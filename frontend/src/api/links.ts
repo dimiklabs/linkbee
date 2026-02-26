@@ -42,6 +42,12 @@ export const linksApi = {
     return `${base}/links/${id}/qr?token=${token}`;
   },
 
+  getLiveCountUrl: (id: string): string => {
+    const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
+    const token = localStorage.getItem('access_token');
+    return `${base}/links/${id}/analytics/live?token=${token}`;
+  },
+
   getAnalytics: async (id: string, from?: string, to?: string, granularity = 'day'): Promise<ApiResponse<AnalyticsResponse>> => {
     const response = await apiClient.get(`/links/${id}/analytics`, {
       params: { from, to, granularity },

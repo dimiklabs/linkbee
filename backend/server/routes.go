@@ -76,7 +76,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	linkHandler      := handler.NewLinkHandler(linkService)
 	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, linkRepo)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
-	analyticsHandler := handler.NewAnalyticsHandler(analyticsService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
 
 	// ── Health ────────────────────────────────────────────────────────────────
@@ -113,6 +113,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 			// Demo shorten (rate-limited per IP)
 			v1Public.POST("/demo/shorten", demoHandler.ShortenURL)
+
+			// SSE live click counter (inline JWT via ?token= because EventSource can't set headers)
+			v1Public.GET("/links/:id/analytics/live", analyticsHandler.StreamLiveCount)
 		}
 
 		// Protected routes (JWT required)

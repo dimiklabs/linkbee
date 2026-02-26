@@ -92,14 +92,22 @@
           <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-medium">Total Clicks</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted small fw-medium">Total Clicks</span>
+                  <span v-if="isLive" class="live-badge d-inline-flex align-items-center gap-1">
+                    <span class="live-dot"></span>
+                    <span style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; color: #16a34a;">LIVE</span>
+                  </span>
+                </div>
                 <div class="stat-icon bg-primary-soft rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#635bff" viewBox="0 0 16 16">
                     <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
                   </svg>
                 </div>
               </div>
-              <div class="fw-bold fs-4 mb-0">{{ analytics.total_clicks.toLocaleString() }}</div>
+              <div class="fw-bold fs-4 mb-0">
+                {{ (liveTotal !== null ? liveTotal : analytics.total_clicks).toLocaleString() }}
+              </div>
             </div>
           </div>
         </div>
@@ -109,14 +117,22 @@
           <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small fw-medium">Unique Clicks</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="text-muted small fw-medium">Unique Clicks</span>
+                  <span v-if="isLive" class="live-badge d-inline-flex align-items-center gap-1">
+                    <span class="live-dot"></span>
+                    <span style="font-size: 0.6rem; font-weight: 600; letter-spacing: 0.04em; color: #16a34a;">LIVE</span>
+                  </span>
+                </div>
                 <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: rgba(20, 184, 166, 0.12);">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#14b8a6" viewBox="0 0 16 16">
                     <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
                   </svg>
                 </div>
               </div>
-              <div class="fw-bold fs-4 mb-0">{{ analytics.unique_clicks.toLocaleString() }}</div>
+              <div class="fw-bold fs-4 mb-0">
+                {{ (liveUnique !== null ? liveUnique : analytics.unique_clicks).toLocaleString() }}
+              </div>
             </div>
           </div>
         </div>
@@ -457,7 +473,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { use } from 'echarts/core';
@@ -476,6 +492,41 @@ const router = useRouter();
 const analytics = ref<AnalyticsResponse | null>(null);
 const loading = ref(false);
 const error = ref('');
+
+// Live click counter (SSE)
+const isLive = ref(false);
+const liveTotal = ref<number | null>(null);
+const liveUnique = ref<number | null>(null);
+let eventSource: EventSource | null = null;
+
+function connectLiveCount() {
+  const id = route.params.id as string;
+  const url = linksApi.getLiveCountUrl(id);
+  eventSource = new EventSource(url);
+
+  eventSource.addEventListener('count', (e: MessageEvent) => {
+    try {
+      const data = JSON.parse(e.data) as { total_clicks: number; unique_clicks: number };
+      liveTotal.value = data.total_clicks;
+      liveUnique.value = data.unique_clicks;
+      isLive.value = true;
+    } catch {
+      // ignore parse errors
+    }
+  });
+
+  eventSource.onerror = () => {
+    isLive.value = false;
+    eventSource?.close();
+    eventSource = null;
+  };
+}
+
+function disconnectLiveCount() {
+  eventSource?.close();
+  eventSource = null;
+  isLive.value = false;
+}
 
 // Filter state — default to last 30 days
 const now = new Date();
@@ -600,6 +651,11 @@ function exportToCSV() {
 
 onMounted(() => {
   loadAnalytics();
+  connectLiveCount();
+});
+
+onUnmounted(() => {
+  disconnectLiveCount();
 });
 
 // Computed helpers
@@ -913,5 +969,20 @@ const chartOption = computed(() => ({
 
 .progress-bar {
   border-radius: 100px;
+}
+
+/* Live indicator */
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #16a34a;
+  animation: live-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
 }
 </style>
