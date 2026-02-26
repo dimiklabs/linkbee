@@ -56,10 +56,15 @@ export const linksApi = {
     return response.data;
   },
 
-  getQRUrl: (id: string): string => {
+  getQRUrl: (id: string, opts?: { fg?: string; bg?: string; size?: number; ec?: string }): string => {
     const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
     const token = localStorage.getItem('access_token');
-    return `${base}/links/${id}/qr?token=${token}`;
+    const params = new URLSearchParams({ token: token ?? '' });
+    if (opts?.fg) params.set('fg', opts.fg.replace('#', ''));
+    if (opts?.bg) params.set('bg', opts.bg.replace('#', ''));
+    if (opts?.size) params.set('size', String(opts.size));
+    if (opts?.ec) params.set('ec', opts.ec);
+    return `${base}/links/${id}/qr?${params.toString()}`;
   },
 
   getLiveCountUrl: (id: string): string => {
