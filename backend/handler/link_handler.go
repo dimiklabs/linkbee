@@ -10,16 +10,18 @@ import (
 	"github.com/shafikshaon/shortlink/middlewares"
 	"github.com/shafikshaon/shortlink/request"
 	linkSvc "github.com/shafikshaon/shortlink/service/link"
+	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/transport"
 	"github.com/shafikshaon/shortlink/util"
 )
 
 type LinkHandler struct {
-	linkService linkSvc.LinkServiceI
+	linkService    linkSvc.LinkServiceI
+	webhookService webhookSvc.WebhookServiceI
 }
 
-func NewLinkHandler(linkService linkSvc.LinkServiceI) *LinkHandler {
-	return &LinkHandler{linkService: linkService}
+func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.WebhookServiceI) *LinkHandler {
+	return &LinkHandler{linkService: linkService, webhookService: webhookService}
 }
 
 // ListLinks godoc
@@ -78,6 +80,8 @@ func (h *LinkHandler) CreateLink(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+
+	h.webhookService.Trigger(userID, webhookSvc.EventLinkCreated, result)
 
 	transport.RespondWithSuccess(c, http.StatusCreated, "Link created successfully", result)
 }
@@ -165,6 +169,8 @@ func (h *LinkHandler) DeleteLink(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+
+	h.webhookService.Trigger(userID, webhookSvc.EventLinkDeleted, map[string]string{"id": id.String()})
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Link deleted successfully", nil)
 }

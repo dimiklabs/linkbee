@@ -26,6 +26,7 @@ const (
 // CachedLink is the minimal link data cached in Valkey.
 type CachedLink struct {
 	ID           string     `json:"id"`
+	UserID       string     `json:"user_id"`
 	DestURL      string     `json:"dest_url"`
 	RedirectType int16      `json:"redirect_type"`
 	IsActive     bool       `json:"is_active"`
@@ -90,6 +91,7 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 				link.PasswordHash = "cached" // sentinel — actual hash not cached
 			}
 			_ = link.ID.UnmarshalText([]byte(cl.ID))
+			_ = link.UserID.UnmarshalText([]byte(cl.UserID))
 			return link, nil
 		}
 	}
@@ -169,6 +171,7 @@ func (s *redirectService) ApplyGeoRouting(ctx context.Context, linkID uuid.UUID,
 func (s *redirectService) warmCache(ctx context.Context, key string, link *model.Link) {
 	cl := CachedLink{
 		ID:           link.ID.String(),
+		UserID:       link.UserID.String(),
 		DestURL:      link.DestinationURL,
 		RedirectType: link.RedirectType,
 		IsActive:     link.IsActive,

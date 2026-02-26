@@ -69,6 +69,11 @@ const router = createRouter({
           name: 'api-keys',
           component: () => import('@/pages/dashboard/ApiKeysPage.vue'),
         },
+        {
+          path: 'webhooks',
+          name: 'webhooks',
+          component: () => import('@/pages/dashboard/WebhooksPage.vue'),
+        },
       ],
     },
 

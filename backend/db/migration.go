@@ -22,6 +22,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.LinkVariant{},
 		&model.LinkGeoRule{},
 		&model.ClickEvent{},
+		&model.Webhook{},
 	)
 	if err != nil {
 		logger.Error("Auto migration failed", zap.Error(err))

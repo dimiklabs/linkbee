@@ -14,6 +14,7 @@ import (
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	geoSvc "github.com/shafikshaon/shortlink/service/geo"
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
+	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/transport"
 )
 
@@ -21,6 +22,7 @@ type RedirectHandler struct {
 	redirectService redirectSvc.RedirectServiceI
 	clickService    clickSvc.ClickServiceI
 	geoService      geoSvc.GeoServiceI
+	webhookService  webhookSvc.WebhookServiceI
 	linkRepo        repository.LinkRepositoryI
 }
 
@@ -28,12 +30,14 @@ func NewRedirectHandler(
 	redirectService redirectSvc.RedirectServiceI,
 	clickService clickSvc.ClickServiceI,
 	geoService geoSvc.GeoServiceI,
+	webhookService webhookSvc.WebhookServiceI,
 	linkRepo repository.LinkRepositoryI,
 ) *RedirectHandler {
 	return &RedirectHandler{
 		redirectService: redirectService,
 		clickService:    clickService,
 		geoService:      geoService,
+		webhookService:  webhookService,
 		linkRepo:        linkRepo,
 	}
 }
@@ -97,10 +101,16 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 
 	// Enqueue click asynchronously using background context so it outlives the request
 	linkID := link.ID
+	userID := link.UserID
 	ip := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 	referrer := c.GetHeader("Referer")
 	go h.clickService.EnqueueClick(context.Background(), linkID, ip, userAgent, referrer, source)
+	h.webhookService.Trigger(userID, webhookSvc.EventLinkClicked, map[string]string{
+		"link_id": linkID.String(),
+		"ip":      ip,
+		"source":  source,
+	})
 
 	// Determine destination URL: split test → geo routing → default
 	destURL := link.DestinationURL

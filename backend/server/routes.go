@@ -29,6 +29,7 @@ import (
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
+	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/worker"
 )
 
@@ -41,6 +42,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
 	apiKeyRepo            := repository.NewAPIKeyRepository(s.MasterDB, s.ReplicaDB)
+	webhookRepo           := repository.NewWebhookRepository(s.MasterDB, s.ReplicaDB)
 	folderRepo            := repository.NewFolderRepository(s.MasterDB, s.ReplicaDB)
 	userRepo              := repository.NewUserRepository(s.MasterDB, s.ReplicaDB)
 	passwordResetRepo     := repository.NewPasswordResetRepository(s.MasterDB, s.ReplicaDB)
@@ -64,6 +66,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 	folderService      := folderSvc.NewFolderService(folderRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
+	webhookService     := webhookSvc.NewWebhookService(webhookRepo)
 	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
 	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
 	geoService         := geoSvc.NewGeoService(s.Cfg.App.GeoDBPath)
@@ -93,10 +96,11 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	folderHandler    := handler.NewFolderHandler(folderService)
 	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService)
+	webhookHandler   := handler.NewWebhookHandler(webhookService)
 	splitHandler     := handler.NewSplitHandler(splitService)
 	geoHandler       := handler.NewGeoHandler(geoRoutingService)
-	linkHandler      := handler.NewLinkHandler(linkService)
-	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, linkRepo)
+	linkHandler      := handler.NewLinkHandler(linkService, webhookService)
+	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, webhookService, linkRepo)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
@@ -193,6 +197,12 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.GET("/api-keys", apiKeyHandler.ListAPIKeys)
 			v1Auth.POST("/api-keys", apiKeyHandler.CreateAPIKey)
 			v1Auth.DELETE("/api-keys/:id", apiKeyHandler.RevokeAPIKey)
+
+			// Webhooks
+			v1Auth.GET("/webhooks", webhookHandler.ListWebhooks)
+			v1Auth.POST("/webhooks", webhookHandler.CreateWebhook)
+			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
+			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
 		}
 	}
 
