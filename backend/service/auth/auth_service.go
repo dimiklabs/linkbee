@@ -576,9 +576,10 @@ func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req *
 		zap.String("user_id", userID.String()))
 
 	updateReq := &dto.UpdateUserRequest{
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Phone:     req.Phone,
+		FirstName:      req.FirstName,
+		LastName:       req.LastName,
+		Phone:          req.Phone,
+		ProfilePicture: req.ProfilePicture,
 	}
 
 	user, svcErr := s.userService.UpdateUser(ctx, userID, updateReq)

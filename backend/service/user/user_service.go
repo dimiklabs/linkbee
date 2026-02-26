@@ -259,6 +259,10 @@ func (s *UserService) UpdateUser(ctx context.Context, id uuid.UUID, req *dto.Upd
 	user.FirstName = strings.TrimSpace(req.FirstName)
 	user.LastName = strings.TrimSpace(req.LastName)
 	user.Phone = strings.TrimSpace(req.Phone)
+	if req.ProfilePicture != "" {
+		user.ProfilePicture = strings.TrimSpace(req.ProfilePicture)
+		user.ProfilePictureSource = "custom"
+	}
 
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		logger.ErrorCtx(ctx, "Failed to update user",

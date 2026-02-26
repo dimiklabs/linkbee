@@ -30,9 +30,10 @@ type ResetPasswordRequest struct {
 }
 
 type UpdateProfileRequest struct {
-	FirstName string `json:"first_name" binding:"max=100"`
-	LastName  string `json:"last_name" binding:"max=100"`
-	Phone     string `json:"phone" binding:"max=20"`
+	FirstName      string `json:"first_name" binding:"max=100"`
+	LastName       string `json:"last_name" binding:"max=100"`
+	Phone          string `json:"phone" binding:"max=20"`
+	ProfilePicture string `json:"profile_picture" binding:"max=2048"`
 }
 
 type ReactivateAccountRequest struct {

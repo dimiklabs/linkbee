@@ -10,9 +10,10 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Phone     string `json:"phone,omitempty"`
+	FirstName      string `json:"first_name"`
+	LastName       string `json:"last_name"`
+	Phone          string `json:"phone,omitempty"`
+	ProfilePicture string `json:"profile_picture,omitempty"`
 }
 
 type ChangePasswordRequest struct {

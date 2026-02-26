@@ -79,6 +79,11 @@ const router = createRouter({
           name: 'bio',
           component: () => import('@/pages/dashboard/BioPage.vue'),
         },
+        {
+          path: 'settings',
+          name: 'settings',
+          component: () => import('@/pages/dashboard/SettingsPage.vue'),
+        },
       ],
     },
 
