@@ -354,3 +354,42 @@ func (h *LinkHandler) ToggleStar(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Link star toggled successfully", result)
 }
 
+// CheckDuplicate godoc
+//
+//	@Summary		Check if a destination URL already exists
+//	@Description	Returns the existing shortened link if the given destination URL is already in the user's account.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			url	query		string	true	"Destination URL to check"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		400	{object}	transport.ErrorResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/duplicate [get]
+func (h *LinkHandler) CheckDuplicate(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	destURL := c.Query("url")
+	if destURL == "" {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "url query parameter is required")
+		return
+	}
+
+	result, svcErr := h.linkService.CheckDuplicate(ctx, userID, destURL)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Duplicate link found", result)
+}
+

@@ -22,6 +22,9 @@ type LinkRepositoryI interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
+	// Duplicate check
+	FindByDestinationURL(ctx context.Context, userID uuid.UUID, destURL string) (*model.Link, error)
+
 	// Update
 	Update(ctx context.Context, link *model.Link) error
 	IncrementClickCount(ctx context.Context, id uuid.UUID) error
@@ -90,6 +93,18 @@ func (r *LinkRepository) GetBySlug(ctx context.Context, slug string) (*model.Lin
 	if err := r.replicaDB.WithContext(ctx).
 		Where("slug = ? AND is_active = ?", slug, true).
 		First(&link).Error; err != nil {
+		return nil, err
+	}
+	return &link, nil
+}
+
+func (r *LinkRepository) FindByDestinationURL(ctx context.Context, userID uuid.UUID, destURL string) (*model.Link, error) {
+	var link model.Link
+	err := r.replicaDB.WithContext(ctx).
+		Where("user_id = ? AND destination_url = ? AND deleted_at IS NULL", userID, destURL).
+		Order("created_at ASC").
+		First(&link).Error
+	if err != nil {
 		return nil, err
 	}
 	return &link, nil

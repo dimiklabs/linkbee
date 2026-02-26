@@ -35,6 +35,7 @@ type LinkServiceI interface {
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
 	ImportLinks(ctx context.Context, userID uuid.UUID, r io.Reader) (*response.ImportLinksResponse, *dto.ServiceError)
 	CheckLinkHealth(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
+	CheckDuplicate(ctx context.Context, userID uuid.UUID, destURL string) (*response.LinkResponse, *dto.ServiceError)
 }
 
 // healthHTTPClient is shared across all on-demand health checks.
@@ -541,4 +542,15 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 		CreatedAt:        link.CreatedAt,
 		UpdatedAt:        link.UpdatedAt,
 	}
+}
+
+func (s *linkService) CheckDuplicate(ctx context.Context, userID uuid.UUID, destURL string) (*response.LinkResponse, *dto.ServiceError) {
+	link, err := s.linkRepo.FindByDestinationURL(ctx, userID, destURL)
+	if err == gorm.ErrRecordNotFound {
+		return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "no duplicate found")
+	}
+	if err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to check duplicate")
+	}
+	return s.toLinkResponse(link), nil
 }

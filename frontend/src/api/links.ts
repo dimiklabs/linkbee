@@ -85,6 +85,15 @@ export const linksApi = {
     const response = await apiClient.post('/demo/shorten', data);
     return response.data;
   },
+
+  checkDuplicate: async (url: string): Promise<LinkResponse | null> => {
+    try {
+      const response = await apiClient.get('/links/duplicate', { params: { url } });
+      return response.data?.data ?? null;
+    } catch {
+      return null; // 404 = no duplicate; other errors = ignore
+    }
+  },
 };
 
 export default linksApi;

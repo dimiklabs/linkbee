@@ -31,6 +31,32 @@
               <div v-if="validationErrors.destination_url" class="invalid-feedback">
                 {{ validationErrors.destination_url }}
               </div>
+
+              <!-- Duplicate check feedback -->
+              <div v-if="!isEditMode && checkingDuplicate" class="mt-2 text-muted small d-flex align-items-center gap-1">
+                <span class="spinner-border spinner-border-sm"></span> Checking for duplicates&hellip;
+              </div>
+              <div
+                v-else-if="!isEditMode && duplicateLink && !ignoreDuplicate"
+                class="alert alert-warning py-2 px-3 mt-2 mb-0 d-flex align-items-start gap-2"
+                style="font-size: 0.85rem;"
+              >
+                <div class="flex-fill">
+                  <strong>Duplicate URL detected.</strong>
+                  This destination is already shortened as
+                  <a :href="duplicateLink.short_url" target="_blank" rel="noopener noreferrer" class="fw-semibold alert-link">
+                    {{ duplicateLink.short_url }}
+                  </a>
+                  <span class="text-muted">(slug: <code>{{ duplicateLink.slug }}</code>)</span>.
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                  @click="ignoreDuplicate = true"
+                >
+                  Create anyway
+                </button>
+              </div>
             </div>
 
             <!-- Custom Slug -->
@@ -209,6 +235,7 @@ import { Modal } from 'bootstrap';
 import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
+import linksApi from '@/api/links';
 
 interface Props {
   link?: LinkResponse;
@@ -229,6 +256,12 @@ const saving = ref(false);
 const error = ref('');
 const validationErrors = ref<Record<string, string>>({});
 const tagsInput = ref('');
+
+// Duplicate detection
+const duplicateLink = ref<LinkResponse | null>(null);
+const checkingDuplicate = ref(false);
+const ignoreDuplicate = ref(false);
+let duplicateTimer: ReturnType<typeof setTimeout> | null = null;
 
 const isEditMode = computed(() => !!props.link);
 
@@ -284,6 +317,18 @@ function resetForm() {
   tagsInput.value = '';
   error.value = '';
   validationErrors.value = {};
+  duplicateLink.value = null;
+  ignoreDuplicate.value = false;
+  if (duplicateTimer) { clearTimeout(duplicateTimer); duplicateTimer = null; }
+}
+
+async function runDuplicateCheck(url: string) {
+  checkingDuplicate.value = true;
+  try {
+    duplicateLink.value = await linksApi.checkDuplicate(url);
+  } finally {
+    checkingDuplicate.value = false;
+  }
 }
 
 function validate(): boolean {
@@ -300,6 +345,20 @@ function validate(): boolean {
   }
   return true;
 }
+
+// Watch destination URL to trigger duplicate check in create mode
+watch(
+  () => form.value.destination_url,
+  (url) => {
+    if (isEditMode.value) return;
+    duplicateLink.value = null;
+    ignoreDuplicate.value = false;
+    if (duplicateTimer) clearTimeout(duplicateTimer);
+    if (!url.trim()) return;
+    try { new URL(url.trim()); } catch { return; }
+    duplicateTimer = setTimeout(() => runDuplicateCheck(url.trim()), 600);
+  }
+);
 
 async function handleSave() {
   if (!validate()) return;
