@@ -23,6 +23,7 @@ type Link struct {
 	IsActive           bool           `gorm:"default:true;not null" json:"is_active"`
 	IsStarred          bool           `gorm:"default:false;not null" json:"is_starred"`
 	IsSplitTest        bool           `gorm:"default:false;not null" json:"is_split_test"`
+	IsGeoRouting       bool           `gorm:"default:false;not null" json:"is_geo_routing"`
 	HealthStatus       string         `gorm:"type:varchar(20);not null;default:'unknown'" json:"health_status"`
 	HealthStatusCode   int            `gorm:"default:0;not null" json:"health_status_code"`
 	HealthCheckedAt    *time.Time     `gorm:"type:timestamptz" json:"health_checked_at,omitempty"`

@@ -13,11 +13,12 @@ import (
 	analyticsSvc "github.com/shafikshaon/shortlink/service/analytics"
 	authSrv "github.com/shafikshaon/shortlink/service/auth"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
-	folderSvc "github.com/shafikshaon/shortlink/service/folder"
-	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	demoSvc "github.com/shafikshaon/shortlink/service/demo"
 	emailSrv "github.com/shafikshaon/shortlink/service/email"
 	facebookSrv "github.com/shafikshaon/shortlink/service/facebook"
+	folderSvc "github.com/shafikshaon/shortlink/service/folder"
+	geoSvc "github.com/shafikshaon/shortlink/service/geo"
+	georoutingSvc "github.com/shafikshaon/shortlink/service/georouting"
 	githubSrv "github.com/shafikshaon/shortlink/service/github"
 	googleSrv "github.com/shafikshaon/shortlink/service/google"
 	healthSrv "github.com/shafikshaon/shortlink/service/health"
@@ -25,6 +26,7 @@ import (
 	qrSvc "github.com/shafikshaon/shortlink/service/qr"
 	rateLimitSrv "github.com/shafikshaon/shortlink/service/ratelimit"
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
+	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
 	"github.com/shafikshaon/shortlink/worker"
 )
@@ -36,35 +38,38 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 	// ── Repositories ─────────────────────────────────────────────────────────
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
+	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
 	folderRepo            := repository.NewFolderRepository(s.MasterDB, s.ReplicaDB)
 	userRepo              := repository.NewUserRepository(s.MasterDB, s.ReplicaDB)
 	passwordResetRepo     := repository.NewPasswordResetRepository(s.MasterDB, s.ReplicaDB)
-	tokenBlacklistRepo   := repository.NewTokenBlacklistRepository(s.Cache)
-	sessionRepo          := repository.NewSessionRepository(s.MasterDB, s.ReplicaDB)
+	tokenBlacklistRepo    := repository.NewTokenBlacklistRepository(s.Cache)
+	sessionRepo           := repository.NewSessionRepository(s.MasterDB, s.ReplicaDB)
 	emailVerificationRepo := repository.NewEmailVerificationRepository(s.MasterDB, s.ReplicaDB)
-	oauthStateRepo       := repository.NewOAuthStateRepository(s.Cache)
-	rateLimitRepo        := repository.NewRateLimitRepository(s.Cache)
-	linkRepo             := repository.NewLinkRepository(s.MasterDB, s.ReplicaDB)
-	clickEventRepo       := repository.NewClickEventRepository(s.MasterDB, s.ReplicaDB)
+	oauthStateRepo        := repository.NewOAuthStateRepository(s.Cache)
+	rateLimitRepo         := repository.NewRateLimitRepository(s.Cache)
+	linkRepo              := repository.NewLinkRepository(s.MasterDB, s.ReplicaDB)
+	clickEventRepo        := repository.NewClickEventRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
-	healthService       := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
-	userService         := userSrv.NewUserService(userRepo)
-	emailService        := emailSrv.NewEmailService(s.Cfg.Email, emailVerificationRepo, userRepo)
-	authService         := authSrv.NewAuthService(userService, passwordResetRepo, tokenBlacklistRepo, sessionRepo, emailService, s.Cfg.App, s.Cfg.Session)
-	rateLimitService    := rateLimitSrv.NewRateLimitService(rateLimitRepo, s.Cfg.RateLimit)
-	googleOAuthService  := googleSrv.NewGoogleOAuthService(s.Cfg.Google, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
-	githubOAuthService  := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
+	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
+	userService          := userSrv.NewUserService(userRepo)
+	emailService         := emailSrv.NewEmailService(s.Cfg.Email, emailVerificationRepo, userRepo)
+	authService          := authSrv.NewAuthService(userService, passwordResetRepo, tokenBlacklistRepo, sessionRepo, emailService, s.Cfg.App, s.Cfg.Session)
+	rateLimitService     := rateLimitSrv.NewRateLimitService(rateLimitRepo, s.Cfg.RateLimit)
+	googleOAuthService   := googleSrv.NewGoogleOAuthService(s.Cfg.Google, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
+	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
-	folderService    := folderSvc.NewFolderService(folderRepo)
-	splitService     := splitSvc.NewSplitService(variantRepo, linkRepo)
-	linkService      := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
-	redirectService  := redirectSvc.NewRedirectService(linkRepo, variantRepo, s.Cache, s.Cfg.Link.CacheTTLSeconds)
-	clickService     := clickSvc.NewClickService(s.Cache)
-	qrService        := qrSvc.NewQRService()
-	analyticsService := analyticsSvc.NewAnalyticsService(linkRepo, clickEventRepo)
-	demoService      := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
+	folderService      := folderSvc.NewFolderService(folderRepo)
+	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
+	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
+	geoService         := geoSvc.NewGeoService(s.Cfg.App.GeoDBPath)
+	geoRoutingService  := georoutingSvc.NewGeoRoutingService(geoRuleRepo, linkRepo)
+	redirectService    := redirectSvc.NewRedirectService(linkRepo, variantRepo, geoRuleRepo, s.Cache, s.Cfg.Link.CacheTTLSeconds)
+	clickService       := clickSvc.NewClickService(s.Cache)
+	qrService          := qrSvc.NewQRService()
+	analyticsService   := analyticsSvc.NewAnalyticsService(linkRepo, clickEventRepo)
+	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
 
 	// ── Click worker (background goroutine) ───────────────────────────────────
 	clickWorker := worker.NewClickWorker(
@@ -85,8 +90,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	folderHandler    := handler.NewFolderHandler(folderService)
 	splitHandler     := handler.NewSplitHandler(splitService)
+	geoHandler       := handler.NewGeoHandler(geoRoutingService)
 	linkHandler      := handler.NewLinkHandler(linkService)
-	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, linkRepo)
+	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, linkRepo)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
@@ -160,11 +166,20 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.DELETE("/links/:id", linkHandler.DeleteLink)
 			v1Auth.PATCH("/links/:id/star", linkHandler.ToggleStar)
 			v1Auth.POST("/links/:id/health-check", linkHandler.CheckLinkHealth)
+
+			// A/B split testing
 			v1Auth.PATCH("/links/:id/split-test", splitHandler.ToggleSplitTest)
 			v1Auth.GET("/links/:id/variants", splitHandler.ListVariants)
 			v1Auth.POST("/links/:id/variants", splitHandler.CreateVariant)
 			v1Auth.PUT("/links/:id/variants/:variantId", splitHandler.UpdateVariant)
 			v1Auth.DELETE("/links/:id/variants/:variantId", splitHandler.DeleteVariant)
+
+			// Geo routing
+			v1Auth.PATCH("/links/:id/geo-routing", geoHandler.ToggleGeoRouting)
+			v1Auth.GET("/links/:id/geo-rules", geoHandler.ListGeoRules)
+			v1Auth.POST("/links/:id/geo-rules", geoHandler.CreateGeoRule)
+			v1Auth.PUT("/links/:id/geo-rules/:ruleId", geoHandler.UpdateGeoRule)
+			v1Auth.DELETE("/links/:id/geo-rules/:ruleId", geoHandler.DeleteGeoRule)
 
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)

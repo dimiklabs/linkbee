@@ -19,6 +19,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.Folder{},
 		&model.Link{},
 		&model.LinkVariant{},
+		&model.LinkGeoRule{},
 		&model.ClickEvent{},
 	)
 	if err != nil {

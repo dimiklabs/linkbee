@@ -17,6 +17,7 @@ type AppConfig struct {
 	JWTRefreshExpiry   int
 	MaxSessions        int
 	BaseDomain         string
+	GeoDBPath          string
 }
 
 func LoadAppConfig(_ context.Context) *AppConfig {
@@ -30,6 +31,7 @@ func LoadAppConfig(_ context.Context) *AppConfig {
 	viper.SetDefault("JWT_REFRESH_EXPIRY_DAYS", 7)
 	viper.SetDefault("MAX_SESSIONS", 5)
 	viper.SetDefault("BASE_DOMAIN", "http://localhost:8080")
+	viper.SetDefault("GEO_DB_PATH", "")
 
 	return &AppConfig{
 		Env:                viper.GetString("ENV"),
@@ -42,5 +44,6 @@ func LoadAppConfig(_ context.Context) *AppConfig {
 		JWTRefreshExpiry:   viper.GetInt("JWT_REFRESH_EXPIRY_DAYS"),
 		MaxSessions:        viper.GetInt("MAX_SESSIONS"),
 		BaseDomain:         viper.GetString("BASE_DOMAIN"),
+		GeoDBPath:          viper.GetString("GEO_DB_PATH"),
 	}
 }

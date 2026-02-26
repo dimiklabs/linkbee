@@ -30,6 +30,7 @@ type CachedLink struct {
 	RedirectType int16      `json:"redirect_type"`
 	IsActive     bool       `json:"is_active"`
 	IsSplitTest  bool       `json:"is_split_test"`
+	IsGeoRouting bool       `json:"is_geo_routing"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	MaxClicks    *int64     `json:"max_clicks,omitempty"`
 	ClickCount   int64      `json:"click_count"`
@@ -39,11 +40,13 @@ type CachedLink struct {
 type RedirectServiceI interface {
 	GetCachedLink(ctx context.Context, slug string) (*model.Link, *dto.ServiceError)
 	PickSplitTestVariant(ctx context.Context, linkID uuid.UUID) (string, *dto.ServiceError)
+	ApplyGeoRouting(ctx context.Context, linkID uuid.UUID, countryCode string) (string, *dto.ServiceError)
 }
 
 type redirectService struct {
 	linkRepo    repository.LinkRepositoryI
 	variantRepo repository.LinkVariantRepositoryI
+	geoRuleRepo repository.LinkGeoRuleRepositoryI
 	cache       valkeycompat.Cmdable
 	cacheTTL    time.Duration
 }
@@ -51,12 +54,14 @@ type redirectService struct {
 func NewRedirectService(
 	linkRepo repository.LinkRepositoryI,
 	variantRepo repository.LinkVariantRepositoryI,
+	geoRuleRepo repository.LinkGeoRuleRepositoryI,
 	cache valkeycompat.Cmdable,
 	cacheTTLSeconds int,
 ) RedirectServiceI {
 	return &redirectService{
 		linkRepo:    linkRepo,
 		variantRepo: variantRepo,
+		geoRuleRepo: geoRuleRepo,
 		cache:       cache,
 		cacheTTL:    time.Duration(cacheTTLSeconds) * time.Second,
 	}
@@ -75,6 +80,7 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 				RedirectType:   cl.RedirectType,
 				IsActive:       cl.IsActive,
 				IsSplitTest:    cl.IsSplitTest,
+				IsGeoRouting:   cl.IsGeoRouting,
 				ExpiresAt:      cl.ExpiresAt,
 				MaxClicks:      cl.MaxClicks,
 				ClickCount:     cl.ClickCount,
@@ -144,6 +150,22 @@ func (s *redirectService) PickSplitTestVariant(ctx context.Context, linkID uuid.
 	return chosen.DestinationURL, nil
 }
 
+// ApplyGeoRouting looks up the first geo rule matching the given country code.
+// Returns the destination URL for that rule, or "" if no rule matches (caller falls back).
+func (s *redirectService) ApplyGeoRouting(ctx context.Context, linkID uuid.UUID, countryCode string) (string, *dto.ServiceError) {
+	if countryCode == "" {
+		return "", nil
+	}
+	rule, err := s.geoRuleRepo.GetByLinkIDAndCountry(ctx, linkID, countryCode)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", nil // no rule for this country — fall through to default URL
+		}
+		return "", dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	return rule.DestinationURL, nil
+}
+
 func (s *redirectService) warmCache(ctx context.Context, key string, link *model.Link) {
 	cl := CachedLink{
 		ID:           link.ID.String(),
@@ -151,6 +173,7 @@ func (s *redirectService) warmCache(ctx context.Context, key string, link *model
 		RedirectType: link.RedirectType,
 		IsActive:     link.IsActive,
 		IsSplitTest:  link.IsSplitTest,
+		IsGeoRouting: link.IsGeoRouting,
 		ExpiresAt:    link.ExpiresAt,
 		MaxClicks:    link.MaxClicks,
 		ClickCount:   link.ClickCount,

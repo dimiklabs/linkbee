@@ -526,6 +526,7 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 		IsActive:         link.IsActive,
 		IsStarred:        link.IsStarred,
 		IsSplitTest:      link.IsSplitTest,
+		IsGeoRouting:     link.IsGeoRouting,
 		HealthStatus:     link.HealthStatus,
 		HealthStatusCode: link.HealthStatusCode,
 		HealthCheckedAt:  link.HealthCheckedAt,

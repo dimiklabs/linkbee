@@ -379,6 +379,18 @@
                     </svg>
                   </button>
 
+                  <!-- Geo Routing -->
+                  <button
+                    class="btn btn-sm border-0 p-1"
+                    :class="link.is_geo_routing ? 'text-success' : 'btn-outline-secondary'"
+                    title="Geo Routing"
+                    @click="openGeoModal(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484q-.121.12-.242.234c-.416.396-.787.749-.758 1.266.035.634.618.824 1.214 1.017.577.188 1.168.38 1.286.983.082.417-.075.988-.22 1.52-.215.782-.406 1.48.22 1.48 1.5-.5 3.798-3.186 4-5 .138-1.243-2-2-3.5-2.5-.478-.16-.755.081-.99.284-.172.15-.322.279-.51.216-.445-.148-2.614-1.208-2.614-2 0-.56.23-1.272.55-2zm6.959 0c.922.065 1.459.22 1.459.22 -.12.1-.32.3-.39.5-.069.2.049.3.2.4.15.1.29.2.31.4.019.2-.11.3-.23.4-.11.1-.22.2-.19.4.03.2.18.3.33.4.16.1.32.2.36.4.039.2-.08.3-.19.4-.12.1-.25.2-.25.4 0 .2.17.3.33.4.17.1.35.2.37.4.02.2-.1.4-.24.5-.14.1-.3.2-.32.4l-.015.046c-.023.068-.04.12-.06.16.9-.2 1.6-.5 1.9-1.1.3-.6.1-1.3-.2-2z"/>
+                    </svg>
+                  </button>
+
                   <!-- Edit -->
                   <button
                     class="btn btn-sm btn-outline-secondary border-0 p-1"
@@ -489,6 +501,16 @@
       @updated="onSplitTestUpdated"
     />
 
+    <!-- Geo Routing Modal -->
+    <GeoRulesModal
+      v-if="geoLink"
+      ref="geoModalRef"
+      :link-id="geoLink.id"
+      :slug="geoLink.slug"
+      :is-geo-routing-initial="geoLink.is_geo_routing"
+      @updated="onGeoRoutingUpdated"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -532,6 +554,7 @@ import CreateLinkModal from '@/components/CreateLinkModal.vue';
 import QRCodeModal from '@/components/QRCodeModal.vue';
 import ImportLinksModal from '@/components/ImportLinksModal.vue';
 import SplitTestModal from '@/components/SplitTestModal.vue';
+import GeoRulesModal from '@/components/GeoRulesModal.vue';
 import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
@@ -547,6 +570,8 @@ const qrModalRef = ref<InstanceType<typeof QRCodeModal> | null>(null);
 const importModalRef = ref<InstanceType<typeof ImportLinksModal> | null>(null);
 const splitModalRef = ref<InstanceType<typeof SplitTestModal> | null>(null);
 const splitLink = ref<LinkResponse | null>(null);
+const geoModalRef = ref<InstanceType<typeof GeoRulesModal> | null>(null);
+const geoLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
@@ -718,6 +743,19 @@ function onSplitTestUpdated(enabled: boolean) {
     const idx = linksStore.links.findIndex(l => l.id === splitLink.value!.id);
     if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_split_test: enabled };
     splitLink.value = { ...splitLink.value, is_split_test: enabled };
+  }
+}
+
+function openGeoModal(link: LinkResponse) {
+  geoLink.value = link;
+  setTimeout(() => geoModalRef.value?.show(), 50);
+}
+
+function onGeoRoutingUpdated(enabled: boolean) {
+  if (geoLink.value) {
+    const idx = linksStore.links.findIndex(l => l.id === geoLink.value!.id);
+    if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_geo_routing: enabled };
+    geoLink.value = { ...geoLink.value, is_geo_routing: enabled };
   }
 }
 

@@ -40,6 +40,7 @@ export interface LinkResponse {
   is_active: boolean;
   is_starred: boolean;
   is_split_test: boolean;
+  is_geo_routing: boolean;
   health_status: string;
   health_status_code?: number;
   health_checked_at?: string;
@@ -142,6 +143,26 @@ export interface UpdateVariantRequest {
   name?: string;
   destination_url?: string;
   weight?: number;
+}
+
+export interface LinkGeoRule {
+  id: string;
+  link_id: string;
+  country_code: string;
+  destination_url: string;
+  priority: number;
+}
+
+export interface CreateGeoRuleRequest {
+  country_code: string;
+  destination_url: string;
+  priority: number;
+}
+
+export interface UpdateGeoRuleRequest {
+  country_code?: string;
+  destination_url?: string;
+  priority?: number;
 }
 
 export interface ImportLinkError {

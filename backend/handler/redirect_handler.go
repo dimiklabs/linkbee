@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/repository"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
+	geoSvc "github.com/shafikshaon/shortlink/service/geo"
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	"github.com/shafikshaon/shortlink/transport"
 )
@@ -18,17 +20,20 @@ import (
 type RedirectHandler struct {
 	redirectService redirectSvc.RedirectServiceI
 	clickService    clickSvc.ClickServiceI
+	geoService      geoSvc.GeoServiceI
 	linkRepo        repository.LinkRepositoryI
 }
 
 func NewRedirectHandler(
 	redirectService redirectSvc.RedirectServiceI,
 	clickService clickSvc.ClickServiceI,
+	geoService geoSvc.GeoServiceI,
 	linkRepo repository.LinkRepositoryI,
 ) *RedirectHandler {
 	return &RedirectHandler{
 		redirectService: redirectService,
 		clickService:    clickService,
+		geoService:      geoService,
 		linkRepo:        linkRepo,
 	}
 }
@@ -97,11 +102,16 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 	referrer := c.GetHeader("Referer")
 	go h.clickService.EnqueueClick(context.Background(), linkID, ip, userAgent, referrer, source)
 
-	// Determine destination URL (split test overrides the original)
+	// Determine destination URL: split test → geo routing → default
 	destURL := link.DestinationURL
 	if link.IsSplitTest {
 		if variantURL, svcErr := h.redirectService.PickSplitTestVariant(ctx, linkID); svcErr == nil && variantURL != "" {
 			destURL = variantURL
+		}
+	} else if link.IsGeoRouting {
+		country := h.detectCountry(c)
+		if geoURL, svcErr := h.redirectService.ApplyGeoRouting(ctx, linkID, country); svcErr == nil && geoURL != "" {
+			destURL = geoURL
 		}
 	}
 
@@ -110,4 +120,16 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 		redirectCode = http.StatusMovedPermanently
 	}
 	c.Redirect(redirectCode, destURL)
+}
+
+// detectCountry extracts the visitor's ISO 3166-1 alpha-2 country code from
+// CDN / proxy headers, then falls back to MaxMind DB lookup via geoService.
+func (h *RedirectHandler) detectCountry(c *gin.Context) string {
+	headers := map[string]string{
+		"CF-IPCountry":    c.GetHeader("CF-IPCountry"),
+		"X-GeoIP-Country": c.GetHeader("X-GeoIP-Country"),
+		"X-Country-Code":  c.GetHeader("X-Country-Code"),
+	}
+	country := h.geoService.GetCountryCode(c.ClientIP(), headers)
+	return strings.ToUpper(country)
 }
