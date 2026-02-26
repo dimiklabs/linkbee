@@ -31,6 +31,7 @@ type UserRepositoryI interface {
 	GetActiveUsers(ctx context.Context, offset, limit int) ([]model.User, int64, error)
 	GetInactiveUsers(ctx context.Context, offset, limit int) ([]model.User, int64, error)
 	SearchByName(ctx context.Context, name string, offset, limit int) ([]model.User, int64, error)
+	SearchAll(ctx context.Context, query string, offset, limit int) ([]model.User, int64, error)
 
 	// Update
 	Update(ctx context.Context, user *model.User) error
@@ -271,6 +272,28 @@ func (r *UserRepository) SearchByName(ctx context.Context, name string, offset, 
 
 	if err := query.Offset(offset).Limit(limit).Order("created_at DESC").Find(&users).Error; err != nil {
 		logger.ErrorCtx(ctx, "Failed to search users by name", zap.String("name", name), zap.Error(err))
+		return nil, 0, err
+	}
+	return users, total, nil
+}
+
+func (r *UserRepository) SearchAll(ctx context.Context, query string, offset, limit int) ([]model.User, int64, error) {
+	logger.DebugCtx(ctx, "Searching users",
+		zap.String("query", query),
+		zap.Int("offset", offset),
+		zap.Int("limit", limit))
+
+	var users []model.User
+	var total int64
+
+	pattern := "%" + query + "%"
+	q := r.replicaDB.WithContext(ctx).Model(&model.User{}).
+		Where("email ILIKE ? OR first_name ILIKE ? OR last_name ILIKE ?", pattern, pattern, pattern)
+
+	if err := q.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	if err := q.Offset(offset).Limit(limit).Order("created_at DESC").Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 	return users, total, nil

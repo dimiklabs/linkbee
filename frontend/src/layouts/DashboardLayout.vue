@@ -75,6 +75,17 @@
           <span class="nav-icon">⚙️</span>
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Settings</span>
         </router-link>
+        <!-- Admin (only visible to admin role) -->
+        <router-link
+          v-if="authStore.isAdmin"
+          to="/admin"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/admin') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">🛡️</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Admin</span>
+        </router-link>
       </nav>
 
       <!-- Sidebar footer: user info + logout -->

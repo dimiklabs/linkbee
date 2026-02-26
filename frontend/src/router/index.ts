@@ -87,6 +87,14 @@ const router = createRouter({
       ],
     },
 
+    // Admin (admin role required)
+    {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/pages/AdminPage.vue'),
+      meta: { requiresAuth: true, requiresAdmin: true },
+    },
+
     // Public bio page
     {
       path: '/bio/:username',
@@ -119,10 +127,13 @@ router.beforeEach(async (to, _from, next) => {
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
   const isGuestRoute = to.matched.some((record) => record.meta.guest);
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
 
   if (requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } });
   } else if (isGuestRoute && authStore.isAuthenticated) {
+    next({ name: 'links' });
+  } else if (requiresAdmin && authStore.profile?.role !== 'admin') {
     next({ name: 'links' });
   } else {
     next();

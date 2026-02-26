@@ -77,6 +77,7 @@ export interface LoginResponse {
 export interface ProfileResponse {
   id: string;
   email: string;
+  role: string;
   first_name?: string;
   last_name?: string;
   phone?: string;

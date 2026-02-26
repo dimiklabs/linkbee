@@ -563,6 +563,7 @@ func (s *AuthService) GetProfile(ctx context.Context, userID uuid.UUID) (*respon
 	return &response.ProfileResponse{
 		ID:                   user.ID.String(),
 		Email:                user.Email,
+		Role:                 user.Role,
 		FirstName:            user.FirstName,
 		LastName:             user.LastName,
 		Phone:                user.Phone,
@@ -593,6 +594,7 @@ func (s *AuthService) UpdateProfile(ctx context.Context, userID uuid.UUID, req *
 	return &response.ProfileResponse{
 		ID:                   user.ID.String(),
 		Email:                user.Email,
+		Role:                 user.Role,
 		FirstName:            user.FirstName,
 		LastName:             user.LastName,
 		Phone:                user.Phone,

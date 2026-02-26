@@ -12,6 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null);
 
   const isAuthenticated = computed(() => !!accessToken.value);
+  const isAdmin = computed(() => profile.value?.role === 'admin');
 
   const userInitials = computed(() => {
     const firstName = profile.value?.first_name;
@@ -167,7 +168,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user, profile, accessToken, refreshToken, loading, error,
-    isAuthenticated, userInitials, userName,
+    isAuthenticated, isAdmin, userInitials, userName,
     login, signup, logout, fetchProfile, updateProfile, changePassword, deleteAccount, init,
     setTokens, clearTokens,
   };

@@ -34,6 +34,9 @@ type LinkRepositoryI interface {
 	// Health check
 	GetLinksForHealthCheck(ctx context.Context, staleBefore time.Time, limit int) ([]model.Link, error)
 
+	// Count (all links, admin use)
+	Count(ctx context.Context) (int64, error)
+
 	// Delete
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
 	DeleteByUserID(ctx context.Context, userID uuid.UUID) error
@@ -301,6 +304,14 @@ func (r *LinkRepository) Delete(ctx context.Context, id uuid.UUID, userID uuid.U
 	logger.InfoCtx(ctx, "Link deleted",
 		zap.String("link_id", id.String()))
 	return nil
+}
+
+func (r *LinkRepository) Count(ctx context.Context) (int64, error) {
+	var count int64
+	if err := r.replicaDB.WithContext(ctx).Model(&model.Link{}).Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (r *LinkRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {

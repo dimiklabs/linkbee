@@ -32,6 +32,7 @@ import (
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
+	adminSvc   "github.com/shafikshaon/shortlink/service/admin"
 	bioSvc     "github.com/shafikshaon/shortlink/service/bio"
 	pixelSvc   "github.com/shafikshaon/shortlink/service/pixel"
 	previewSvc "github.com/shafikshaon/shortlink/service/preview"
@@ -72,6 +73,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
+	adminService       := adminSvc.NewAdminService(userRepo, linkRepo)
 	bioService         := bioSvc.NewBioService(bioRepo)
 	previewService     := previewSvc.NewPreviewService(s.Cache)
 	folderService      := folderSvc.NewFolderService(folderRepo)
@@ -105,6 +107,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
+	adminHandler     := handler.NewAdminHandler(adminService)
 	bioHandler       := handler.NewBioHandler(bioService)
 	previewHandler   := handler.NewPreviewHandler(previewService, linkService)
 	folderHandler    := handler.NewFolderHandler(folderService)
@@ -231,6 +234,15 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.POST("/webhooks", webhookHandler.CreateWebhook)
 			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
 			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
+
+			// Admin (role=admin only)
+			v1Admin := v1Auth.Group("/admin")
+			v1Admin.Use(middlewares.AdminMiddleware())
+			{
+				v1Admin.GET("/stats", adminHandler.GetStats)
+				v1Admin.GET("/users", adminHandler.ListUsers)
+				v1Admin.PATCH("/users/:id/status", adminHandler.UpdateUserStatus)
+			}
 
 			// Bio page (link-in-bio)
 			v1Auth.GET("/bio", bioHandler.GetBioPage)

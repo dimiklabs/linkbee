@@ -27,6 +27,7 @@ type UserResponse struct {
 type ProfileResponse struct {
 	ID                   string `json:"id"`
 	Email                string `json:"email"`
+	Role                 string `json:"role"`
 	FirstName            string `json:"first_name,omitempty"`
 	LastName             string `json:"last_name,omitempty"`
 	Phone                string `json:"phone,omitempty"`
