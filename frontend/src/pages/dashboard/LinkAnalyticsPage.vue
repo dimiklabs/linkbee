@@ -59,14 +59,27 @@
               </select>
             </div>
             <div class="col-sm-6 col-md-3">
-              <button
-                class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
-                :disabled="loading"
-                @click="applyFilters"
-              >
-                <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                Apply
-              </button>
+              <div class="d-flex gap-2">
+                <button
+                  class="btn btn-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                  :disabled="loading"
+                  @click="applyFilters"
+                >
+                  <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                  Apply
+                </button>
+                <button
+                  class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 flex-shrink-0"
+                  title="Export all analytics to CSV"
+                  @click="exportToCSV"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+                  </svg>
+                  <span class="d-none d-lg-inline">CSV</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -497,6 +510,92 @@ async function loadAnalytics() {
 
 function applyFilters() {
   loadAnalytics();
+}
+
+function exportToCSV() {
+  const a = analytics.value;
+  if (!a) return;
+
+  const esc = (v: string | number) => {
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const rows: string[] = [];
+
+  // ── Report header ───────────────────────────────────────────────────────────
+  rows.push('LINK ANALYTICS REPORT');
+  rows.push(`Link ID,${esc(a.link_id)}`);
+  rows.push(`Exported,${new Date().toISOString().slice(0, 10)}`);
+  rows.push(`Period,${filterFrom.value} to ${filterTo.value}`);
+  rows.push(`Granularity,${filterGranularity.value}`);
+  rows.push('');
+
+  // ── Summary ─────────────────────────────────────────────────────────────────
+  rows.push('SUMMARY');
+  rows.push('Total Clicks,Unique Clicks');
+  rows.push(`${a.total_clicks},${a.unique_clicks}`);
+  rows.push('');
+
+  // ── Clicks over time ────────────────────────────────────────────────────────
+  rows.push('CLICKS OVER TIME');
+  rows.push('Date,Clicks');
+  a.time_series.forEach((p) => rows.push(`${p.timestamp.substring(0, 10)},${p.count}`));
+  rows.push('');
+
+  // ── Top referrers ───────────────────────────────────────────────────────────
+  rows.push('TOP REFERRERS');
+  rows.push('Referrer,Clicks');
+  a.referrers.forEach((r) => rows.push(`${esc(r.referrer || 'Direct / None')},${r.count}`));
+  rows.push('');
+
+  // ── Device breakdown ────────────────────────────────────────────────────────
+  rows.push('DEVICE BREAKDOWN');
+  rows.push('Device,Clicks');
+  a.devices.forEach((d) => rows.push(`${esc(d.device_type || 'Unknown')},${d.count}`));
+  rows.push('');
+
+  // ── Browser breakdown ───────────────────────────────────────────────────────
+  rows.push('BROWSER BREAKDOWN');
+  rows.push('Browser,Clicks');
+  a.browsers.forEach((b) => rows.push(`${esc(b.browser || 'Unknown')},${b.count}`));
+  rows.push('');
+
+  // ── OS breakdown ────────────────────────────────────────────────────────────
+  rows.push('OS BREAKDOWN');
+  rows.push('OS,Clicks');
+  a.os_breakdown.forEach((o) => rows.push(`${esc(o.os || 'Unknown')},${o.count}`));
+  rows.push('');
+
+  // ── Top countries ───────────────────────────────────────────────────────────
+  rows.push('TOP COUNTRIES');
+  rows.push('Country Code,Country,Clicks');
+  a.countries.forEach((c) => {
+    const name = countryDisplayName(c.country);
+    rows.push(`${esc(c.country)},${esc(name)},${c.count}`);
+  });
+  rows.push('');
+
+  // ── Click heatmap ───────────────────────────────────────────────────────────
+  rows.push('CLICK HEATMAP (UTC)');
+  rows.push('Day,Hour,Clicks');
+  a.heatmap.forEach((h) => {
+    const hour = `${String(h.hour).padStart(2, '0')}:00`;
+    rows.push(`${dayNames[h.day_of_week]},${hour},${h.count}`);
+  });
+
+  // ── Trigger download ────────────────────────────────────────────────────────
+  const csv = rows.join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `analytics-${a.link_id.slice(0, 8)}-${filterFrom.value}-to-${filterTo.value}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 onMounted(() => {
