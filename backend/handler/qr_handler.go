@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -32,12 +33,13 @@ func NewQRHandler(qrService qrSvc.QRServiceI, linkService linkSvc.LinkServiceI, 
 
 // GetQRCode handles GET /api/v1/links/:id/qr
 //
-// Optional query parameters:
+// Query parameters:
 //
-//	fg  – foreground hex color without '#', default "000000"
-//	bg  – background hex color without '#', default "ffffff"
-//	size – pixel dimension (64–1024), default 256
-//	ec  – error correction level: L / M / Q / H, default "M"
+//	format – "png" (default, inline for preview) | "svg" (attachment download)
+//	fg     – foreground hex without '#', default "000000"
+//	bg     – background hex without '#', default "ffffff"
+//	size   – pixel dimension (64–1024), default 256
+//	ec     – error correction: L / M / Q / H, default "M"
 func (h *QRHandler) GetQRCode(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -62,7 +64,7 @@ func (h *QRHandler) GetQRCode(c *gin.Context) {
 		return
 	}
 
-	// Parse customisation options from query string
+	// Parse customisation options
 	opts := qrSvc.QROptions{
 		ForegroundHex:   c.DefaultQuery("fg", "000000"),
 		BackgroundHex:   c.DefaultQuery("bg", "ffffff"),
@@ -78,13 +80,29 @@ func (h *QRHandler) GetQRCode(c *gin.Context) {
 	}
 
 	shortURL := fmt.Sprintf("%s/%s", h.appCfg.BaseDomain, link.Slug)
-	pngData, err := h.qrService.GenerateCustomPNG(shortURL, opts)
-	if err != nil {
-		transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-		return
-	}
 
-	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"qr-%s.png\"", link.Slug))
+	format := strings.ToLower(c.DefaultQuery("format", "png"))
 	c.Header("Cache-Control", "no-cache, no-store, must-revalidate")
-	c.Data(http.StatusOK, "image/png", pngData)
+
+	switch format {
+	case "svg":
+		svgData, err := h.qrService.GenerateSVG(shortURL, opts)
+		if err != nil {
+			transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+			return
+		}
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"qr-%s.svg\"", link.Slug))
+		c.Data(http.StatusOK, "image/svg+xml; charset=utf-8", svgData)
+
+	default: // "png"
+		pngData, err := h.qrService.GenerateCustomPNG(shortURL, opts)
+		if err != nil {
+			transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+			return
+		}
+		// Use inline so the <img> tag preview works; the browser still downloads
+		// when the frontend <a> tag carries the `download` attribute.
+		c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"qr-%s.png\"", link.Slug))
+		c.Data(http.StatusOK, "image/png", pngData)
+	}
 }

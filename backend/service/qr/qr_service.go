@@ -9,7 +9,7 @@ import (
 	qrcode "github.com/skip2/go-qrcode"
 )
 
-// ErrorCorrectionLevel maps the single-char string to the library constant.
+// errorCorrectionMap maps the single-char string to the library constant.
 var errorCorrectionMap = map[string]qrcode.RecoveryLevel{
 	"L": qrcode.Low,
 	"M": qrcode.Medium,
@@ -49,6 +49,7 @@ func (o *QROptions) normalize() {
 type QRServiceI interface {
 	GeneratePNG(shortURL string) ([]byte, error)
 	GenerateCustomPNG(shortURL string, opts QROptions) ([]byte, error)
+	GenerateSVG(shortURL string, opts QROptions) ([]byte, error)
 }
 
 type qrService struct{}
@@ -88,6 +89,59 @@ func (s *qrService) GenerateCustomPNG(shortURL string, opts QROptions) ([]byte, 
 		return nil, fmt.Errorf("failed to render QR code PNG: %w", err)
 	}
 	return png, nil
+}
+
+// GenerateSVG returns a scalable SVG for the QR code.
+// The SVG uses a single <path> element (run-length encoded rows) for compact output.
+// The viewBox is N×N modules; width/height are set to opts.Size pixels.
+func (s *qrService) GenerateSVG(shortURL string, opts QROptions) ([]byte, error) {
+	opts.normalize()
+
+	level := errorCorrectionMap[opts.ErrorCorrection]
+
+	qr, err := qrcode.New(shortURL, level)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create QR code: %w", err)
+	}
+
+	bitmap := qr.Bitmap() // bitmap[row][col] == true → dark module
+	n := len(bitmap)
+
+	fg := "#" + opts.ForegroundHex
+	bg := "#" + opts.BackgroundHex
+
+	// Build a single SVG <path> using run-length encoding per row.
+	// Each run of consecutive dark modules in a row becomes one rect command:
+	//   M x,y h width v 1 h -width z
+	var path strings.Builder
+	for row := 0; row < n; row++ {
+		col := 0
+		for col < n {
+			if bitmap[row][col] {
+				start := col
+				for col < n && bitmap[row][col] {
+					col++
+				}
+				width := col - start
+				fmt.Fprintf(&path, "M%d,%dh%dv1h-%dz", start, row, width, width)
+			} else {
+				col++
+			}
+		}
+	}
+
+	var sb strings.Builder
+	fmt.Fprintf(&sb,
+		`<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" shape-rendering="crispEdges">`,
+		opts.Size, opts.Size, n, n,
+	)
+	fmt.Fprintf(&sb, `<rect width="%d" height="%d" fill="%s"/>`, n, n, bg)
+	if path.Len() > 0 {
+		fmt.Fprintf(&sb, `<path fill="%s" d="%s"/>`, fg, path.String())
+	}
+	sb.WriteString(`</svg>`)
+
+	return []byte(sb.String()), nil
 }
 
 // hexToRGBA parses a 6-char hex string (without '#') into color.RGBA.

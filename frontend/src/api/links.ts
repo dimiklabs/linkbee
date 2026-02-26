@@ -56,7 +56,7 @@ export const linksApi = {
     return response.data;
   },
 
-  getQRUrl: (id: string, opts?: { fg?: string; bg?: string; size?: number; ec?: string }): string => {
+  getQRUrl: (id: string, opts?: { fg?: string; bg?: string; size?: number; ec?: string; format?: 'png' | 'svg' }): string => {
     const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
     const token = localStorage.getItem('access_token');
     const params = new URLSearchParams({ token: token ?? '' });
@@ -64,6 +64,7 @@ export const linksApi = {
     if (opts?.bg) params.set('bg', opts.bg.replace('#', ''));
     if (opts?.size) params.set('size', String(opts.size));
     if (opts?.ec) params.set('ec', opts.ec);
+    if (opts?.format) params.set('format', opts.format);
     return `${base}/links/${id}/qr?${params.toString()}`;
   },
 
