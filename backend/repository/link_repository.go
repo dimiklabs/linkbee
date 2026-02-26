@@ -19,12 +19,13 @@ type LinkRepositoryI interface {
 	// Read
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) ([]model.Link, int64, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) ([]model.Link, int64, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
 	// Update
 	Update(ctx context.Context, link *model.Link) error
 	IncrementClickCount(ctx context.Context, id uuid.UUID) error
+	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (bool, error)
 
 	// Delete
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
@@ -90,7 +91,7 @@ func (r *LinkRepository) GetBySlug(ctx context.Context, slug string) (*model.Lin
 	return &link, nil
 }
 
-func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) ([]model.Link, int64, error) {
+func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) ([]model.Link, int64, error) {
 	logger.DebugCtx(ctx, "Fetching links for user",
 		zap.String("user_id", userID.String()),
 		zap.Int("page", page),
@@ -104,6 +105,10 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 
 	if folderID != nil {
 		query = query.Where("folder_id = ?", *folderID)
+	}
+
+	if starred != nil {
+		query = query.Where("is_starred = ?", *starred)
 	}
 
 	if search != "" {
@@ -184,6 +189,35 @@ func (r *LinkRepository) IncrementClickCount(ctx context.Context, id uuid.UUID) 
 		return err
 	}
 	return nil
+}
+
+func (r *LinkRepository) ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (bool, error) {
+	logger.DebugCtx(ctx, "Toggling star for link",
+		zap.String("link_id", id.String()),
+		zap.String("user_id", userID.String()))
+
+	var link model.Link
+	if err := r.masterDB.WithContext(ctx).
+		Where("id = ? AND user_id = ?", id, userID).
+		First(&link).Error; err != nil {
+		return false, err
+	}
+
+	link.IsStarred = !link.IsStarred
+	link.UpdatedAt = time.Now()
+	if err := r.masterDB.WithContext(ctx).
+		Model(&link).
+		Update("is_starred", link.IsStarred).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to toggle star",
+			zap.String("link_id", id.String()),
+			zap.Error(err))
+		return false, err
+	}
+
+	logger.InfoCtx(ctx, "Link star toggled",
+		zap.String("link_id", id.String()),
+		zap.Bool("is_starred", link.IsStarred))
+	return link.IsStarred, nil
 }
 
 // --------------- Delete ---------------

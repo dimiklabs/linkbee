@@ -149,6 +149,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.GET("/links/:id", linkHandler.GetLink)
 			v1Auth.PUT("/links/:id", linkHandler.UpdateLink)
 			v1Auth.DELETE("/links/:id", linkHandler.DeleteLink)
+			v1Auth.PATCH("/links/:id/star", linkHandler.ToggleStar)
 
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)

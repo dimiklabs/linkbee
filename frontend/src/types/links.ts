@@ -38,6 +38,7 @@ export interface LinkResponse {
   click_count: number;
   redirect_type: number;
   is_active: boolean;
+  is_starred: boolean;
   tags?: string[];
   has_password: boolean;
   expires_at?: string;

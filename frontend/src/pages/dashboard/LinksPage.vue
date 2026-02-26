@@ -12,7 +12,7 @@
             <!-- All Links -->
             <button
               class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': selectedFolderID === '' }"
+              :class="{ 'folder-active': selectedFolderID === '' && !starredOnly }"
               style="font-size: 0.85rem;"
               @click="selectFolder('')"
             >
@@ -20,6 +20,19 @@
                 <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
               </svg>
               <span class="flex-grow-1 text-truncate">All Links</span>
+            </button>
+
+            <!-- Starred -->
+            <button
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
+              :class="{ 'folder-active': starredOnly }"
+              style="font-size: 0.85rem;"
+              @click="selectStarred"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16">
+                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+              </svg>
+              <span class="flex-grow-1 text-truncate">Starred</span>
             </button>
 
             <!-- Folder rows -->
@@ -267,6 +280,18 @@
               <!-- Actions -->
               <td class="pe-4 py-3 text-end">
                 <div class="d-flex align-items-center justify-content-end gap-1">
+                  <!-- Star -->
+                  <button
+                    class="btn btn-sm border-0 p-1"
+                    :class="link.is_starred ? 'text-warning' : 'btn-outline-secondary'"
+                    :title="link.is_starred ? 'Unstar' : 'Star'"
+                    @click="toggleStar(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" :fill="link.is_starred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1" viewBox="0 0 16 16">
+                      <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                    </svg>
+                  </button>
+
                   <!-- Analytics -->
                   <RouterLink
                     :to="`/dashboard/links/${link.id}`"
@@ -441,9 +466,10 @@ const qrModalRef = ref<InstanceType<typeof QRCodeModal> | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
-// ── Folder state ────────────────────────────────────────────────────────────
+// ── Folder / filter state ────────────────────────────────────────────────────
 const folders = ref<FolderResponse[]>([]);
 const selectedFolderID = ref('');
+const starredOnly = ref(false);
 
 // New folder creation
 const showNewFolderInput = ref(false);
@@ -466,7 +492,14 @@ async function loadFolders() {
 
 function selectFolder(id: string) {
   selectedFolderID.value = id;
+  starredOnly.value = false;
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, id);
+}
+
+function selectStarred() {
+  starredOnly.value = true;
+  selectedFolderID.value = '';
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', true);
 }
 
 function openNewFolderInput() {
@@ -526,7 +559,7 @@ async function deleteFolder(folder: FolderResponse) {
     folders.value = folders.value.filter(f => f.id !== folder.id);
     if (selectedFolderID.value === folder.id) {
       selectedFolderID.value = '';
-      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '');
+      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined);
     }
   } catch {
     // silent
@@ -538,7 +571,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, (val) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value);
+    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined);
   }, 400);
 });
 
@@ -590,8 +623,16 @@ function openQRModal(link: LinkResponse) {
 }
 
 async function onLinkSaved(_link: LinkResponse) {
-  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value);
+  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
   editingLink.value = null;
+}
+
+async function toggleStar(link: LinkResponse) {
+  await linksStore.toggleStar(link.id);
+  // If viewing starred-only filter and user just un-starred, refresh to remove it from view
+  if (starredOnly.value && !linksStore.links.find(l => l.id === link.id)?.is_starred) {
+    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, '', true);
+  }
 }
 
 async function confirmDelete(link: LinkResponse) {
@@ -606,7 +647,7 @@ async function confirmDelete(link: LinkResponse) {
     const newTotal = linksStore.total - 1;
     const maxPage = Math.ceil(newTotal / linksStore.limit) || 1;
     const targetPage = Math.min(linksStore.page, maxPage);
-    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value);
+    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
   } finally {
     deletingId.value = null;
   }
@@ -614,7 +655,7 @@ async function confirmDelete(link: LinkResponse) {
 
 function goToPage(page: number) {
   if (page < 1 || page > linksStore.totalPages) return;
-  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value);
+  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
 }
 
 const visiblePages = computed<(number | string)[]>(() => {

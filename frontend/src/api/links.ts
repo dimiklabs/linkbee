@@ -11,8 +11,8 @@ import type {
 } from '@/types/links';
 
 export const linksApi = {
-  list: async (page = 1, limit = 20, search = '', folderID = ''): Promise<ApiResponse<LinkListResponse>> => {
-    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined } });
+  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean): Promise<ApiResponse<LinkListResponse>> => {
+    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred } });
     return response.data;
   },
 
@@ -33,6 +33,11 @@ export const linksApi = {
 
   delete: async (id: string): Promise<ApiResponse<null>> => {
     const response = await apiClient.delete(`/links/${id}`);
+    return response.data;
+  },
+
+  toggleStar: async (id: string): Promise<ApiResponse<LinkResponse>> => {
+    const response = await apiClient.patch(`/links/${id}/star`);
     return response.data;
   },
 

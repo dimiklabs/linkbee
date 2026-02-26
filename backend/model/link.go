@@ -21,6 +21,7 @@ type Link struct {
 	ClickCount     int64          `gorm:"default:0;not null" json:"click_count"`
 	RedirectType   int16          `gorm:"default:302;not null" json:"redirect_type"`
 	IsActive       bool           `gorm:"default:true;not null" json:"is_active"`
+	IsStarred      bool           `gorm:"default:false;not null" json:"is_starred"`
 	Tags           pq.StringArray `gorm:"type:text[]" json:"tags,omitempty"`
 	UTMSource      string         `gorm:"type:varchar(255)" json:"utm_source,omitempty"`
 	UTMMedium      string         `gorm:"type:varchar(255)" json:"utm_medium,omitempty"`

@@ -17,6 +17,7 @@ type LinkResponse struct {
 	ClickCount     int64      `json:"click_count"`
 	RedirectType   int16      `json:"redirect_type"`
 	IsActive       bool       `json:"is_active"`
+	IsStarred      bool       `json:"is_starred"`
 	Tags           []string   `json:"tags,omitempty"`
 	HasPassword    bool       `json:"has_password"`
 	ExpiresAt      *time.Time `json:"expires_at,omitempty"`

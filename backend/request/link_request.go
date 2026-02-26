@@ -38,6 +38,7 @@ type ListLinksRequest struct {
 	Limit    int    `form:"limit,default=20" binding:"min=1,max=100"`
 	Search   string `form:"search"`
 	FolderID string `form:"folder_id"` // optional UUID filter
+	Starred  *bool  `form:"starred"`   // optional; true = starred only
 }
 
 // DemoShortenRequest is for the unauthenticated demo shorten endpoint.

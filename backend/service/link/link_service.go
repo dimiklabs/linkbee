@@ -25,9 +25,10 @@ import (
 type LinkServiceI interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
-	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) (*response.LinkListResponse, *dto.ServiceError)
+	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) (*response.LinkListResponse, *dto.ServiceError)
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
+	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
 }
 
 type linkService struct {
@@ -154,8 +155,8 @@ func (s *linkService) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return s.toLinkResponse(link), nil
 }
 
-func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) (*response.LinkListResponse, *dto.ServiceError) {
-	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID)
+func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) (*response.LinkListResponse, *dto.ServiceError) {
+	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred)
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
@@ -265,6 +266,23 @@ func (s *linkService) DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.
 	return nil
 }
 
+func (s *linkService) ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError) {
+	isStarred, err := s.linkRepo.ToggleStar(ctx, id, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	link, err := s.linkRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	link.IsStarred = isStarred
+	return s.toLinkResponse(link), nil
+}
+
 func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 	shortURL := fmt.Sprintf("%s/%s", s.appCfg.BaseDomain, link.Slug)
 
@@ -301,6 +319,7 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 		ClickCount:     link.ClickCount,
 		RedirectType:   link.RedirectType,
 		IsActive:       link.IsActive,
+		IsStarred:      link.IsStarred,
 		Tags:           tags,
 		HasPassword:    link.PasswordHash != "",
 		ExpiresAt:      link.ExpiresAt,

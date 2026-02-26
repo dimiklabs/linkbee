@@ -12,11 +12,11 @@ export const useLinksStore = defineStore('links', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '') => {
+  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '', starred?: boolean) => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await linksApi.list(p, l, search, folderID);
+      const response = await linksApi.list(p, l, search, folderID, starred);
       if (response.data) {
         const data = response.data as LinkListResponse;
         links.value = data.links;
@@ -89,8 +89,22 @@ export const useLinksStore = defineStore('links', () => {
     }
   };
 
+  const toggleStar = async (id: string) => {
+    try {
+      const response = await linksApi.toggleStar(id);
+      if (response.data) {
+        const idx = links.value.findIndex(l => l.id === id);
+        if (idx !== -1) links.value[idx] = response.data!;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to toggle star';
+      error.value = message;
+      throw err;
+    }
+  };
+
   return {
     links, total, page, limit, totalPages, loading, error,
-    fetchLinks, createLink, updateLink, deleteLink,
+    fetchLinks, createLink, updateLink, deleteLink, toggleStar,
   };
 });
