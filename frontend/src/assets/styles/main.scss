@@ -62,8 +62,15 @@ body {
 }
 
 // ─── Dark mode ──────────────────────────────────────────────────────────────
+
+// Applied directly to <html> by inline script before first paint (FOUC prevention)
+html.dark-mode {
+  background: #0D1117;
+  color: #E6EDF3;
+}
+
 .dark-mode {
-  body, html {
+  body {
     background: #0D1117;
     color: #E6EDF3;
   }

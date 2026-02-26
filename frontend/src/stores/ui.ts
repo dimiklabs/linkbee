@@ -8,13 +8,20 @@ export const useUiStore = defineStore('ui', () => {
   const darkMode = ref(false);
 
   const initDarkMode = () => {
-    const stored = localStorage.getItem('darkMode');
-    if (stored !== null) {
-      darkMode.value = stored === 'true';
+    // Restore dark mode preference
+    const storedDark = localStorage.getItem('darkMode');
+    if (storedDark !== null) {
+      darkMode.value = storedDark === 'true';
     } else {
       darkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
     applyDarkMode(darkMode.value);
+
+    // Restore sidebar collapsed state (desktop only)
+    const storedCollapsed = localStorage.getItem('sidebarCollapsed');
+    if (storedCollapsed !== null) {
+      sidebarCollapsed.value = storedCollapsed === 'true';
+    }
   };
 
   const applyDarkMode = (isDark: boolean) => {
@@ -30,6 +37,10 @@ export const useUiStore = defineStore('ui', () => {
   watch(darkMode, (newValue) => {
     localStorage.setItem('darkMode', String(newValue));
     applyDarkMode(newValue);
+  });
+
+  watch(sidebarCollapsed, (newValue) => {
+    localStorage.setItem('sidebarCollapsed', String(newValue));
   });
 
   const isMobile = computed(() => window.innerWidth < 992);
