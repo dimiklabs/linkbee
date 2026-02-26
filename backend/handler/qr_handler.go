@@ -31,15 +31,24 @@ func NewQRHandler(qrService qrSvc.QRServiceI, linkService linkSvc.LinkServiceI, 
 	}
 }
 
-// GetQRCode handles GET /api/v1/links/:id/qr
+// GetQRCode godoc
 //
-// Query parameters:
-//
-//	format – "png" (default, inline for preview) | "svg" (attachment download)
-//	fg     – foreground hex without '#', default "000000"
-//	bg     – background hex without '#', default "ffffff"
-//	size   – pixel dimension (64–1024), default 256
-//	ec     – error correction: L / M / Q / H, default "M"
+//	@Summary		Get QR code for a link
+//	@Description	Returns a QR code image in PNG (default, inline) or SVG (download) format. Supports custom colours, size, and error correction level.
+//	@Tags			links
+//	@Produce		image/png
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path	string	true	"Link UUID"
+//	@Param			format	query	string	false	"Output format: png (default) or svg"
+//	@Param			fg		query	string	false	"Foreground hex colour without '#' (default 000000)"
+//	@Param			bg		query	string	false	"Background hex colour without '#' (default ffffff)"
+//	@Param			size	query	int		false	"Image dimension in pixels 64–1024 (default 256)"
+//	@Param			ec		query	string	false	"Error correction level: L, M, Q, H (default M)"
+//	@Success		200
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/qr [get]
 func (h *QRHandler) GetQRCode(c *gin.Context) {
 	ctx := c.Request.Context()
 

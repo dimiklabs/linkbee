@@ -31,7 +31,16 @@ func (h *APIKeyHandler) userID(c *gin.Context) (uuid.UUID, bool) {
 	return id, true
 }
 
-// ListAPIKeys GET /api-keys
+// ListAPIKeys godoc
+//
+//	@Summary		List API keys
+//	@Description	Returns all API keys for the authenticated user.
+//	@Tags			api-keys
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/api-keys [get]
 func (h *APIKeyHandler) ListAPIKeys(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
@@ -45,7 +54,19 @@ func (h *APIKeyHandler) ListAPIKeys(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": keys})
 }
 
-// CreateAPIKey POST /api-keys
+// CreateAPIKey godoc
+//
+//	@Summary		Create an API key
+//	@Description	Creates a new API key. The full key is returned once and cannot be retrieved again.
+//	@Tags			api-keys
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body	object{name=string,expires_at=string}	true	"Key details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/api-keys [post]
 func (h *APIKeyHandler) CreateAPIKey(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
@@ -79,7 +100,18 @@ func (h *APIKeyHandler) CreateAPIKey(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": resp})
 }
 
-// RevokeAPIKey DELETE /api-keys/:id
+// RevokeAPIKey godoc
+//
+//	@Summary		Revoke an API key
+//	@Description	Permanently revokes an API key.
+//	@Tags			api-keys
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"API key UUID"
+//	@Success		204
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/api-keys/{id} [delete]
 func (h *APIKeyHandler) RevokeAPIKey(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {

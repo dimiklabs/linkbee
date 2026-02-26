@@ -31,7 +31,17 @@ func (h *WebhookHandler) userID(c *gin.Context) (uuid.UUID, bool) {
 	return id, true
 }
 
-// ListWebhooks GET /api/v1/webhooks
+// ListWebhooks godoc
+//
+//	@Summary		List webhooks
+//	@Description	Returns all webhooks for the authenticated user.
+//	@Tags			webhooks
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/webhooks [get]
 func (h *WebhookHandler) ListWebhooks(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
@@ -45,7 +55,20 @@ func (h *WebhookHandler) ListWebhooks(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Webhooks retrieved successfully", webhooks)
 }
 
-// CreateWebhook POST /api/v1/webhooks
+// CreateWebhook godoc
+//
+//	@Summary		Create a webhook
+//	@Description	Registers a new webhook endpoint. The signing secret is generated server-side.
+//	@Tags			webhooks
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			body	body		request.CreateWebhookRequest	true	"Webhook details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/webhooks [post]
 func (h *WebhookHandler) CreateWebhook(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
@@ -64,7 +87,22 @@ func (h *WebhookHandler) CreateWebhook(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusCreated, "Webhook created successfully", webhook)
 }
 
-// UpdateWebhook PUT /api/v1/webhooks/:id
+// UpdateWebhook godoc
+//
+//	@Summary		Update a webhook
+//	@Description	Updates the URL, subscribed events, or active status of a webhook.
+//	@Tags			webhooks
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string						true	"Webhook UUID"
+//	@Param			body	body		request.UpdateWebhookRequest	true	"Fields to update"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/webhooks/{id} [put]
 func (h *WebhookHandler) UpdateWebhook(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
@@ -92,7 +130,19 @@ func (h *WebhookHandler) UpdateWebhook(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Webhook updated successfully", webhook)
 }
 
-// DeleteWebhook DELETE /api/v1/webhooks/:id
+// DeleteWebhook godoc
+//
+//	@Summary		Delete a webhook
+//	@Description	Permanently deletes a webhook.
+//	@Tags			webhooks
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Webhook UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/webhooks/{id} [delete]
 func (h *WebhookHandler) DeleteWebhook(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {

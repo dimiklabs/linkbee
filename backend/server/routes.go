@@ -5,7 +5,10 @@ import (
 
 	"github.com/gin-contrib/gzip"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
+	_ "github.com/shafikshaon/shortlink/docs" // swagger generated docs
 	"github.com/shafikshaon/shortlink/handler"
 	"github.com/shafikshaon/shortlink/logger"
 	"github.com/shafikshaon/shortlink/middlewares"
@@ -104,6 +107,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
+
+	// ── Swagger UI ───────────────────────────────────────────────────────────
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// ── Health ────────────────────────────────────────────────────────────────
 	router.GET("/health", healthHandler.Check)

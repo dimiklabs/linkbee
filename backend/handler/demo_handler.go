@@ -20,7 +20,18 @@ func NewDemoHandler(demoService demoSvc.DemoServiceI) *DemoHandler {
 	return &DemoHandler{demoService: demoService}
 }
 
-// ShortenURL handles POST /api/v1/demo/shorten
+// ShortenURL godoc
+//
+//	@Summary		Demo URL shortener
+//	@Description	Shorten a URL without an account (rate-limited per IP). Returns a short URL valid for 1 hour.
+//	@Tags			demo
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.DemoShortenRequest	true	"URL to shorten"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		429		{object}	transport.ErrorResponse
+//	@Router			/api/v1/demo/shorten [post]
 func (h *DemoHandler) ShortenURL(c *gin.Context) {
 	ctx := c.Request.Context()
 

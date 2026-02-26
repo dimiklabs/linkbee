@@ -30,6 +30,18 @@ func NewAuthHandler(authService authSrv.AuthServiceI, rateLimitService rateLimit
 	}
 }
 
+// Signup godoc
+//
+//	@Summary		Register a new user
+//	@Description	Creates a new user account. A verification email is sent after signup.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.SignupRequest	true	"Signup details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		409		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/signup [post]
 func (h *AuthHandler) Signup(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -66,6 +78,19 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusCreated, "User registered successfully", signupResp)
 }
 
+// Login godoc
+//
+//	@Summary		Login
+//	@Description	Authenticates a user and returns JWT access + refresh tokens.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.LoginRequest	true	"Login credentials"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		429		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -133,6 +158,18 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Login successful", loginResp)
 }
 
+// RefreshToken godoc
+//
+//	@Summary		Refresh access token
+//	@Description	Exchanges a refresh token for a new access + refresh token pair.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.RefreshTokenRequest	true	"Refresh token"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -159,6 +196,19 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Token refreshed successfully", tokenResp)
 }
 
+// ChangePassword godoc
+//
+//	@Summary		Change password
+//	@Description	Changes the authenticated user's password.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		request.ChangePasswordRequest	true	"Current and new password"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/change-password [put]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -200,6 +250,17 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Password changed successfully", nil)
 }
 
+// ForgotPassword godoc
+//
+//	@Summary		Forgot password
+//	@Description	Sends a password reset email if the address is registered.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.ForgotPasswordRequest	true	"Email address"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -226,6 +287,17 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "If the email exists, a password reset link has been sent", nil)
 }
 
+// ResetPassword godoc
+//
+//	@Summary		Reset password
+//	@Description	Resets a user's password using the token received by email.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		request.ResetPasswordRequest	true	"Reset token and new password"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -250,6 +322,16 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Password has been reset successfully", nil)
 }
 
+// GetProfile godoc
+//
+//	@Summary		Get user profile
+//	@Description	Returns the authenticated user's profile information.
+//	@Tags			auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/profile [get]
 func (h *AuthHandler) GetProfile(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -283,6 +365,19 @@ func (h *AuthHandler) GetProfile(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Profile retrieved successfully", profile)
 }
 
+// UpdateProfile godoc
+//
+//	@Summary		Update user profile
+//	@Description	Updates the authenticated user's display name and other profile fields.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		request.UpdateProfileRequest	true	"Profile fields to update"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/profile [put]
 func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -325,6 +420,18 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Profile updated successfully", profile)
 }
 
+// Logout godoc
+//
+//	@Summary		Logout
+//	@Description	Revokes the current access token and optionally the refresh token.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		request.LogoutRequest	false	"Optional refresh token to revoke"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	ctx := c.Request.Context()
 

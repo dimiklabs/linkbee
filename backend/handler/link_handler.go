@@ -25,7 +25,22 @@ func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.
 }
 
 // ListLinks godoc
-// GET /api/v1/links
+//
+//	@Summary		List links
+//	@Description	Returns a paginated list of links for the authenticated user.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			page			query		int		false	"Page number (default 1)"
+//	@Param			limit			query		int		false	"Items per page (default 20)"
+//	@Param			search			query		string	false	"Search by slug, title or URL"
+//	@Param			folder_id		query		string	false	"Filter by folder UUID"
+//	@Param			starred			query		bool	false	"Filter starred links"
+//	@Param			health_status	query		string	false	"Filter by health status"
+//	@Success		200				{object}	transport.StandardResponse
+//	@Failure		401				{object}	transport.ErrorResponse
+//	@Router			/api/v1/links [get]
 func (h *LinkHandler) ListLinks(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -58,7 +73,20 @@ func (h *LinkHandler) ListLinks(c *gin.Context) {
 }
 
 // CreateLink godoc
-// POST /api/v1/links
+//
+//	@Summary		Create a link
+//	@Description	Creates a new shortened link.
+//	@Tags			links
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			body	body		request.CreateLinkRequest	true	"Link details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		409		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links [post]
 func (h *LinkHandler) CreateLink(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -87,7 +115,18 @@ func (h *LinkHandler) CreateLink(c *gin.Context) {
 }
 
 // GetLink godoc
-// GET /api/v1/links/:id
+//
+//	@Summary		Get a link
+//	@Description	Returns a single link by ID.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id} [get]
 func (h *LinkHandler) GetLink(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -114,7 +153,21 @@ func (h *LinkHandler) GetLink(c *gin.Context) {
 }
 
 // UpdateLink godoc
-// PUT /api/v1/links/:id
+//
+//	@Summary		Update a link
+//	@Description	Updates fields of an existing link.
+//	@Tags			links
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string					true	"Link UUID"
+//	@Param			body	body		request.UpdateLinkRequest	true	"Fields to update"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id} [put]
 func (h *LinkHandler) UpdateLink(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -148,7 +201,18 @@ func (h *LinkHandler) UpdateLink(c *gin.Context) {
 }
 
 // DeleteLink godoc
-// DELETE /api/v1/links/:id
+//
+//	@Summary		Delete a link
+//	@Description	Permanently deletes a link.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id} [delete]
 func (h *LinkHandler) DeleteLink(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -176,7 +240,18 @@ func (h *LinkHandler) DeleteLink(c *gin.Context) {
 }
 
 // CheckLinkHealth godoc
-// POST /api/v1/links/:id/health-check
+//
+//	@Summary		Check link health
+//	@Description	Probes the destination URL and updates its health status.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/health-check [post]
 func (h *LinkHandler) CheckLinkHealth(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -203,7 +278,19 @@ func (h *LinkHandler) CheckLinkHealth(c *gin.Context) {
 }
 
 // ImportLinks godoc
-// POST /api/v1/links/import
+//
+//	@Summary		Bulk import links from CSV
+//	@Description	Accepts a multipart CSV file with a 'destination_url' column (max 500 rows).
+//	@Tags			links
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			file	formData	file	true	"CSV file"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/import [post]
 func (h *LinkHandler) ImportLinks(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -230,7 +317,18 @@ func (h *LinkHandler) ImportLinks(c *gin.Context) {
 }
 
 // ToggleStar godoc
-// PATCH /api/v1/links/:id/star
+//
+//	@Summary		Toggle star on a link
+//	@Description	Toggles the starred flag on the given link.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/star [patch]
 func (h *LinkHandler) ToggleStar(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)

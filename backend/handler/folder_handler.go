@@ -21,7 +21,17 @@ func NewFolderHandler(folderService folderSvc.FolderServiceI) *FolderHandler {
 	return &FolderHandler{folderService: folderService}
 }
 
-// ListFolders handles GET /api/v1/folders
+// ListFolders godoc
+//
+//	@Summary		List folders
+//	@Description	Returns all folders for the authenticated user.
+//	@Tags			folders
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/folders [get]
 func (h *FolderHandler) ListFolders(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -40,7 +50,20 @@ func (h *FolderHandler) ListFolders(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Folders retrieved successfully", folders)
 }
 
-// CreateFolder handles POST /api/v1/folders
+// CreateFolder godoc
+//
+//	@Summary		Create a folder
+//	@Description	Creates a new folder for organising links.
+//	@Tags			folders
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			body	body		request.CreateFolderRequest	true	"Folder details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/folders [post]
 func (h *FolderHandler) CreateFolder(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -65,7 +88,22 @@ func (h *FolderHandler) CreateFolder(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusCreated, "Folder created successfully", folder)
 }
 
-// UpdateFolder handles PUT /api/v1/folders/:id
+// UpdateFolder godoc
+//
+//	@Summary		Update a folder
+//	@Description	Updates the name or icon of a folder.
+//	@Tags			folders
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string					true	"Folder UUID"
+//	@Param			body	body		request.UpdateFolderRequest	true	"Updated fields"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/folders/{id} [put]
 func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
@@ -97,7 +135,19 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Folder updated successfully", folder)
 }
 
-// DeleteFolder handles DELETE /api/v1/folders/:id
+// DeleteFolder godoc
+//
+//	@Summary		Delete a folder
+//	@Description	Deletes a folder (links inside are not deleted).
+//	@Tags			folders
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Folder UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/folders/{id} [delete]
 func (h *FolderHandler) DeleteFolder(c *gin.Context) {
 	ctx := c.Request.Context()
 	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)

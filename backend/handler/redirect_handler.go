@@ -42,6 +42,20 @@ func NewRedirectHandler(
 	}
 }
 
+// Redirect godoc
+//
+//	@Summary		Redirect short URL
+//	@Description	Resolves a slug and redirects to the destination URL. Tracks the click asynchronously.
+//	@Tags			redirect
+//	@Param			slug	path	string	true	"Short URL slug"
+//	@Param			pwd		query	string	false	"Password for protected links"
+//	@Param			source	query	string	false	"Click source (e.g. 'qr')"
+//	@Success		302
+//	@Success		301
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Failure		410	{object}	transport.ErrorResponse
+//	@Router			/{slug} [get]
 // Redirect handles GET /:slug — cache-first lookup + async click tracking.
 func (h *RedirectHandler) Redirect(c *gin.Context) {
 	ctx := c.Request.Context()

@@ -21,6 +21,15 @@ func NewHealthHandler(healthService health.HealthServiceI) *HealthHandler {
 	}
 }
 
+// Check godoc
+//
+//	@Summary		Health check
+//	@Description	Returns the health status of the API server and its dependencies.
+//	@Tags			system
+//	@Produce		json
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		503	{object}	transport.StandardResponse
+//	@Router			/health [get]
 func (h *HealthHandler) Check(c *gin.Context) {
 	ctx := c.Request.Context()
 

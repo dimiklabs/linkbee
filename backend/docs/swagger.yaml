@@ -1,0 +1,1722 @@
+definitions:
+  request.ChangePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
+  request.CreateFolderRequest:
+    properties:
+      color:
+        maxLength: 20
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  request.CreateGeoRuleRequest:
+    properties:
+      country_code:
+        type: string
+      destination_url:
+        type: string
+      priority:
+        minimum: 0
+        type: integer
+    required:
+    - country_code
+    - destination_url
+    type: object
+  request.CreateLinkRequest:
+    properties:
+      destination_url:
+        type: string
+      expires_at:
+        description: RFC3339 string, nullable
+        type: string
+      folder_id:
+        description: UUID string; null = no folder
+        type: string
+      max_clicks:
+        minimum: 1
+        type: integer
+      password:
+        maxLength: 128
+        minLength: 4
+        type: string
+      redirect_type:
+        enum:
+        - 301
+        - 302
+        type: integer
+      slug:
+        maxLength: 20
+        minLength: 3
+        type: string
+      tags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      title:
+        maxLength: 500
+        type: string
+      utm_campaign:
+        maxLength: 255
+        type: string
+      utm_medium:
+        maxLength: 255
+        type: string
+      utm_source:
+        maxLength: 255
+        type: string
+    required:
+    - destination_url
+    type: object
+  request.CreateVariantRequest:
+    properties:
+      destination_url:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      weight:
+        maximum: 1000
+        minimum: 1
+        type: integer
+    required:
+    - destination_url
+    - name
+    - weight
+    type: object
+  request.CreateWebhookRequest:
+    properties:
+      events:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      url:
+        type: string
+    required:
+    - events
+    - url
+    type: object
+  request.DemoShortenRequest:
+    properties:
+      destination_url:
+        type: string
+    required:
+    - destination_url
+    type: object
+  request.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  request.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      remember_me:
+        description: 'Optional: for extended session duration'
+        type: boolean
+    required:
+    - email
+    - password
+    type: object
+  request.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  request.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  request.ResetPasswordRequest:
+    properties:
+      new_password:
+        type: string
+      token:
+        type: string
+    required:
+    - new_password
+    - token
+    type: object
+  request.SignupRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  request.ToggleGeoRoutingRequest:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  request.ToggleSplitTestRequest:
+    properties:
+      enabled:
+        type: boolean
+    type: object
+  request.UpdateFolderRequest:
+    properties:
+      color:
+        maxLength: 20
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  request.UpdateGeoRuleRequest:
+    properties:
+      country_code:
+        type: string
+      destination_url:
+        type: string
+      priority:
+        minimum: 0
+        type: integer
+    type: object
+  request.UpdateLinkRequest:
+    properties:
+      destination_url:
+        type: string
+      expires_at:
+        description: RFC3339 string, nullable; null clears expiry
+        type: string
+      folder_id:
+        description: UUID string; null = remove from folder
+        type: string
+      is_active:
+        type: boolean
+      max_clicks:
+        minimum: 1
+        type: integer
+      password:
+        maxLength: 128
+        minLength: 4
+        type: string
+      redirect_type:
+        enum:
+        - 301
+        - 302
+        type: integer
+      tags:
+        items:
+          type: string
+        maxItems: 10
+        type: array
+      title:
+        maxLength: 500
+        type: string
+      utm_campaign:
+        maxLength: 255
+        type: string
+      utm_medium:
+        maxLength: 255
+        type: string
+      utm_source:
+        maxLength: 255
+        type: string
+    type: object
+  request.UpdateProfileRequest:
+    properties:
+      first_name:
+        maxLength: 100
+        type: string
+      last_name:
+        maxLength: 100
+        type: string
+      phone:
+        maxLength: 20
+        type: string
+    type: object
+  request.UpdateVariantRequest:
+    properties:
+      destination_url:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      weight:
+        maximum: 1000
+        minimum: 1
+        type: integer
+    type: object
+  request.UpdateWebhookRequest:
+    properties:
+      events:
+        items:
+          type: string
+        type: array
+      is_active:
+        type: boolean
+      url:
+        type: string
+    type: object
+  transport.ErrorResponse:
+    properties:
+      data: {}
+      description:
+        type: string
+      error_code:
+        type: string
+      request_id:
+        type: string
+      timestamp:
+        type: integer
+    type: object
+  transport.StandardResponse:
+    properties:
+      data: {}
+      description:
+        type: string
+      request_id:
+        type: string
+      timestamp:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /{slug}:
+    get:
+      description: Resolves a slug and redirects to the destination URL. Tracks the
+        click asynchronously.
+      parameters:
+      - description: Short URL slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      - description: Password for protected links
+        in: query
+        name: pwd
+        type: string
+      - description: Click source (e.g. 'qr')
+        in: query
+        name: source
+        type: string
+      responses:
+        "301":
+          description: Moved Permanently
+        "302":
+          description: Found
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "410":
+          description: Gone
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Redirect short URL
+      tags:
+      - redirect
+  /api/v1/api-keys:
+    get:
+      description: Returns all API keys for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List API keys
+      tags:
+      - api-keys
+    post:
+      consumes:
+      - application/json
+      description: Creates a new API key. The full key is returned once and cannot
+        be retrieved again.
+      parameters:
+      - description: Key details
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            expires_at:
+              type: string
+            name:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create an API key
+      tags:
+      - api-keys
+  /api/v1/api-keys/{id}:
+    delete:
+      description: Permanently revokes an API key.
+      parameters:
+      - description: API key UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Revoke an API key
+      tags:
+      - api-keys
+  /api/v1/auth/change-password:
+    put:
+      consumes:
+      - application/json
+      description: Changes the authenticated user's password.
+      parameters:
+      - description: Current and new password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Change password
+      tags:
+      - auth
+  /api/v1/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Sends a password reset email if the address is registered.
+      parameters:
+      - description: Email address
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Forgot password
+      tags:
+      - auth
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns JWT access + refresh tokens.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Login
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revokes the current access token and optionally the refresh token.
+      parameters:
+      - description: Optional refresh token to revoke
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/request.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout
+      tags:
+      - auth
+  /api/v1/auth/profile:
+    get:
+      description: Returns the authenticated user's profile information.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's display name and other profile
+        fields.
+      parameters:
+      - description: Profile fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update user profile
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Exchanges a refresh token for a new access + refresh token pair.
+      parameters:
+      - description: Refresh token
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Resets a user's password using the token received by email.
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Reset password
+      tags:
+      - auth
+  /api/v1/auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account. A verification email is sent after
+        signup.
+      parameters:
+      - description: Signup details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+  /api/v1/demo/shorten:
+    post:
+      consumes:
+      - application/json
+      description: Shorten a URL without an account (rate-limited per IP). Returns
+        a short URL valid for 1 hour.
+      parameters:
+      - description: URL to shorten
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.DemoShortenRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "429":
+          description: Too Many Requests
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      summary: Demo URL shortener
+      tags:
+      - demo
+  /api/v1/folders:
+    get:
+      description: Returns all folders for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: List folders
+      tags:
+      - folders
+    post:
+      consumes:
+      - application/json
+      description: Creates a new folder for organising links.
+      parameters:
+      - description: Folder details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Create a folder
+      tags:
+      - folders
+  /api/v1/folders/{id}:
+    delete:
+      description: Deletes a folder (links inside are not deleted).
+      parameters:
+      - description: Folder UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Delete a folder
+      tags:
+      - folders
+    put:
+      consumes:
+      - application/json
+      description: Updates the name or icon of a folder.
+      parameters:
+      - description: Folder UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateFolderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Update a folder
+      tags:
+      - folders
+  /api/v1/links:
+    get:
+      description: Returns a paginated list of links for the authenticated user.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 20)
+        in: query
+        name: limit
+        type: integer
+      - description: Search by slug, title or URL
+        in: query
+        name: search
+        type: string
+      - description: Filter by folder UUID
+        in: query
+        name: folder_id
+        type: string
+      - description: Filter starred links
+        in: query
+        name: starred
+        type: boolean
+      - description: Filter by health status
+        in: query
+        name: health_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: List links
+      tags:
+      - links
+    post:
+      consumes:
+      - application/json
+      description: Creates a new shortened link.
+      parameters:
+      - description: Link details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Create a link
+      tags:
+      - links
+  /api/v1/links/{id}:
+    delete:
+      description: Permanently deletes a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Delete a link
+      tags:
+      - links
+    get:
+      description: Returns a single link by ID.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Get a link
+      tags:
+      - links
+    put:
+      consumes:
+      - application/json
+      description: Updates fields of an existing link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Update a link
+      tags:
+      - links
+  /api/v1/links/{id}/analytics:
+    get:
+      description: Returns aggregated analytics for a link including click count,
+        time-series data, top referrers, device breakdown, and country breakdown.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Start date (RFC3339)
+        in: query
+        name: start
+        type: string
+      - description: End date (RFC3339)
+        in: query
+        name: end
+        type: string
+      - description: 'Time bucket: hour, day, week, month (default day)'
+        in: query
+        name: granularity
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Get link analytics
+      tags:
+      - analytics
+  /api/v1/links/{id}/geo-routing:
+    patch:
+      consumes:
+      - application/json
+      description: Enables or disables geo-routing for a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Toggle payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ToggleGeoRoutingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Toggle geo-routing
+      tags:
+      - geo-routing
+  /api/v1/links/{id}/geo-rules:
+    get:
+      description: Returns all geo-routing rules for a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: List geo-routing rules
+      tags:
+      - geo-routing
+    post:
+      consumes:
+      - application/json
+      description: Adds a country-based redirect rule to a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateGeoRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Create a geo-routing rule
+      tags:
+      - geo-routing
+  /api/v1/links/{id}/geo-rules/{ruleId}:
+    delete:
+      description: Removes a geo-routing rule from a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule UUID
+        in: path
+        name: ruleId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Delete a geo-routing rule
+      tags:
+      - geo-routing
+    put:
+      consumes:
+      - application/json
+      description: Updates the country code, destination URL, or priority of a rule.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule UUID
+        in: path
+        name: ruleId
+        required: true
+        type: string
+      - description: Updated fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateGeoRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Update a geo-routing rule
+      tags:
+      - geo-routing
+  /api/v1/links/{id}/health-check:
+    post:
+      description: Probes the destination URL and updates its health status.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Check link health
+      tags:
+      - links
+  /api/v1/links/{id}/qr:
+    get:
+      description: Returns a QR code image in PNG (default, inline) or SVG (download)
+        format. Supports custom colours, size, and error correction level.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Output format: png (default) or svg'
+        in: query
+        name: format
+        type: string
+      - description: Foreground hex colour without '#' (default 000000)
+        in: query
+        name: fg
+        type: string
+      - description: Background hex colour without '#' (default ffffff)
+        in: query
+        name: bg
+        type: string
+      - description: Image dimension in pixels 64–1024 (default 256)
+        in: query
+        name: size
+        type: integer
+      - description: 'Error correction level: L, M, Q, H (default M)'
+        in: query
+        name: ec
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Get QR code for a link
+      tags:
+      - links
+  /api/v1/links/{id}/split-test:
+    patch:
+      consumes:
+      - application/json
+      description: Enables or disables A/B split testing for a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Toggle payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ToggleSplitTestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Toggle A/B split test
+      tags:
+      - split-testing
+  /api/v1/links/{id}/star:
+    patch:
+      description: Toggles the starred flag on the given link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Toggle star on a link
+      tags:
+      - links
+  /api/v1/links/{id}/variants:
+    get:
+      description: Returns all A/B test variants for a link.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: List split test variants
+      tags:
+      - split-testing
+    post:
+      consumes:
+      - application/json
+      description: Adds a weighted destination URL variant for A/B testing.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Variant details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateVariantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Create a variant
+      tags:
+      - split-testing
+  /api/v1/links/{id}/variants/{variantId}:
+    delete:
+      description: Removes an A/B test variant.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Variant UUID
+        in: path
+        name: variantId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Delete a variant
+      tags:
+      - split-testing
+    put:
+      consumes:
+      - application/json
+      description: Updates a variant's destination URL or weight.
+      parameters:
+      - description: Link UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Variant UUID
+        in: path
+        name: variantId
+        required: true
+        type: string
+      - description: Updated fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateVariantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Update a variant
+      tags:
+      - split-testing
+  /api/v1/links/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Accepts a multipart CSV file with a 'destination_url' column (max
+        500 rows).
+      parameters:
+      - description: CSV file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Bulk import links from CSV
+      tags:
+      - links
+  /api/v1/webhooks:
+    get:
+      description: Returns all webhooks for the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: List webhooks
+      tags:
+      - webhooks
+    post:
+      consumes:
+      - application/json
+      description: Registers a new webhook endpoint. The signing secret is generated
+        server-side.
+      parameters:
+      - description: Webhook details
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CreateWebhookRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Create a webhook
+      tags:
+      - webhooks
+  /api/v1/webhooks/{id}:
+    delete:
+      description: Permanently deletes a webhook.
+      parameters:
+      - description: Webhook UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Delete a webhook
+      tags:
+      - webhooks
+    put:
+      consumes:
+      - application/json
+      description: Updates the URL, subscribed events, or active status of a webhook.
+      parameters:
+      - description: Webhook UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.UpdateWebhookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/transport.ErrorResponse'
+      security:
+      - BearerAuth: []
+      - APIKeyAuth: []
+      summary: Update a webhook
+      tags:
+      - webhooks
+  /health:
+    get:
+      description: Returns the health status of the API server and its dependencies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/transport.StandardResponse'
+      summary: Health check
+      tags:
+      - system
+swagger: "2.0"

@@ -39,7 +39,22 @@ func NewAnalyticsHandler(
 	}
 }
 
-// GetLinkAnalytics handles GET /api/v1/links/:id/analytics
+// GetLinkAnalytics godoc
+//
+//	@Summary		Get link analytics
+//	@Description	Returns aggregated analytics for a link including click count, time-series data, top referrers, device breakdown, and country breakdown.
+//	@Tags			analytics
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id			path	string	true	"Link UUID"
+//	@Param			start		query	string	false	"Start date (RFC3339)"
+//	@Param			end			query	string	false	"End date (RFC3339)"
+//	@Param			granularity	query	string	false	"Time bucket: hour, day, week, month (default day)"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/analytics [get]
 func (h *AnalyticsHandler) GetLinkAnalytics(c *gin.Context) {
 	ctx := c.Request.Context()
 

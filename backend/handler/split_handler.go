@@ -42,7 +42,18 @@ func (h *SplitHandler) linkID(c *gin.Context) (uuid.UUID, bool) {
 }
 
 // ListVariants godoc
-// GET /api/v1/links/:id/variants
+//
+//	@Summary		List split test variants
+//	@Description	Returns all A/B test variants for a link.
+//	@Tags			split-testing
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/variants [get]
 func (h *SplitHandler) ListVariants(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, ok := h.userID(c)
@@ -62,7 +73,20 @@ func (h *SplitHandler) ListVariants(c *gin.Context) {
 }
 
 // CreateVariant godoc
-// POST /api/v1/links/:id/variants
+//
+//	@Summary		Create a variant
+//	@Description	Adds a weighted destination URL variant for A/B testing.
+//	@Tags			split-testing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string					true	"Link UUID"
+//	@Param			body	body		request.CreateVariantRequest	true	"Variant details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/variants [post]
 func (h *SplitHandler) CreateVariant(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, ok := h.userID(c)
@@ -88,7 +112,22 @@ func (h *SplitHandler) CreateVariant(c *gin.Context) {
 }
 
 // UpdateVariant godoc
-// PUT /api/v1/links/:id/variants/:variantId
+//
+//	@Summary		Update a variant
+//	@Description	Updates a variant's destination URL or weight.
+//	@Tags			split-testing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id			path		string					true	"Link UUID"
+//	@Param			variantId	path		string					true	"Variant UUID"
+//	@Param			body		body		request.UpdateVariantRequest	true	"Updated fields"
+//	@Success		200			{object}	transport.StandardResponse
+//	@Failure		400			{object}	transport.ErrorResponse
+//	@Failure		401			{object}	transport.ErrorResponse
+//	@Failure		404			{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/variants/{variantId} [put]
 func (h *SplitHandler) UpdateVariant(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, ok := h.userID(c)
@@ -119,7 +158,19 @@ func (h *SplitHandler) UpdateVariant(c *gin.Context) {
 }
 
 // DeleteVariant godoc
-// DELETE /api/v1/links/:id/variants/:variantId
+//
+//	@Summary		Delete a variant
+//	@Description	Removes an A/B test variant.
+//	@Tags			split-testing
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id			path		string	true	"Link UUID"
+//	@Param			variantId	path		string	true	"Variant UUID"
+//	@Success		200			{object}	transport.StandardResponse
+//	@Failure		401			{object}	transport.ErrorResponse
+//	@Failure		404			{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/variants/{variantId} [delete]
 func (h *SplitHandler) DeleteVariant(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, ok := h.userID(c)
@@ -143,7 +194,21 @@ func (h *SplitHandler) DeleteVariant(c *gin.Context) {
 }
 
 // ToggleSplitTest godoc
-// PATCH /api/v1/links/:id/split-test
+//
+//	@Summary		Toggle A/B split test
+//	@Description	Enables or disables A/B split testing for a link.
+//	@Tags			split-testing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string						true	"Link UUID"
+//	@Param			body	body		request.ToggleSplitTestRequest	true	"Toggle payload"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/split-test [patch]
 func (h *SplitHandler) ToggleSplitTest(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, ok := h.userID(c)

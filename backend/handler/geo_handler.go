@@ -42,7 +42,19 @@ func (h *GeoHandler) ruleID(c *gin.Context) (uuid.UUID, bool) {
 	return id, true
 }
 
-// ListGeoRules GET /links/:id/geo-rules
+// ListGeoRules godoc
+//
+//	@Summary		List geo-routing rules
+//	@Description	Returns all geo-routing rules for a link.
+//	@Tags			geo-routing
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id	path		string	true	"Link UUID"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/geo-rules [get]
 func (h *GeoHandler) ListGeoRules(c *gin.Context) {
 	linkID, ok := h.linkID(c)
 	if !ok {
@@ -56,7 +68,21 @@ func (h *GeoHandler) ListGeoRules(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": rules})
 }
 
-// CreateGeoRule POST /links/:id/geo-rules
+// CreateGeoRule godoc
+//
+//	@Summary		Create a geo-routing rule
+//	@Description	Adds a country-based redirect rule to a link.
+//	@Tags			geo-routing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string						true	"Link UUID"
+//	@Param			body	body		request.CreateGeoRuleRequest	true	"Rule details"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/geo-rules [post]
 func (h *GeoHandler) CreateGeoRule(c *gin.Context) {
 	linkID, ok := h.linkID(c)
 	if !ok {
@@ -75,7 +101,23 @@ func (h *GeoHandler) CreateGeoRule(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"data": rule})
 }
 
-// UpdateGeoRule PUT /links/:id/geo-rules/:ruleId
+// UpdateGeoRule godoc
+//
+//	@Summary		Update a geo-routing rule
+//	@Description	Updates the country code, destination URL, or priority of a rule.
+//	@Tags			geo-routing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string						true	"Link UUID"
+//	@Param			ruleId	path		string						true	"Rule UUID"
+//	@Param			body	body		request.UpdateGeoRuleRequest	true	"Updated fields"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/geo-rules/{ruleId} [put]
 func (h *GeoHandler) UpdateGeoRule(c *gin.Context) {
 	linkID, ok := h.linkID(c)
 	if !ok {
@@ -98,7 +140,20 @@ func (h *GeoHandler) UpdateGeoRule(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": rule})
 }
 
-// DeleteGeoRule DELETE /links/:id/geo-rules/:ruleId
+// DeleteGeoRule godoc
+//
+//	@Summary		Delete a geo-routing rule
+//	@Description	Removes a geo-routing rule from a link.
+//	@Tags			geo-routing
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path	string	true	"Link UUID"
+//	@Param			ruleId	path	string	true	"Rule UUID"
+//	@Success		204
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Failure		404	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/geo-rules/{ruleId} [delete]
 func (h *GeoHandler) DeleteGeoRule(c *gin.Context) {
 	linkID, ok := h.linkID(c)
 	if !ok {
@@ -115,7 +170,22 @@ func (h *GeoHandler) DeleteGeoRule(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// ToggleGeoRouting PATCH /links/:id/geo-routing
+// ToggleGeoRouting godoc
+//
+//	@Summary		Toggle geo-routing
+//	@Description	Enables or disables geo-routing for a link.
+//	@Tags			geo-routing
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string							true	"Link UUID"
+//	@Param			body	body		request.ToggleGeoRoutingRequest	true	"Toggle payload"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/geo-routing [patch]
 func (h *GeoHandler) ToggleGeoRouting(c *gin.Context) {
 	linkID, ok := h.linkID(c)
 	if !ok {
