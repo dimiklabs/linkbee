@@ -32,8 +32,9 @@ import (
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
-	bioSvc   "github.com/shafikshaon/shortlink/service/bio"
-	pixelSvc "github.com/shafikshaon/shortlink/service/pixel"
+	bioSvc     "github.com/shafikshaon/shortlink/service/bio"
+	pixelSvc   "github.com/shafikshaon/shortlink/service/pixel"
+	previewSvc "github.com/shafikshaon/shortlink/service/preview"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/worker"
 )
@@ -72,6 +73,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
 	bioService         := bioSvc.NewBioService(bioRepo)
+	previewService     := previewSvc.NewPreviewService(s.Cache)
 	folderService      := folderSvc.NewFolderService(folderRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
 	webhookService     := webhookSvc.NewWebhookService(webhookRepo)
@@ -104,6 +106,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	bioHandler       := handler.NewBioHandler(bioService)
+	previewHandler   := handler.NewPreviewHandler(previewService, linkService)
 	folderHandler    := handler.NewFolderHandler(folderService)
 	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService)
 	webhookHandler   := handler.NewWebhookHandler(webhookService)
@@ -216,6 +219,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)
 			v1Auth.GET("/links/:id/analytics", analyticsHandler.GetLinkAnalytics)
+			v1Auth.GET("/links/:id/preview", previewHandler.GetLinkPreview)
 
 			// API key management (JWT only — can't bootstrap with API key)
 			v1Auth.GET("/api-keys", apiKeyHandler.ListAPIKeys)

@@ -353,6 +353,18 @@
                     </svg>
                   </RouterLink>
 
+                  <!-- Preview -->
+                  <button
+                    class="btn btn-sm btn-outline-secondary border-0 p-1"
+                    title="Link Preview"
+                    @click="openPreviewModal(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                      <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                    </svg>
+                  </button>
+
                   <!-- QR Code -->
                   <button
                     class="btn btn-sm btn-outline-secondary border-0 p-1"
@@ -532,6 +544,14 @@
       @pixel-tracking-updated="onPixelTrackingUpdated"
     />
 
+    <!-- Link Preview Modal -->
+    <LinkPreviewModal
+      v-if="previewLink"
+      ref="previewModalRef"
+      modal-id="preview-modal"
+      :link="previewLink"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -577,6 +597,7 @@ import ImportLinksModal from '@/components/ImportLinksModal.vue';
 import SplitTestModal from '@/components/SplitTestModal.vue';
 import GeoRulesModal from '@/components/GeoRulesModal.vue';
 import PixelsModal from '@/components/PixelsModal.vue';
+import LinkPreviewModal from '@/components/LinkPreviewModal.vue';
 import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
@@ -596,6 +617,8 @@ const geoModalRef = ref<InstanceType<typeof GeoRulesModal> | null>(null);
 const geoLink = ref<LinkResponse | null>(null);
 const pixelModalRef = ref<InstanceType<typeof PixelsModal> | null>(null);
 const pixelLink = ref<LinkResponse | null>(null);
+const previewModalRef = ref<InstanceType<typeof LinkPreviewModal> | null>(null);
+const previewLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
@@ -794,6 +817,11 @@ function onPixelTrackingUpdated(enabled: boolean) {
     if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_pixel_tracking: enabled };
     pixelLink.value = { ...pixelLink.value, is_pixel_tracking: enabled };
   }
+}
+
+function openPreviewModal(link: LinkResponse) {
+  previewLink.value = link;
+  setTimeout(() => previewModalRef.value?.show(), 50);
 }
 
 async function onImportDone(_result: ImportLinksResponse) {
