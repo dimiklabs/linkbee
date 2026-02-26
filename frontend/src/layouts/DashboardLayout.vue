@@ -57,6 +57,15 @@
           <span class="nav-icon">🔔</span>
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Webhooks</span>
         </router-link>
+        <router-link
+          to="/dashboard/bio"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/bio') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">🌿</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Link-in-Bio</span>
+        </router-link>
       </nav>
 
       <!-- Sidebar footer: user info + logout -->

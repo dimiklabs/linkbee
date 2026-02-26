@@ -74,7 +74,19 @@ const router = createRouter({
           name: 'webhooks',
           component: () => import('@/pages/dashboard/WebhooksPage.vue'),
         },
+        {
+          path: 'bio',
+          name: 'bio',
+          component: () => import('@/pages/dashboard/BioPage.vue'),
+        },
       ],
+    },
+
+    // Public bio page
+    {
+      path: '/bio/:username',
+      name: 'public-bio',
+      component: () => import('@/pages/PublicBioPage.vue'),
     },
 
     // Catch all

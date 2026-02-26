@@ -32,6 +32,7 @@ import (
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
+	bioSvc   "github.com/shafikshaon/shortlink/service/bio"
 	pixelSvc "github.com/shafikshaon/shortlink/service/pixel"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/worker"
@@ -43,6 +44,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	s.setupMiddleware(router)
 
 	// ── Repositories ─────────────────────────────────────────────────────────
+	bioRepo               := repository.NewBioRepository(s.MasterDB, s.ReplicaDB)
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
 	apiKeyRepo            := repository.NewAPIKeyRepository(s.MasterDB, s.ReplicaDB)
@@ -69,6 +71,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
+	bioService         := bioSvc.NewBioService(bioRepo)
 	folderService      := folderSvc.NewFolderService(folderRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
 	webhookService     := webhookSvc.NewWebhookService(webhookRepo)
@@ -100,6 +103,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
+	bioHandler       := handler.NewBioHandler(bioService)
 	folderHandler    := handler.NewFolderHandler(folderService)
 	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService)
 	webhookHandler   := handler.NewWebhookHandler(webhookService)
@@ -152,6 +156,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 			// SSE live click counter (inline JWT via ?token= because EventSource can't set headers)
 			v1Public.GET("/links/:id/analytics/live", analyticsHandler.StreamLiveCount)
+
+			// Public bio page
+			v1Public.GET("/bio/public/:username", bioHandler.GetPublicBioPage)
 		}
 
 		// Protected routes (JWT or API key required)
@@ -219,6 +226,15 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.POST("/webhooks", webhookHandler.CreateWebhook)
 			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
 			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
+
+			// Bio page (link-in-bio)
+			v1Auth.GET("/bio", bioHandler.GetBioPage)
+			v1Auth.PUT("/bio", bioHandler.UpdateBioPage)
+			v1Auth.GET("/bio/links", bioHandler.ListBioLinks)
+			v1Auth.POST("/bio/links", bioHandler.CreateBioLink)
+			v1Auth.PATCH("/bio/links/reorder", bioHandler.ReorderBioLinks)
+			v1Auth.PUT("/bio/links/:id", bioHandler.UpdateBioLink)
+			v1Auth.DELETE("/bio/links/:id", bioHandler.DeleteBioLink)
 		}
 	}
 
