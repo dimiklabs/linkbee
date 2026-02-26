@@ -49,6 +49,13 @@ type OSPoint struct {
 	Count int64  `json:"count"`
 }
 
+// HeatmapPoint holds click count for a specific hour-of-day × day-of-week cell.
+type HeatmapPoint struct {
+	DayOfWeek int   `json:"day_of_week"` // 0 = Sunday … 6 = Saturday
+	Hour      int   `json:"hour"`        // 0–23 UTC
+	Count     int64 `json:"count"`
+}
+
 type ClickEventRepositoryI interface {
 	// Write
 	BulkCreate(ctx context.Context, events []*model.ClickEvent) error
@@ -62,6 +69,7 @@ type ClickEventRepositoryI interface {
 	GetCountryBreakdown(ctx context.Context, linkID uuid.UUID) ([]CountryPoint, error)
 	GetBrowserBreakdown(ctx context.Context, linkID uuid.UUID) ([]BrowserPoint, error)
 	GetOSBreakdown(ctx context.Context, linkID uuid.UUID) ([]OSPoint, error)
+	GetHeatmapData(ctx context.Context, linkID uuid.UUID, from, to time.Time) ([]HeatmapPoint, error)
 
 	// Delete
 	DeleteByLinkID(ctx context.Context, linkID uuid.UUID) error
@@ -299,6 +307,34 @@ func (r *ClickEventRepository) GetOSBreakdown(ctx context.Context, linkID uuid.U
 	points := make([]OSPoint, len(rows))
 	for i, r := range rows {
 		points[i] = OSPoint{OS: r.OS, Count: r.Count}
+	}
+	return points, nil
+}
+
+func (r *ClickEventRepository) GetHeatmapData(ctx context.Context, linkID uuid.UUID, from, to time.Time) ([]HeatmapPoint, error) {
+	type result struct {
+		DayOfWeek int
+		Hour      int
+		Count     int64
+	}
+
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Model(&model.ClickEvent{}).
+		Select("EXTRACT(DOW FROM clicked_at)::int AS day_of_week, EXTRACT(HOUR FROM clicked_at)::int AS hour, COUNT(*) AS count").
+		Where("link_id = ? AND clicked_at BETWEEN ? AND ?", linkID, from, to).
+		Group("EXTRACT(DOW FROM clicked_at), EXTRACT(HOUR FROM clicked_at)").
+		Order("day_of_week, hour").
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get heatmap data",
+			zap.String("link_id", linkID.String()),
+			zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]HeatmapPoint, len(rows))
+	for i, r := range rows {
+		points[i] = HeatmapPoint{DayOfWeek: r.DayOfWeek, Hour: r.Hour, Count: r.Count}
 	}
 	return points, nil
 }

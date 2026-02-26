@@ -364,6 +364,23 @@
         </div>
       </div>
 
+      <!-- Click Heatmap -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+          <div>
+            <h6 class="mb-0 fw-semibold">Click Heatmap</h6>
+            <p class="text-muted mb-0" style="font-size: 0.72rem;">Clicks by hour of day × day of week (UTC)</p>
+          </div>
+          <span class="badge bg-light text-muted border fw-normal">24 × 7</span>
+        </div>
+        <div class="card-body pb-2">
+          <div v-if="!analytics.heatmap || analytics.heatmap.length === 0" class="text-center py-4 text-muted small">
+            No heatmap data available for this period.
+          </div>
+          <VChart v-else :option="heatmapChartOption" style="height: 260px;" autoresize />
+        </div>
+      </div>
+
       <!-- Top Countries -->
       <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
@@ -431,14 +448,14 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { RouterLink } from 'vue-router';
 import { use } from 'echarts/core';
-import { LineChart, PieChart, BarChart } from 'echarts/charts';
-import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+import { LineChart, PieChart, BarChart, HeatmapChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent, TitleComponent, VisualMapComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import linksApi from '@/api/links';
 import type { AnalyticsResponse } from '@/types/links';
 
-use([LineChart, PieChart, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+use([LineChart, PieChart, BarChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, VisualMapComponent, CanvasRenderer]);
 
 const route = useRoute();
 const router = useRouter();
@@ -666,6 +683,68 @@ const osChartOption = computed(() => ({
     },
   ],
 }));
+
+// Click heatmap (hour × day-of-week)
+const heatmapChartOption = computed(() => {
+  const heatmap = analytics.value?.heatmap ?? [];
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}:00`);
+  const maxCount = heatmap.reduce((m, p) => Math.max(m, Number(p.count)), 0);
+
+  return {
+    tooltip: {
+      position: 'top',
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      borderColor: '#e9ecef',
+      borderWidth: 1,
+      textStyle: { color: '#333', fontSize: 12 },
+      formatter: (params: { data: [number, number, number] }) => {
+        const [hour, day, count] = params.data;
+        return `${days[day]} ${hours[hour]}: <strong>${count}</strong> click${count !== 1 ? 's' : ''}`;
+      },
+    },
+    grid: { left: '4%', right: '4%', bottom: '18%', top: '4%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: hours,
+      splitArea: { show: true },
+      axisLabel: { color: '#6c757d', fontSize: 9, interval: 1 },
+      axisLine: { lineStyle: { color: '#dee2e6' } },
+      axisTick: { show: false },
+    },
+    yAxis: {
+      type: 'category',
+      data: days,
+      splitArea: { show: true },
+      axisLabel: { color: '#6c757d', fontSize: 11 },
+      axisLine: { lineStyle: { color: '#dee2e6' } },
+      axisTick: { show: false },
+    },
+    visualMap: {
+      min: 0,
+      max: maxCount || 1,
+      calculable: false,
+      orient: 'horizontal',
+      left: 'center',
+      bottom: '2%',
+      inRange: { color: ['#f0eeff', '#a89cff', '#635bff'] },
+      textStyle: { color: '#6c757d', fontSize: 10 },
+      itemWidth: 14,
+      itemHeight: 80,
+    },
+    series: [
+      {
+        name: 'Clicks',
+        type: 'heatmap',
+        data: heatmap.map((p) => [p.hour, p.day_of_week, p.count]),
+        label: { show: false },
+        emphasis: {
+          itemStyle: { shadowBlur: 8, shadowColor: 'rgba(99,91,255,0.4)' },
+        },
+      },
+    ],
+  };
+});
 
 // ECharts option
 const chartOption = computed(() => ({

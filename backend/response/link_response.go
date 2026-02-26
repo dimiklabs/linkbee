@@ -47,6 +47,7 @@ type AnalyticsResponse struct {
 	Countries    []CountryData    `json:"countries"`
 	Browsers     []BrowserData    `json:"browsers"`
 	OSBreakdown  []OSData         `json:"os_breakdown"`
+	Heatmap      []HeatmapData    `json:"heatmap"`
 }
 
 type TimeSeriesData struct {
@@ -77,6 +78,12 @@ type BrowserData struct {
 type OSData struct {
 	OS    string `json:"os"`
 	Count int64  `json:"count"`
+}
+
+type HeatmapData struct {
+	DayOfWeek int   `json:"day_of_week"` // 0 = Sunday … 6 = Saturday
+	Hour      int   `json:"hour"`        // 0–23 UTC
+	Count     int64 `json:"count"`
 }
 
 // DemoShortenResponse is returned from the demo shorten endpoint.

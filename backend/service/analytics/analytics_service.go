@@ -86,6 +86,11 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		logger.ErrorCtx(ctx, "Failed to get OS breakdown", zap.Error(err))
 	}
 
+	heatmap, err := s.clickEventRepo.GetHeatmapData(ctx, linkID, from, to)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get heatmap data", zap.Error(err))
+	}
+
 	tsData := make([]response.TimeSeriesData, len(timeSeries))
 	for i, ts := range timeSeries {
 		tsData[i] = response.TimeSeriesData{Timestamp: ts.Timestamp, Count: ts.Count}
@@ -116,6 +121,11 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		osData[i] = response.OSData{OS: o.OS, Count: o.Count}
 	}
 
+	heatmapData := make([]response.HeatmapData, len(heatmap))
+	for i, h := range heatmap {
+		heatmapData[i] = response.HeatmapData{DayOfWeek: h.DayOfWeek, Hour: h.Hour, Count: h.Count}
+	}
+
 	return &response.AnalyticsResponse{
 		LinkID:       linkID,
 		TotalClicks:  totalClicks,
@@ -126,5 +136,6 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		Countries:    countryData,
 		Browsers:     browserData,
 		OSBreakdown:  osData,
+		Heatmap:      heatmapData,
 	}, nil
 }

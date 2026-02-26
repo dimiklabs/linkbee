@@ -84,6 +84,12 @@ export interface OSPoint {
   count: number;
 }
 
+export interface HeatmapPoint {
+  day_of_week: number; // 0 = Sunday … 6 = Saturday
+  hour: number;        // 0–23
+  count: number;
+}
+
 export interface AnalyticsResponse {
   link_id: string;
   total_clicks: number;
@@ -94,6 +100,7 @@ export interface AnalyticsResponse {
   countries: CountryPoint[];
   browsers: BrowserPoint[];
   os_breakdown: OSPoint[];
+  heatmap: HeatmapPoint[];
 }
 
 export interface DemoShortenRequest {
