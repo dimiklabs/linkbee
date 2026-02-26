@@ -74,6 +74,16 @@ export interface CountryPoint {
   count: number;
 }
 
+export interface BrowserPoint {
+  browser: string;
+  count: number;
+}
+
+export interface OSPoint {
+  os: string;
+  count: number;
+}
+
 export interface AnalyticsResponse {
   link_id: string;
   total_clicks: number;
@@ -82,6 +92,8 @@ export interface AnalyticsResponse {
   referrers: ReferrerPoint[];
   devices: DevicePoint[];
   countries: CountryPoint[];
+  browsers: BrowserPoint[];
+  os_breakdown: OSPoint[];
 }
 
 export interface DemoShortenRequest {

@@ -76,6 +76,16 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		logger.ErrorCtx(ctx, "Failed to get country breakdown", zap.Error(err))
 	}
 
+	browsers, err := s.clickEventRepo.GetBrowserBreakdown(ctx, linkID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get browser breakdown", zap.Error(err))
+	}
+
+	osBreakdown, err := s.clickEventRepo.GetOSBreakdown(ctx, linkID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get OS breakdown", zap.Error(err))
+	}
+
 	tsData := make([]response.TimeSeriesData, len(timeSeries))
 	for i, ts := range timeSeries {
 		tsData[i] = response.TimeSeriesData{Timestamp: ts.Timestamp, Count: ts.Count}
@@ -96,6 +106,16 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		countryData[i] = response.CountryData{Country: c.Country, Count: c.Count}
 	}
 
+	browserData := make([]response.BrowserData, len(browsers))
+	for i, b := range browsers {
+		browserData[i] = response.BrowserData{Browser: b.Browser, Count: b.Count}
+	}
+
+	osData := make([]response.OSData, len(osBreakdown))
+	for i, o := range osBreakdown {
+		osData[i] = response.OSData{OS: o.OS, Count: o.Count}
+	}
+
 	return &response.AnalyticsResponse{
 		LinkID:       linkID,
 		TotalClicks:  totalClicks,
@@ -104,5 +124,7 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		Referrers:    refData,
 		Devices:      devData,
 		Countries:    countryData,
+		Browsers:     browserData,
+		OSBreakdown:  osData,
 	}, nil
 }

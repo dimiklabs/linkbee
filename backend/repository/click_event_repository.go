@@ -37,6 +37,18 @@ type CountryPoint struct {
 	Count   int64  `json:"count"`
 }
 
+// BrowserPoint holds per-browser click stats for a link.
+type BrowserPoint struct {
+	Browser string `json:"browser"`
+	Count   int64  `json:"count"`
+}
+
+// OSPoint holds per-OS click stats for a link.
+type OSPoint struct {
+	OS    string `json:"os"`
+	Count int64  `json:"count"`
+}
+
 type ClickEventRepositoryI interface {
 	// Write
 	BulkCreate(ctx context.Context, events []*model.ClickEvent) error
@@ -48,6 +60,8 @@ type ClickEventRepositoryI interface {
 	GetTopReferrers(ctx context.Context, linkID uuid.UUID, limit int) ([]ReferrerPoint, error)
 	GetDeviceBreakdown(ctx context.Context, linkID uuid.UUID) ([]DevicePoint, error)
 	GetCountryBreakdown(ctx context.Context, linkID uuid.UUID) ([]CountryPoint, error)
+	GetBrowserBreakdown(ctx context.Context, linkID uuid.UUID) ([]BrowserPoint, error)
+	GetOSBreakdown(ctx context.Context, linkID uuid.UUID) ([]OSPoint, error)
 
 	// Delete
 	DeleteByLinkID(ctx context.Context, linkID uuid.UUID) error
@@ -231,6 +245,60 @@ func (r *ClickEventRepository) GetCountryBreakdown(ctx context.Context, linkID u
 	points := make([]CountryPoint, len(rows))
 	for i, r := range rows {
 		points[i] = CountryPoint{Country: r.Country, Count: r.Count}
+	}
+	return points, nil
+}
+
+func (r *ClickEventRepository) GetBrowserBreakdown(ctx context.Context, linkID uuid.UUID) ([]BrowserPoint, error) {
+	type result struct {
+		Browser string
+		Count   int64
+	}
+
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Model(&model.ClickEvent{}).
+		Select("COALESCE(NULLIF(browser, ''), 'Unknown') AS browser, COUNT(*) AS count").
+		Where("link_id = ?", linkID).
+		Group("COALESCE(NULLIF(browser, ''), 'Unknown')").
+		Order("count DESC").
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get browser breakdown",
+			zap.String("link_id", linkID.String()),
+			zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]BrowserPoint, len(rows))
+	for i, r := range rows {
+		points[i] = BrowserPoint{Browser: r.Browser, Count: r.Count}
+	}
+	return points, nil
+}
+
+func (r *ClickEventRepository) GetOSBreakdown(ctx context.Context, linkID uuid.UUID) ([]OSPoint, error) {
+	type result struct {
+		OS    string
+		Count int64
+	}
+
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Model(&model.ClickEvent{}).
+		Select("COALESCE(NULLIF(os, ''), 'Unknown') AS os, COUNT(*) AS count").
+		Where("link_id = ?", linkID).
+		Group("COALESCE(NULLIF(os, ''), 'Unknown')").
+		Order("count DESC").
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get OS breakdown",
+			zap.String("link_id", linkID.String()),
+			zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]OSPoint, len(rows))
+	for i, r := range rows {
+		points[i] = OSPoint{OS: r.OS, Count: r.Count}
 	}
 	return points, nil
 }

@@ -45,6 +45,8 @@ type AnalyticsResponse struct {
 	Referrers    []ReferrerData   `json:"referrers"`
 	Devices      []DeviceData     `json:"devices"`
 	Countries    []CountryData    `json:"countries"`
+	Browsers     []BrowserData    `json:"browsers"`
+	OSBreakdown  []OSData         `json:"os_breakdown"`
 }
 
 type TimeSeriesData struct {
@@ -65,6 +67,16 @@ type DeviceData struct {
 type CountryData struct {
 	Country string `json:"country"`
 	Count   int64  `json:"count"`
+}
+
+type BrowserData struct {
+	Browser string `json:"browser"`
+	Count   int64  `json:"count"`
+}
+
+type OSData struct {
+	OS    string `json:"os"`
+	Count int64  `json:"count"`
 }
 
 // DemoShortenResponse is returned from the demo shorten endpoint.

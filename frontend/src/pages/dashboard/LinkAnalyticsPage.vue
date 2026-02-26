@@ -285,6 +285,85 @@
         </div>
       </div>
 
+      <!-- Browser & OS breakdown -->
+      <div class="row g-4 mt-0">
+        <!-- Browser breakdown -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-semibold">Browser Breakdown</h6>
+              <span class="badge bg-light text-muted border fw-normal">All Browsers</span>
+            </div>
+            <div class="card-body">
+              <div v-if="!analytics.browsers || analytics.browsers.length === 0" class="text-center py-4 text-muted small">
+                No browser data available.
+              </div>
+              <div v-else class="row align-items-center g-0">
+                <div class="col-6">
+                  <VChart :option="browserChartOption" style="height: 200px;" autoresize />
+                </div>
+                <div class="col-6">
+                  <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                      <tr v-for="(b, i) in analytics.browsers" :key="b.browser">
+                        <td class="ps-0 py-1 border-0">
+                          <div class="d-flex align-items-center gap-2">
+                            <span
+                              class="rounded-circle d-inline-block flex-shrink-0"
+                              :style="{ width: '8px', height: '8px', backgroundColor: chartColors[i % chartColors.length] }"
+                            ></span>
+                            <span class="small text-truncate" style="max-width: 110px;" :title="b.browser">{{ b.browser }}</span>
+                          </div>
+                        </td>
+                        <td class="py-1 text-end small fw-semibold pe-0 border-0">{{ browserPercent(b.count) }}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OS breakdown -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-semibold">Operating System</h6>
+              <span class="badge bg-light text-muted border fw-normal">All OS</span>
+            </div>
+            <div class="card-body">
+              <div v-if="!analytics.os_breakdown || analytics.os_breakdown.length === 0" class="text-center py-4 text-muted small">
+                No OS data available.
+              </div>
+              <div v-else class="row align-items-center g-0">
+                <div class="col-6">
+                  <VChart :option="osChartOption" style="height: 200px;" autoresize />
+                </div>
+                <div class="col-6">
+                  <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                      <tr v-for="(o, i) in analytics.os_breakdown" :key="o.os">
+                        <td class="ps-0 py-1 border-0">
+                          <div class="d-flex align-items-center gap-2">
+                            <span
+                              class="rounded-circle d-inline-block flex-shrink-0"
+                              :style="{ width: '8px', height: '8px', backgroundColor: chartColors[i % chartColors.length] }"
+                            ></span>
+                            <span class="small text-truncate" style="max-width: 110px;" :title="o.os">{{ o.os }}</span>
+                          </div>
+                        </td>
+                        <td class="py-1 text-end small fw-semibold pe-0 border-0">{{ osPercent(o.count) }}%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Top Countries -->
       <div class="card border-0 shadow-sm mt-4">
         <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
@@ -512,6 +591,81 @@ const countriesChartOption = computed(() => {
     ],
   };
 });
+
+// Browser & OS breakdown
+const chartColors = ['#635bff', '#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
+
+const totalBrowserClicks = computed(() =>
+  (analytics.value?.browsers ?? []).reduce((sum, b) => sum + b.count, 0),
+);
+
+function browserPercent(count: number): number {
+  if (totalBrowserClicks.value === 0) return 0;
+  return Math.round((count / totalBrowserClicks.value) * 100);
+}
+
+const totalOSClicks = computed(() =>
+  (analytics.value?.os_breakdown ?? []).reduce((sum, o) => sum + o.count, 0),
+);
+
+function osPercent(count: number): number {
+  if (totalOSClicks.value === 0) return 0;
+  return Math.round((count / totalOSClicks.value) * 100);
+}
+
+const browserChartOption = computed(() => ({
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderColor: '#e9ecef',
+    borderWidth: 1,
+    textStyle: { color: '#333', fontSize: 12 },
+    formatter: '{b}: {c} ({d}%)',
+  },
+  series: [
+    {
+      name: 'Browser',
+      type: 'pie',
+      radius: ['45%', '72%'],
+      center: ['50%', '50%'],
+      avoidLabelOverlap: false,
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' } },
+      data: (analytics.value?.browsers ?? []).map((b, i) => ({
+        name: b.browser,
+        value: b.count,
+        itemStyle: { color: chartColors[i % chartColors.length] },
+      })),
+    },
+  ],
+}));
+
+const osChartOption = computed(() => ({
+  tooltip: {
+    trigger: 'item',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderColor: '#e9ecef',
+    borderWidth: 1,
+    textStyle: { color: '#333', fontSize: 12 },
+    formatter: '{b}: {c} ({d}%)',
+  },
+  series: [
+    {
+      name: 'OS',
+      type: 'pie',
+      radius: ['45%', '72%'],
+      center: ['50%', '50%'],
+      avoidLabelOverlap: false,
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 12, fontWeight: 'bold' } },
+      data: (analytics.value?.os_breakdown ?? []).map((o, i) => ({
+        name: o.os,
+        value: o.count,
+        itemStyle: { color: chartColors[i % chartColors.length] },
+      })),
+    },
+  ],
+}));
 
 // ECharts option
 const chartOption = computed(() => ({
