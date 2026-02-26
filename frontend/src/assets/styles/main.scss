@@ -1,0 +1,97 @@
+// ─── Shortlink Design Tokens ────────────────────────────────────────────────
+$primary: #635BFF;
+$primary-dark: #5851DB;
+$primary-light: #EEF0FF;
+$accent: #00D4FF;
+$success: #00C851;
+$warning: #FF9F0A;
+$danger: #FF3B30;
+$text-primary: #1A1F36;
+$text-secondary: #697386;
+$border-color: #E3E8EE;
+$bg-light: #F7F9FC;
+$bg-white: #FFFFFF;
+$shadow-sm: 0 1px 3px rgba(0,0,0,.08);
+$shadow-md: 0 4px 12px rgba(0,0,0,.1);
+
+// Bootstrap overrides
+$theme-colors: (
+  "primary": $primary,
+  "success": $success,
+  "warning": $warning,
+  "danger": $danger,
+);
+
+@import 'bootstrap/scss/bootstrap';
+
+// ─── Global ─────────────────────────────────────────────────────────────────
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: $text-primary;
+  background: $bg-light;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ─── Buttons ────────────────────────────────────────────────────────────────
+.btn-primary {
+  background-color: $primary;
+  border-color: $primary;
+  font-weight: 500;
+
+  &:hover, &:focus {
+    background-color: $primary-dark;
+    border-color: $primary-dark;
+  }
+}
+
+// ─── Form controls ──────────────────────────────────────────────────────────
+.form-control:focus {
+  border-color: $primary;
+  box-shadow: 0 0 0 3px rgba($primary, 0.15);
+}
+
+// ─── Cards ──────────────────────────────────────────────────────────────────
+.card {
+  border: 1px solid $border-color;
+  border-radius: 0.5rem;
+  box-shadow: $shadow-sm;
+}
+
+// ─── Dark mode ──────────────────────────────────────────────────────────────
+.dark-mode {
+  body, html {
+    background: #0D1117;
+    color: #E6EDF3;
+  }
+
+  .card {
+    background: #161B22;
+    border-color: #30363D;
+  }
+
+  .form-control {
+    background: #21262D;
+    border-color: #30363D;
+    color: #E6EDF3;
+
+    &:focus {
+      background: #21262D;
+      color: #E6EDF3;
+    }
+  }
+}
+
+// ─── Utilities ──────────────────────────────────────────────────────────────
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: $text-secondary !important;
+}

@@ -1,0 +1,585 @@
+<template>
+  <div class="container-fluid py-4">
+    <!-- Back navigation -->
+    <div class="mb-4">
+      <RouterLink
+        to="/dashboard/links"
+        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+        Back to Links
+      </RouterLink>
+    </div>
+
+    <!-- Page title -->
+    <div class="mb-4">
+      <h4 class="fw-bold mb-1">Link Analytics</h4>
+      <p class="text-muted small mb-0">{{ route.params.id }}</p>
+    </div>
+
+    <!-- Error state -->
+    <div v-if="error" class="alert alert-danger d-flex align-items-center gap-2" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+      </svg>
+      {{ error }}
+      <button class="btn btn-sm btn-outline-danger ms-auto" @click="loadAnalytics">Retry</button>
+    </div>
+
+    <!-- Loading state -->
+    <div v-if="loading && !error" class="text-center py-5">
+      <div class="spinner-border text-primary" style="width: 2.5rem; height: 2.5rem;" role="status">
+        <span class="visually-hidden">Loading analytics...</span>
+      </div>
+      <p class="text-muted mt-3 mb-0">Loading analytics data...</p>
+    </div>
+
+    <template v-if="!loading && analytics">
+      <!-- Date range filter -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-sm-6 col-md-3">
+              <label class="form-label fw-medium small">From</label>
+              <input v-model="filterFrom" type="date" class="form-control form-control-sm" />
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <label class="form-label fw-medium small">To</label>
+              <input v-model="filterTo" type="date" class="form-control form-control-sm" />
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <label class="form-label fw-medium small">Granularity</label>
+              <select v-model="filterGranularity" class="form-select form-select-sm">
+                <option value="hour">Hour</option>
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+                <option value="month">Month</option>
+              </select>
+            </div>
+            <div class="col-sm-6 col-md-3">
+              <button
+                class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2"
+                :disabled="loading"
+                @click="applyFilters"
+              >
+                <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="row g-3 mb-4">
+        <!-- Total Clicks -->
+        <div class="col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-medium">Total Clicks</span>
+                <div class="stat-icon bg-primary-soft rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#635bff" viewBox="0 0 16 16">
+                    <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="fw-bold fs-4 mb-0">{{ analytics.total_clicks.toLocaleString() }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unique Clicks -->
+        <div class="col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-medium">Unique Clicks</span>
+                <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: rgba(20, 184, 166, 0.12);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#14b8a6" viewBox="0 0 16 16">
+                    <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="fw-bold fs-4 mb-0">{{ analytics.unique_clicks.toLocaleString() }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Referrer -->
+        <div class="col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-medium">Top Referrer</span>
+                <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: rgba(245, 158, 11, 0.12);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#f59e0b" viewBox="0 0 16 16">
+                    <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/>
+                    <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="fw-bold fs-6 mb-0 text-truncate" :title="topReferrer">
+                {{ topReferrer }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Device -->
+        <div class="col-sm-6 col-xl-3">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small fw-medium">Top Device</span>
+                <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: rgba(239, 68, 68, 0.12);">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ef4444" viewBox="0 0 16 16">
+                    <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                    <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="fw-bold fs-6 mb-0 text-capitalize">
+                {{ topDevice }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clicks over time chart -->
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom py-3 px-4">
+          <h6 class="mb-0 fw-semibold">Clicks Over Time</h6>
+        </div>
+        <div class="card-body p-4">
+          <div v-if="analytics.time_series.length === 0" class="text-center py-4 text-muted">
+            No time series data available for this period.
+          </div>
+          <VChart
+            v-else
+            :option="chartOption"
+            style="height: 320px;"
+            autoresize
+          />
+        </div>
+      </div>
+
+      <!-- Bottom tables row -->
+      <div class="row g-4">
+        <!-- Referrers table -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-semibold">Top Referrers</h6>
+              <span class="badge bg-light text-muted border fw-normal">Top 10</span>
+            </div>
+            <div class="card-body p-0">
+              <div v-if="topReferrers.length === 0" class="text-center py-4 text-muted small">
+                No referrer data available.
+              </div>
+              <div v-else class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4 py-2 fw-semibold text-muted" style="font-size: 0.75rem;">Referrer</th>
+                      <th class="py-2 fw-semibold text-muted text-end" style="font-size: 0.75rem; width: 60px;">Clicks</th>
+                      <th class="pe-4 py-2 fw-semibold text-muted" style="font-size: 0.75rem; width: 120px;">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="ref in topReferrers" :key="ref.referrer">
+                      <td class="ps-4 py-2" style="max-width: 180px;">
+                        <span class="text-truncate d-block small" :title="ref.referrer">
+                          {{ ref.referrer || 'Direct / None' }}
+                        </span>
+                      </td>
+                      <td class="py-2 text-end small fw-semibold">{{ ref.count.toLocaleString() }}</td>
+                      <td class="pe-4 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height: 6px;">
+                            <div
+                              class="progress-bar"
+                              role="progressbar"
+                              :style="{ width: referrerPercent(ref.count) + '%', backgroundColor: '#635bff' }"
+                              :aria-valuenow="referrerPercent(ref.count)"
+                              aria-valuemin="0"
+                              aria-valuemax="100"
+                            ></div>
+                          </div>
+                          <span class="text-muted" style="font-size: 0.7rem; min-width: 32px;">{{ referrerPercent(ref.count) }}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Devices table -->
+        <div class="col-lg-6">
+          <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+              <h6 class="mb-0 fw-semibold">Device Breakdown</h6>
+              <span class="badge bg-light text-muted border fw-normal">All Devices</span>
+            </div>
+            <div class="card-body p-0">
+              <div v-if="analytics.devices.length === 0" class="text-center py-4 text-muted small">
+                No device data available.
+              </div>
+              <div v-else class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-4 py-2 fw-semibold text-muted" style="font-size: 0.75rem;">Device</th>
+                      <th class="py-2 fw-semibold text-muted text-end" style="font-size: 0.75rem; width: 60px;">Clicks</th>
+                      <th class="pe-4 py-2 fw-semibold text-muted" style="font-size: 0.75rem; width: 120px;">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="device in analytics.devices" :key="device.device_type">
+                      <td class="ps-4 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="device-icon">
+                            <svg v-if="device.device_type.toLowerCase() === 'mobile'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#635bff" viewBox="0 0 16 16">
+                              <path d="M11 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM5 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                              <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                            </svg>
+                            <svg v-else-if="device.device_type.toLowerCase() === 'tablet'" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#635bff" viewBox="0 0 16 16">
+                              <path d="M12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM4 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                              <path d="M8 14a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#635bff" viewBox="0 0 16 16">
+                              <path d="M0 4s0-2 2-2h12s2 0 2 2v6s0 2-2 2h-4q0 1 .25 1.5H11a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h.75Q6 13 6 12H2s-2 0-2-2zm1.398 0a.53.53 0 0 0-.398.49v5.62a.53.53 0 0 0 .398.49h13.204a.53.53 0 0 0 .398-.49V4.49a.53.53 0 0 0-.398-.49z"/>
+                            </svg>
+                          </span>
+                          <span class="small text-capitalize">{{ device.device_type || 'Unknown' }}</span>
+                        </div>
+                      </td>
+                      <td class="py-2 text-end small fw-semibold">{{ device.count.toLocaleString() }}</td>
+                      <td class="pe-4 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height: 6px;">
+                            <div
+                              class="progress-bar"
+                              role="progressbar"
+                              :style="{ width: devicePercent(device.count) + '%', backgroundColor: '#635bff' }"
+                              :aria-valuenow="devicePercent(device.count)"
+                              aria-valuemin="0"
+                              aria-valuemax="100"
+                            ></div>
+                          </div>
+                          <span class="text-muted" style="font-size: 0.7rem; min-width: 32px;">{{ devicePercent(device.count) }}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Countries -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-semibold">Top Countries</h6>
+          <span class="badge bg-light text-muted border fw-normal">Top 15</span>
+        </div>
+        <div class="card-body">
+          <div v-if="!analytics.countries || analytics.countries.length === 0" class="text-center py-4 text-muted small">
+            No country data available yet. Geographic data is collected on new clicks.
+          </div>
+          <div v-else class="row g-4">
+            <!-- Horizontal bar chart -->
+            <div class="col-lg-7">
+              <VChart :option="countriesChartOption" style="height: 360px;" autoresize />
+            </div>
+            <!-- Country table -->
+            <div class="col-lg-5">
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th class="ps-3 py-2 fw-semibold text-muted" style="font-size: 0.75rem;">Country</th>
+                      <th class="py-2 fw-semibold text-muted text-end" style="font-size: 0.75rem; width: 60px;">Clicks</th>
+                      <th class="pe-3 py-2 fw-semibold text-muted" style="font-size: 0.75rem; width: 120px;">Share</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="c in analytics.countries" :key="c.country">
+                      <td class="ps-3 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <span style="font-size: 1.1rem; line-height: 1;">{{ countryFlag(c.country) }}</span>
+                          <span class="small">{{ countryDisplayName(c.country) }}</span>
+                        </div>
+                      </td>
+                      <td class="py-2 text-end small fw-semibold">{{ c.count.toLocaleString() }}</td>
+                      <td class="pe-3 py-2">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height: 6px;">
+                            <div
+                              class="progress-bar"
+                              role="progressbar"
+                              :style="{ width: countryPercent(c.count) + '%', backgroundColor: '#635bff' }"
+                              :aria-valuenow="countryPercent(c.count)"
+                              aria-valuemin="0"
+                              aria-valuemax="100"
+                            ></div>
+                          </div>
+                          <span class="text-muted" style="font-size: 0.7rem; min-width: 32px;">{{ countryPercent(c.count) }}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { RouterLink } from 'vue-router';
+import { use } from 'echarts/core';
+import { LineChart, PieChart, BarChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent, TitleComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+import VChart from 'vue-echarts';
+import linksApi from '@/api/links';
+import type { AnalyticsResponse } from '@/types/links';
+
+use([LineChart, PieChart, BarChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, CanvasRenderer]);
+
+const route = useRoute();
+const router = useRouter();
+
+const analytics = ref<AnalyticsResponse | null>(null);
+const loading = ref(false);
+const error = ref('');
+
+// Filter state — default to last 30 days
+const now = new Date();
+const thirtyDaysAgo = new Date(now);
+thirtyDaysAgo.setDate(now.getDate() - 30);
+
+const filterFrom = ref(thirtyDaysAgo.toISOString().slice(0, 10));
+const filterTo = ref(now.toISOString().slice(0, 10));
+const filterGranularity = ref<'hour' | 'day' | 'week' | 'month'>('day');
+
+async function loadAnalytics() {
+  const id = route.params.id as string;
+  loading.value = true;
+  error.value = '';
+  try {
+    analytics.value = await linksApi.getAnalytics(
+      id,
+      filterFrom.value ? new Date(filterFrom.value).toISOString() : undefined,
+      filterTo.value ? new Date(filterTo.value).toISOString() : undefined,
+      filterGranularity.value,
+    );
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      error.value = err.message;
+    } else {
+      error.value = 'Failed to load analytics. Please try again.';
+    }
+  } finally {
+    loading.value = false;
+  }
+}
+
+function applyFilters() {
+  loadAnalytics();
+}
+
+onMounted(() => {
+  loadAnalytics();
+});
+
+// Computed helpers
+const topReferrer = computed(() => {
+  if (!analytics.value || analytics.value.referrers.length === 0) return 'N/A';
+  const top = analytics.value.referrers.reduce((a, b) => (a.count >= b.count ? a : b));
+  return top.referrer || 'Direct / None';
+});
+
+const topDevice = computed(() => {
+  if (!analytics.value || analytics.value.devices.length === 0) return 'N/A';
+  const top = analytics.value.devices.reduce((a, b) => (a.count >= b.count ? a : b));
+  return top.device_type || 'Unknown';
+});
+
+const topReferrers = computed(() => {
+  if (!analytics.value) return [];
+  return [...analytics.value.referrers]
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+});
+
+const totalReferrerClicks = computed(() =>
+  topReferrers.value.reduce((sum, r) => sum + r.count, 0)
+);
+
+const totalDeviceClicks = computed(() => {
+  if (!analytics.value) return 0;
+  return analytics.value.devices.reduce((sum, d) => sum + d.count, 0);
+});
+
+function referrerPercent(count: number): number {
+  if (totalReferrerClicks.value === 0) return 0;
+  return Math.round((count / totalReferrerClicks.value) * 100);
+}
+
+function devicePercent(count: number): number {
+  if (totalDeviceClicks.value === 0) return 0;
+  return Math.round((count / totalDeviceClicks.value) * 100);
+}
+
+// Country helpers
+function countryFlag(code: string): string {
+  if (!code || code.length !== 2 || code === 'Unknown') return '🌐';
+  try {
+    return String.fromCodePoint(
+      ...code.toUpperCase().split('').map((c: string) => c.charCodeAt(0) + 127397),
+    );
+  } catch {
+    return '🌐';
+  }
+}
+
+function countryDisplayName(code: string): string {
+  if (!code || code === 'Unknown') return 'Unknown';
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'region' }).of(code) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+const totalCountryClicks = computed(() =>
+  (analytics.value?.countries ?? []).reduce((sum, c) => sum + c.count, 0),
+);
+
+function countryPercent(count: number): number {
+  if (totalCountryClicks.value === 0) return 0;
+  return Math.round((count / totalCountryClicks.value) * 100);
+}
+
+const countriesChartOption = computed(() => {
+  const countries = analytics.value?.countries ?? [];
+  const reversed = [...countries].reverse();
+  return {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      backgroundColor: 'rgba(255,255,255,0.95)',
+      borderColor: '#e9ecef',
+      borderWidth: 1,
+      textStyle: { color: '#333', fontSize: 12 },
+    },
+    grid: { left: '3%', right: '8%', bottom: '3%', containLabel: true },
+    xAxis: {
+      type: 'value',
+      axisLabel: { color: '#6c757d', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f3f5', type: 'dashed' } },
+    },
+    yAxis: {
+      type: 'category',
+      data: reversed.map((c) => countryDisplayName(c.country)),
+      axisLabel: { color: '#6c757d', fontSize: 11 },
+      axisLine: { lineStyle: { color: '#dee2e6' } },
+      axisTick: { show: false },
+    },
+    series: [
+      {
+        name: 'Clicks',
+        type: 'bar',
+        data: reversed.map((c) => c.count),
+        barMaxWidth: 20,
+        itemStyle: { color: '#635bff', borderRadius: [0, 4, 4, 0] },
+      },
+    ],
+  };
+});
+
+// ECharts option
+const chartOption = computed(() => ({
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderColor: '#e9ecef',
+    borderWidth: 1,
+    textStyle: { color: '#333', fontSize: 12 },
+    axisPointer: { type: 'cross', label: { backgroundColor: '#635bff' } },
+  },
+  grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+  xAxis: {
+    type: 'category',
+    data: analytics.value?.time_series.map((p) => p.timestamp.substring(0, 10)) ?? [],
+    axisLine: { lineStyle: { color: '#dee2e6' } },
+    axisTick: { show: false },
+    axisLabel: { color: '#6c757d', fontSize: 11 },
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { color: '#f1f3f5', type: 'dashed' } },
+    axisLabel: { color: '#6c757d', fontSize: 11 },
+  },
+  series: [
+    {
+      name: 'Clicks',
+      type: 'line',
+      data: analytics.value?.time_series.map((p) => p.count) ?? [],
+      smooth: true,
+      areaStyle: { color: 'rgba(99,91,255,0.1)' },
+      itemStyle: { color: '#635bff' },
+      lineStyle: { color: '#635bff', width: 2 },
+      symbol: 'circle',
+      symbolSize: 6,
+    },
+  ],
+}));
+</script>
+
+<style scoped>
+.btn-primary {
+  background-color: #635bff;
+  border-color: #635bff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #5249e0;
+  border-color: #5249e0;
+}
+
+.text-primary {
+  color: #635bff !important;
+}
+
+.stat-icon {
+  flex-shrink: 0;
+}
+
+.bg-primary-soft {
+  background-color: rgba(99, 91, 255, 0.12);
+}
+
+.progress {
+  border-radius: 100px;
+}
+
+.progress-bar {
+  border-radius: 100px;
+}
+</style>
