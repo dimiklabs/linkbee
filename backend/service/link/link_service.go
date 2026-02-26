@@ -525,6 +525,7 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 		RedirectType:     link.RedirectType,
 		IsActive:         link.IsActive,
 		IsStarred:        link.IsStarred,
+		IsSplitTest:      link.IsSplitTest,
 		HealthStatus:     link.HealthStatus,
 		HealthStatusCode: link.HealthStatusCode,
 		HealthCheckedAt:  link.HealthCheckedAt,

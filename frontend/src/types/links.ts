@@ -39,6 +39,7 @@ export interface LinkResponse {
   redirect_type: number;
   is_active: boolean;
   is_starred: boolean;
+  is_split_test: boolean;
   health_status: string;
   health_status_code?: number;
   health_checked_at?: string;
@@ -118,6 +119,29 @@ export interface DemoShortenResponse {
   short_url: string;
   slug: string;
   destination_url: string;
+}
+
+export interface LinkVariant {
+  id: string;
+  link_id: string;
+  name: string;
+  destination_url: string;
+  weight: number;
+  click_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateVariantRequest {
+  name: string;
+  destination_url: string;
+  weight: number;
+}
+
+export interface UpdateVariantRequest {
+  name?: string;
+  destination_url?: string;
+  weight?: number;
 }
 
 export interface ImportLinkError {

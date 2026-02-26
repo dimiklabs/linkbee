@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	"github.com/google/uuid"
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/dto"
 	"github.com/shafikshaon/shortlink/logger"
@@ -27,6 +29,7 @@ type CachedLink struct {
 	DestURL      string     `json:"dest_url"`
 	RedirectType int16      `json:"redirect_type"`
 	IsActive     bool       `json:"is_active"`
+	IsSplitTest  bool       `json:"is_split_test"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	MaxClicks    *int64     `json:"max_clicks,omitempty"`
 	ClickCount   int64      `json:"click_count"`
@@ -35,19 +38,27 @@ type CachedLink struct {
 
 type RedirectServiceI interface {
 	GetCachedLink(ctx context.Context, slug string) (*model.Link, *dto.ServiceError)
+	PickSplitTestVariant(ctx context.Context, linkID uuid.UUID) (string, *dto.ServiceError)
 }
 
 type redirectService struct {
-	linkRepo repository.LinkRepositoryI
-	cache    valkeycompat.Cmdable
-	cacheTTL time.Duration
+	linkRepo    repository.LinkRepositoryI
+	variantRepo repository.LinkVariantRepositoryI
+	cache       valkeycompat.Cmdable
+	cacheTTL    time.Duration
 }
 
-func NewRedirectService(linkRepo repository.LinkRepositoryI, cache valkeycompat.Cmdable, cacheTTLSeconds int) RedirectServiceI {
+func NewRedirectService(
+	linkRepo repository.LinkRepositoryI,
+	variantRepo repository.LinkVariantRepositoryI,
+	cache valkeycompat.Cmdable,
+	cacheTTLSeconds int,
+) RedirectServiceI {
 	return &redirectService{
-		linkRepo: linkRepo,
-		cache:    cache,
-		cacheTTL: time.Duration(cacheTTLSeconds) * time.Second,
+		linkRepo:    linkRepo,
+		variantRepo: variantRepo,
+		cache:       cache,
+		cacheTTL:    time.Duration(cacheTTLSeconds) * time.Second,
 	}
 }
 
@@ -59,11 +70,11 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 	if err == nil && cached != "" {
 		var cl CachedLink
 		if jsonErr := json.Unmarshal([]byte(cached), &cl); jsonErr == nil {
-			// Reconstruct minimal link from cache
 			link := &model.Link{
 				DestinationURL: cl.DestURL,
 				RedirectType:   cl.RedirectType,
 				IsActive:       cl.IsActive,
+				IsSplitTest:    cl.IsSplitTest,
 				ExpiresAt:      cl.ExpiresAt,
 				MaxClicks:      cl.MaxClicks,
 				ClickCount:     cl.ClickCount,
@@ -72,7 +83,6 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 			if cl.HasPassword {
 				link.PasswordHash = "cached" // sentinel — actual hash not cached
 			}
-			// Parse UUID
 			_ = link.ID.UnmarshalText([]byte(cl.ID))
 			return link, nil
 		}
@@ -94,12 +104,53 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 	return link, nil
 }
 
+// PickSplitTestVariant selects a variant by weighted random and increments its click count.
+// Returns the chosen destination URL, or "" if no variants exist (caller falls back to original URL).
+func (s *redirectService) PickSplitTestVariant(ctx context.Context, linkID uuid.UUID) (string, *dto.ServiceError) {
+	variants, err := s.variantRepo.GetByLinkID(ctx, linkID)
+	if err != nil {
+		return "", dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	if len(variants) == 0 {
+		return "", nil
+	}
+
+	// Weighted random selection
+	total := 0
+	for _, v := range variants {
+		total += v.Weight
+	}
+
+	r := rand.Intn(total)
+	cumulative := 0
+	var chosen *model.LinkVariant
+	for i := range variants {
+		cumulative += variants[i].Weight
+		if r < cumulative {
+			chosen = &variants[i]
+			break
+		}
+	}
+	if chosen == nil {
+		chosen = &variants[len(variants)-1]
+	}
+
+	// Increment variant click count asynchronously
+	variantID := chosen.ID
+	go func() {
+		_ = s.variantRepo.IncrementClickCount(context.Background(), variantID)
+	}()
+
+	return chosen.DestinationURL, nil
+}
+
 func (s *redirectService) warmCache(ctx context.Context, key string, link *model.Link) {
 	cl := CachedLink{
 		ID:           link.ID.String(),
 		DestURL:      link.DestinationURL,
 		RedirectType: link.RedirectType,
 		IsActive:     link.IsActive,
+		IsSplitTest:  link.IsSplitTest,
 		ExpiresAt:    link.ExpiresAt,
 		MaxClicks:    link.MaxClicks,
 		ClickCount:   link.ClickCount,

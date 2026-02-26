@@ -27,6 +27,7 @@ type LinkResponse struct {
 	RedirectType   int16      `json:"redirect_type"`
 	IsActive           bool       `json:"is_active"`
 	IsStarred          bool       `json:"is_starred"`
+	IsSplitTest        bool       `json:"is_split_test"`
 	HealthStatus       string     `json:"health_status"`
 	HealthStatusCode   int        `json:"health_status_code,omitempty"`
 	HealthCheckedAt    *time.Time `json:"health_checked_at,omitempty"`
@@ -107,6 +108,18 @@ type HeatmapData struct {
 	DayOfWeek int   `json:"day_of_week"` // 0 = Sunday … 6 = Saturday
 	Hour      int   `json:"hour"`        // 0–23 UTC
 	Count     int64 `json:"count"`
+}
+
+// LinkVariantResponse represents a single A/B split-test variant.
+type LinkVariantResponse struct {
+	ID             uuid.UUID `json:"id"`
+	LinkID         uuid.UUID `json:"link_id"`
+	Name           string    `json:"name"`
+	DestinationURL string    `json:"destination_url"`
+	Weight         int       `json:"weight"`
+	ClickCount     int64     `json:"click_count"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // ImportLinkError captures a per-row failure during CSV import.

@@ -18,6 +18,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.EmailVerification{},
 		&model.Folder{},
 		&model.Link{},
+		&model.LinkVariant{},
 		&model.ClickEvent{},
 	)
 	if err != nil {

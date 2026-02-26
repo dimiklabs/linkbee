@@ -97,10 +97,17 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 	referrer := c.GetHeader("Referer")
 	go h.clickService.EnqueueClick(context.Background(), linkID, ip, userAgent, referrer, source)
 
-	// Redirect
+	// Determine destination URL (split test overrides the original)
+	destURL := link.DestinationURL
+	if link.IsSplitTest {
+		if variantURL, svcErr := h.redirectService.PickSplitTestVariant(ctx, linkID); svcErr == nil && variantURL != "" {
+			destURL = variantURL
+		}
+	}
+
 	redirectCode := http.StatusFound // 302 default
 	if link.RedirectType == 301 {
 		redirectCode = http.StatusMovedPermanently
 	}
-	c.Redirect(redirectCode, link.DestinationURL)
+	c.Redirect(redirectCode, destURL)
 }

@@ -367,6 +367,18 @@
                     </svg>
                   </button>
 
+                  <!-- A/B Split Test -->
+                  <button
+                    class="btn btn-sm border-0 p-1"
+                    :class="link.is_split_test ? 'text-primary' : 'btn-outline-secondary'"
+                    title="A/B Split Test"
+                    @click="openSplitModal(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3.5a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1zM0 9.5h2.05a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0zm4.5-1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+                    </svg>
+                  </button>
+
                   <!-- Edit -->
                   <button
                     class="btn btn-sm btn-outline-secondary border-0 p-1"
@@ -467,6 +479,16 @@
       @imported="onImportDone"
     />
 
+    <!-- A/B Split Test Modal -->
+    <SplitTestModal
+      v-if="splitLink"
+      ref="splitModalRef"
+      :link-id="splitLink.id"
+      :slug="splitLink.slug"
+      :is-split-test-initial="splitLink.is_split_test"
+      @updated="onSplitTestUpdated"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -509,6 +531,7 @@ import foldersApi from '@/api/folders';
 import CreateLinkModal from '@/components/CreateLinkModal.vue';
 import QRCodeModal from '@/components/QRCodeModal.vue';
 import ImportLinksModal from '@/components/ImportLinksModal.vue';
+import SplitTestModal from '@/components/SplitTestModal.vue';
 import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
@@ -522,6 +545,8 @@ const deletingId = ref<string | null>(null);
 const createModalRef = ref<InstanceType<typeof CreateLinkModal> | null>(null);
 const qrModalRef = ref<InstanceType<typeof QRCodeModal> | null>(null);
 const importModalRef = ref<InstanceType<typeof ImportLinksModal> | null>(null);
+const splitModalRef = ref<InstanceType<typeof SplitTestModal> | null>(null);
+const splitLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
@@ -681,6 +706,19 @@ function openCreateModal() {
 
 function openImportModal() {
   importModalRef.value?.show();
+}
+
+function openSplitModal(link: LinkResponse) {
+  splitLink.value = link;
+  setTimeout(() => splitModalRef.value?.show(), 50);
+}
+
+function onSplitTestUpdated(enabled: boolean) {
+  if (splitLink.value) {
+    const idx = linksStore.links.findIndex(l => l.id === splitLink.value!.id);
+    if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_split_test: enabled };
+    splitLink.value = { ...splitLink.value, is_split_test: enabled };
+  }
 }
 
 async function onImportDone(_result: ImportLinksResponse) {
