@@ -16,6 +16,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.PasswordReset{},
 		&model.Session{},
 		&model.EmailVerification{},
+		&model.APIKey{},
 		&model.Folder{},
 		&model.Link{},
 		&model.LinkVariant{},

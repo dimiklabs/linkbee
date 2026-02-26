@@ -64,6 +64,11 @@ const router = createRouter({
           name: 'link-analytics',
           component: () => import('@/pages/dashboard/LinkAnalyticsPage.vue'),
         },
+        {
+          path: 'api-keys',
+          name: 'api-keys',
+          component: () => import('@/pages/dashboard/ApiKeysPage.vue'),
+        },
       ],
     },
 

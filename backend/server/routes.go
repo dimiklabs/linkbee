@@ -11,6 +11,7 @@ import (
 	"github.com/shafikshaon/shortlink/middlewares"
 	"github.com/shafikshaon/shortlink/repository"
 	analyticsSvc "github.com/shafikshaon/shortlink/service/analytics"
+	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
 	authSrv "github.com/shafikshaon/shortlink/service/auth"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	demoSvc "github.com/shafikshaon/shortlink/service/demo"
@@ -39,6 +40,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	// ── Repositories ─────────────────────────────────────────────────────────
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
+	apiKeyRepo            := repository.NewAPIKeyRepository(s.MasterDB, s.ReplicaDB)
 	folderRepo            := repository.NewFolderRepository(s.MasterDB, s.ReplicaDB)
 	userRepo              := repository.NewUserRepository(s.MasterDB, s.ReplicaDB)
 	passwordResetRepo     := repository.NewPasswordResetRepository(s.MasterDB, s.ReplicaDB)
@@ -61,6 +63,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
 	folderService      := folderSvc.NewFolderService(folderRepo)
+	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
 	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
 	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
 	geoService         := geoSvc.NewGeoService(s.Cfg.App.GeoDBPath)
@@ -89,6 +92,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	folderHandler    := handler.NewFolderHandler(folderService)
+	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService)
 	splitHandler     := handler.NewSplitHandler(splitService)
 	geoHandler       := handler.NewGeoHandler(geoRoutingService)
 	linkHandler      := handler.NewLinkHandler(linkService)
@@ -136,9 +140,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Public.GET("/links/:id/analytics/live", analyticsHandler.StreamLiveCount)
 		}
 
-		// Protected routes (JWT required)
+		// Protected routes (JWT or API key required)
 		v1Auth := v1.Group("")
-		v1Auth.Use(middlewares.AuthMiddleware(s.Cfg.App, tokenBlacklistRepo))
+		v1Auth.Use(middlewares.AuthOrAPIKeyMiddleware(s.Cfg.App, tokenBlacklistRepo, apiKeyService))
 		v1Auth.Use(middlewares.SessionActivityMiddleware(sessionRepo, s.Cfg.Session))
 		{
 			// Auth profile & session management
@@ -184,6 +188,11 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)
 			v1Auth.GET("/links/:id/analytics", analyticsHandler.GetLinkAnalytics)
+
+			// API key management (JWT only — can't bootstrap with API key)
+			v1Auth.GET("/api-keys", apiKeyHandler.ListAPIKeys)
+			v1Auth.POST("/api-keys", apiKeyHandler.CreateAPIKey)
+			v1Auth.DELETE("/api-keys/:id", apiKeyHandler.RevokeAPIKey)
 		}
 	}
 

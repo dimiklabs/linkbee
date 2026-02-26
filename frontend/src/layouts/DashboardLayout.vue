@@ -39,6 +39,15 @@
           <span class="nav-icon">🔗</span>
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Links</span>
         </router-link>
+        <router-link
+          to="/dashboard/api-keys"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/api-keys') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">🔑</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">API Keys</span>
+        </router-link>
       </nav>
 
       <!-- Sidebar footer: user info + logout -->
