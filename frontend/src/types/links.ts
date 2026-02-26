@@ -116,3 +116,16 @@ export interface DemoShortenResponse {
   slug: string;
   destination_url: string;
 }
+
+export interface ImportLinkError {
+  row: number;
+  url: string;
+  error: string;
+}
+
+export interface ImportLinksResponse {
+  total: number;
+  created: number;
+  failed: number;
+  errors?: ImportLinkError[];
+}

@@ -2,8 +2,11 @@ package link
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -29,6 +32,7 @@ type LinkServiceI interface {
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
+	ImportLinks(ctx context.Context, userID uuid.UUID, r io.Reader) (*response.ImportLinksResponse, *dto.ServiceError)
 }
 
 type linkService struct {
@@ -281,6 +285,131 @@ func (s *linkService) ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.
 	}
 	link.IsStarred = isStarred
 	return s.toLinkResponse(link), nil
+}
+
+const importMaxRows = 500
+
+func (s *linkService) ImportLinks(ctx context.Context, userID uuid.UUID, r io.Reader) (*response.ImportLinksResponse, *dto.ServiceError) {
+	csvReader := csv.NewReader(r)
+	csvReader.TrimLeadingSpace = true
+
+	header, err := csvReader.Read()
+	if err != nil {
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "Invalid CSV: could not read header row")
+	}
+
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[strings.ToLower(strings.TrimSpace(col))] = i
+	}
+
+	if _, ok := colIdx["destination_url"]; !ok {
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "CSV must have a 'destination_url' column")
+	}
+
+	result := &response.ImportLinksResponse{
+		Errors: []response.ImportLinkError{},
+	}
+	rowNum := 0
+
+	for {
+		record, readErr := csvReader.Read()
+		if readErr == io.EOF {
+			break
+		}
+		if readErr != nil {
+			rowNum++
+			result.Total++
+			result.Failed++
+			result.Errors = append(result.Errors, response.ImportLinkError{
+				Row:   rowNum,
+				Error: "Parse error: " + readErr.Error(),
+			})
+			continue
+		}
+
+		// Skip blank rows
+		allEmpty := true
+		for _, cell := range record {
+			if strings.TrimSpace(cell) != "" {
+				allEmpty = false
+				break
+			}
+		}
+		if allEmpty {
+			continue
+		}
+
+		rowNum++
+		if rowNum > importMaxRows {
+			break
+		}
+		result.Total++
+
+		destURL := csvField(record, colIdx, "destination_url")
+		if destURL == "" {
+			result.Failed++
+			result.Errors = append(result.Errors, response.ImportLinkError{
+				Row:   rowNum,
+				Error: "destination_url is required",
+			})
+			continue
+		}
+
+		req := &request.CreateLinkRequest{
+			DestinationURL: destURL,
+			Slug:           csvField(record, colIdx, "slug"),
+			Title:          csvField(record, colIdx, "title"),
+		}
+
+		if tagsStr := csvField(record, colIdx, "tags"); tagsStr != "" {
+			for _, t := range strings.Split(tagsStr, ";") {
+				if t = strings.TrimSpace(t); t != "" {
+					req.Tags = append(req.Tags, t)
+				}
+			}
+		}
+
+		switch csvField(record, colIdx, "redirect_type") {
+		case "301":
+			rt := int16(301)
+			req.RedirectType = &rt
+		case "302":
+			rt := int16(302)
+			req.RedirectType = &rt
+		}
+
+		if fid := csvField(record, colIdx, "folder_id"); fid != "" {
+			req.FolderID = &fid
+		}
+
+		if _, svcErr := s.CreateLink(ctx, userID, req); svcErr != nil {
+			result.Failed++
+			result.Errors = append(result.Errors, response.ImportLinkError{
+				Row:   rowNum,
+				URL:   destURL,
+				Error: svcErr.Description,
+			})
+		} else {
+			result.Created++
+		}
+	}
+
+	logger.InfoCtx(ctx, "CSV import complete",
+		zap.String("user_id", userID.String()),
+		zap.Int("total", result.Total),
+		zap.Int("created", result.Created),
+		zap.Int("failed", result.Failed))
+
+	return result, nil
+}
+
+func csvField(record []string, colIdx map[string]int, col string) string {
+	idx, ok := colIdx[col]
+	if !ok || idx >= len(record) {
+		return ""
+	}
+	return strings.TrimSpace(record[idx])
 }
 
 func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {

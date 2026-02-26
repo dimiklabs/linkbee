@@ -8,6 +8,7 @@ import type {
   AnalyticsResponse,
   DemoShortenRequest,
   DemoShortenResponse,
+  ImportLinksResponse,
 } from '@/types/links';
 
 export const linksApi = {
@@ -38,6 +39,15 @@ export const linksApi = {
 
   toggleStar: async (id: string): Promise<ApiResponse<LinkResponse>> => {
     const response = await apiClient.patch(`/links/${id}/star`);
+    return response.data;
+  },
+
+  importCSV: async (file: File): Promise<ApiResponse<ImportLinksResponse>> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post('/links/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 

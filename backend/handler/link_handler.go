@@ -169,6 +169,33 @@ func (h *LinkHandler) DeleteLink(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Link deleted successfully", nil)
 }
 
+// ImportLinks godoc
+// POST /api/v1/links/import
+func (h *LinkHandler) ImportLinks(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "A CSV file is required (field name: file)")
+		return
+	}
+	defer file.Close()
+
+	result, svcErr := h.linkService.ImportLinks(ctx, userID, file)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Import complete", result)
+}
+
 // ToggleStar godoc
 // PATCH /api/v1/links/:id/star
 func (h *LinkHandler) ToggleStar(c *gin.Context) {

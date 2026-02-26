@@ -146,6 +146,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			// Link CRUD
 			v1Auth.GET("/links", linkHandler.ListLinks)
 			v1Auth.POST("/links", linkHandler.CreateLink)
+			v1Auth.POST("/links/import", linkHandler.ImportLinks)
 			v1Auth.GET("/links/:id", linkHandler.GetLink)
 			v1Auth.PUT("/links/:id", linkHandler.UpdateLink)
 			v1Auth.DELETE("/links/:id", linkHandler.DeleteLink)

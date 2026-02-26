@@ -97,6 +97,21 @@ type HeatmapData struct {
 	Count     int64 `json:"count"`
 }
 
+// ImportLinkError captures a per-row failure during CSV import.
+type ImportLinkError struct {
+	Row   int    `json:"row"`
+	URL   string `json:"url"`
+	Error string `json:"error"`
+}
+
+// ImportLinksResponse is returned from the bulk CSV import endpoint.
+type ImportLinksResponse struct {
+	Total   int               `json:"total"`
+	Created int               `json:"created"`
+	Failed  int               `json:"failed"`
+	Errors  []ImportLinkError `json:"errors,omitempty"`
+}
+
 // DemoShortenResponse is returned from the demo shorten endpoint.
 type DemoShortenResponse struct {
 	ShortURL       string `json:"short_url"`

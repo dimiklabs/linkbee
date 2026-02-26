@@ -139,6 +139,15 @@
           />
         </div>
 
+        <!-- Import button -->
+        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @click="openImportModal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+          </svg>
+          Import CSV
+        </button>
+
         <!-- Create button -->
         <button class="btn btn-primary d-flex align-items-center gap-2" @click="openCreateModal">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -411,6 +420,12 @@
       :slug="qrLink.slug"
     />
 
+    <!-- Import CSV Modal -->
+    <ImportLinksModal
+      ref="importModalRef"
+      @imported="onImportDone"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -452,6 +467,8 @@ import type { FolderResponse } from '@/types/folders';
 import foldersApi from '@/api/folders';
 import CreateLinkModal from '@/components/CreateLinkModal.vue';
 import QRCodeModal from '@/components/QRCodeModal.vue';
+import ImportLinksModal from '@/components/ImportLinksModal.vue';
+import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
 
@@ -463,6 +480,7 @@ const deletingId = ref<string | null>(null);
 
 const createModalRef = ref<InstanceType<typeof CreateLinkModal> | null>(null);
 const qrModalRef = ref<InstanceType<typeof QRCodeModal> | null>(null);
+const importModalRef = ref<InstanceType<typeof ImportLinksModal> | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
@@ -607,6 +625,14 @@ async function copyShortUrl(link: LinkResponse) {
 function openCreateModal() {
   editingLink.value = null;
   createModalRef.value?.show();
+}
+
+function openImportModal() {
+  importModalRef.value?.show();
+}
+
+async function onImportDone(_result: ImportLinksResponse) {
+  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
 }
 
 function openEditModal(link: LinkResponse) {
