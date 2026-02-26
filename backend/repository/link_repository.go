@@ -19,7 +19,7 @@ type LinkRepositoryI interface {
 	// Read
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string) ([]model.Link, int64, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) ([]model.Link, int64, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
 	// Update
@@ -90,7 +90,7 @@ func (r *LinkRepository) GetBySlug(ctx context.Context, slug string) (*model.Lin
 	return &link, nil
 }
 
-func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string) ([]model.Link, int64, error) {
+func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) ([]model.Link, int64, error) {
 	logger.DebugCtx(ctx, "Fetching links for user",
 		zap.String("user_id", userID.String()),
 		zap.Int("page", page),
@@ -101,6 +101,10 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 	query := r.replicaDB.WithContext(ctx).
 		Model(&model.Link{}).
 		Where("user_id = ?", userID)
+
+	if folderID != nil {
+		query = query.Where("folder_id = ?", *folderID)
+	}
 
 	if search != "" {
 		searchTerm := "%" + search + "%"

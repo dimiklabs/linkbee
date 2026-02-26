@@ -110,6 +110,15 @@
               </select>
             </div>
 
+            <!-- Folder -->
+            <div class="mb-3">
+              <label for="folder" class="form-label fw-medium">Folder</label>
+              <select id="folder" v-model="form.folder_id" class="form-select">
+                <option value="">— No folder —</option>
+                <option v-for="f in props.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+              </select>
+            </div>
+
             <!-- Tags -->
             <div class="mb-3">
               <label for="tags" class="form-label fw-medium">Tags</label>
@@ -198,10 +207,12 @@
 import { ref, watch, onMounted, computed } from 'vue';
 import { Modal } from 'bootstrap';
 import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types/links';
+import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
 
 interface Props {
   link?: LinkResponse;
+  folders?: FolderResponse[];
 }
 
 const props = defineProps<Props>();
@@ -232,6 +243,7 @@ interface FormState {
   utm_source: string;
   utm_medium: string;
   utm_campaign: string;
+  folder_id: string;
 }
 
 const defaultForm = (): FormState => ({
@@ -245,6 +257,7 @@ const defaultForm = (): FormState => ({
   utm_source: '',
   utm_medium: '',
   utm_campaign: '',
+  folder_id: '',
 });
 
 const form = ref<FormState>(defaultForm());
@@ -262,6 +275,7 @@ function populateForm(link: LinkResponse) {
   form.value.utm_source = link.utm_source ?? '';
   form.value.utm_medium = link.utm_medium ?? '';
   form.value.utm_campaign = link.utm_campaign ?? '';
+  form.value.folder_id = link.folder_id ?? '';
   tagsInput.value = link.tags?.join(', ') ?? '';
 }
 
@@ -315,6 +329,7 @@ async function handleSave() {
         utm_source: form.value.utm_source.trim() || undefined,
         utm_medium: form.value.utm_medium.trim() || undefined,
         utm_campaign: form.value.utm_campaign.trim() || undefined,
+        folder_id: form.value.folder_id || null,
       };
       savedLink = await linksStore.updateLink(props.link.id, payload);
     } else {
@@ -332,6 +347,7 @@ async function handleSave() {
         utm_source: form.value.utm_source.trim() || undefined,
         utm_medium: form.value.utm_medium.trim() || undefined,
         utm_campaign: form.value.utm_campaign.trim() || undefined,
+        folder_id: form.value.folder_id || undefined,
       };
       savedLink = await linksStore.createLink(payload);
     }

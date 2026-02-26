@@ -25,7 +25,7 @@ import (
 type LinkServiceI interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
-	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string) (*response.LinkListResponse, *dto.ServiceError)
+	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) (*response.LinkListResponse, *dto.ServiceError)
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
 }
@@ -95,6 +95,13 @@ func (s *linkService) CreateLink(ctx context.Context, userID uuid.UUID, req *req
 		UTMCampaign:    req.UTMCampaign,
 	}
 
+	if req.FolderID != nil && *req.FolderID != "" {
+		folderID, err := uuid.Parse(*req.FolderID)
+		if err == nil {
+			link.FolderID = &folderID
+		}
+	}
+
 	if req.RedirectType != nil {
 		link.RedirectType = *req.RedirectType
 	}
@@ -147,8 +154,8 @@ func (s *linkService) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return s.toLinkResponse(link), nil
 }
 
-func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string) (*response.LinkListResponse, *dto.ServiceError) {
-	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search)
+func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID) (*response.LinkListResponse, *dto.ServiceError) {
+	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID)
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
@@ -230,6 +237,16 @@ func (s *linkService) UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.
 		}
 		link.PasswordHash = string(hash)
 	}
+	if req.FolderID != nil {
+		if *req.FolderID == "" {
+			link.FolderID = nil
+		} else {
+			folderID, err := uuid.Parse(*req.FolderID)
+			if err == nil {
+				link.FolderID = &folderID
+			}
+		}
+	}
 
 	if err := s.linkRepo.Update(ctx, link); err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
@@ -276,6 +293,7 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 
 	return &response.LinkResponse{
 		ID:             link.ID,
+		FolderID:       link.FolderID,
 		Slug:           link.Slug,
 		ShortURL:       shortURL,
 		DestinationURL: link.DestinationURL,

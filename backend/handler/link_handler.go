@@ -39,7 +39,14 @@ func (h *LinkHandler) ListLinks(c *gin.Context) {
 		return
 	}
 
-	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search)
+	var folderFilter *uuid.UUID
+	if req.FolderID != "" {
+		if parsed, err := uuid.Parse(req.FolderID); err == nil {
+			folderFilter = &parsed
+		}
+	}
+
+	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return

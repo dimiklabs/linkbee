@@ -12,6 +12,7 @@ import (
 	"github.com/shafikshaon/shortlink/repository"
 	analyticsSvc "github.com/shafikshaon/shortlink/service/analytics"
 	authSrv "github.com/shafikshaon/shortlink/service/auth"
+	folderSvc "github.com/shafikshaon/shortlink/service/folder"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	demoSvc "github.com/shafikshaon/shortlink/service/demo"
 	emailSrv "github.com/shafikshaon/shortlink/service/email"
@@ -33,6 +34,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	s.setupMiddleware(router)
 
 	// ── Repositories ─────────────────────────────────────────────────────────
+	folderRepo            := repository.NewFolderRepository(s.MasterDB, s.ReplicaDB)
 	userRepo              := repository.NewUserRepository(s.MasterDB, s.ReplicaDB)
 	passwordResetRepo     := repository.NewPasswordResetRepository(s.MasterDB, s.ReplicaDB)
 	tokenBlacklistRepo   := repository.NewTokenBlacklistRepository(s.Cache)
@@ -53,6 +55,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	githubOAuthService  := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
+	folderService    := folderSvc.NewFolderService(folderRepo)
 	linkService      := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
 	redirectService  := redirectSvc.NewRedirectService(linkRepo, s.Cache, s.Cfg.Link.CacheTTLSeconds)
 	clickService     := clickSvc.NewClickService(s.Cache)
@@ -73,6 +76,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
+	folderHandler    := handler.NewFolderHandler(folderService)
 	linkHandler      := handler.NewLinkHandler(linkService)
 	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, linkRepo)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
@@ -132,6 +136,12 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.GET("/auth/sessions", authHandler.GetSessions)
 			v1Auth.DELETE("/auth/sessions/:id", authHandler.DeleteSession)
 			v1Auth.POST("/auth/logout-all", authHandler.LogoutAll)
+
+			// Folders
+			v1Auth.GET("/folders", folderHandler.ListFolders)
+			v1Auth.POST("/folders", folderHandler.CreateFolder)
+			v1Auth.PUT("/folders/:id", folderHandler.UpdateFolder)
+			v1Auth.DELETE("/folders/:id", folderHandler.DeleteFolder)
 
 			// Link CRUD
 			v1Auth.GET("/links", linkHandler.ListLinks)

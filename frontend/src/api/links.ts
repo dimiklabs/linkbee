@@ -11,8 +11,8 @@ import type {
 } from '@/types/links';
 
 export const linksApi = {
-  list: async (page = 1, limit = 20, search = ''): Promise<ApiResponse<LinkListResponse>> => {
-    const response = await apiClient.get('/links', { params: { page, limit, search } });
+  list: async (page = 1, limit = 20, search = '', folderID = ''): Promise<ApiResponse<LinkListResponse>> => {
+    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined } });
     return response.data;
   },
 

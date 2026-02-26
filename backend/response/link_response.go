@@ -9,6 +9,7 @@ import (
 // LinkResponse is the standard link representation returned to clients.
 type LinkResponse struct {
 	ID             uuid.UUID  `json:"id"`
+	FolderID       *uuid.UUID `json:"folder_id,omitempty"`
 	Slug           string     `json:"slug"`
 	ShortURL       string     `json:"short_url"`
 	DestinationURL string     `json:"destination_url"`
@@ -25,6 +26,15 @@ type LinkResponse struct {
 	UTMCampaign    string     `json:"utm_campaign,omitempty"`
 	CreatedAt      time.Time  `json:"created_at"`
 	UpdatedAt      time.Time  `json:"updated_at"`
+}
+
+// FolderResponse represents a link folder.
+type FolderResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Color     string    `json:"color"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // LinkListResponse wraps a paginated list of links.

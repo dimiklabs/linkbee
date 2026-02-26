@@ -13,6 +13,7 @@ type CreateLinkRequest struct {
 	UTMSource      string   `json:"utm_source" binding:"omitempty,max=255"`
 	UTMMedium      string   `json:"utm_medium" binding:"omitempty,max=255"`
 	UTMCampaign    string   `json:"utm_campaign" binding:"omitempty,max=255"`
+	FolderID       *string  `json:"folder_id"` // UUID string; null = no folder
 }
 
 // UpdateLinkRequest is the request body for updating an existing short link.
@@ -28,13 +29,15 @@ type UpdateLinkRequest struct {
 	UTMSource      string   `json:"utm_source" binding:"omitempty,max=255"`
 	UTMMedium      string   `json:"utm_medium" binding:"omitempty,max=255"`
 	UTMCampaign    string   `json:"utm_campaign" binding:"omitempty,max=255"`
+	FolderID       *string  `json:"folder_id"` // UUID string; null = remove from folder
 }
 
 // ListLinksRequest holds query params for paginating the link list.
 type ListLinksRequest struct {
-	Page   int    `form:"page,default=1" binding:"min=1"`
-	Limit  int    `form:"limit,default=20" binding:"min=1,max=100"`
-	Search string `form:"search"`
+	Page     int    `form:"page,default=1" binding:"min=1"`
+	Limit    int    `form:"limit,default=20" binding:"min=1,max=100"`
+	Search   string `form:"search"`
+	FolderID string `form:"folder_id"` // optional UUID filter
 }
 
 // DemoShortenRequest is for the unauthenticated demo shorten endpoint.

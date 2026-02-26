@@ -1,5 +1,106 @@
 <template>
   <div class="container-fluid py-4">
+    <div class="row g-3 align-items-start">
+
+      <!-- ── Folder Sidebar ──────────────────────────────────────── -->
+      <div class="col-md-3 col-lg-2 d-none d-md-block">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom py-3 px-3">
+            <span class="fw-semibold small">Folders</span>
+          </div>
+          <div class="list-group list-group-flush">
+            <!-- All Links -->
+            <button
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
+              :class="{ 'folder-active': selectedFolderID === '' }"
+              style="font-size: 0.85rem;"
+              @click="selectFolder('')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16">
+                <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
+              </svg>
+              <span class="flex-grow-1 text-truncate">All Links</span>
+            </button>
+
+            <!-- Folder rows -->
+            <template v-for="folder in folders" :key="folder.id">
+              <!-- Rename mode -->
+              <div v-if="renamingFolderID === folder.id"
+                class="d-flex align-items-center gap-1 px-2 py-1">
+                <input
+                  v-model="renameValue"
+                  class="form-control form-control-sm flex-grow-1"
+                  style="font-size: 0.8rem;"
+                  @keydown.enter="submitRename(folder)"
+                  @keydown.esc="cancelRename"
+                  ref="renameInputRef"
+                  maxlength="100"
+                />
+                <button class="btn btn-sm btn-primary px-1 py-0 lh-1" style="font-size: 0.8rem;" @click="submitRename(folder)">✓</button>
+              </div>
+
+              <!-- Normal mode -->
+              <div v-else class="folder-row d-flex align-items-center gap-1 px-2 py-1"
+                :class="{ 'folder-row-active': selectedFolderID === folder.id }">
+                <button
+                  class="d-flex align-items-center gap-2 border-0 bg-transparent text-start flex-grow-1 py-1 rounded"
+                  style="font-size: 0.85rem; min-width: 0;"
+                  :class="{ 'fw-semibold': selectedFolderID === folder.id }"
+                  @click="selectFolder(folder.id)"
+                >
+                  <span class="flex-shrink-0 rounded-circle"
+                    :style="{ width: '8px', height: '8px', backgroundColor: folder.color, display: 'inline-block' }">
+                  </span>
+                  <span class="text-truncate" :title="folder.name">{{ folder.name }}</span>
+                </button>
+                <div class="folder-actions d-flex gap-0 flex-shrink-0">
+                  <button class="btn btn-sm border-0 p-1 lh-1 text-muted folder-action-btn" title="Rename" @click.stop="startRename(folder)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+                    </svg>
+                  </button>
+                  <button class="btn btn-sm border-0 p-1 lh-1 text-danger folder-action-btn" title="Delete folder" @click.stop="deleteFolder(folder)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- New folder -->
+          <div class="card-footer bg-white border-top p-2">
+            <div v-if="showNewFolderInput" class="d-flex gap-1">
+              <input
+                v-model="newFolderName"
+                class="form-control form-control-sm flex-grow-1"
+                placeholder="Folder name"
+                maxlength="100"
+                ref="newFolderInputRef"
+                @keydown.enter="createFolder"
+                @keydown.esc="showNewFolderInput = false; newFolderName = ''"
+              />
+              <button class="btn btn-sm btn-primary px-2" @click="createFolder" :disabled="!newFolderName.trim()">✓</button>
+            </div>
+            <button
+              v-else
+              class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
+              @click="openNewFolderInput"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+              </svg>
+              <span style="font-size: 0.8rem;">New Folder</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Main content ──────────────────────────────────────────── -->
+      <div class="col-md-9 col-lg-10">
+
     <!-- Page Header -->
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
       <div>
@@ -273,6 +374,7 @@
     <CreateLinkModal
       ref="createModalRef"
       :link="editingLink ?? undefined"
+      :folders="folders"
       @saved="onLinkSaved"
     />
 
@@ -309,15 +411,20 @@
         </div>
       </div>
     </div>
+
+      </div><!-- end main content col -->
+    </div><!-- end row -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { Toast } from 'bootstrap';
 import { useLinksStore } from '@/stores/links';
 import type { LinkResponse } from '@/types/links';
+import type { FolderResponse } from '@/types/folders';
+import foldersApi from '@/api/folders';
 import CreateLinkModal from '@/components/CreateLinkModal.vue';
 import QRCodeModal from '@/components/QRCodeModal.vue';
 
@@ -334,17 +441,110 @@ const qrModalRef = ref<InstanceType<typeof QRCodeModal> | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
+// ── Folder state ────────────────────────────────────────────────────────────
+const folders = ref<FolderResponse[]>([]);
+const selectedFolderID = ref('');
+
+// New folder creation
+const showNewFolderInput = ref(false);
+const newFolderName = ref('');
+const newFolderInputRef = ref<HTMLInputElement | null>(null);
+
+// Inline rename
+const renamingFolderID = ref('');
+const renameValue = ref('');
+const renameInputRef = ref<HTMLInputElement | null>(null);
+
+async function loadFolders() {
+  try {
+    const res = await foldersApi.list();
+    if (res.data) folders.value = res.data;
+  } catch {
+    // non-critical — sidebar just stays empty
+  }
+}
+
+function selectFolder(id: string) {
+  selectedFolderID.value = id;
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, id);
+}
+
+function openNewFolderInput() {
+  showNewFolderInput.value = true;
+  nextTick(() => newFolderInputRef.value?.focus());
+}
+
+async function createFolder() {
+  const name = newFolderName.value.trim();
+  if (!name) return;
+  try {
+    const res = await foldersApi.create({ name, color: '#635bff' });
+    if (res.data) {
+      folders.value.push(res.data);
+      folders.value.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  } catch {
+    // silent
+  } finally {
+    newFolderName.value = '';
+    showNewFolderInput.value = false;
+  }
+}
+
+function startRename(folder: FolderResponse) {
+  renamingFolderID.value = folder.id;
+  renameValue.value = folder.name;
+  nextTick(() => renameInputRef.value?.focus());
+}
+
+function cancelRename() {
+  renamingFolderID.value = '';
+  renameValue.value = '';
+}
+
+async function submitRename(folder: FolderResponse) {
+  const name = renameValue.value.trim();
+  if (!name) { cancelRename(); return; }
+  try {
+    const res = await foldersApi.update(folder.id, { name });
+    if (res.data) {
+      const idx = folders.value.findIndex(f => f.id === folder.id);
+      if (idx !== -1) folders.value[idx] = res.data;
+      folders.value.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  } catch {
+    // silent
+  } finally {
+    cancelRename();
+  }
+}
+
+async function deleteFolder(folder: FolderResponse) {
+  if (!window.confirm(`Delete folder "${folder.name}"? Links inside will be moved to All Links.`)) return;
+  try {
+    await foldersApi.delete(folder.id);
+    folders.value = folders.value.filter(f => f.id !== folder.id);
+    if (selectedFolderID.value === folder.id) {
+      selectedFolderID.value = '';
+      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '');
+    }
+  } catch {
+    // silent
+  }
+}
+
 // Debounced search
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, (val) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    linksStore.fetchLinks(1, linksStore.limit, val);
+    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value);
   }, 400);
 });
 
 onMounted(() => {
   linksStore.fetchLinks(1, 20, '');
+  loadFolders();
   if (toastEl.value) {
     toastInstance = new Toast(toastEl.value, { delay: 2000 });
   }
@@ -390,7 +590,7 @@ function openQRModal(link: LinkResponse) {
 }
 
 async function onLinkSaved(_link: LinkResponse) {
-  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value);
+  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value);
   editingLink.value = null;
 }
 
@@ -406,7 +606,7 @@ async function confirmDelete(link: LinkResponse) {
     const newTotal = linksStore.total - 1;
     const maxPage = Math.ceil(newTotal / linksStore.limit) || 1;
     const targetPage = Math.min(linksStore.page, maxPage);
-    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value);
+    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value);
   } finally {
     deletingId.value = null;
   }
@@ -414,7 +614,7 @@ async function confirmDelete(link: LinkResponse) {
 
 function goToPage(page: number) {
   if (page < 1 || page > linksStore.totalPages) return;
-  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value);
+  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value);
 }
 
 const visiblePages = computed<(number | string)[]>(() => {
@@ -469,5 +669,34 @@ const visiblePages = computed<(number | string)[]>(() => {
 
 .copy-btn:hover {
   background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Folder sidebar */
+.folder-active {
+  background-color: rgba(99, 91, 255, 0.08) !important;
+  color: #635bff !important;
+  font-weight: 600;
+}
+
+.folder-row {
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.folder-row:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.folder-row-active {
+  background-color: rgba(99, 91, 255, 0.08);
+}
+
+.folder-action-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.folder-row:hover .folder-action-btn {
+  opacity: 1;
 }
 </style>

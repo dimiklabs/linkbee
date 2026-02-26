@@ -10,6 +10,7 @@ export interface CreateLinkRequest {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
+  folder_id?: string | null;
 }
 
 export interface UpdateLinkRequest {
@@ -24,10 +25,12 @@ export interface UpdateLinkRequest {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
+  folder_id?: string | null;
 }
 
 export interface LinkResponse {
   id: string;
+  folder_id?: string;
   slug: string;
   short_url: string;
   destination_url: string;
