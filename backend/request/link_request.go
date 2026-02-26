@@ -34,11 +34,12 @@ type UpdateLinkRequest struct {
 
 // ListLinksRequest holds query params for paginating the link list.
 type ListLinksRequest struct {
-	Page     int    `form:"page,default=1" binding:"min=1"`
-	Limit    int    `form:"limit,default=20" binding:"min=1,max=100"`
-	Search   string `form:"search"`
-	FolderID string `form:"folder_id"` // optional UUID filter
-	Starred  *bool  `form:"starred"`   // optional; true = starred only
+	Page         int    `form:"page,default=1" binding:"min=1"`
+	Limit        int    `form:"limit,default=20" binding:"min=1,max=100"`
+	Search       string `form:"search"`
+	FolderID     string `form:"folder_id"`     // optional UUID filter
+	Starred      *bool  `form:"starred"`        // optional; true = starred only
+	HealthStatus string `form:"health_status"` // optional; healthy|unhealthy|timeout|error|unknown
 }
 
 // DemoShortenRequest is for the unauthenticated demo shorten endpoint.

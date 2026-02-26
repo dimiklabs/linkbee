@@ -19,13 +19,17 @@ type LinkRepositoryI interface {
 	// Read
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) ([]model.Link, int64, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
 	// Update
 	Update(ctx context.Context, link *model.Link) error
 	IncrementClickCount(ctx context.Context, id uuid.UUID) error
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (bool, error)
+	UpdateHealthStatus(ctx context.Context, id uuid.UUID, status string, statusCode int) error
+
+	// Health check
+	GetLinksForHealthCheck(ctx context.Context, staleBefore time.Time, limit int) ([]model.Link, error)
 
 	// Delete
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
@@ -91,7 +95,7 @@ func (r *LinkRepository) GetBySlug(ctx context.Context, slug string) (*model.Lin
 	return &link, nil
 }
 
-func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) ([]model.Link, int64, error) {
+func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error) {
 	logger.DebugCtx(ctx, "Fetching links for user",
 		zap.String("user_id", userID.String()),
 		zap.Int("page", page),
@@ -109,6 +113,10 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 
 	if starred != nil {
 		query = query.Where("is_starred = ?", *starred)
+	}
+
+	if healthStatus != "" {
+		query = query.Where("health_status = ?", healthStatus)
 	}
 
 	if search != "" {
@@ -189,6 +197,39 @@ func (r *LinkRepository) IncrementClickCount(ctx context.Context, id uuid.UUID) 
 		return err
 	}
 	return nil
+}
+
+func (r *LinkRepository) UpdateHealthStatus(ctx context.Context, id uuid.UUID, status string, statusCode int) error {
+	now := time.Now()
+	if err := r.masterDB.WithContext(ctx).
+		Model(&model.Link{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"health_status":      status,
+			"health_status_code": statusCode,
+			"health_checked_at":  now,
+			"updated_at":         now,
+		}).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to update health status",
+			zap.String("link_id", id.String()),
+			zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (r *LinkRepository) GetLinksForHealthCheck(ctx context.Context, staleBefore time.Time, limit int) ([]model.Link, error) {
+	var links []model.Link
+	err := r.replicaDB.WithContext(ctx).
+		Where("is_active = ? AND (health_checked_at IS NULL OR health_checked_at < ?)", true, staleBefore).
+		Order("health_checked_at ASC NULLS FIRST").
+		Limit(limit).
+		Find(&links).Error
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to fetch links for health check", zap.Error(err))
+		return nil, err
+	}
+	return links, nil
 }
 
 func (r *LinkRepository) ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (bool, error) {

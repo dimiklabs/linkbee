@@ -72,6 +72,10 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	)
 	go clickWorker.Start(ctx)
 
+	// ── Health worker (background goroutine) ──────────────────────────────────
+	healthWorker := worker.NewHealthWorker(linkRepo)
+	go healthWorker.Start(ctx)
+
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
@@ -151,6 +155,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.PUT("/links/:id", linkHandler.UpdateLink)
 			v1Auth.DELETE("/links/:id", linkHandler.DeleteLink)
 			v1Auth.PATCH("/links/:id/star", linkHandler.ToggleStar)
+			v1Auth.POST("/links/:id/health-check", linkHandler.CheckLinkHealth)
 
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)

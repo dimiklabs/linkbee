@@ -6,6 +6,15 @@ import (
 	"github.com/google/uuid"
 )
 
+// HealthStatus values for a link.
+const (
+	HealthStatusUnknown   = "unknown"
+	HealthStatusHealthy   = "healthy"
+	HealthStatusUnhealthy = "unhealthy"
+	HealthStatusTimeout   = "timeout"
+	HealthStatusError     = "error"
+)
+
 // LinkResponse is the standard link representation returned to clients.
 type LinkResponse struct {
 	ID             uuid.UUID  `json:"id"`
@@ -16,9 +25,12 @@ type LinkResponse struct {
 	Title          string     `json:"title,omitempty"`
 	ClickCount     int64      `json:"click_count"`
 	RedirectType   int16      `json:"redirect_type"`
-	IsActive       bool       `json:"is_active"`
-	IsStarred      bool       `json:"is_starred"`
-	Tags           []string   `json:"tags,omitempty"`
+	IsActive           bool       `json:"is_active"`
+	IsStarred          bool       `json:"is_starred"`
+	HealthStatus       string     `json:"health_status"`
+	HealthStatusCode   int        `json:"health_status_code,omitempty"`
+	HealthCheckedAt    *time.Time `json:"health_checked_at,omitempty"`
+	Tags               []string   `json:"tags,omitempty"`
 	HasPassword    bool       `json:"has_password"`
 	ExpiresAt      *time.Time `json:"expires_at,omitempty"`
 	MaxClicks      *int64     `json:"max_clicks,omitempty"`

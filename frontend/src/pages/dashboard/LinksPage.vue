@@ -35,6 +35,20 @@
               <span class="flex-grow-1 text-truncate">Starred</span>
             </button>
 
+            <!-- Unhealthy -->
+            <button
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
+              :class="{ 'folder-active': healthFilter === 'unhealthy' }"
+              style="font-size: 0.85rem;"
+              @click="selectHealthFilter('unhealthy')"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0 text-danger" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+              </svg>
+              <span class="flex-grow-1 text-truncate">Unhealthy</span>
+            </button>
+
             <!-- Folder rows -->
             <template v-for="folder in folders" :key="folder.id">
               <!-- Rename mode -->
@@ -209,6 +223,7 @@
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Short URL</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Clicks</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Status</th>
+              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Health</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Created</th>
               <th class="pe-4 py-3 fw-semibold text-muted small text-uppercase text-end" style="letter-spacing: 0.05em;">Actions</th>
             </tr>
@@ -281,6 +296,18 @@
                 </span>
               </td>
 
+              <!-- Health -->
+              <td class="py-3">
+                <span
+                  class="badge rounded-pill px-2 py-1"
+                  :class="healthBadgeClass(link.health_status)"
+                  style="font-size: 0.72rem;"
+                  :title="link.health_checked_at ? `Last checked: ${formatDate(link.health_checked_at)}` : 'Not yet checked'"
+                >
+                  {{ healthLabel(link.health_status) }}
+                </span>
+              </td>
+
               <!-- Created -->
               <td class="py-3 text-muted small">
                 {{ formatDate(link.created_at) }}
@@ -298,6 +325,20 @@
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" :fill="link.is_starred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1" viewBox="0 0 16 16">
                       <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+                    </svg>
+                  </button>
+
+                  <!-- Health check -->
+                  <button
+                    class="btn btn-sm btn-outline-secondary border-0 p-1"
+                    :title="checkingHealthId === link.id ? 'Checking...' : 'Check link health'"
+                    :disabled="checkingHealthId === link.id"
+                    @click="runHealthCheck(link)"
+                  >
+                    <span v-if="checkingHealthId === link.id" class="spinner-border spinner-border-sm" style="width: 14px; height: 14px;" role="status"></span>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
+                      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
                     </svg>
                   </button>
 
@@ -488,6 +529,8 @@ let toastInstance: Toast | null = null;
 const folders = ref<FolderResponse[]>([]);
 const selectedFolderID = ref('');
 const starredOnly = ref(false);
+const healthFilter = ref('');
+const checkingHealthId = ref<string | null>(null);
 
 // New folder creation
 const showNewFolderInput = ref(false);
@@ -511,13 +554,22 @@ async function loadFolders() {
 function selectFolder(id: string) {
   selectedFolderID.value = id;
   starredOnly.value = false;
+  healthFilter.value = '';
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, id);
 }
 
 function selectStarred() {
   starredOnly.value = true;
   selectedFolderID.value = '';
+  healthFilter.value = '';
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', true);
+}
+
+function selectHealthFilter(status: string) {
+  healthFilter.value = status;
+  selectedFolderID.value = '';
+  starredOnly.value = false;
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, status);
 }
 
 function openNewFolderInput() {
@@ -577,7 +629,7 @@ async function deleteFolder(folder: FolderResponse) {
     folders.value = folders.value.filter(f => f.id !== folder.id);
     if (selectedFolderID.value === folder.id) {
       selectedFolderID.value = '';
-      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined);
+      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined, healthFilter.value || undefined);
     }
   } catch {
     // silent
@@ -589,7 +641,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, (val) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined);
+    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
   }, 400);
 });
 
@@ -632,7 +684,7 @@ function openImportModal() {
 }
 
 async function onImportDone(_result: ImportLinksResponse) {
-  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
+  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
 }
 
 function openEditModal(link: LinkResponse) {
@@ -649,15 +701,50 @@ function openQRModal(link: LinkResponse) {
 }
 
 async function onLinkSaved(_link: LinkResponse) {
-  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
+  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
   editingLink.value = null;
 }
 
 async function toggleStar(link: LinkResponse) {
   await linksStore.toggleStar(link.id);
-  // If viewing starred-only filter and user just un-starred, refresh to remove it from view
   if (starredOnly.value && !linksStore.links.find(l => l.id === link.id)?.is_starred) {
-    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, '', true);
+    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, '', true, healthFilter.value || undefined);
+  }
+}
+
+async function runHealthCheck(link: LinkResponse) {
+  checkingHealthId.value = link.id;
+  try {
+    await linksStore.checkHealth(link.id);
+    // If filtering by unhealthy and link just became healthy, refresh list
+    if (healthFilter.value === 'unhealthy') {
+      const updated = linksStore.links.find(l => l.id === link.id);
+      if (updated && updated.health_status !== 'unhealthy') {
+        await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, 'unhealthy');
+      }
+    }
+  } finally {
+    checkingHealthId.value = null;
+  }
+}
+
+function healthBadgeClass(status: string): string {
+  switch (status) {
+    case 'healthy':   return 'text-bg-success';
+    case 'unhealthy': return 'text-bg-danger';
+    case 'timeout':   return 'text-bg-warning';
+    case 'error':     return 'text-bg-secondary';
+    default:          return 'bg-light text-secondary border';
+  }
+}
+
+function healthLabel(status: string): string {
+  switch (status) {
+    case 'healthy':   return 'Healthy';
+    case 'unhealthy': return 'Unhealthy';
+    case 'timeout':   return 'Timeout';
+    case 'error':     return 'Error';
+    default:          return 'Unknown';
   }
 }
 
@@ -673,7 +760,7 @@ async function confirmDelete(link: LinkResponse) {
     const newTotal = linksStore.total - 1;
     const maxPage = Math.ceil(newTotal / linksStore.limit) || 1;
     const targetPage = Math.min(linksStore.page, maxPage);
-    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
+    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
   } finally {
     deletingId.value = null;
   }
@@ -681,7 +768,7 @@ async function confirmDelete(link: LinkResponse) {
 
 function goToPage(page: number) {
   if (page < 1 || page > linksStore.totalPages) return;
-  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined);
+  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
 }
 
 const visiblePages = computed<(number | string)[]>(() => {

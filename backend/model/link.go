@@ -20,8 +20,11 @@ type Link struct {
 	MaxClicks      *int64         `gorm:"type:bigint" json:"max_clicks,omitempty"`
 	ClickCount     int64          `gorm:"default:0;not null" json:"click_count"`
 	RedirectType   int16          `gorm:"default:302;not null" json:"redirect_type"`
-	IsActive       bool           `gorm:"default:true;not null" json:"is_active"`
-	IsStarred      bool           `gorm:"default:false;not null" json:"is_starred"`
+	IsActive           bool           `gorm:"default:true;not null" json:"is_active"`
+	IsStarred          bool           `gorm:"default:false;not null" json:"is_starred"`
+	HealthStatus       string         `gorm:"type:varchar(20);not null;default:'unknown'" json:"health_status"`
+	HealthStatusCode   int            `gorm:"default:0;not null" json:"health_status_code"`
+	HealthCheckedAt    *time.Time     `gorm:"type:timestamptz" json:"health_checked_at,omitempty"`
 	Tags           pq.StringArray `gorm:"type:text[]" json:"tags,omitempty"`
 	UTMSource      string         `gorm:"type:varchar(255)" json:"utm_source,omitempty"`
 	UTMMedium      string         `gorm:"type:varchar(255)" json:"utm_medium,omitempty"`

@@ -12,11 +12,11 @@ export const useLinksStore = defineStore('links', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '', starred?: boolean) => {
+  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string) => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await linksApi.list(p, l, search, folderID, starred);
+      const response = await linksApi.list(p, l, search, folderID, starred, healthStatus);
       if (response.data) {
         const data = response.data as LinkListResponse;
         links.value = data.links;
@@ -103,8 +103,22 @@ export const useLinksStore = defineStore('links', () => {
     }
   };
 
+  const checkHealth = async (id: string) => {
+    try {
+      const response = await linksApi.checkHealth(id);
+      if (response.data) {
+        const idx = links.value.findIndex(l => l.id === id);
+        if (idx !== -1) links.value[idx] = response.data!;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Health check failed';
+      error.value = message;
+      throw err;
+    }
+  };
+
   return {
     links, total, page, limit, totalPages, loading, error,
-    fetchLinks, createLink, updateLink, deleteLink, toggleStar,
+    fetchLinks, createLink, updateLink, deleteLink, toggleStar, checkHealth,
   };
 });

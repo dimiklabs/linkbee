@@ -12,8 +12,8 @@ import type {
 } from '@/types/links';
 
 export const linksApi = {
-  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean): Promise<ApiResponse<LinkListResponse>> => {
-    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred } });
+  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string): Promise<ApiResponse<LinkListResponse>> => {
+    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred, health_status: healthStatus || undefined } });
     return response.data;
   },
 
@@ -39,6 +39,11 @@ export const linksApi = {
 
   toggleStar: async (id: string): Promise<ApiResponse<LinkResponse>> => {
     const response = await apiClient.patch(`/links/${id}/star`);
+    return response.data;
+  },
+
+  checkHealth: async (id: string): Promise<ApiResponse<LinkResponse>> => {
+    const response = await apiClient.post(`/links/${id}/health-check`);
     return response.data;
   },
 

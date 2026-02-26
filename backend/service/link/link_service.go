@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
@@ -28,11 +29,23 @@ import (
 type LinkServiceI interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
-	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) (*response.LinkListResponse, *dto.ServiceError)
+	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) (*response.LinkListResponse, *dto.ServiceError)
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
 	ImportLinks(ctx context.Context, userID uuid.UUID, r io.Reader) (*response.ImportLinksResponse, *dto.ServiceError)
+	CheckLinkHealth(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
+}
+
+// healthHTTPClient is shared across all on-demand health checks.
+var healthHTTPClient = &http.Client{
+	Timeout: 10 * time.Second,
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 10 {
+			return http.ErrUseLastResponse
+		}
+		return nil
+	},
 }
 
 type linkService struct {
@@ -159,8 +172,8 @@ func (s *linkService) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return s.toLinkResponse(link), nil
 }
 
-func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool) (*response.LinkListResponse, *dto.ServiceError) {
-	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred)
+func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) (*response.LinkListResponse, *dto.ServiceError) {
+	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred, healthStatus)
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
@@ -285,6 +298,69 @@ func (s *linkService) ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.
 	}
 	link.IsStarred = isStarred
 	return s.toLinkResponse(link), nil
+}
+
+func (s *linkService) CheckLinkHealth(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError) {
+	link, err := s.linkRepo.GetByID(ctx, id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	if link.UserID != userID {
+		return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+	}
+
+	status, statusCode := probeURL(ctx, link.DestinationURL)
+
+	if err := s.linkRepo.UpdateHealthStatus(ctx, id, status, statusCode); err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	link.HealthStatus = status
+	link.HealthStatusCode = statusCode
+	now := time.Now()
+	link.HealthCheckedAt = &now
+	return s.toLinkResponse(link), nil
+}
+
+// probeURL performs a HEAD (then GET fallback) request and returns a health status + HTTP code.
+func probeURL(ctx context.Context, rawURL string) (status string, statusCode int) {
+	checkCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(checkCtx, http.MethodHead, rawURL, nil)
+	if err != nil {
+		return response.HealthStatusError, 0
+	}
+	req.Header.Set("User-Agent", "shortlink-health-monitor/1.0")
+
+	resp, err := healthHTTPClient.Do(req)
+	if err != nil {
+		if checkCtx.Err() != nil {
+			return response.HealthStatusTimeout, 0
+		}
+		return response.HealthStatusError, 0
+	}
+	resp.Body.Close()
+
+	// Some servers reject HEAD — retry with GET
+	if resp.StatusCode == http.StatusMethodNotAllowed || resp.StatusCode == http.StatusNotImplemented {
+		getReq, gErr := http.NewRequestWithContext(checkCtx, http.MethodGet, rawURL, nil)
+		if gErr == nil {
+			getReq.Header.Set("User-Agent", "shortlink-health-monitor/1.0")
+			if getResp, gErr2 := healthHTTPClient.Do(getReq); gErr2 == nil {
+				resp.StatusCode = getResp.StatusCode
+				getResp.Body.Close()
+			}
+		}
+	}
+
+	if resp.StatusCode >= 200 && resp.StatusCode < 400 {
+		return response.HealthStatusHealthy, resp.StatusCode
+	}
+	return response.HealthStatusUnhealthy, resp.StatusCode
 }
 
 const importMaxRows = 500
@@ -439,24 +515,27 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 	}
 
 	return &response.LinkResponse{
-		ID:             link.ID,
-		FolderID:       link.FolderID,
-		Slug:           link.Slug,
-		ShortURL:       shortURL,
-		DestinationURL: link.DestinationURL,
-		Title:          link.Title,
-		ClickCount:     link.ClickCount,
-		RedirectType:   link.RedirectType,
-		IsActive:       link.IsActive,
-		IsStarred:      link.IsStarred,
-		Tags:           tags,
-		HasPassword:    link.PasswordHash != "",
-		ExpiresAt:      link.ExpiresAt,
-		MaxClicks:      link.MaxClicks,
-		UTMSource:      link.UTMSource,
-		UTMMedium:      link.UTMMedium,
-		UTMCampaign:    link.UTMCampaign,
-		CreatedAt:      link.CreatedAt,
-		UpdatedAt:      link.UpdatedAt,
+		ID:               link.ID,
+		FolderID:         link.FolderID,
+		Slug:             link.Slug,
+		ShortURL:         shortURL,
+		DestinationURL:   link.DestinationURL,
+		Title:            link.Title,
+		ClickCount:       link.ClickCount,
+		RedirectType:     link.RedirectType,
+		IsActive:         link.IsActive,
+		IsStarred:        link.IsStarred,
+		HealthStatus:     link.HealthStatus,
+		HealthStatusCode: link.HealthStatusCode,
+		HealthCheckedAt:  link.HealthCheckedAt,
+		Tags:             tags,
+		HasPassword:      link.PasswordHash != "",
+		ExpiresAt:        link.ExpiresAt,
+		MaxClicks:        link.MaxClicks,
+		UTMSource:        link.UTMSource,
+		UTMMedium:        link.UTMMedium,
+		UTMCampaign:      link.UTMCampaign,
+		CreatedAt:        link.CreatedAt,
+		UpdatedAt:        link.UpdatedAt,
 	}
 }

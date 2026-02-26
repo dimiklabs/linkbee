@@ -39,6 +39,9 @@ export interface LinkResponse {
   redirect_type: number;
   is_active: boolean;
   is_starred: boolean;
+  health_status: string;
+  health_status_code?: number;
+  health_checked_at?: string;
   tags?: string[];
   has_password: boolean;
   expires_at?: string;

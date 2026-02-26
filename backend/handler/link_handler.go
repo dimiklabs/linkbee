@@ -46,7 +46,7 @@ func (h *LinkHandler) ListLinks(c *gin.Context) {
 		}
 	}
 
-	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred)
+	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred, req.HealthStatus)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
@@ -167,6 +167,33 @@ func (h *LinkHandler) DeleteLink(c *gin.Context) {
 	}
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Link deleted successfully", nil)
+}
+
+// CheckLinkHealth godoc
+// POST /api/v1/links/:id/health-check
+func (h *LinkHandler) CheckLinkHealth(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid link ID")
+		return
+	}
+
+	result, svcErr := h.linkService.CheckLinkHealth(ctx, id, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Health check complete", result)
 }
 
 // ImportLinks godoc
