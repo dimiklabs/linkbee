@@ -41,6 +41,7 @@ export interface LinkResponse {
   is_starred: boolean;
   is_split_test: boolean;
   is_geo_routing: boolean;
+  is_pixel_tracking: boolean;
   health_status: string;
   health_status_code?: number;
   health_checked_at?: string;

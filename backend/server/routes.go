@@ -32,6 +32,7 @@ import (
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
+	pixelSvc "github.com/shafikshaon/shortlink/service/pixel"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/worker"
 )
@@ -46,6 +47,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
 	apiKeyRepo            := repository.NewAPIKeyRepository(s.MasterDB, s.ReplicaDB)
 	webhookRepo           := repository.NewWebhookRepository(s.MasterDB, s.ReplicaDB)
+	pixelRepo             := repository.NewRetargetingPixelRepository(s.MasterDB, s.ReplicaDB)
 	folderRepo            := repository.NewFolderRepository(s.MasterDB, s.ReplicaDB)
 	userRepo              := repository.NewUserRepository(s.MasterDB, s.ReplicaDB)
 	passwordResetRepo     := repository.NewPasswordResetRepository(s.MasterDB, s.ReplicaDB)
@@ -70,6 +72,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	folderService      := folderSvc.NewFolderService(folderRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
 	webhookService     := webhookSvc.NewWebhookService(webhookRepo)
+	pixelService       := pixelSvc.NewPixelService(pixelRepo, linkRepo)
 	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
 	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
 	geoService         := geoSvc.NewGeoService(s.Cfg.App.GeoDBPath)
@@ -100,10 +103,11 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	folderHandler    := handler.NewFolderHandler(folderService)
 	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService)
 	webhookHandler   := handler.NewWebhookHandler(webhookService)
+	pixelHandler     := handler.NewPixelHandler(pixelService)
 	splitHandler     := handler.NewSplitHandler(splitService)
 	geoHandler       := handler.NewGeoHandler(geoRoutingService)
 	linkHandler      := handler.NewLinkHandler(linkService, webhookService)
-	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, webhookService, linkRepo)
+	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
@@ -187,6 +191,12 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.POST("/links/:id/variants", splitHandler.CreateVariant)
 			v1Auth.PUT("/links/:id/variants/:variantId", splitHandler.UpdateVariant)
 			v1Auth.DELETE("/links/:id/variants/:variantId", splitHandler.DeleteVariant)
+
+			// Retargeting pixels
+			v1Auth.PATCH("/links/:id/pixel-tracking", pixelHandler.TogglePixelTracking)
+			v1Auth.GET("/links/:id/pixels", pixelHandler.ListPixels)
+			v1Auth.POST("/links/:id/pixels", pixelHandler.CreatePixel)
+			v1Auth.DELETE("/links/:id/pixels/:pixelId", pixelHandler.DeletePixel)
 
 			// Geo routing
 			v1Auth.PATCH("/links/:id/geo-routing", geoHandler.ToggleGeoRouting)

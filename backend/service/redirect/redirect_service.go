@@ -25,13 +25,14 @@ const (
 
 // CachedLink is the minimal link data cached in Valkey.
 type CachedLink struct {
-	ID           string     `json:"id"`
-	UserID       string     `json:"user_id"`
-	DestURL      string     `json:"dest_url"`
-	RedirectType int16      `json:"redirect_type"`
-	IsActive     bool       `json:"is_active"`
-	IsSplitTest  bool       `json:"is_split_test"`
-	IsGeoRouting bool       `json:"is_geo_routing"`
+	ID              string     `json:"id"`
+	UserID          string     `json:"user_id"`
+	DestURL         string     `json:"dest_url"`
+	RedirectType    int16      `json:"redirect_type"`
+	IsActive        bool       `json:"is_active"`
+	IsSplitTest     bool       `json:"is_split_test"`
+	IsGeoRouting    bool       `json:"is_geo_routing"`
+	IsPixelTracking bool       `json:"is_pixel_tracking"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	MaxClicks    *int64     `json:"max_clicks,omitempty"`
 	ClickCount   int64      `json:"click_count"`
@@ -77,15 +78,16 @@ func (s *redirectService) GetCachedLink(ctx context.Context, slug string) (*mode
 		var cl CachedLink
 		if jsonErr := json.Unmarshal([]byte(cached), &cl); jsonErr == nil {
 			link := &model.Link{
-				DestinationURL: cl.DestURL,
-				RedirectType:   cl.RedirectType,
-				IsActive:       cl.IsActive,
-				IsSplitTest:    cl.IsSplitTest,
-				IsGeoRouting:   cl.IsGeoRouting,
-				ExpiresAt:      cl.ExpiresAt,
-				MaxClicks:      cl.MaxClicks,
-				ClickCount:     cl.ClickCount,
-				PasswordHash:   "",
+				DestinationURL:  cl.DestURL,
+				RedirectType:    cl.RedirectType,
+				IsActive:        cl.IsActive,
+				IsSplitTest:     cl.IsSplitTest,
+				IsGeoRouting:    cl.IsGeoRouting,
+				IsPixelTracking: cl.IsPixelTracking,
+				ExpiresAt:       cl.ExpiresAt,
+				MaxClicks:       cl.MaxClicks,
+				ClickCount:      cl.ClickCount,
+				PasswordHash:    "",
 			}
 			if cl.HasPassword {
 				link.PasswordHash = "cached" // sentinel — actual hash not cached
@@ -170,17 +172,18 @@ func (s *redirectService) ApplyGeoRouting(ctx context.Context, linkID uuid.UUID,
 
 func (s *redirectService) warmCache(ctx context.Context, key string, link *model.Link) {
 	cl := CachedLink{
-		ID:           link.ID.String(),
-		UserID:       link.UserID.String(),
-		DestURL:      link.DestinationURL,
-		RedirectType: link.RedirectType,
-		IsActive:     link.IsActive,
-		IsSplitTest:  link.IsSplitTest,
-		IsGeoRouting: link.IsGeoRouting,
-		ExpiresAt:    link.ExpiresAt,
-		MaxClicks:    link.MaxClicks,
-		ClickCount:   link.ClickCount,
-		HasPassword:  link.PasswordHash != "",
+		ID:              link.ID.String(),
+		UserID:          link.UserID.String(),
+		DestURL:         link.DestinationURL,
+		RedirectType:    link.RedirectType,
+		IsActive:        link.IsActive,
+		IsSplitTest:     link.IsSplitTest,
+		IsGeoRouting:    link.IsGeoRouting,
+		IsPixelTracking: link.IsPixelTracking,
+		ExpiresAt:       link.ExpiresAt,
+		MaxClicks:       link.MaxClicks,
+		ClickCount:      link.ClickCount,
+		HasPassword:     link.PasswordHash != "",
 	}
 
 	data, err := json.Marshal(cl)

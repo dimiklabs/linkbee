@@ -391,6 +391,18 @@
                     </svg>
                   </button>
 
+                  <!-- Retargeting Pixels -->
+                  <button
+                    class="btn btn-sm border-0 p-1"
+                    :class="link.is_pixel_tracking ? 'text-danger' : 'btn-outline-secondary'"
+                    title="Retargeting Pixels"
+                    @click="openPixelModal(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m.5 11.5a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 1 0zm-.5-6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5"/>
+                    </svg>
+                  </button>
+
                   <!-- Edit -->
                   <button
                     class="btn btn-sm btn-outline-secondary border-0 p-1"
@@ -511,6 +523,15 @@
       @updated="onGeoRoutingUpdated"
     />
 
+    <!-- Retargeting Pixels Modal -->
+    <PixelsModal
+      v-if="pixelLink"
+      ref="pixelModalRef"
+      modal-id="pixels-modal"
+      :link="pixelLink"
+      @pixel-tracking-updated="onPixelTrackingUpdated"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -555,6 +576,7 @@ import QRCodeModal from '@/components/QRCodeModal.vue';
 import ImportLinksModal from '@/components/ImportLinksModal.vue';
 import SplitTestModal from '@/components/SplitTestModal.vue';
 import GeoRulesModal from '@/components/GeoRulesModal.vue';
+import PixelsModal from '@/components/PixelsModal.vue';
 import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
@@ -572,6 +594,8 @@ const splitModalRef = ref<InstanceType<typeof SplitTestModal> | null>(null);
 const splitLink = ref<LinkResponse | null>(null);
 const geoModalRef = ref<InstanceType<typeof GeoRulesModal> | null>(null);
 const geoLink = ref<LinkResponse | null>(null);
+const pixelModalRef = ref<InstanceType<typeof PixelsModal> | null>(null);
+const pixelLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
 
@@ -756,6 +780,19 @@ function onGeoRoutingUpdated(enabled: boolean) {
     const idx = linksStore.links.findIndex(l => l.id === geoLink.value!.id);
     if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_geo_routing: enabled };
     geoLink.value = { ...geoLink.value, is_geo_routing: enabled };
+  }
+}
+
+function openPixelModal(link: LinkResponse) {
+  pixelLink.value = link;
+  setTimeout(() => pixelModalRef.value?.show(), 50);
+}
+
+function onPixelTrackingUpdated(enabled: boolean) {
+  if (pixelLink.value) {
+    const idx = linksStore.links.findIndex(l => l.id === pixelLink.value!.id);
+    if (idx !== -1) linksStore.links[idx] = { ...linksStore.links[idx], is_pixel_tracking: enabled };
+    pixelLink.value = { ...pixelLink.value, is_pixel_tracking: enabled };
   }
 }
 

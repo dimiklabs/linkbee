@@ -29,6 +29,7 @@ type LinkResponse struct {
 	IsStarred          bool       `json:"is_starred"`
 	IsSplitTest        bool       `json:"is_split_test"`
 	IsGeoRouting       bool       `json:"is_geo_routing"`
+	IsPixelTracking    bool       `json:"is_pixel_tracking"`
 	HealthStatus       string     `json:"health_status"`
 	HealthStatusCode   int        `json:"health_status_code,omitempty"`
 	HealthCheckedAt    *time.Time `json:"health_checked_at,omitempty"`

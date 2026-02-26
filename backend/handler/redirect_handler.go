@@ -13,6 +13,7 @@ import (
 	"github.com/shafikshaon/shortlink/repository"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	geoSvc "github.com/shafikshaon/shortlink/service/geo"
+	pixelSvc "github.com/shafikshaon/shortlink/service/pixel"
 	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/transport"
@@ -22,6 +23,7 @@ type RedirectHandler struct {
 	redirectService redirectSvc.RedirectServiceI
 	clickService    clickSvc.ClickServiceI
 	geoService      geoSvc.GeoServiceI
+	pixelService    pixelSvc.PixelServiceI
 	webhookService  webhookSvc.WebhookServiceI
 	linkRepo        repository.LinkRepositoryI
 }
@@ -30,6 +32,7 @@ func NewRedirectHandler(
 	redirectService redirectSvc.RedirectServiceI,
 	clickService clickSvc.ClickServiceI,
 	geoService geoSvc.GeoServiceI,
+	pixelService pixelSvc.PixelServiceI,
 	webhookService webhookSvc.WebhookServiceI,
 	linkRepo repository.LinkRepositoryI,
 ) *RedirectHandler {
@@ -37,6 +40,7 @@ func NewRedirectHandler(
 		redirectService: redirectService,
 		clickService:    clickService,
 		geoService:      geoService,
+		pixelService:    pixelService,
 		webhookService:  webhookService,
 		linkRepo:        linkRepo,
 	}
@@ -137,6 +141,17 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 		if geoURL, svcErr := h.redirectService.ApplyGeoRouting(ctx, linkID, country); svcErr == nil && geoURL != "" {
 			destURL = geoURL
 		}
+	}
+
+	// If pixel tracking is enabled, serve an intermediate HTML page that fires
+	// all tracking pixels and then redirects via JS — no direct HTTP redirect.
+	if link.IsPixelTracking {
+		if html, err := h.pixelService.RenderRedirectPage(ctx, linkID, destURL); err == nil && html != "" {
+			c.Header("Cache-Control", "no-store, no-cache, must-revalidate")
+			c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
+			return
+		}
+		// Fall through to direct redirect if pixel rendering fails
 	}
 
 	redirectCode := http.StatusFound // 302 default
