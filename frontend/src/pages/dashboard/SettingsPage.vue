@@ -179,6 +179,29 @@
       </div>
     </div>
 
+    <!-- ── Data Export ──────────────────────────────────────────────────── -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white border-bottom py-3 px-4">
+        <span class="fw-semibold">Data Export</span>
+      </div>
+      <div class="card-body px-4 py-4">
+        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+          <div>
+            <div class="fw-medium mb-1">Download your data</div>
+            <p class="text-muted small mb-0">
+              Export a JSON file containing your profile information and all your short links.
+              Your data will be ready to download immediately.
+            </p>
+          </div>
+          <button class="btn btn-outline-primary flex-shrink-0" :disabled="exportingData" @click="downloadExport">
+            <span v-if="exportingData" class="spinner-border spinner-border-sm me-2"></span>
+            <span v-else>Download my data</span>
+          </button>
+        </div>
+        <div v-if="exportError" class="alert alert-danger py-2 small mt-3 mb-0">{{ exportError }}</div>
+      </div>
+    </div>
+
     <!-- ── Danger Zone ──────────────────────────────────────────────────── -->
     <div class="card border-0 shadow-sm border border-danger border-opacity-25">
       <div class="card-header bg-danger bg-opacity-10 border-bottom border-danger border-opacity-25 py-3 px-4">
@@ -400,6 +423,23 @@ function formatRelative(dateStr: string) {
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
   return `${days}d ago`;
+}
+
+// ── Data export ───────────────────────────────────────────────────────────────
+
+const exportingData = ref(false);
+const exportError = ref('');
+
+async function downloadExport() {
+  exportingData.value = true;
+  exportError.value = '';
+  try {
+    await authApi.downloadExport();
+  } catch (err: any) {
+    exportError.value = err?.response?.data?.description ?? 'Failed to export data. Please try again.';
+  } finally {
+    exportingData.value = false;
+  }
 }
 
 // ── Delete account ────────────────────────────────────────────────────────────

@@ -105,6 +105,20 @@ export const authApi = {
     const response = await apiClient.post('/auth/logout-all');
     return response.data;
   },
+
+  downloadExport: async (): Promise<void> => {
+    const response = await apiClient.get('/auth/data-export', { responseType: 'blob' });
+    const blob = new Blob([response.data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `shortlink-data-${date}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
 };
 
 export const oauthApi = {

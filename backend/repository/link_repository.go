@@ -20,6 +20,7 @@ type LinkRepositoryI interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
 	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error)
+	GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.Link, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
 	// Duplicate check
@@ -166,6 +167,17 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 	}
 
 	return links, total, nil
+}
+
+func (r *LinkRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.Link, error) {
+	var links []model.Link
+	if err := r.replicaDB.WithContext(ctx).
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Order("created_at ASC").
+		Find(&links).Error; err != nil {
+		return nil, err
+	}
+	return links, nil
 }
 
 func (r *LinkRepository) SlugExists(ctx context.Context, slug string) (bool, error) {
