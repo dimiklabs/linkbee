@@ -1,239 +1,200 @@
 <template>
   <div class="auth-wrapper">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12" style="max-width: 420px;">
+    <div class="auth-container">
 
-          <!-- Logo -->
-          <div class="text-center mb-4">
-            <div class="auth-logo">🔗 Shortlink</div>
-            <p class="text-muted small mt-1">Sign in to your account</p>
-          </div>
+      <!-- Logo -->
+      <div class="auth-logo-wrap">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Shortlink</span>
+      </div>
 
-          <!-- Card -->
-          <div class="card shadow-sm border-0 auth-card">
-            <div class="card-body p-4">
+      <!-- Card -->
+      <div class="m3-card m3-card--elevated auth-card">
 
-              <!-- Error Alert -->
-              <div v-if="errorMessage" class="alert alert-danger alert-dismissible py-2 small" role="alert">
-                {{ errorMessage }}
-                <button type="button" class="btn-close btn-close-sm" @click="errorMessage = ''"></button>
-              </div>
+        <h1 class="md-headline-small auth-heading">Sign in</h1>
 
-              <!-- TOTP Step -->
-              <div v-if="pendingTOTPSession">
-                <p class="text-center text-muted small mb-3">
-                  Enter the 6-digit code from your authenticator app, or a backup code.
-                </p>
-                <form @submit.prevent="handleTOTPVerify" novalidate>
-                  <div class="mb-4">
-                    <label for="totpCode" class="form-label">Authentication code</label>
-                    <input
-                      id="totpCode"
-                      v-model="totpCode"
-                      type="text"
-                      class="form-control form-control-lg text-center"
-                      placeholder="000000"
-                      maxlength="8"
-                      autocomplete="one-time-code"
-                      autofocus
-                    />
-                  </div>
-                  <button type="submit" class="btn btn-primary w-100" :disabled="loading">
-                    <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Verify &amp; Sign In
-                  </button>
-                  <button type="button" class="btn btn-link w-100 mt-2 small text-muted" @click="pendingTOTPSession = ''">
-                    ← Back to login
-                  </button>
-                </form>
-              </div>
+        <!-- Error Banner -->
+        <div v-if="errorMessage" class="error-banner">
+          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+          <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+          <md-icon-button @click="errorMessage = ''">
+            <span class="material-symbols-outlined">close</span>
+          </md-icon-button>
+        </div>
 
-              <!-- Login Form -->
-              <template v-else>
-                <form @submit.prevent="handleLogin" novalidate>
-                  <div class="mb-3">
-                    <label for="email" class="form-label">Email address</label>
-                    <input
-                      id="email"
-                      v-model="form.email"
-                      type="email"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.email }"
-                      placeholder="you@example.com"
-                      autocomplete="email"
-                      required
-                    />
-                    <div v-if="errors.email" class="invalid-feedback">{{ errors.email }}</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                      <label for="password" class="form-label mb-0">Password</label>
-                      <router-link to="/forgot-password" class="text-decoration-none small" style="color: #635bff;">
-                        Forgot password?
-                      </router-link>
-                    </div>
-                    <div class="input-group">
-                      <input
-                        id="password"
-                        v-model="form.password"
-                        :type="showPassword ? 'text' : 'password'"
-                        class="form-control"
-                        :class="{ 'is-invalid': errors.password }"
-                        placeholder="••••••••"
-                        autocomplete="current-password"
-                        required
-                      />
-                      <button
-                        type="button"
-                        class="btn btn-outline-secondary"
-                        @click="showPassword = !showPassword"
-                        tabindex="-1"
-                      >
-                        {{ showPassword ? '🙈' : '👁️' }}
-                      </button>
-                      <div v-if="errors.password" class="invalid-feedback">{{ errors.password }}</div>
-                    </div>
-                  </div>
-
-                  <div class="mb-4">
-                    <div class="form-check">
-                      <input
-                        id="rememberMe"
-                        v-model="form.rememberMe"
-                        type="checkbox"
-                        class="form-check-input"
-                      />
-                      <label for="rememberMe" class="form-check-label small text-muted">Remember me</label>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    class="btn btn-primary w-100"
-                    :disabled="loading"
-                  >
-                    <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Sign In
-                  </button>
-                </form>
-
-                <!-- Divider -->
-                <div class="auth-divider my-4">
-                  <span class="text-muted small">Or continue with</span>
-                </div>
-
-                <!-- OAuth Buttons -->
-                <div class="d-flex gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary flex-fill oauth-btn"
-                    :disabled="oauthLoading"
-                    @click="handleOAuth('google')"
-                  >
-                    <span class="oauth-icon fw-bold">G</span>
-                    <span class="d-none d-sm-inline">Google</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary flex-fill oauth-btn"
-                    :disabled="oauthLoading"
-                    @click="handleOAuth('github')"
-                  >
-                    <span class="oauth-icon fw-bold">GH</span>
-                    <span class="d-none d-sm-inline">GitHub</span>
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-outline-secondary flex-fill oauth-btn"
-                    :disabled="oauthLoading"
-                    @click="handleOAuth('facebook')"
-                  >
-                    <span class="oauth-icon fw-bold">FB</span>
-                    <span class="d-none d-sm-inline">Facebook</span>
-                  </button>
-                </div>
-              </template>
-
-            </div>
-          </div>
-
-          <!-- Sign up link -->
-          <p class="text-center mt-4 text-muted small">
-            Don't have an account?
-            <router-link to="/auth/signup" class="text-decoration-none fw-medium" style="color: #635bff;">Sign up</router-link>
+        <!-- TOTP Step -->
+        <div v-if="pendingTOTPSession">
+          <p class="md-body-medium totp-hint">
+            Enter the 6-digit code from your authenticator app, or a backup code.
           </p>
-
+          <form @submit.prevent="handleTOTPVerify" novalidate>
+            <div class="field-wrap">
+              <md-outlined-text-field
+                :value="totpCode"
+                @input="totpCode = ($event.target as HTMLInputElement).value"
+                label="Authentication code"
+                type="text"
+                inputmode="numeric"
+                maxlength="8"
+                autocomplete="one-time-code"
+                autofocus
+                style="width: 100%; text-align: center;"
+              />
+            </div>
+            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-bottom: 8px;">
+              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+              Verify &amp; Sign In
+            </md-filled-button>
+            <md-text-button type="button" @click="pendingTOTPSession = ''" style="width: 100%;">
+              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">arrow_back</span>
+              Back to login
+            </md-text-button>
+          </form>
         </div>
-      </div>
-    </div>
 
-    <!-- Reactivation Modal -->
-    <div
-      v-if="showReactivationModal"
-      class="modal d-block"
-      tabindex="-1"
-      style="background: rgba(0,0,0,0.5);"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-semibold">Reactivate Your Account</h5>
-            <button type="button" class="btn-close" @click="showReactivationModal = false"></button>
-          </div>
-          <div class="modal-body">
-            <p class="text-muted small mb-4">
-              Your account has been deactivated. Enter your credentials below to reactivate it and restore full access.
-            </p>
-
-            <div v-if="reactivationError" class="alert alert-danger py-2 small">{{ reactivationError }}</div>
-
-            <div class="mb-3">
-              <label class="form-label">Email address</label>
-              <input
-                v-model="reactivationForm.email"
+        <!-- Login Form -->
+        <template v-else>
+          <form @submit.prevent="handleLogin" novalidate>
+            <div class="field-wrap">
+              <md-outlined-text-field
+                :value="form.email"
+                @input="form.email = ($event.target as HTMLInputElement).value"
+                label="Email address"
                 type="email"
-                class="form-control"
-                placeholder="you@example.com"
+                autocomplete="email"
+                :error="!!errors.email"
+                :error-text="errors.email"
+                style="width: 100%;"
               />
             </div>
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input
-                v-model="reactivationForm.password"
-                type="password"
-                class="form-control"
-                placeholder="••••••••"
-              />
+
+            <div class="field-wrap">
+              <div class="password-label-row">
+                <span class="md-label-large" style="color: var(--md-sys-color-on-surface-variant);">Password</span>
+                <router-link to="/forgot-password" class="forgot-link md-label-large">
+                  Forgot password?
+                </router-link>
+              </div>
+              <div class="password-field-wrap">
+                <md-outlined-text-field
+                  :value="form.password"
+                  @input="form.password = ($event.target as HTMLInputElement).value"
+                  label="Password"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  :error="!!errors.password"
+                  :error-text="errors.password"
+                  style="width: 100%;"
+                >
+                  <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                    <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+                  </md-icon-button>
+                </md-outlined-text-field>
+              </div>
             </div>
+
+            <div class="remember-row">
+              <label class="remember-label">
+                <md-checkbox
+                  :checked="form.rememberMe"
+                  @change="form.rememberMe = ($event.target as HTMLInputElement).checked"
+                />
+                <span class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant);">Remember me</span>
+              </label>
+            </div>
+
+            <md-filled-button type="submit" :disabled="loading" style="width: 100%;">
+              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+              Sign In
+            </md-filled-button>
+          </form>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <md-divider />
+            <span class="divider-label md-body-small">Or continue with</span>
+            <md-divider />
           </div>
-          <div class="modal-footer border-0 pt-0">
-            <button
-              type="button"
-              class="btn btn-outline-secondary"
-              @click="showReactivationModal = false"
+
+          <!-- OAuth Buttons -->
+          <div class="oauth-row">
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('google')"
+              style="flex: 1;"
             >
-              Cancel
-            </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              :disabled="reactivationLoading"
-              @click="handleReactivation"
+              <span class="oauth-icon">G</span>
+              <span class="oauth-label">Google</span>
+            </md-outlined-button>
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('github')"
+              style="flex: 1;"
             >
-              <span
-                v-if="reactivationLoading"
-                class="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Reactivate Account
-            </button>
+              <span class="oauth-icon">GH</span>
+              <span class="oauth-label">GitHub</span>
+            </md-outlined-button>
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('facebook')"
+              style="flex: 1;"
+            >
+              <span class="oauth-icon">FB</span>
+              <span class="oauth-label">Facebook</span>
+            </md-outlined-button>
           </div>
+        </template>
+
+      </div>
+
+      <!-- Sign up link -->
+      <p class="auth-footer-text md-body-medium">
+        Don't have an account?
+        <router-link to="/auth/signup" class="auth-link">Sign up</router-link>
+      </p>
+
+    </div>
+
+    <!-- Reactivation Dialog -->
+    <md-dialog :open="showReactivationModal" @closed="showReactivationModal = false">
+      <div slot="headline">Reactivate Your Account</div>
+      <div slot="content" style="width: 400px; max-width: 100%;">
+        <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 20px;">
+          Your account has been deactivated. Enter your credentials below to reactivate it and restore full access.
+        </p>
+
+        <div v-if="reactivationError" class="error-banner" style="margin-bottom: 16px;">
+          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+          <span class="md-body-medium">{{ reactivationError }}</span>
+        </div>
+
+        <div class="field-wrap">
+          <md-outlined-text-field
+            :value="reactivationForm.email"
+            @input="reactivationForm.email = ($event.target as HTMLInputElement).value"
+            label="Email address"
+            type="email"
+            style="width: 100%;"
+          />
+        </div>
+        <div class="field-wrap">
+          <md-outlined-text-field
+            :value="reactivationForm.password"
+            @input="reactivationForm.password = ($event.target as HTMLInputElement).value"
+            label="Password"
+            type="password"
+            style="width: 100%;"
+          />
         </div>
       </div>
-    </div>
+      <div slot="actions">
+        <md-text-button @click="showReactivationModal = false">Cancel</md-text-button>
+        <md-filled-button :disabled="reactivationLoading" @click="handleReactivation">
+          <md-circular-progress v-if="reactivationLoading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+          Reactivate Account
+        </md-filled-button>
+      </div>
+    </md-dialog>
 
   </div>
 </template>
@@ -401,52 +362,149 @@ async function handleReactivation() {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #f7f9fc 0%, #eef0ff 100%);
-  padding: 2rem 1rem;
+  justify-content: center;
+  background: var(--md-sys-color-background);
+  padding: 32px 16px;
 }
 
-.auth-logo {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #635bff;
-  letter-spacing: -0.5px;
+.auth-container {
+  width: 100%;
+  max-width: 400px;
 }
 
-.auth-card {
-  border-radius: 12px;
-}
-
-.auth-divider {
-  position: relative;
-  text-align: center;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: #dee2e6;
-  }
-
-  span {
-    position: relative;
-    background: #fff;
-    padding: 0 1rem;
-  }
-}
-
-.oauth-btn {
-  font-size: 0.8rem;
-  padding: 0.5rem 0.5rem;
+.auth-logo-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 700;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.auth-card {
+  padding: 32px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.auth-heading {
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 24px;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.field-wrap {
+  margin-bottom: 16px;
+}
+
+.password-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.forgot-link {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.password-field-wrap {
+  position: relative;
+}
+
+.remember-row {
+  margin-bottom: 20px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+
+  md-divider {
+    flex: 1;
+  }
+}
+
+.divider-label {
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.oauth-row {
+  display: flex;
+  gap: 8px;
 }
 
 .oauth-icon {
+  font-weight: 700;
   font-size: 0.75rem;
+}
+
+.oauth-label {
+  margin-left: 4px;
+}
+
+.totp-hint {
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.auth-footer-text {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.auth-link {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 </style>

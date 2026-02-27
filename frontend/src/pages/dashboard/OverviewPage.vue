@@ -1,153 +1,175 @@
 <template>
   <div class="overview-page">
-    <div class="page-header mb-4">
-      <h1 class="page-title">Overview</h1>
-      <p class="page-subtitle">A snapshot of your account activity.</p>
+
+    <!-- Page header -->
+    <div class="page-header">
+      <h1 class="md-headline-small page-title">Overview</h1>
+      <p class="md-body-medium page-subtitle">A snapshot of your account activity.</p>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading…</span>
-      </div>
+    <div v-if="loading" class="loading-state">
+      <md-circular-progress indeterminate style="--md-circular-progress-size: 48px" />
     </div>
 
     <template v-else-if="data">
 
       <!-- ── Stat cards ──────────────────────────────────────────────────── -->
-      <div class="stat-grid mb-4">
-        <div class="stat-card card">
-          <div class="stat-icon">🔗</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.total_links.toLocaleString() }}</div>
-            <div class="stat-label">Total Links</div>
+      <div class="stat-grid">
+
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-icon-wrap" style="background: var(--md-sys-color-primary-container)">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-primary-container)">link</span>
           </div>
+          <div class="stat-value md-display-small">{{ data.total_links.toLocaleString() }}</div>
+          <div class="md-body-medium stat-label">Total Links</div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">👆</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.total_clicks.toLocaleString() }}</div>
-            <div class="stat-label">Total Clicks</div>
+
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-icon-wrap" style="background: var(--md-sys-color-secondary-container)">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-secondary-container)">ads_click</span>
           </div>
+          <div class="stat-value md-display-small">{{ data.total_clicks.toLocaleString() }}</div>
+          <div class="md-body-medium stat-label">Total Clicks</div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">☀️</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.clicks_today.toLocaleString() }}</div>
-            <div class="stat-label">Clicks Today</div>
+
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-icon-wrap" style="background: var(--md-sys-color-tertiary-container, color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent))">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-primary))">today</span>
           </div>
+          <div class="stat-value md-display-small">{{ data.clicks_today.toLocaleString() }}</div>
+          <div class="md-body-medium stat-label">Clicks Today</div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">📅</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.clicks_30_days.toLocaleString() }}</div>
-            <div class="stat-label">Clicks (30 days)</div>
+
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-icon-wrap" style="background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent)">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary)">calendar_month</span>
           </div>
+          <div class="stat-value md-display-small">{{ data.clicks_30_days.toLocaleString() }}</div>
+          <div class="md-body-medium stat-label">Clicks (30 days)</div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">⚡</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.clicks_7_days.toLocaleString() }}</div>
-            <div class="stat-label">Clicks (7 days)</div>
+
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-icon-wrap" style="background: color-mix(in srgb, var(--md-sys-color-secondary) 12%, transparent)">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-secondary, var(--md-sys-color-primary))">bolt</span>
           </div>
+          <div class="stat-value md-display-small">{{ data.clicks_7_days.toLocaleString() }}</div>
+          <div class="md-body-medium stat-label">Clicks (7 days)</div>
         </div>
+
       </div>
 
       <!-- ── 30-Day Click Trend ───────────────────────────────────────────── -->
-      <div class="card mb-4">
+      <div class="m3-card m3-card--elevated chart-card">
         <div class="card-header-row">
-          <h2 class="section-title">30-Day Click Trend</h2>
-          <span class="text-muted" style="font-size: 0.8125rem;">Daily clicks across all your links</span>
+          <span class="md-title-medium card-section-title">30-Day Click Trend</span>
+          <span class="md-body-small" style="color: var(--md-sys-color-on-surface-variant)">Daily clicks across all your links</span>
         </div>
-        <div class="card-body px-3 pb-3 pt-2">
-          <div v-if="!data.time_series_30d || data.time_series_30d.length === 0" class="text-center py-4 text-muted small">
-            No click data yet. Clicks will appear here as your links are visited.
+        <md-divider />
+        <div class="chart-body">
+          <div
+            v-if="!data.time_series_30d || data.time_series_30d.length === 0"
+            class="empty-chart"
+          >
+            <span class="material-symbols-outlined empty-icon">show_chart</span>
+            <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant)">
+              No click data yet. Clicks will appear here as your links are visited.
+            </p>
           </div>
           <VChart v-else :option="trendChartOption" style="height: 220px;" autoresize />
         </div>
       </div>
 
       <!-- ── Expiring & At-Limit Links ────────────────────────────────────── -->
-      <div v-if="expiringLinks.length > 0 || atLimitLinks.length > 0" class="card attention-card mb-4">
+      <div
+        v-if="expiringLinks.length > 0 || atLimitLinks.length > 0"
+        class="m3-card m3-card--outlined attention-card"
+      >
         <div class="card-header-row">
-          <h2 class="section-title">
-            ⚠️ Links Needing Attention
-            <span class="attention-badge">{{ expiringLinks.length + atLimitLinks.length }}</span>
-          </h2>
-          <router-link to="/dashboard/links?expiring_soon=true" class="view-all-link">View all</router-link>
-        </div>
-        <div class="card-body p-0">
-
-          <!-- Expiring Soon -->
-          <div v-if="expiringLinks.length > 0" class="attention-section">
-            <div class="attention-section-title">Expiring Soon</div>
-            <table class="link-table">
-              <thead>
-                <tr>
-                  <th>Link</th>
-                  <th>Short URL</th>
-                  <th class="text-end">Expires</th>
-                  <th class="text-end">Time Left</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="link in expiringLinks" :key="link.id">
-                  <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
-                      /{{ link.slug }}
-                    </router-link>
-                  </td>
-                  <td class="text-muted small">{{ link.short_url }}</td>
-                  <td class="text-end text-muted small text-nowrap">
-                    {{ formatDate(link.expires_at!) }}
-                  </td>
-                  <td class="text-end text-nowrap">
-                    <span :class="daysUntil(link.expires_at!) <= 3 ? 'expiry-urgent' : 'expiry-soon'">
-                      {{ daysUntil(link.expires_at!) }} days left
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-error); font-size: 20px">warning</span>
+            <span class="md-title-medium card-section-title">Links Needing Attention</span>
+            <span class="m3-badge m3-badge--warning">{{ expiringLinks.length + atLimitLinks.length }}</span>
           </div>
+          <router-link to="/dashboard/links?expiring_soon=true" class="view-all-link md-label-large">
+            View all
+          </router-link>
+        </div>
+        <md-divider />
 
-          <!-- Approaching Click Limit -->
-          <div v-if="atLimitLinks.length > 0" class="attention-section">
-            <div class="attention-section-title">Approaching Click Limit</div>
-            <table class="link-table">
-              <thead>
-                <tr>
-                  <th>Link</th>
-                  <th class="text-end">Clicks Used</th>
-                  <th>Progress</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="link in atLimitLinks" :key="link.id">
-                  <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
-                      /{{ link.slug }}
-                    </router-link>
-                  </td>
-                  <td class="text-end text-muted small text-nowrap">
-                    {{ link.click_count.toLocaleString() }} / {{ link.max_clicks!.toLocaleString() }}
-                  </td>
-                  <td style="min-width: 120px;">
-                    <div class="click-progress-track">
-                      <div
-                        class="click-progress-bar"
-                        :style="{ width: Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) + '%' }"
-                      ></div>
-                    </div>
-                    <span class="click-progress-pct">
+        <!-- Expiring Soon -->
+        <div v-if="expiringLinks.length > 0" class="attention-section">
+          <div class="attention-section-title md-label-large">Expiring Soon</div>
+          <table class="m3-table">
+            <thead>
+              <tr>
+                <th>Link</th>
+                <th>Short URL</th>
+                <th class="text-end">Expires</th>
+                <th class="text-end">Time Left</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="link in expiringLinks" :key="link.id">
+                <td>
+                  <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    /{{ link.slug }}
+                  </router-link>
+                </td>
+                <td class="text-muted md-body-small">{{ link.short_url }}</td>
+                <td class="text-end text-muted md-body-small text-nowrap">
+                  {{ formatDate(link.expires_at!) }}
+                </td>
+                <td class="text-end text-nowrap">
+                  <span
+                    class="m3-badge"
+                    :class="daysUntil(link.expires_at!) <= 3 ? 'm3-badge--error' : 'm3-badge--warning'"
+                  >
+                    {{ daysUntil(link.expires_at!) }} days left
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <md-divider v-if="expiringLinks.length > 0 && atLimitLinks.length > 0" />
+
+        <!-- Approaching Click Limit -->
+        <div v-if="atLimitLinks.length > 0" class="attention-section">
+          <div class="attention-section-title md-label-large">Approaching Click Limit</div>
+          <table class="m3-table">
+            <thead>
+              <tr>
+                <th>Link</th>
+                <th class="text-end">Clicks Used</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="link in atLimitLinks" :key="link.id">
+                <td>
+                  <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    /{{ link.slug }}
+                  </router-link>
+                </td>
+                <td class="text-end text-muted md-body-small text-nowrap">
+                  {{ link.click_count.toLocaleString() }} / {{ link.max_clicks!.toLocaleString() }}
+                </td>
+                <td style="min-width: 140px">
+                  <div class="progress-row">
+                    <md-linear-progress
+                      :value="Math.min(1, link.click_count / link.max_clicks!)"
+                      style="flex: 1; --md-linear-progress-active-indicator-color: var(--md-sys-color-error)"
+                    />
+                    <span class="md-body-small progress-pct">
                       {{ Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) }}%
                     </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -155,71 +177,71 @@
       <div class="tables-grid">
 
         <!-- Top links by clicks -->
-        <div class="card">
+        <div class="m3-card m3-card--elevated">
           <div class="card-header-row">
-            <h2 class="section-title">Top Links by Clicks</h2>
-            <router-link to="/dashboard/links" class="view-all-link">View all</router-link>
+            <span class="md-title-medium card-section-title">Top Links by Clicks</span>
+            <router-link to="/dashboard/links" class="view-all-link md-label-large">View all</router-link>
           </div>
-          <div class="card-body p-0">
-            <div v-if="data.top_links.length === 0" class="empty-state py-4 text-center text-muted small">
-              No clicks recorded yet.
-            </div>
-            <table v-else class="link-table">
-              <thead>
-                <tr>
-                  <th>Link</th>
-                  <th class="text-end">Clicks</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="link in data.top_links" :key="link.id">
-                  <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
-                      /{{ link.slug }}
-                    </router-link>
-                    <div class="link-dest text-muted">{{ truncate(link.destination_url, 40) }}</div>
-                  </td>
-                  <td class="text-end">
-                    <span class="click-badge">{{ link.click_count.toLocaleString() }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <md-divider />
+          <div v-if="data.top_links.length === 0" class="empty-state">
+            <span class="material-symbols-outlined empty-icon">link_off</span>
+            <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant)">No clicks recorded yet.</p>
           </div>
+          <table v-else class="m3-table">
+            <thead>
+              <tr>
+                <th>Link</th>
+                <th class="text-end">Clicks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="link in data.top_links" :key="link.id">
+                <td>
+                  <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    /{{ link.slug }}
+                  </router-link>
+                  <div class="link-dest md-body-small">{{ truncate(link.destination_url, 40) }}</div>
+                </td>
+                <td class="text-end">
+                  <span class="m3-badge m3-badge--primary">{{ link.click_count.toLocaleString() }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Recently created links -->
-        <div class="card">
+        <div class="m3-card m3-card--elevated">
           <div class="card-header-row">
-            <h2 class="section-title">Recently Created</h2>
-            <router-link to="/dashboard/links" class="view-all-link">View all</router-link>
+            <span class="md-title-medium card-section-title">Recently Created</span>
+            <router-link to="/dashboard/links" class="view-all-link md-label-large">View all</router-link>
           </div>
-          <div class="card-body p-0">
-            <div v-if="data.recent_links.length === 0" class="empty-state py-4 text-center text-muted small">
-              No links created yet.
-            </div>
-            <table v-else class="link-table">
-              <thead>
-                <tr>
-                  <th>Link</th>
-                  <th class="text-end">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="link in data.recent_links" :key="link.id">
-                  <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
-                      /{{ link.slug }}
-                    </router-link>
-                    <div class="link-dest text-muted">{{ truncate(link.destination_url, 40) }}</div>
-                  </td>
-                  <td class="text-end text-muted small text-nowrap">
-                    {{ formatDate(link.created_at) }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <md-divider />
+          <div v-if="data.recent_links.length === 0" class="empty-state">
+            <span class="material-symbols-outlined empty-icon">add_link</span>
+            <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant)">No links created yet.</p>
           </div>
+          <table v-else class="m3-table">
+            <thead>
+              <tr>
+                <th>Link</th>
+                <th class="text-end">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="link in data.recent_links" :key="link.id">
+                <td>
+                  <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    /{{ link.slug }}
+                  </router-link>
+                  <div class="link-dest md-body-small">{{ truncate(link.destination_url, 40) }}</div>
+                </td>
+                <td class="text-end text-muted md-body-small text-nowrap">
+                  {{ formatDate(link.created_at) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
       </div>
@@ -227,8 +249,9 @@
     </template>
 
     <!-- Error -->
-    <div v-else-if="error" class="alert alert-danger">
-      {{ error }}
+    <div v-else-if="error" class="m3-card m3-card--outlined error-card">
+      <span class="material-symbols-outlined" style="color: var(--md-sys-color-error)">error</span>
+      <span class="md-body-medium" style="color: var(--md-sys-color-error)">{{ error }}</span>
     </div>
 
   </div>
@@ -367,26 +390,48 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-$primary: #635bff;
+.overview-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+
+  @media (max-width: 575px) {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+/* ── Page header ─────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
 .page-title {
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: #1a1f36;
   margin: 0;
+  color: var(--md-sys-color-on-surface);
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
-  color: #697386;
-  margin: 0.25rem 0 0;
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-// ── Stat grid ─────────────────────────────────────────────────────────────────
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 64px 0;
+}
+
+/* ── Stat grid ───────────────────────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 1rem;
+  gap: 16px;
 
   @media (max-width: 1199px) {
     grid-template-columns: repeat(3, 1fr);
@@ -403,90 +448,125 @@ $primary: #635bff;
 
 .stat-card {
   display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 4px;
+}
+
+.stat-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-
-  .stat-icon {
-    font-size: 2rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .stat-value {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #1a1f36;
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 0.8125rem;
-    color: #697386;
-    margin-top: 0.25rem;
-  }
+  justify-content: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
-// ── Two-column layout ─────────────────────────────────────────────────────────
-.tables-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr;
-  }
+.stat-value {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.1;
 }
 
+.stat-label {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+}
+
+/* ── M3 Cards ────────────────────────────────────────────────────────────── */
+.m3-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.m3-card--elevated {
+  background: var(--md-sys-color-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.m3-card--outlined {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* ── Attention card ──────────────────────────────────────────────────────── */
+.attention-card {
+  border-color: var(--md-sys-color-error) !important;
+  border-left-width: 3px !important;
+}
+
+/* ── Card header row ─────────────────────────────────────────────────────── */
 .card-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #e3e8ee;
+  padding: 16px 20px;
+  gap: 8px;
 }
 
-.section-title {
-  font-size: 0.9375rem;
+.card-section-title {
+  color: var(--md-sys-color-on-surface);
   font-weight: 600;
-  color: #1a1f36;
-  margin: 0;
 }
 
 .view-all-link {
-  font-size: 0.8125rem;
-  color: $primary;
+  color: var(--md-sys-color-primary);
   text-decoration: none;
+  white-space: nowrap;
 
   &:hover {
     text-decoration: underline;
   }
 }
 
-// ── Link table ────────────────────────────────────────────────────────────────
-.link-table {
+/* ── Chart card ──────────────────────────────────────────────────────────── */
+.chart-body {
+  padding: 16px 16px 20px;
+}
+
+.empty-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 0;
+  text-align: center;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────────── */
+.tables-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 767px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.m3-table {
   width: 100%;
   border-collapse: collapse;
 
   th {
-    font-size: 0.75rem;
+    font-size: 11px;
     font-weight: 600;
-    color: #697386;
+    color: var(--md-sys-color-on-surface-variant);
     text-transform: uppercase;
-    letter-spacing: 0.04em;
-    padding: 0.625rem 1.25rem;
-    border-bottom: 1px solid #e3e8ee;
+    letter-spacing: 0.06em;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
     white-space: nowrap;
   }
 
   td {
-    padding: 0.75rem 1.25rem;
-    border-bottom: 1px solid #f0f2f5;
+    padding: 12px 20px;
+    border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
     vertical-align: middle;
-
-    &:last-child {
-      border-bottom: none;
-    }
+    color: var(--md-sys-color-on-surface);
   }
 
   tr:last-child td {
@@ -494,10 +574,22 @@ $primary: #635bff;
   }
 }
 
+.text-end {
+  text-align: right;
+}
+
+.text-nowrap {
+  white-space: nowrap;
+}
+
+.text-muted {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .link-slug {
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 600;
-  color: $primary;
+  color: var(--md-sys-color-primary);
   text-decoration: none;
 
   &:hover {
@@ -506,102 +598,90 @@ $primary: #635bff;
 }
 
 .link-dest {
-  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 220px;
-  margin-top: 0.125rem;
+  margin-top: 2px;
 }
 
-.click-badge {
-  display: inline-block;
-  background: #eef0ff;
-  color: $primary;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-}
-
-// ── Attention card ────────────────────────────────────────────────────────────
-.attention-card {
-  border-left: 3px solid #f59e0b !important;
-}
-
-.attention-badge {
+/* ── M3 Badges ───────────────────────────────────────────────────────────── */
+.m3-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f59e0b;
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
   border-radius: 999px;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.35rem;
-  margin-left: 0.5rem;
-  vertical-align: middle;
+  white-space: nowrap;
 }
 
+.m3-badge--primary {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+}
+
+.m3-badge--error {
+  background: var(--md-sys-color-error);
+  color: #fff;
+}
+
+.m3-badge--warning {
+  background: #f59e0b;
+  color: #fff;
+}
+
+/* ── Attention sections ──────────────────────────────────────────────────── */
 .attention-section {
-  &:not(:last-child) {
-    border-bottom: 1px solid #e3e8ee;
-  }
+  padding: 0 0 4px;
 }
 
 .attention-section-title {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #697386;
+  padding: 12px 20px 4px;
+  color: var(--md-sys-color-on-surface-variant);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.625rem 1.25rem 0;
+  letter-spacing: 0.06em;
+  font-size: 11px;
 }
 
-.expiry-urgent {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #ef4444;
+/* ── Progress row ────────────────────────────────────────────────────────── */
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.expiry-soon {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #f59e0b;
+.progress-pct {
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+  min-width: 32px;
+  text-align: right;
 }
 
-.click-progress-track {
-  background: #e3e8ee;
-  border-radius: 999px;
-  height: 6px;
-  width: 100%;
-  overflow: hidden;
-  display: inline-block;
-  vertical-align: middle;
+/* ── Error card ──────────────────────────────────────────────────────────── */
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
 }
 
-.click-progress-bar {
-  background: #f59e0b;
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.3s ease;
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
 }
 
-.click-progress-pct {
-  font-size: 0.75rem;
-  color: #697386;
-  margin-left: 0.375rem;
-  vertical-align: middle;
+.empty-icon {
+  font-size: 40px;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6;
 }
-
-// ── Dark mode ─────────────────────────────────────────────────────────────────
-:global(.dark-mode) .page-title { color: #e6edf3; }
-:global(.dark-mode) .stat-card .stat-value { color: #e6edf3; }
-:global(.dark-mode) .section-title { color: #e6edf3; }
-:global(.dark-mode) .card-header-row { border-bottom-color: #30363d; }
-:global(.dark-mode) .link-table th { color: #8b949e; border-bottom-color: #30363d; }
-:global(.dark-mode) .link-table td { border-bottom-color: #21262d; }
-:global(.dark-mode) .click-badge { background: rgba(99, 91, 255, 0.2); }
 </style>

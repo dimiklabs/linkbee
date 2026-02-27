@@ -1,77 +1,64 @@
 <template>
-  <div :id="modalId" class="modal fade" tabindex="-1" aria-hidden="true" ref="modalEl">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">Clone Link</div>
 
-        <div class="modal-header border-0 pb-0">
-          <h5 class="modal-title fw-semibold">Clone Link</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div slot="content" style="min-width:440px;max-width:100%;padding:0 4px">
+      <!-- Source summary -->
+      <div v-if="link" class="clone-source-card">
+        <div class="clone-source-label">Cloning</div>
+        <div class="clone-source-name">{{ link.title || link.slug }}</div>
+        <div class="clone-source-url">{{ link.short_url }}</div>
+      </div>
+
+      <!-- New Title -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="newTitle"
+          @input="newTitle = ($event.target as HTMLInputElement).value"
+          label="New Title (optional)"
+          placeholder="Leave blank to keep original title"
+          maxlength="500"
+          style="width:100%"
+        />
+      </div>
+
+      <!-- Custom Slug -->
+      <div class="field-group">
+        <div class="slug-field">
+          <span class="slug-prefix">{{ baseSlug }}/</span>
+          <md-outlined-text-field
+            :value="newSlug"
+            @input="newSlug = ($event.target as HTMLInputElement).value; slugError = ''"
+            label="Custom Slug (optional)"
+            placeholder="auto-generated if blank"
+            maxlength="20"
+            style="flex:1"
+            :error="!!slugError"
+            :error-text="slugError"
+            supporting-text="3–20 alphanumeric characters."
+          />
         </div>
+      </div>
 
-        <div class="modal-body pt-3">
-          <!-- Source summary -->
-          <div v-if="link" class="rounded-3 p-3 mb-4" style="background: var(--bs-secondary-bg, #f8f9fa);">
-            <div class="small text-muted mb-1">Cloning</div>
-            <div class="fw-semibold text-truncate mb-1">{{ link.title || link.slug }}</div>
-            <div class="small text-muted text-truncate">{{ link.short_url }}</div>
-          </div>
-
-          <!-- Optional overrides -->
-          <div class="mb-3">
-            <label class="form-label fw-medium small">New Title <span class="text-muted fw-normal">(optional)</span></label>
-            <input
-              v-model="newTitle"
-              type="text"
-              class="form-control"
-              placeholder="Leave blank to keep original title"
-              maxlength="500"
-            />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-medium small">Custom Slug <span class="text-muted fw-normal">(optional)</span></label>
-            <div class="input-group">
-              <span class="input-group-text text-muted small" style="font-size: 0.8rem;">
-                {{ baseSlug }}/
-              </span>
-              <input
-                v-model="newSlug"
-                type="text"
-                class="form-control"
-                :class="{ 'is-invalid': slugError }"
-                placeholder="auto-generated if blank"
-                maxlength="20"
-                @input="slugError = ''"
-              />
-              <div v-if="slugError" class="invalid-feedback">{{ slugError }}</div>
-            </div>
-            <div class="form-text">3–20 alphanumeric characters.</div>
-          </div>
-
-          <div v-if="errorMsg" class="alert alert-danger py-2 small">{{ errorMsg }}</div>
-        </div>
-
-        <div class="modal-footer border-0 pt-0">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button
-            type="button"
-            class="btn btn-primary"
-            :disabled="cloning"
-            @click="doClone"
-          >
-            <span v-if="cloning" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            Clone Link
-          </button>
-        </div>
-
+      <!-- Error message -->
+      <div v-if="errorMsg" class="clone-error-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
+        <span>{{ errorMsg }}</span>
       </div>
     </div>
-  </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide">Cancel</md-text-button>
+      <md-filled-button :disabled="cloning" @click="doClone">
+        <md-circular-progress v-if="cloning" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
+        Clone Link
+      </md-filled-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { Modal } from 'bootstrap';
 import linksApi from '@/api/links';
 import type { LinkResponse } from '@/types/links';
 
@@ -86,8 +73,9 @@ const emit = defineEmits<{
 
 const modalId = props.modalId ?? 'clone-link-modal';
 const modalEl = ref<HTMLElement | null>(null);
-let bsModal: Modal | null = null;
+let bsModal: any = null;
 
+const isOpen = ref(false);
 const newTitle = ref('');
 const newSlug = ref('');
 const slugError = ref('');
@@ -104,10 +92,7 @@ const baseSlug = computed(() => {
 });
 
 onMounted(() => {
-  if (modalEl.value) {
-    bsModal = new Modal(modalEl.value);
-    modalEl.value.addEventListener('hidden.bs.modal', resetForm);
-  }
+  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
 });
 
 onBeforeUnmount(() => {
@@ -116,11 +101,17 @@ onBeforeUnmount(() => {
 
 function show() {
   resetForm();
+  isOpen.value = true;
   bsModal?.show();
 }
 
 function hide() {
+  isOpen.value = false;
   bsModal?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
 }
 
 function resetForm() {
@@ -161,3 +152,64 @@ async function doClone() {
 
 defineExpose({ show, hide });
 </script>
+
+<style scoped>
+.clone-source-card {
+  padding: 12px 16px;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.clone-source-label {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 4px;
+}
+
+.clone-source-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 2px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.clone-source-url {
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.field-group {
+  margin-bottom: 16px;
+}
+
+.slug-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slug-prefix {
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+
+.clone-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--md-sys-color-error-container, #FFDAD6);
+  color: var(--md-sys-color-on-error-container, #410002);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+</style>

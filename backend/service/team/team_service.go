@@ -310,6 +310,16 @@ func (s *teamService) AcceptInvite(ctx context.Context, token string, userID uui
 		return dto.NewBadRequestError(constant.ErrCodeBadRequest, "Invite has already been accepted or declined")
 	}
 
+	// Verify the calling user's email matches the invite email
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to fetch user for invite verification", zap.Error(err))
+		return dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	if user.Email != member.InviteEmail {
+		return dto.NewForbiddenError(constant.ErrCodeForbidden, "This invite was sent to a different email address")
+	}
+
 	now := time.Now()
 
 	// Update member: set status=active, joinedAt=now

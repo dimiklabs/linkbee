@@ -3,7 +3,16 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          // Tell Vue compiler that all md-* tags are native custom elements
+          isCustomElement: (tag) => tag.startsWith('md-'),
+        },
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -1,210 +1,216 @@
 <template>
-  <div class="container-fluid py-4">
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="page-wrapper">
+
+    <!-- Page Header -->
+    <div class="page-header">
       <div>
-        <h4 class="fw-bold mb-1">Webhooks</h4>
-        <p class="text-muted mb-0 small">Receive real-time HTTP notifications when events happen.</p>
+        <h1 class="page-title">Webhooks</h1>
+        <p class="page-subtitle">Receive real-time HTTP notifications when events happen.</p>
       </div>
-      <button class="btn btn-primary" @click="showCreate = !showCreate">
-        <i class="bi bi-plus-lg me-1"></i>Add Webhook
-      </button>
+      <md-filled-button @click="showCreate = !showCreate">
+        <span class="material-symbols-outlined" slot="icon">add</span>
+        Add Webhook
+      </md-filled-button>
     </div>
 
-    <!-- Usage warning banner -->
-    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
-      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
-      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
-      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
+    <!-- Usage Warning Banner -->
+    <div v-if="usageWarning" :class="['warning-banner', usageWarning.level === 'danger' ? 'warning-banner--error' : 'warning-banner--warning']">
+      <span class="material-symbols-outlined">{{ usageWarning.level === 'danger' ? 'block' : 'warning' }}</span>
+      <span style="flex:1;font-size:0.875rem;">{{ usageWarning.msg }}</span>
+      <RouterLink to="/dashboard/billing">
+        <md-filled-tonal-button>Upgrade</md-filled-tonal-button>
+      </RouterLink>
     </div>
 
     <!-- Create form -->
-    <div v-if="showCreate" class="card border-0 shadow-sm mb-4">
-      <div class="card-body">
-        <h6 class="fw-semibold mb-3">New Webhook</h6>
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Endpoint URL</label>
-          <input
-            v-model="newURL"
-            type="url"
-            class="form-control"
-            placeholder="https://your-server.com/webhook"
-            ref="urlInputRef"
-          />
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Events to subscribe</label>
-          <div class="d-flex flex-column gap-2">
-            <div v-for="ev in WEBHOOK_EVENTS" :key="ev.value" class="form-check">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                :id="`new-ev-${ev.value}`"
-                :value="ev.value"
-                v-model="newEvents"
-              />
-              <label class="form-check-label" :for="`new-ev-${ev.value}`">
-                <span class="fw-medium">{{ ev.label }}</span>
-                <span class="text-muted ms-1 small">— {{ ev.description }}</span>
-              </label>
+    <div v-if="showCreate" class="m3-card m3-card--outlined create-form">
+      <h6 style="margin:0 0 16px;font-weight:600;">New Webhook</h6>
+      <div style="margin-bottom:16px;">
+        <md-outlined-text-field
+          :value="newURL"
+          @input="newURL=($event.target as HTMLInputElement).value"
+          label="Endpoint URL"
+          type="url"
+          placeholder="https://your-server.com/webhook"
+          style="width:100%;"
+          ref="urlInputRef"
+        />
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Events to subscribe</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+            <input
+              type="checkbox"
+              :value="ev.value"
+              v-model="newEvents"
+              style="margin-top:2px;accent-color:var(--md-sys-color-primary);"
+            />
+            <div>
+              <span style="font-weight:500;font-size:0.875rem;">{{ ev.label }}</span>
+              <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;"> — {{ ev.description }}</span>
             </div>
-          </div>
-          <div v-if="newEvents.length === 0" class="text-danger small mt-1">
-            Select at least one event.
-          </div>
+          </label>
         </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-primary btn-sm" :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
-            <span v-if="creating" class="spinner-border spinner-border-sm me-1"></span>
-            Create
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" @click="cancelCreate">Cancel</button>
+        <div v-if="newEvents.length === 0" style="color:var(--md-sys-color-error);font-size:0.8rem;margin-top:4px;">
+          Select at least one event.
         </div>
-        <div v-if="createError" class="alert alert-danger mt-3 py-2 small mb-0">{{ createError }}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <md-filled-button :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
+          <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          Create
+        </md-filled-button>
+        <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+      </div>
+      <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
+        {{ createError }}
       </div>
     </div>
 
-    <!-- Webhook list -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary"></div>
+    <!-- Loading -->
+    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
+      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
     </div>
 
-    <div v-else-if="webhooks.length === 0 && !showCreate" class="card border-0 shadow-sm">
-      <div class="card-body text-center py-5">
-        <div class="mb-3" style="font-size:2.5rem">🔔</div>
-        <h6 class="fw-semibold">No webhooks yet</h6>
-        <p class="text-muted small mb-3">Add a webhook endpoint to start receiving event notifications.</p>
-        <button class="btn btn-primary btn-sm" @click="showCreate = true">Add Webhook</button>
-      </div>
+    <!-- Empty state -->
+    <div v-else-if="webhooks.length === 0 && !showCreate" class="m3-card m3-card--outlined empty-state">
+      <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--md-sys-color-on-surface-variant);">notifications</span>
+      <h6 style="font-weight:600;margin:12px 0 4px;">No webhooks yet</h6>
+      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 16px;">Add a webhook endpoint to start receiving event notifications.</p>
+      <md-filled-button @click="showCreate = true">Add Webhook</md-filled-button>
     </div>
 
-    <div v-else-if="webhooks.length > 0" class="card border-0 shadow-sm">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+    <!-- Webhooks table -->
+    <div v-else-if="webhooks.length > 0" class="m3-card m3-card--outlined">
+      <div class="table-container">
+        <table class="m3-table">
+          <thead>
             <tr>
-              <th class="ps-3">Endpoint</th>
+              <th>Endpoint</th>
               <th>Events</th>
               <th>Status</th>
               <th>Created</th>
-              <th class="pe-3 text-end">Actions</th>
+              <th style="text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <template v-for="wh in webhooks" :key="wh.id">
               <tr>
                 <!-- Endpoint -->
-                <td class="ps-3">
+                <td>
                   <div v-if="editingId === wh.id">
-                    <input v-model="editURL" type="url" class="form-control form-control-sm" style="min-width:240px" />
+                    <md-outlined-text-field
+                      :value="editURL"
+                      @input="editURL=($event.target as HTMLInputElement).value"
+                      type="url"
+                      label="URL"
+                      style="min-width:240px;"
+                    />
                   </div>
-                  <code v-else class="small">{{ wh.url }}</code>
+                  <code v-else style="font-size:0.8rem;word-break:break-all;">{{ wh.url }}</code>
                 </td>
 
                 <!-- Events -->
                 <td>
-                  <div v-if="editingId === wh.id" class="d-flex flex-column gap-1">
-                    <div v-for="ev in WEBHOOK_EVENTS" :key="ev.value" class="form-check mb-0">
+                  <div v-if="editingId === wh.id" style="display:flex;flex-direction:column;gap:6px;">
+                    <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.8rem;">
                       <input
-                        class="form-check-input"
                         type="checkbox"
-                        :id="`edit-ev-${wh.id}-${ev.value}`"
                         :value="ev.value"
                         v-model="editEvents"
+                        style="accent-color:var(--md-sys-color-primary);"
                       />
-                      <label class="form-check-label small" :for="`edit-ev-${wh.id}-${ev.value}`">{{ ev.label }}</label>
-                    </div>
+                      {{ ev.label }}
+                    </label>
                   </div>
-                  <div v-else class="d-flex flex-wrap gap-1">
+                  <div v-else style="display:flex;flex-wrap:wrap;gap:4px;">
                     <span
                       v-for="ev in wh.events"
                       :key="ev"
-                      class="badge rounded-pill"
-                      :class="eventBadgeClass(ev)"
+                      :class="['m3-badge', eventBadgeClass(ev)]"
                     >{{ ev }}</span>
                   </div>
                 </td>
 
                 <!-- Status -->
                 <td>
-                  <div v-if="editingId === wh.id" class="form-check form-switch mb-0">
-                    <input class="form-check-input" type="checkbox" v-model="editIsActive" />
-                    <label class="form-check-label small">Active</label>
+                  <div v-if="editingId === wh.id" style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" v-model="editIsActive" style="accent-color:var(--md-sys-color-primary);" />
+                    <span style="font-size:0.875rem;">Active</span>
                   </div>
-                  <span v-else :class="wh.is_active ? 'badge bg-success' : 'badge bg-secondary'">
+                  <span v-else :class="['m3-badge', wh.is_active ? 'm3-badge--success' : 'm3-badge--neutral']">
                     {{ wh.is_active ? 'Active' : 'Paused' }}
                   </span>
                 </td>
 
                 <!-- Created -->
-                <td class="small text-muted">{{ formatDate(wh.created_at) }}</td>
+                <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ formatDate(wh.created_at) }}</td>
 
                 <!-- Actions -->
-                <td class="pe-3 text-end">
-                  <div v-if="editingId === wh.id" class="d-flex justify-content-end gap-2">
-                    <button class="btn btn-primary btn-sm" :disabled="saving" @click="saveEdit(wh.id)">
-                      <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
+                <td>
+                  <div v-if="editingId === wh.id" style="display:flex;justify-content:flex-end;gap:8px;">
+                    <md-filled-button :disabled="saving" @click="saveEdit(wh.id)">
+                      <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
                       Save
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" @click="cancelEdit">Cancel</button>
+                    </md-filled-button>
+                    <md-outlined-button @click="cancelEdit">Cancel</md-outlined-button>
                   </div>
-                  <div v-else class="d-flex justify-content-end gap-1 flex-wrap">
-                    <button class="btn btn-outline-secondary btn-sm" @click="sendTest(wh.id)" :disabled="testingId === wh.id" title="Send test event">
-                      <span v-if="testingId === wh.id" class="spinner-border spinner-border-sm"></span>
-                      <span v-else>Test</span>
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" @click="toggleDeliveries(wh.id)" title="Delivery logs">
-                      Logs
-                    </button>
-                    <button class="btn btn-outline-secondary btn-sm" @click="startEdit(wh)" title="Edit">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-outline-danger btn-sm" @click="deleteWebhook(wh.id)" title="Delete">
-                      <i class="bi bi-trash"></i>
-                    </button>
+                  <div v-else style="display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap;">
+                    <md-icon-button @click="sendTest(wh.id)" :disabled="testingId === wh.id" title="Send test event">
+                      <md-circular-progress v-if="testingId === wh.id" indeterminate style="--md-circular-progress-size:20px" />
+                      <span v-else class="material-symbols-outlined">send</span>
+                    </md-icon-button>
+                    <md-icon-button @click="toggleDeliveries(wh.id)" title="Delivery logs">
+                      <span class="material-symbols-outlined">history</span>
+                    </md-icon-button>
+                    <md-icon-button @click="startEdit(wh)" title="Edit">
+                      <span class="material-symbols-outlined">edit</span>
+                    </md-icon-button>
+                    <md-icon-button @click="deleteWebhook(wh.id)" title="Delete" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+                      <span class="material-symbols-outlined">delete</span>
+                    </md-icon-button>
                   </div>
                 </td>
               </tr>
 
               <!-- Delivery logs expandable row -->
               <tr v-if="openDeliveriesId === wh.id">
-                <td colspan="5" class="p-0">
-                  <div class="bg-light border-top px-3 py-3">
+                <td colspan="5" style="padding:0;">
+                  <div class="deliveries-panel">
 
                     <!-- Secret reveal -->
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                      <span class="small fw-medium text-muted">Signing secret:</span>
-                      <code v-if="revealedSecret[wh.id]" class="small">{{ revealedSecret[wh.id] }}</code>
-                      <span v-else class="small text-muted font-monospace">••••••••••••••••</span>
-                      <button class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.7rem" @click="toggleSecret(wh.id)">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                      <span style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Signing secret:</span>
+                      <code v-if="revealedSecret[wh.id]" style="font-size:0.8rem;">{{ revealedSecret[wh.id] }}</code>
+                      <span v-else style="font-size:0.8rem;font-family:monospace;color:var(--md-sys-color-on-surface-variant);">••••••••••••••••</span>
+                      <md-text-button @click="toggleSecret(wh.id)">
                         {{ revealedSecret[wh.id] ? 'Hide' : 'Reveal' }}
-                      </button>
-                      <button v-if="revealedSecret[wh.id]" class="btn btn-outline-secondary btn-sm py-0" style="font-size:0.7rem" @click="copyText(revealedSecret[wh.id])">
-                        Copy
-                      </button>
+                      </md-text-button>
+                      <md-text-button v-if="revealedSecret[wh.id]" @click="copyText(revealedSecret[wh.id])">Copy</md-text-button>
                     </div>
 
                     <!-- Test result banner -->
-                    <div v-if="testResults[wh.id]" class="mb-3">
-                      <div :class="['alert', 'py-2', 'small', 'mb-0', testResults[wh.id].success ? 'alert-success' : 'alert-danger']">
+                    <div v-if="testResults[wh.id]" style="margin-bottom:16px;">
+                      <div :style="`padding:10px 14px;border-radius:8px;font-size:0.875rem;background:${testResults[wh.id].success ? '#dcfce7' : '#fee2e2'};color:${testResults[wh.id].success ? '#16a34a' : '#dc2626'};`">
                         <strong>Test delivery:</strong>
                         {{ testResults[wh.id].success ? `✓ HTTP ${testResults[wh.id].response_code}` : `✗ ${testResults[wh.id].error_message || 'Failed'}` }}
-                        <span class="text-muted ms-2">({{ testResults[wh.id].duration_ms }}ms)</span>
+                        <span style="opacity:0.7;margin-left:8px;">({{ testResults[wh.id].duration_ms }}ms)</span>
                       </div>
                     </div>
 
                     <!-- Deliveries table -->
-                    <h6 class="small fw-semibold mb-2">Recent Deliveries</h6>
-                    <div v-if="deliveriesLoading[wh.id]" class="text-center py-3">
-                      <div class="spinner-border spinner-border-sm text-primary"></div>
+                    <div style="font-size:0.875rem;font-weight:600;margin-bottom:8px;">Recent Deliveries</div>
+                    <div v-if="deliveriesLoading[wh.id]" style="display:flex;justify-content:center;padding:16px;">
+                      <md-circular-progress indeterminate style="--md-circular-progress-size:24px" />
                     </div>
-                    <div v-else-if="!deliveries[wh.id] || deliveries[wh.id].length === 0" class="text-muted small py-2">
+                    <div v-else-if="!deliveries[wh.id] || deliveries[wh.id].length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;padding:8px 0;">
                       No deliveries recorded yet. Send a test event to get started.
                     </div>
-                    <div v-else class="table-responsive">
-                      <table class="table table-sm table-borderless mb-0 align-middle" style="font-size:0.8rem">
+                    <div v-else>
+                      <table class="m3-table" style="font-size:0.8rem;">
                         <thead>
-                          <tr class="text-muted">
+                          <tr>
                             <th>Time</th>
                             <th>Event</th>
                             <th>Status</th>
@@ -214,34 +220,36 @@
                         </thead>
                         <tbody>
                           <tr v-for="d in deliveries[wh.id]" :key="d.id">
-                            <td class="text-muted text-nowrap">{{ formatDateTime(d.created_at) }}</td>
+                            <td style="white-space:nowrap;color:var(--md-sys-color-on-surface-variant);">{{ formatDateTime(d.created_at) }}</td>
                             <td><code>{{ d.event }}</code></td>
                             <td>
-                              <span v-if="d.success" class="badge text-bg-success">{{ d.response_code }}</span>
-                              <span v-else class="badge text-bg-danger">{{ d.response_code || 'Error' }}</span>
+                              <span :class="['m3-badge', d.success ? 'm3-badge--success' : 'm3-badge--error']">{{ d.success ? d.response_code : (d.response_code || 'Error') }}</span>
                             </td>
-                            <td class="text-muted">{{ d.duration_ms }}ms</td>
-                            <td class="text-end">
-                              <button
-                                class="btn btn-outline-secondary btn-sm py-0"
-                                style="font-size:0.7rem"
+                            <td style="color:var(--md-sys-color-on-surface-variant);">{{ d.duration_ms }}ms</td>
+                            <td style="text-align:right;">
+                              <md-text-button
                                 @click="resendDelivery(wh.id, d.id)"
                                 :disabled="resendingId === d.id"
+                                style="font-size:0.75rem;"
                               >
-                                <span v-if="resendingId === d.id" class="spinner-border spinner-border-sm"></span>
+                                <md-circular-progress v-if="resendingId === d.id" indeterminate style="--md-circular-progress-size:16px" />
                                 <span v-else>Resend</span>
-                              </button>
+                              </md-text-button>
                             </td>
                           </tr>
                         </tbody>
                       </table>
 
                       <!-- Pagination -->
-                      <div v-if="deliveryTotals[wh.id] > 20" class="d-flex justify-content-between align-items-center mt-2">
-                        <span class="text-muted small">{{ deliveryTotals[wh.id] }} total</span>
-                        <div class="d-flex gap-1">
-                          <button class="btn btn-sm btn-outline-secondary" :disabled="deliveryPages[wh.id] <= 1" @click="loadDeliveries(wh.id, deliveryPages[wh.id] - 1)">←</button>
-                          <button class="btn btn-sm btn-outline-secondary" :disabled="deliveryPages[wh.id] * 20 >= deliveryTotals[wh.id]" @click="loadDeliveries(wh.id, deliveryPages[wh.id] + 1)">→</button>
+                      <div v-if="deliveryTotals[wh.id] > 20" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                        <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ deliveryTotals[wh.id] }} total</span>
+                        <div style="display:flex;gap:4px;">
+                          <md-icon-button :disabled="deliveryPages[wh.id] <= 1" @click="loadDeliveries(wh.id, deliveryPages[wh.id] - 1)">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                          </md-icon-button>
+                          <md-icon-button :disabled="deliveryPages[wh.id] * 20 >= deliveryTotals[wh.id]" @click="loadDeliveries(wh.id, deliveryPages[wh.id] + 1)">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                          </md-icon-button>
                         </div>
                       </div>
                     </div>
@@ -255,29 +263,26 @@
     </div>
 
     <!-- Signing info card -->
-    <div class="card border-0 shadow-sm mt-4">
-      <div class="card-body">
-        <h6 class="fw-semibold mb-2">Verifying webhook signatures</h6>
-        <p class="small text-muted mb-2">
-          Every delivery includes an <code>X-Webhook-Signature</code> header with an HMAC-SHA256 signature of the raw request body, prefixed with <code>sha256=</code>.
-          Your signing secret was generated when you created the webhook (stored server-side only).
-          Verify on your server to ensure the request is genuine:
-        </p>
-        <pre class="bg-light rounded p-3 small mb-0"><code>import hmac, hashlib
+    <div class="m3-card m3-card--outlined info-card">
+      <h6 style="font-weight:600;margin:0 0 8px;">Verifying webhook signatures</h6>
+      <p style="font-size:0.875rem;color:var(--md-sys-color-on-surface-variant);margin:0 0 8px;">
+        Every delivery includes an <code>X-Webhook-Signature</code> header with an HMAC-SHA256 signature of the raw request body, prefixed with <code>sha256=</code>.
+        Your signing secret was generated when you created the webhook (stored server-side only).
+        Verify on your server to ensure the request is genuine:
+      </p>
+      <pre class="code-block"><code>import hmac, hashlib
 
 def verify(secret: str, body: bytes, header: str) -> bool:
     expected = "sha256=" + hmac.new(
         secret.encode(), body, hashlib.sha256
     ).hexdigest()
     return hmac.compare_digest(expected, header)</code></pre>
-      </div>
     </div>
 
     <!-- Example payload card -->
-    <div class="card border-0 shadow-sm mt-3">
-      <div class="card-body">
-        <h6 class="fw-semibold mb-2">Example payload</h6>
-        <pre class="bg-light rounded p-3 small mb-0"><code>{
+    <div class="m3-card m3-card--outlined info-card">
+      <h6 style="font-weight:600;margin:0 0 8px;">Example payload</h6>
+      <pre class="code-block"><code>{
   "event": "link.created",
   "timestamp": "2025-01-01T12:00:00Z",
   "data": {
@@ -287,8 +292,8 @@ def verify(secret: str, body: bytes, header: str) -> bool:
     "destination_url": "https://example.com"
   }
 }</code></pre>
-      </div>
     </div>
+
   </div>
 </template>
 
@@ -418,10 +423,10 @@ async function deleteWebhook(id: string) {
 }
 
 function eventBadgeClass(event: string) {
-  if (event === 'link.created') return 'bg-success bg-opacity-10 text-success';
-  if (event === 'link.deleted') return 'bg-danger bg-opacity-10 text-danger';
-  if (event === 'link.clicked') return 'bg-primary bg-opacity-10 text-primary';
-  return 'bg-secondary bg-opacity-10 text-secondary';
+  if (event === 'link.created') return 'm3-badge--success';
+  if (event === 'link.deleted') return 'm3-badge--error';
+  if (event === 'link.clicked') return 'm3-badge--primary';
+  return 'm3-badge--neutral';
 }
 
 function formatDate(iso: string) {
@@ -539,3 +544,167 @@ onMounted(async () => {
   } catch {}
 });
 </script>
+
+<style scoped>
+.page-wrapper {
+  padding: 24px;
+  max-width: 1100px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+.m3-card--outlined {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: 20px;
+}
+
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.warning-banner--error {
+  background: var(--md-sys-color-error-container, #ffdad6);
+  color: var(--md-sys-color-on-error-container, #410002);
+}
+
+.warning-banner--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.create-form {
+  padding: 20px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.m3-table thead tr {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-low);
+  white-space: nowrap;
+}
+
+.m3-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+  vertical-align: middle;
+}
+
+.m3-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.m3-table tbody tr:hover td {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.m3-badge--primary {
+  background: var(--md-sys-color-primary-container, #e8def8);
+  color: var(--md-sys-color-on-primary-container, #21005d);
+}
+
+.m3-badge--neutral {
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-badge--success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.m3-badge--error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.deliveries-panel {
+  background: var(--md-sys-color-surface-container-low);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: 16px 20px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.info-card {
+  padding: 20px;
+}
+
+.code-block {
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  margin: 0;
+  overflow-x: auto;
+  color: var(--md-sys-color-on-surface);
+}
+</style>

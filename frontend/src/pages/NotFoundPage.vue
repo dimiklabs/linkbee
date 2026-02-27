@@ -1,14 +1,15 @@
 <template>
   <div class="not-found-page">
-    <div class="not-found-content text-center">
-      <div class="not-found-number">404</div>
-      <h1 class="not-found-title">Page not found</h1>
-      <p class="not-found-description text-muted">
+    <div class="not-found-content">
+      <div class="not-found-number md-display-large">404</div>
+      <h1 class="md-headline-medium not-found-title">Page not found</h1>
+      <p class="md-body-large not-found-description">
         The page you're looking for doesn't exist or has been moved.
       </p>
-      <button class="btn btn-primary px-4" @click="router.push('/')">
+      <md-filled-button @click="router.push('/')">
+        <span class="material-symbols-outlined" style="font-size:18px; margin-right:6px;">home</span>
         Go back home
-      </button>
+      </md-filled-button>
     </div>
   </div>
 </template>
@@ -25,37 +26,30 @@ const router = useRouter();
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f7f9fc 0%, #eef0ff 100%);
-  padding: 2rem 1rem;
+  background: var(--md-sys-color-background);
+  padding: 32px 16px;
 }
 
 .not-found-content {
   max-width: 420px;
+  text-align: center;
 }
 
 .not-found-number {
-  font-size: 8rem;
-  font-weight: 800;
-  color: #635bff;
+  color: var(--md-sys-color-primary);
   line-height: 1;
-  margin-bottom: 0.5rem;
+  margin-bottom: 16px;
   letter-spacing: -0.04em;
-  background: linear-gradient(135deg, #635bff, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .not-found-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1a1f36;
-  margin-bottom: 1rem;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 16px;
 }
 
 .not-found-description {
-  font-size: 1rem;
-  margin-bottom: 2rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 32px;
   line-height: 1.6;
 }
 </style>

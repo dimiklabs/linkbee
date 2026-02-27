@@ -1,179 +1,174 @@
 <template>
-  <div class="modal fade" id="geoRulesModal" tabindex="-1" aria-labelledby="geoRulesModalLabel" aria-hidden="true" ref="modalEl">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-
-        <!-- Header -->
-        <div class="modal-header">
-          <h5 class="modal-title" id="geoRulesModalLabel">
-            <i class="bi bi-geo-alt me-2 text-primary"></i>Geo Routing
-            <span class="text-muted fw-normal fs-6 ms-2">{{ slug }}</span>
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-
-        <!-- Body -->
-        <div class="modal-body">
-
-          <!-- Enable / Disable toggle -->
-          <div class="d-flex align-items-center justify-content-between mb-4 p-3 bg-light rounded">
-            <div>
-              <div class="fw-semibold">Geo routing</div>
-              <div class="text-muted small">Redirect visitors from specific countries to custom URLs.</div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                id="geoRoutingToggle"
-                v-model="geoRoutingEnabled"
-                :disabled="toggling"
-                @change="onToggle"
-                style="width:2.5em;height:1.4em;"
-              />
-            </div>
-          </div>
-
-          <!-- Status badge -->
-          <div class="mb-3">
-            <span v-if="geoRoutingEnabled" class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
-              <i class="bi bi-check-circle me-1"></i>Geo routing enabled
-            </span>
-            <span v-else class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2">
-              <i class="bi bi-dash-circle me-1"></i>Geo routing disabled
-            </span>
-          </div>
-
-          <!-- Rules list -->
-          <div class="mb-3">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <h6 class="mb-0">Country Rules</h6>
-              <span class="text-muted small">{{ rules.length }} rule{{ rules.length !== 1 ? 's' : '' }}</span>
-            </div>
-
-            <div v-if="loadingRules" class="text-center py-4 text-muted">
-              <div class="spinner-border spinner-border-sm me-2"></div>Loading rules…
-            </div>
-
-            <div v-else-if="rules.length === 0" class="text-center py-4 text-muted">
-              <i class="bi bi-globe2 fs-2 d-block mb-2 opacity-50"></i>
-              No geo rules yet. Add one below.
-            </div>
-
-            <div v-else class="list-group mb-3">
-              <div
-                v-for="rule in rules"
-                :key="rule.id"
-                class="list-group-item list-group-item-action py-3"
-              >
-                <!-- View mode -->
-                <div v-if="editingId !== rule.id" class="d-flex align-items-center gap-2">
-                  <span class="flag-emoji me-1" :title="countryName(rule.country_code)">
-                    {{ countryFlag(rule.country_code) }}
-                  </span>
-                  <span class="badge bg-secondary-subtle text-secondary fw-bold" style="min-width:3.5rem">
-                    {{ rule.country_code }}
-                  </span>
-                  <span class="text-muted small me-1">Priority {{ rule.priority }}</span>
-                  <span class="text-truncate flex-grow-1 text-primary small" :title="rule.destination_url">
-                    {{ rule.destination_url }}
-                  </span>
-                  <div class="d-flex gap-1 ms-auto flex-shrink-0">
-                    <button class="btn btn-sm btn-outline-secondary" @click="startEdit(rule)" title="Edit">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" @click="deleteRule(rule.id)" title="Delete">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Edit mode -->
-                <div v-else class="row g-2">
-                  <div class="col-auto">
-                    <select class="form-select form-select-sm" v-model="editForm.country_code" style="width:10rem">
-                      <option v-for="c in countries" :key="c.code" :value="c.code">
-                        {{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})
-                      </option>
-                    </select>
-                  </div>
-                  <div class="col">
-                    <input class="form-control form-control-sm" v-model="editForm.destination_url" placeholder="Destination URL" />
-                  </div>
-                  <div class="col-auto" style="width:6rem">
-                    <input class="form-control form-control-sm" type="number" v-model.number="editForm.priority" placeholder="Priority" min="0" />
-                  </div>
-                  <div class="col-auto d-flex gap-1">
-                    <button class="btn btn-sm btn-success" @click="saveEdit(rule.id)" :disabled="saving">
-                      <i class="bi bi-check-lg"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" @click="cancelEdit">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add new rule form -->
-          <div class="border rounded p-3 bg-light">
-            <h6 class="mb-3"><i class="bi bi-plus-circle me-1 text-primary"></i>Add Rule</h6>
-            <div class="row g-2">
-              <div class="col-12 col-sm-auto">
-                <select class="form-select form-select-sm" v-model="newForm.country_code" style="min-width:12rem">
-                  <option value="" disabled>Select country…</option>
-                  <option v-for="c in countries" :key="c.code" :value="c.code">
-                    {{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})
-                  </option>
-                </select>
-              </div>
-              <div class="col">
-                <input
-                  class="form-control form-control-sm"
-                  v-model="newForm.destination_url"
-                  placeholder="https://destination.example.com"
-                  type="url"
-                />
-              </div>
-              <div class="col-auto" style="width:7rem">
-                <input
-                  class="form-control form-control-sm"
-                  type="number"
-                  v-model.number="newForm.priority"
-                  placeholder="Priority"
-                  min="0"
-                />
-              </div>
-              <div class="col-auto">
-                <button
-                  class="btn btn-sm btn-primary"
-                  @click="addRule"
-                  :disabled="!newForm.country_code || !newForm.destination_url || saving"
-                >
-                  <span v-if="saving" class="spinner-border spinner-border-sm me-1"></span>
-                  Add
-                </button>
-              </div>
-            </div>
-            <div v-if="formError" class="text-danger small mt-2">{{ formError }}</div>
-          </div>
-
-        </div><!-- /modal-body -->
-
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-
-      </div>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">
+      <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;margin-right:6px;color:var(--md-sys-color-primary)">public</span>
+      Geo Routing
+      <span style="font-size:0.85rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);margin-left:8px">{{ slug }}</span>
     </div>
-  </div>
+
+    <div slot="content" style="min-width:560px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+
+      <!-- Enable / Disable toggle -->
+      <div class="geo-toggle-row">
+        <div class="geo-toggle-info">
+          <div class="geo-toggle-title">Geo routing</div>
+          <div class="geo-toggle-subtitle">Redirect visitors from specific countries to custom URLs.</div>
+        </div>
+        <md-switch
+          :selected="geoRoutingEnabled"
+          @change="geoRoutingEnabled = ($event.target as HTMLInputElement).checked; onToggle()"
+          :disabled="toggling"
+        />
+      </div>
+
+      <!-- Status badge -->
+      <div class="geo-status-row">
+        <span v-if="geoRoutingEnabled" class="m3-badge m3-badge--success">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:2px">check_circle</span>
+          Geo routing enabled
+        </span>
+        <span v-else class="m3-badge m3-badge--neutral">
+          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:2px">remove_circle</span>
+          Geo routing disabled
+        </span>
+      </div>
+
+      <!-- Rules list -->
+      <div class="geo-rules-section">
+        <div class="geo-rules-header">
+          <h6 class="geo-rules-title">Country Rules</h6>
+          <span class="geo-rules-count">{{ rules.length }} rule{{ rules.length !== 1 ? 's' : '' }}</span>
+        </div>
+
+        <div v-if="loadingRules" class="geo-loading">
+          <md-circular-progress indeterminate style="--md-circular-progress-size:24px" />
+          <span>Loading rules…</span>
+        </div>
+
+        <div v-else-if="rules.length === 0" class="geo-empty">
+          <span class="material-symbols-outlined" style="font-size:36px;opacity:0.4">language</span>
+          <span>No geo rules yet. Add one below.</span>
+        </div>
+
+        <div v-else class="geo-rules-list">
+          <div v-for="rule in rules" :key="rule.id" class="geo-rule-item">
+            <!-- View mode -->
+            <div v-if="editingId !== rule.id" class="geo-rule-view">
+              <span class="flag-emoji" :title="countryName(rule.country_code)">
+                {{ countryFlag(rule.country_code) }}
+              </span>
+              <span class="m3-badge m3-badge--secondary" style="min-width:3.5rem;text-align:center">
+                {{ rule.country_code }}
+              </span>
+              <span class="geo-rule-priority">Priority {{ rule.priority }}</span>
+              <span class="geo-rule-url" :title="rule.destination_url">
+                {{ rule.destination_url }}
+              </span>
+              <div class="geo-rule-actions">
+                <md-icon-button @click="startEdit(rule)" title="Edit" style="width:32px;height:32px">
+                  <span class="material-symbols-outlined" style="font-size:16px">edit</span>
+                </md-icon-button>
+                <md-icon-button @click="deleteRule(rule.id)" title="Delete" style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)">
+                  <span class="material-symbols-outlined" style="font-size:16px">delete</span>
+                </md-icon-button>
+              </div>
+            </div>
+
+            <!-- Edit mode -->
+            <div v-else class="geo-rule-edit">
+              <md-outlined-select
+                :value="editForm.country_code"
+                @change="editForm.country_code = ($event.target as HTMLSelectElement).value"
+                label="Country"
+                style="min-width:160px"
+              >
+                <md-select-option v-for="c in countries" :key="c.code" :value="c.code">
+                  <div slot="headline">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</div>
+                </md-select-option>
+              </md-outlined-select>
+              <md-outlined-text-field
+                :value="editForm.destination_url"
+                @input="editForm.destination_url = ($event.target as HTMLInputElement).value"
+                label="Destination URL"
+                style="flex:1"
+              />
+              <md-outlined-text-field
+                :value="String(editForm.priority)"
+                @input="editForm.priority = Number(($event.target as HTMLInputElement).value)"
+                label="Priority"
+                type="number"
+                style="width:90px"
+              />
+              <div class="geo-rule-edit-actions">
+                <md-icon-button @click="saveEdit(rule.id)" :disabled="saving" style="width:32px;height:32px;--md-icon-button-icon-color:#1AA563">
+                  <span class="material-symbols-outlined" style="font-size:18px">check</span>
+                </md-icon-button>
+                <md-icon-button @click="cancelEdit" style="width:32px;height:32px">
+                  <span class="material-symbols-outlined" style="font-size:18px">close</span>
+                </md-icon-button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add new rule form -->
+      <div class="geo-add-section">
+        <div class="geo-add-title">
+          <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-primary)">add_circle</span>
+          Add Rule
+        </div>
+        <div class="geo-add-form">
+          <md-outlined-select
+            :value="newForm.country_code"
+            @change="newForm.country_code = ($event.target as HTMLSelectElement).value"
+            label="Select country…"
+            style="min-width:180px"
+          >
+            <md-select-option value="" disabled><div slot="headline">Select country…</div></md-select-option>
+            <md-select-option v-for="c in countries" :key="c.code" :value="c.code">
+              <div slot="headline">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</div>
+            </md-select-option>
+          </md-outlined-select>
+          <md-outlined-text-field
+            :value="newForm.destination_url"
+            @input="newForm.destination_url = ($event.target as HTMLInputElement).value"
+            label="Destination URL"
+            type="url"
+            placeholder="https://destination.example.com"
+            style="flex:1"
+          />
+          <md-outlined-text-field
+            :value="String(newForm.priority)"
+            @input="newForm.priority = Number(($event.target as HTMLInputElement).value)"
+            label="Priority"
+            type="number"
+            style="width:100px"
+          />
+          <md-filled-button
+            @click="addRule"
+            :disabled="!newForm.country_code || !newForm.destination_url || saving"
+          >
+            <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+            Add
+          </md-filled-button>
+        </div>
+        <div v-if="formError" class="geo-form-error">
+          <span class="material-symbols-outlined" style="font-size:16px">error</span>
+          {{ formError }}
+        </div>
+      </div>
+
+    </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide">Close</md-text-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import type { Modal as BsModal } from 'bootstrap';
 import geoApi from '@/api/geo';
 import type { LinkGeoRule } from '@/types/links';
 
@@ -243,8 +238,9 @@ const countries = [
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const modalEl = ref<HTMLElement | null>(null);
-let bsModal: BsModal | null = null;
+let bsModal: any = null;
 
+const isOpen = ref(false);
 const rules = ref<LinkGeoRule[]>([]);
 const loadingRules = ref(false);
 const saving = ref(false);
@@ -361,17 +357,9 @@ async function deleteRule(ruleId: string) {
   }
 }
 
-// ── Bootstrap modal lifecycle ──────────────────────────────────────────────────
+// Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
 onMounted(async () => {
-  const { Modal } = await import('bootstrap');
-  if (modalEl.value) {
-    bsModal = new Modal(modalEl.value);
-    modalEl.value.addEventListener('hidden.bs.modal', () => {
-      editingId.value = null;
-      formError.value = '';
-    });
-    modalEl.value.addEventListener('shown.bs.modal', loadRules);
-  }
+  // noop
 });
 
 onUnmounted(() => {
@@ -382,15 +370,185 @@ watch(() => props.isGeoRoutingInitial, (v) => {
   geoRoutingEnabled.value = v;
 });
 
+function show() {
+  isOpen.value = true;
+  loadRules();
+  bsModal?.show();
+}
+
+function hide() {
+  isOpen.value = false;
+  bsModal?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
+}
+
 defineExpose({
-  show() { bsModal?.show(); },
-  hide() { bsModal?.hide(); },
+  show,
+  hide,
 });
 </script>
 
 <style scoped>
+/* Toggle row */
+.geo-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.geo-toggle-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.geo-toggle-subtitle {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+}
+
+/* Status badge row */
+.geo-status-row {
+  margin-bottom: 20px;
+}
+
+/* Rules section */
+.geo-rules-section {
+  margin-bottom: 20px;
+}
+
+.geo-rules-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.geo-rules-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+
+.geo-rules-count {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.geo-loading,
+.geo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.geo-rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.geo-rule-item {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.geo-rule-view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
 .flag-emoji {
   font-size: 1.3rem;
   line-height: 1;
+  flex-shrink: 0;
+}
+
+.geo-rule-priority {
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.geo-rule-url {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--md-sys-color-primary);
+  min-width: 0;
+}
+
+.geo-rule-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.geo-rule-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.geo-rule-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* Add section */
+.geo-add-section {
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.geo-add-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 12px;
+}
+
+.geo-add-form {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.geo-form-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: var(--md-sys-color-error);
 }
 </style>

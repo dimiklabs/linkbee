@@ -1,159 +1,133 @@
 <template>
-  <div class="container-fluid py-4" style="max-width: 860px;">
+  <div class="page-wrapper">
 
-    <!-- Page header -->
-    <div class="d-flex align-items-center justify-content-between mb-4">
+    <!-- Page Header -->
+    <div class="page-header">
       <div>
-        <h4 class="mb-1 fw-semibold">API Keys</h4>
-        <p class="text-muted mb-0 small">
+        <h1 class="page-title">API Keys</h1>
+        <p class="page-subtitle">
           Use API keys to authenticate programmatic requests with
-          <code class="text-primary">X-API-Key: &lt;key&gt;</code> header.
+          <code style="color:var(--md-sys-color-primary);">X-API-Key: &lt;key&gt;</code> header.
         </p>
       </div>
-      <button class="btn btn-primary btn-sm" @click="showCreate = true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="me-1" viewBox="0 0 16 16">
-          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-        </svg>
+      <md-filled-button @click="showCreate = true">
+        <span class="material-symbols-outlined" slot="icon">add</span>
         New API Key
-      </button>
+      </md-filled-button>
     </div>
 
-    <!-- Usage warning banner -->
-    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
-      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
-      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
-      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
+    <!-- Usage Warning Banner -->
+    <div v-if="usageWarning" :class="['warning-banner', usageWarning.level === 'danger' ? 'warning-banner--error' : 'warning-banner--warning']">
+      <span class="material-symbols-outlined">{{ usageWarning.level === 'danger' ? 'block' : 'warning' }}</span>
+      <span style="flex:1;font-size:0.875rem;">{{ usageWarning.msg }}</span>
+      <RouterLink to="/dashboard/billing">
+        <md-filled-tonal-button>Upgrade</md-filled-tonal-button>
+      </RouterLink>
     </div>
 
     <!-- One-time key reveal banner -->
-    <div v-if="newKey" class="alert border-0 mb-4 rounded-3 new-key-banner" role="alert">
-      <div class="d-flex align-items-start gap-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="flex-shrink-0 mt-1 text-warning" viewBox="0 0 16 16">
-          <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
-        </svg>
-        <div class="flex-grow-1">
-          <div class="fw-semibold mb-1">Save your API key — it won't be shown again</div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <code class="key-display px-3 py-2 rounded flex-grow-1" style="word-break:break-all;">{{ newKey.key }}</code>
-            <button class="btn btn-sm btn-warning flex-shrink-0" @click="copyKey(newKey.key)" :title="copied ? 'Copied!' : 'Copy'">
-              <svg v-if="!copied" xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
-                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
-              </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
-              </svg>
-              {{ copied ? 'Copied' : 'Copy' }}
-            </button>
-          </div>
+    <div v-if="newKey" class="new-key-banner">
+      <span class="material-symbols-outlined" style="color:#b45309;font-size:1.25rem;flex-shrink:0;margin-top:2px;">lock</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;margin-bottom:8px;">Save your API key — it won't be shown again</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <code class="key-display">{{ newKey.key }}</code>
+          <md-filled-tonal-button @click="copyKey(newKey.key)">
+            <span class="material-symbols-outlined" slot="icon">{{ copied ? 'check' : 'content_copy' }}</span>
+            {{ copied ? 'Copied' : 'Copy' }}
+          </md-filled-tonal-button>
         </div>
-        <button type="button" class="btn-close" @click="newKey = null"></button>
       </div>
+      <md-icon-button @click="newKey = null">
+        <span class="material-symbols-outlined">close</span>
+      </md-icon-button>
     </div>
 
     <!-- Create form (inline) -->
-    <div v-if="showCreate" class="card border-0 shadow-sm mb-4">
-      <div class="card-body">
-        <h6 class="mb-3 fw-semibold">Create new API key</h6>
-        <div class="row g-3 align-items-end">
-          <div class="col-md-5">
-            <label class="form-label small fw-semibold">Name <span class="text-danger">*</span></label>
-            <input
-              ref="nameInputRef"
-              v-model="form.name"
-              type="text"
-              class="form-control form-control-sm"
-              placeholder="e.g. My integration, CI/CD pipeline"
-              maxlength="100"
-              @keydown.enter="createKey"
-            />
-          </div>
-          <div class="col-md-4">
-            <label class="form-label small fw-semibold">
-              Expiry
-              <span class="text-muted fw-normal">(optional)</span>
-            </label>
-            <input
-              v-model="form.expires_at"
-              type="date"
-              class="form-control form-control-sm"
-              :min="tomorrow"
-            />
-          </div>
-          <div class="col-md-3 d-flex gap-2">
-            <button
-              class="btn btn-primary btn-sm flex-fill"
-              @click="createKey"
-              :disabled="!form.name.trim() || creating"
-            >
-              <span v-if="creating" class="spinner-border spinner-border-sm me-1"></span>
-              Create
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" @click="cancelCreate">Cancel</button>
-          </div>
+    <div v-if="showCreate" class="m3-card m3-card--outlined create-form">
+      <h6 style="margin:0 0 16px;font-weight:600;">Create new API key</h6>
+      <div class="create-form-fields">
+        <md-outlined-text-field
+          :value="form.name"
+          @input="form.name=($event.target as HTMLInputElement).value"
+          label="Name *"
+          placeholder="e.g. My integration, CI/CD pipeline"
+          maxlength="100"
+          style="flex:2;min-width:220px;"
+          @keydown.enter="createKey"
+          ref="nameInputRef"
+        />
+        <md-outlined-text-field
+          :value="form.expires_at"
+          @input="form.expires_at=($event.target as HTMLInputElement).value"
+          label="Expiry (optional)"
+          type="date"
+          :min="tomorrow"
+          style="flex:1;min-width:160px;"
+        />
+        <div style="display:flex;gap:8px;align-items:center;">
+          <md-filled-button @click="createKey" :disabled="!form.name.trim() || creating">
+            <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+            Create
+          </md-filled-button>
+          <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
         </div>
-        <div v-if="createError" class="text-danger small mt-2">{{ createError }}</div>
       </div>
+      <div v-if="createError" style="color:var(--md-sys-color-error);font-size:0.875rem;margin-top:8px;">{{ createError }}</div>
     </div>
 
     <!-- Keys table -->
-    <div class="card border-0 shadow-sm">
-      <div class="card-body p-0">
+    <div class="m3-card m3-card--outlined">
 
-        <div v-if="loading" class="text-center py-5 text-muted">
-          <div class="spinner-border spinner-border-sm me-2"></div>Loading API keys…
-        </div>
+      <div v-if="loading" style="display:flex;justify-content:center;padding:40px;">
+        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+      </div>
 
-        <div v-else-if="keys.length === 0 && !loading" class="text-center py-5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="text-muted mb-3 d-block mx-auto opacity-50" viewBox="0 0 16 16">
-            <path d="M0 8a4 4 0 0 1 7.465-2H14a.5.5 0 0 1 .354.146l1.5 1.5a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0L13 9.207l-.646.647a.5.5 0 0 1-.708 0L11 9.207l-.646.647a.5.5 0 0 1-.354.146H7.465A4 4 0 0 1 0 8m4-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6m0 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-          </svg>
-          <div class="text-muted">No API keys yet.</div>
-          <button class="btn btn-sm btn-outline-primary mt-2" @click="showCreate = true">Create your first key</button>
-        </div>
+      <div v-else-if="keys.length === 0 && !loading" class="empty-state">
+        <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">key</span>
+        <div style="color:var(--md-sys-color-on-surface-variant);margin-top:8px;">No API keys yet.</div>
+        <md-outlined-button style="margin-top:12px;" @click="showCreate = true">Create your first key</md-outlined-button>
+      </div>
 
-        <table v-else class="table table-hover mb-0 align-middle">
-          <thead class="table-light">
+      <div v-else class="table-container">
+        <table class="m3-table">
+          <thead>
             <tr>
-              <th class="ps-4 py-3 small text-muted fw-semibold">Name</th>
-              <th class="py-3 small text-muted fw-semibold">Prefix</th>
-              <th class="py-3 small text-muted fw-semibold">Last used</th>
-              <th class="py-3 small text-muted fw-semibold">Expires</th>
-              <th class="py-3 small text-muted fw-semibold">Created</th>
-              <th class="pe-4 py-3 small text-muted fw-semibold text-end">Actions</th>
+              <th>Name</th>
+              <th>Prefix</th>
+              <th>Last used</th>
+              <th>Expires</th>
+              <th>Created</th>
+              <th style="text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="key in keys" :key="key.id">
-              <td class="ps-4 py-3 fw-semibold">{{ key.name }}</td>
-              <td class="py-3">
-                <code class="bg-light px-2 py-1 rounded small text-muted">{{ key.key_prefix }}…</code>
+              <td style="font-weight:600;">{{ key.name }}</td>
+              <td>
+                <code class="prefix-code">{{ key.key_prefix }}…</code>
               </td>
-              <td class="py-3 text-muted small">
+              <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">
                 <span v-if="key.last_used_at">{{ formatDate(key.last_used_at) }}</span>
-                <span v-else class="text-muted">Never</span>
+                <span v-else>Never</span>
               </td>
-              <td class="py-3 small">
-                <span v-if="key.expires_at" :class="isExpired(key.expires_at) ? 'text-danger' : 'text-muted'">
+              <td style="font-size:0.8rem;">
+                <span v-if="key.expires_at" :style="isExpired(key.expires_at) ? 'color:var(--md-sys-color-error)' : 'color:var(--md-sys-color-on-surface-variant)'">
                   {{ isExpired(key.expires_at) ? 'Expired ' : '' }}{{ formatDate(key.expires_at) }}
                 </span>
-                <span v-else class="text-muted">No expiry</span>
+                <span v-else style="color:var(--md-sys-color-on-surface-variant);">No expiry</span>
               </td>
-              <td class="py-3 text-muted small">{{ formatDate(key.created_at) }}</td>
-              <td class="pe-4 py-3 text-end">
-                <button
-                  class="btn btn-sm btn-outline-danger border-0"
+              <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ formatDate(key.created_at) }}</td>
+              <td style="text-align:right;">
+                <md-icon-button
                   title="Revoke"
                   :disabled="revokingId === key.id"
                   @click="revokeKey(key)"
+                  style="--md-icon-button-icon-color:var(--md-sys-color-error);"
                 >
-                  <span v-if="revokingId === key.id" class="spinner-border spinner-border-sm"></span>
-                  <svg v-else xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                  </svg>
-                  Revoke
-                </button>
+                  <md-circular-progress v-if="revokingId === key.id" indeterminate style="--md-circular-progress-size:20px" />
+                  <span v-else class="material-symbols-outlined">delete</span>
+                </md-icon-button>
               </td>
             </tr>
           </tbody>
@@ -162,14 +136,12 @@
     </div>
 
     <!-- Usage docs -->
-    <div class="card border-0 shadow-sm mt-4">
-      <div class="card-body">
-        <h6 class="fw-semibold mb-3">How to use</h6>
-        <p class="text-muted small mb-2">Include the key in the <code>X-API-Key</code> header of every request:</p>
-        <pre class="bg-light rounded p-3 small mb-2">curl https://your-domain.com/api/v1/links \
+    <div class="m3-card m3-card--outlined usage-card">
+      <h6 style="font-weight:600;margin:0 0 12px;">How to use</h6>
+      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 8px;">Include the key in the <code>X-API-Key</code> header of every request:</p>
+      <pre class="code-block">curl https://your-domain.com/api/v1/links \
   -H "X-API-Key: sl_your_api_key_here"</pre>
-        <p class="text-muted small mb-0">API keys have the same access as your account. Revoke keys you no longer need.</p>
-      </div>
+      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:8px 0 0;">API keys have the same access as your account. Revoke keys you no longer need.</p>
     </div>
 
   </div>
@@ -317,26 +289,75 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
-}
-.btn-primary:hover:not(:disabled) {
-  background-color: #5249e0;
-  border-color: #5249e0;
-}
-.btn-outline-primary {
-  color: #635bff;
-  border-color: #635bff;
-}
-.btn-outline-primary:hover {
-  background-color: #635bff;
-  border-color: #635bff;
+.page-wrapper {
+  padding: 24px;
+  max-width: 860px;
 }
 
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+.m3-card--outlined {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: 20px;
+}
+
+/* Warning banner */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.warning-banner--error {
+  background: var(--md-sys-color-error-container, #ffdad6);
+  color: var(--md-sys-color-on-error-container, #410002);
+}
+
+.warning-banner--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* New key banner */
 .new-key-banner {
-  background-color: #fffbeb;
-  border: 1px solid #fde68a !important;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  margin-bottom: 20px;
 }
 
 .key-display {
@@ -344,6 +365,95 @@ onMounted(async () => {
   font-size: 0.78rem;
   background: #f8f9fa;
   color: #212529;
+  padding: 8px 12px;
+  border-radius: 8px;
+  word-break: break-all;
+  flex: 1;
   display: inline-block;
+}
+
+/* Create form */
+.create-form {
+  padding: 20px;
+}
+
+.create-form-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.m3-table thead tr {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-low);
+  white-space: nowrap;
+}
+
+.m3-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.m3-table tbody tr:hover td {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.prefix-code {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.8rem;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+/* Usage docs */
+.usage-card {
+  padding: 20px;
+}
+
+.code-block {
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.8rem;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  margin: 0;
+  overflow-x: auto;
+  color: var(--md-sys-color-on-surface);
 }
 </style>

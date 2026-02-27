@@ -1,257 +1,231 @@
 <template>
-  <div class="container-fluid py-4" style="max-width: 900px;">
+  <div class="page-wrapper">
 
-    <!-- Header -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <!-- Page Header -->
+    <div class="page-header">
       <div>
-        <h4 class="mb-1 fw-bold">Link-in-Bio</h4>
-        <p class="text-muted small mb-0">Share a single page with all your important links.</p>
+        <h1 class="page-title">Bio Page</h1>
+        <p class="page-subtitle">Share a single page with all your important links.</p>
       </div>
-      <div v-if="bioPage" class="d-flex align-items-center gap-2 flex-wrap">
-        <!-- Published badge -->
-        <span
-          class="badge rounded-pill px-3 py-2"
-          :class="bioPage.is_published ? 'text-bg-success' : 'bg-light text-secondary border'"
-          style="font-size: 0.78rem;"
-        >
+      <div v-if="bioPage" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="padding:6px 14px;font-size:0.78rem;">
           {{ bioPage.is_published ? 'Published' : 'Draft' }}
         </span>
-        <!-- Public URL -->
         <a
           v-if="bioPage.is_published"
           :href="publicUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
         >
-          <i class="bi bi-box-arrow-up-right"></i>
-          View page
+          <md-outlined-button>
+            <span class="material-symbols-outlined" slot="icon">open_in_new</span>
+            View page
+          </md-outlined-button>
         </a>
-        <!-- Save button -->
-        <button
-          class="btn btn-primary btn-sm d-flex align-items-center gap-1"
-          :disabled="saving"
-          @click="saveSettings"
-        >
-          <span v-if="saving" class="spinner-border spinner-border-sm"></span>
+        <md-filled-button :disabled="saving" @click="saveSettings">
+          <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           Save settings
-        </button>
+        </md-filled-button>
       </div>
     </div>
 
-    <!-- Copy Public URL button in header area -->
-    <div v-if="bioPage && bioPage.is_published && bioPage.username" class="mb-3">
-      <button
-        class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-        @click="copyBioUrl"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
-          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
-        </svg>
+    <!-- Copy Public URL -->
+    <div v-if="bioPage && bioPage.is_published && bioPage.username" style="margin-bottom:16px;">
+      <md-text-button @click="copyBioUrl">
+        <span class="material-symbols-outlined" slot="icon">{{ bioCopied ? 'check' : 'content_copy' }}</span>
         {{ bioCopied ? 'Copied!' : 'Copy public URL' }}
-      </button>
+      </md-text-button>
     </div>
 
-    <!-- Page Overview Stats Bar -->
-    <div v-if="bioPage" class="d-flex gap-3 flex-wrap mb-4">
-      <!-- Total Links -->
-      <div class="stat-chip">
-        <span class="stat-chip__label">Total Links</span>
-        <span class="stat-chip__value">{{ bioStats.total }}</span>
+    <!-- Stats Row -->
+    <div v-if="bioPage" class="stats-row">
+      <div class="m3-card m3-card--elevated stat-card">
+        <div class="stat-label">Total Links</div>
+        <div class="stat-value">{{ bioStats.total }}</div>
       </div>
-      <!-- Active Links -->
-      <div class="stat-chip">
-        <span class="stat-chip__label">Active Links</span>
-        <span class="stat-chip__value text-success">{{ bioStats.active }}</span>
+      <div class="m3-card m3-card--elevated stat-card">
+        <div class="stat-label">Active Links</div>
+        <div class="stat-value" style="color:#16a34a;">{{ bioStats.active }}</div>
       </div>
-      <!-- Inactive Links -->
-      <div class="stat-chip">
-        <span class="stat-chip__label">Inactive Links</span>
-        <span class="stat-chip__value text-secondary">{{ bioStats.inactive }}</span>
+      <div class="m3-card m3-card--elevated stat-card">
+        <div class="stat-label">Inactive Links</div>
+        <div class="stat-value" style="color:var(--md-sys-color-on-surface-variant);">{{ bioStats.inactive }}</div>
       </div>
-      <!-- Status -->
-      <div class="stat-chip">
-        <span class="stat-chip__label">Status</span>
-        <span
-          class="badge rounded-pill px-2 py-1"
-          :class="bioPage.is_published ? 'text-bg-success' : 'bg-secondary bg-opacity-25 text-secondary'"
-          style="font-size: 0.72rem;"
-        >
+      <div class="m3-card m3-card--elevated stat-card">
+        <div class="stat-label">Status</div>
+        <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="margin-top:4px;">
           {{ bioPage.is_published ? 'Published' : 'Draft' }}
         </span>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status"></div>
+    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
+      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
     </div>
 
-    <div v-else-if="bioPage" class="row g-4">
+    <div v-else-if="bioPage" class="two-column-layout">
 
-      <!-- Left: Settings -->
-      <div class="col-lg-5">
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white border-bottom py-3 px-4">
-            <span class="fw-semibold small">Page Settings</span>
+      <!-- Left: Settings Form -->
+      <div class="m3-card m3-card--outlined settings-card">
+        <div class="card-section-header">Page Settings</div>
+        <div class="card-body">
+
+          <!-- Username -->
+          <div style="margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:0;">
+              <span style="padding:0 12px;height:56px;display:flex;align-items:center;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline);border-right:none;border-radius:4px 0 0 4px;font-size:0.875rem;color:var(--md-sys-color-on-surface-variant);">/bio/</span>
+              <md-outlined-text-field
+                :value="form.username"
+                @input="form.username=($event.target as HTMLInputElement).value"
+                label="Username *"
+                placeholder="your-username"
+                maxlength="30"
+                style="flex:1;"
+              />
+            </div>
+            <div style="font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);margin-top:4px;">Letters, numbers, underscores only. Min 3 characters.</div>
           </div>
-          <div class="card-body px-4 py-3">
 
-            <!-- Username -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Username <span class="text-danger">*</span></label>
-              <div class="input-group">
-                <span class="input-group-text bg-light text-muted small">/bio/</span>
-                <input
-                  v-model="form.username"
-                  type="text"
-                  class="form-control"
-                  placeholder="your-username"
-                  maxlength="30"
-                />
-              </div>
-              <div class="form-text">Letters, numbers, underscores only. Min 3 characters.</div>
+          <!-- Title -->
+          <div style="margin-bottom:16px;">
+            <md-outlined-text-field
+              :value="form.title"
+              @input="form.title=($event.target as HTMLInputElement).value"
+              label="Page title"
+              placeholder="My Links"
+              maxlength="100"
+              style="width:100%;"
+            />
+          </div>
+
+          <!-- Description -->
+          <div style="margin-bottom:16px;">
+            <md-outlined-text-field
+              :value="form.description"
+              @input="form.description=($event.target as HTMLInputElement).value"
+              label="Bio / description"
+              placeholder="A short bio or description..."
+              type="textarea"
+              rows="3"
+              style="width:100%;"
+            />
+          </div>
+
+          <!-- Avatar URL -->
+          <div style="margin-bottom:16px;">
+            <md-outlined-text-field
+              :value="form.avatar_url"
+              @input="form.avatar_url=($event.target as HTMLInputElement).value"
+              label="Avatar URL"
+              type="url"
+              placeholder="https://..."
+              style="width:100%;"
+            />
+          </div>
+
+          <!-- Theme -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Theme</div>
+            <div style="display:flex;gap:8px;">
+              <md-outlined-button
+                @click="form.theme = 'light'"
+                :style="form.theme === 'light' ? 'background:var(--md-sys-color-primary-container);--md-outlined-button-label-text-color:var(--md-sys-color-on-primary-container);--md-outlined-button-outline-color:var(--md-sys-color-primary);' : ''"
+                style="flex:1;"
+              >
+                <span class="material-symbols-outlined" slot="icon">light_mode</span>
+                Light
+              </md-outlined-button>
+              <md-outlined-button
+                @click="form.theme = 'dark'"
+                :style="form.theme === 'dark' ? 'background:var(--md-sys-color-primary-container);--md-outlined-button-label-text-color:var(--md-sys-color-on-primary-container);--md-outlined-button-outline-color:var(--md-sys-color-primary);' : ''"
+                style="flex:1;"
+              >
+                <span class="material-symbols-outlined" slot="icon">dark_mode</span>
+                Dark
+              </md-outlined-button>
             </div>
+          </div>
 
-            <!-- Title -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Page title</label>
+          <!-- Published toggle -->
+          <div :class="['published-toggle', form.is_published ? 'published-toggle--active' : '']">
+            <div>
+              <div style="font-weight:600;font-size:0.875rem;">Published</div>
+              <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:2px;">Make your bio page publicly accessible</div>
+            </div>
+            <label style="display:flex;align-items:center;cursor:pointer;">
               <input
-                v-model="form.title"
-                type="text"
-                class="form-control"
-                placeholder="My Links"
-                maxlength="100"
+                v-model="form.is_published"
+                type="checkbox"
+                role="switch"
+                style="width:2.5rem;height:1.25rem;cursor:pointer;accent-color:var(--md-sys-color-primary);"
               />
-            </div>
+            </label>
+          </div>
 
-            <!-- Description -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Bio / description</label>
-              <textarea
-                v-model="form.description"
-                class="form-control"
-                rows="3"
-                placeholder="A short bio or description..."
-              ></textarea>
-            </div>
-
-            <!-- Avatar URL -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Avatar URL</label>
-              <input
-                v-model="form.avatar_url"
-                type="url"
-                class="form-control"
-                placeholder="https://..."
-              />
-            </div>
-
-            <!-- Theme -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Theme</label>
-              <div class="d-flex gap-2">
-                <button
-                  class="btn btn-sm flex-fill"
-                  :class="form.theme === 'light' ? 'btn-primary' : 'btn-outline-secondary'"
-                  @click="form.theme = 'light'"
-                >
-                  ☀️ Light
-                </button>
-                <button
-                  class="btn btn-sm flex-fill"
-                  :class="form.theme === 'dark' ? 'btn-primary' : 'btn-outline-secondary'"
-                  @click="form.theme = 'dark'"
-                >
-                  🌙 Dark
-                </button>
-              </div>
-            </div>
-
-            <!-- Published toggle -->
-            <div class="d-flex align-items-center justify-content-between p-3 rounded"
-                 :class="form.is_published ? 'bg-success bg-opacity-10 border border-success border-opacity-25' : 'bg-light'">
-              <div>
-                <div class="fw-semibold small">Published</div>
-                <div class="text-muted" style="font-size: 0.8rem;">Make your bio page publicly accessible</div>
-              </div>
-              <div class="form-check form-switch mb-0">
-                <input
-                  v-model="form.is_published"
-                  class="form-check-input"
-                  type="checkbox"
-                  role="switch"
-                  style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
-                />
-              </div>
-            </div>
-
-            <div v-if="saveError" class="alert alert-danger py-2 small mt-3 mb-0">{{ saveError }}</div>
+          <div v-if="saveError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
+            {{ saveError }}
           </div>
         </div>
       </div>
 
-      <!-- Right: Links + Preview -->
-      <div class="col-lg-7">
+      <!-- Right: Links Management -->
+      <div>
 
-        <!-- Add link form -->
-        <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header bg-white border-bottom py-3 px-4">
-            <span class="fw-semibold small">Add Link</span>
-          </div>
-          <div class="card-body px-4 py-3">
-            <div class="row g-2">
-              <div class="col-12 col-sm-5">
-                <input
-                  v-model="newTitle"
-                  type="text"
-                  class="form-control form-control-sm"
-                  placeholder="Link title"
-                  maxlength="100"
-                  @keydown.enter="addLink"
-                />
-              </div>
-              <div class="col-12 col-sm-5">
-                <input
-                  v-model="newUrl"
-                  type="url"
-                  class="form-control form-control-sm"
-                  placeholder="https://..."
-                  @keydown.enter="addLink"
-                />
-              </div>
-              <div class="col-12 col-sm-2">
-                <button
-                  class="btn btn-primary btn-sm w-100"
-                  :disabled="addingLink || !newTitle.trim() || !newUrl.trim()"
-                  @click="addLink"
-                >
-                  <span v-if="addingLink" class="spinner-border spinner-border-sm"></span>
-                  <span v-else>Add</span>
-                </button>
-              </div>
+        <!-- Add Link Form -->
+        <div class="m3-card m3-card--outlined" style="margin-bottom:16px;">
+          <div class="card-section-header">Add Link</div>
+          <div class="card-body">
+            <div class="add-link-row">
+              <md-outlined-text-field
+                :value="newTitle"
+                @input="newTitle=($event.target as HTMLInputElement).value"
+                label="Link title"
+                maxlength="100"
+                style="flex:1;min-width:160px;"
+                @keydown.enter="addLink"
+              />
+              <md-outlined-text-field
+                :value="newUrl"
+                @input="newUrl=($event.target as HTMLInputElement).value"
+                label="URL"
+                type="url"
+                placeholder="https://..."
+                style="flex:1;min-width:160px;"
+                @keydown.enter="addLink"
+              />
+              <md-filled-button
+                :disabled="addingLink || !newTitle.trim() || !newUrl.trim()"
+                @click="addLink"
+                style="flex-shrink:0;"
+              >
+                <md-circular-progress v-if="addingLink" indeterminate style="--md-circular-progress-size:18px;margin-right:4px;" />
+                <span v-else class="material-symbols-outlined" slot="icon">add</span>
+                Add
+              </md-filled-button>
             </div>
-            <div v-if="addError" class="alert alert-danger py-2 small mt-2 mb-0">{{ addError }}</div>
+            <div v-if="addError" style="margin-top:8px;padding:8px 12px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.8rem;">
+              {{ addError }}
+            </div>
           </div>
         </div>
 
-        <!-- Links list -->
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
-            <span class="fw-semibold small">Links ({{ links.length }})</span>
-            <span class="text-muted small">Drag to reorder</span>
+        <!-- Links List -->
+        <div class="m3-card m3-card--outlined">
+          <div class="card-section-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Links ({{ links.length }})</span>
+            <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">Drag to reorder</span>
           </div>
 
-          <div v-if="links.length === 0" class="card-body text-center text-muted py-4">
-            <p class="mb-0 small">No links yet. Add your first link above.</p>
+          <div v-if="links.length === 0" style="padding:32px;text-align:center;color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;">
+            No links yet. Add your first link above.
           </div>
 
-          <div v-else class="list-group list-group-flush">
+          <div v-else>
             <div
               v-for="(link, idx) in links"
               :key="link.id"
-              class="list-group-item py-2 px-4"
+              class="link-item"
               :style="{ opacity: link.is_active ? '1' : '0.6' }"
               draggable="true"
               @dragstart="onDragStart(idx)"
@@ -260,67 +234,61 @@
               @dragend="onDragEnd"
             >
               <!-- View mode -->
-              <div v-if="editingLinkId !== link.id" class="d-flex align-items-center gap-2">
-                <span class="text-muted flex-shrink-0" style="cursor: grab; font-size: 1rem;">⠿</span>
-                <!-- Rank indicator -->
+              <div v-if="editingLinkId !== link.id" style="display:flex;align-items:center;gap:8px;width:100%;">
+                <span class="material-symbols-outlined" style="cursor:grab;color:var(--md-sys-color-on-surface-variant);font-size:1.2rem;flex-shrink:0;">drag_indicator</span>
                 <span
-                  class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 text-secondary bg-light border"
-                  style="width: 1.4rem; height: 1.4rem; font-size: 0.68rem; padding: 0;"
+                  style="width:1.4rem;height:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);font-size:0.68rem;color:var(--md-sys-color-on-surface-variant);flex-shrink:0;"
                   :title="`Position ${idx + 1}`"
                 >{{ idx + 1 }}</span>
-                <!-- Active/Inactive dot -->
                 <span
-                  class="flex-shrink-0"
-                  style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"
-                  :style="{ backgroundColor: link.is_active ? '#198754' : '#adb5bd' }"
+                  style="width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"
+                  :style="{ backgroundColor: link.is_active ? '#16a34a' : 'var(--md-sys-color-outline-variant)' }"
                   :title="link.is_active ? 'Active' : 'Inactive'"
                 ></span>
-                <div class="flex-fill min-w-0">
-                  <div class="fw-medium small text-truncate">{{ link.title }}</div>
-                  <div class="text-muted text-truncate" style="font-size: 0.78rem;">{{ link.url }}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-weight:500;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.title }}</div>
+                  <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.url }}</div>
                 </div>
                 <!-- Active toggle -->
-                <div class="form-check form-switch mb-0 flex-shrink-0">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    role="switch"
-                    :checked="link.is_active"
-                    style="cursor: pointer;"
-                    @change="toggleActive(link)"
-                  />
-                </div>
-                <!-- Edit -->
-                <button class="btn btn-sm border-0 p-1 text-muted" title="Edit" @click="startEdit(link)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                  </svg>
-                </button>
-                <!-- Delete -->
-                <button class="btn btn-sm border-0 p-1 text-danger" title="Delete" @click="deleteLink(link)">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                  </svg>
-                </button>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  :checked="link.is_active"
+                  style="cursor:pointer;accent-color:var(--md-sys-color-primary);flex-shrink:0;"
+                  @change="toggleActive(link)"
+                />
+                <md-icon-button title="Edit" @click="startEdit(link)">
+                  <span class="material-symbols-outlined">edit</span>
+                </md-icon-button>
+                <md-icon-button title="Delete" @click="deleteLink(link)" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+                  <span class="material-symbols-outlined">delete</span>
+                </md-icon-button>
               </div>
 
               <!-- Edit mode -->
-              <div v-else class="d-flex align-items-center gap-2">
-                <div class="flex-fill row g-1">
-                  <div class="col-12 col-sm-5">
-                    <input v-model="editTitle" type="text" class="form-control form-control-sm" placeholder="Title" maxlength="100" />
-                  </div>
-                  <div class="col-12 col-sm-5">
-                    <input v-model="editUrl" type="url" class="form-control form-control-sm" placeholder="URL" />
-                  </div>
-                  <div class="col-12 col-sm-2 d-flex gap-1">
-                    <button class="btn btn-sm btn-primary px-2" :disabled="savingEdit" @click="saveEdit(link)">
-                      <span v-if="savingEdit" class="spinner-border spinner-border-sm"></span>
-                      <span v-else>✓</span>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary px-2" @click="cancelEdit">✕</button>
-                  </div>
+              <div v-else style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap;">
+                <md-outlined-text-field
+                  :value="editTitle"
+                  @input="editTitle=($event.target as HTMLInputElement).value"
+                  label="Title"
+                  maxlength="100"
+                  style="flex:1;min-width:160px;"
+                />
+                <md-outlined-text-field
+                  :value="editUrl"
+                  @input="editUrl=($event.target as HTMLInputElement).value"
+                  label="URL"
+                  type="url"
+                  style="flex:1;min-width:160px;"
+                />
+                <div style="display:flex;gap:4px;flex-shrink:0;">
+                  <md-icon-button :disabled="savingEdit" @click="saveEdit(link)">
+                    <md-circular-progress v-if="savingEdit" indeterminate style="--md-circular-progress-size:20px" />
+                    <span v-else class="material-symbols-outlined">check</span>
+                  </md-icon-button>
+                  <md-icon-button @click="cancelEdit">
+                    <span class="material-symbols-outlined">close</span>
+                  </md-icon-button>
                 </div>
               </div>
             </div>
@@ -522,46 +490,171 @@ function onDragEnd() {
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.page-wrapper {
+  padding: 24px;
+  max-width: 900px;
 }
-.btn-primary:hover {
-  background-color: #5249e0;
-  border-color: #5249e0;
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
-.list-group-item[draggable="true"] {
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Stats */
+.stats-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 110px;
+}
+
+.stat-label {
+  font-size: 0.72rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.2;
+}
+
+/* Cards */
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+.m3-card--elevated {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.m3-card--outlined {
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Badges */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.m3-badge--success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.m3-badge--neutral {
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Two column layout */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 800px) {
+  .two-column-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-card {
+  /* card styling applied from m3-card classes */
+}
+
+.card-section-header {
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.card-body {
+  padding: 16px 20px;
+}
+
+/* Published toggle */
+.published-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  gap: 12px;
+}
+
+.published-toggle--active {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+/* Add link row */
+.add-link-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* Link items */
+.link-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   cursor: default;
   user-select: none;
 }
 
-/* Page Overview stat chips */
-.stat-chip {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  background: #fff;
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
-  padding: 8px 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  min-width: 90px;
+.link-item:last-child {
+  border-bottom: none;
 }
 
-.stat-chip__label {
-  font-size: 0.7rem;
-  color: #6c757d;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-}
-
-.stat-chip__value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #212529;
-  line-height: 1.2;
+.link-item:hover {
+  background: var(--md-sys-color-surface-container-low);
 }
 </style>

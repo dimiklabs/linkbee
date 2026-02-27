@@ -3,12 +3,13 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+// Import ALL Material Web components globally
+import '@material/web/all.js';
+
+// M3 theme tokens
+import './assets/styles/m3-theme.css';
 
 const app = createApp(App);
-const pinia = createPinia();
-
-app.use(pinia);
+app.use(createPinia());
 app.use(router);
-
 app.mount('#app');

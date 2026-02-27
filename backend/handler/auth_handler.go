@@ -49,6 +49,21 @@ func NewAuthHandler(authService authSrv.AuthServiceI, rateLimitService rateLimit
 func (h *AuthHandler) Signup(c *gin.Context) {
 	ctx := c.Request.Context()
 
+	ipAddress := c.ClientIP()
+
+	if h.rateLimitService != nil {
+		if rateLimitErr := h.rateLimitService.CheckSignupRateLimit(ctx, ipAddress); rateLimitErr != nil {
+			logger.WarnCtx(ctx, "Signup blocked by rate limiter",
+				zap.String("ip", ipAddress))
+			if rateLimitErr.Data != nil {
+				transport.RespondWithErrorData(c, rateLimitErr.StatusCode, rateLimitErr.ErrorCode, rateLimitErr.Description, rateLimitErr.Data)
+			} else {
+				transport.RespondWithError(c, rateLimitErr.StatusCode, rateLimitErr.ErrorCode, rateLimitErr.Description)
+			}
+			return
+		}
+	}
+
 	var req request.SignupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.WarnCtx(ctx, "Invalid signup request",
@@ -295,6 +310,22 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 		errCode, errMsg := util.TranslateValidationError(err)
 		transport.RespondWithError(c, http.StatusBadRequest, errCode, errMsg)
 		return
+	}
+
+	ipAddress := c.ClientIP()
+
+	if h.rateLimitService != nil {
+		if rateLimitErr := h.rateLimitService.CheckForgotPasswordRateLimit(ctx, req.Email, ipAddress); rateLimitErr != nil {
+			logger.WarnCtx(ctx, "Forgot-password blocked by rate limiter",
+				zap.String("email", req.Email),
+				zap.String("ip", ipAddress))
+			if rateLimitErr.Data != nil {
+				transport.RespondWithErrorData(c, rateLimitErr.StatusCode, rateLimitErr.ErrorCode, rateLimitErr.Description, rateLimitErr.Data)
+			} else {
+				transport.RespondWithError(c, rateLimitErr.StatusCode, rateLimitErr.ErrorCode, rateLimitErr.Description)
+			}
+			return
+		}
 	}
 
 	logger.InfoCtx(ctx, "Forgot password request received",

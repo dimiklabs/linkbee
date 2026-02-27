@@ -7,7 +7,7 @@ type CreateLinkRequest struct {
 	Title          string   `json:"title" binding:"omitempty,max=500"`
 	Password       string   `json:"password" binding:"omitempty,min=4,max=128"`
 	ExpiresAt      *string  `json:"expires_at"` // RFC3339 string, nullable
-	MaxClicks      *int64   `json:"max_clicks" binding:"omitempty,min=1"`
+	MaxClicks      *int64   `json:"max_clicks" binding:"omitempty,min=1,max=10000000"`
 	RedirectType   *int16   `json:"redirect_type" binding:"omitempty,oneof=301 302"`
 	Tags           []string `json:"tags" binding:"omitempty,max=10"`
 	UTMSource      string   `json:"utm_source" binding:"omitempty,max=255"`
@@ -22,7 +22,7 @@ type UpdateLinkRequest struct {
 	Title          string   `json:"title" binding:"omitempty,max=500"`
 	Password       string   `json:"password" binding:"omitempty,min=4,max=128"`
 	ExpiresAt      *string  `json:"expires_at"` // RFC3339 string, nullable; null clears expiry
-	MaxClicks      *int64   `json:"max_clicks" binding:"omitempty,min=1"`
+	MaxClicks      *int64   `json:"max_clicks" binding:"omitempty,min=1,max=10000000"`
 	RedirectType   *int16   `json:"redirect_type" binding:"omitempty,oneof=301 302"`
 	Tags           []string `json:"tags" binding:"omitempty,max=10"`
 	IsActive       *bool    `json:"is_active"`

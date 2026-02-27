@@ -1,149 +1,139 @@
 <template>
-  <div class="modal fade" :id="modalId" tabindex="-1" ref="modalEl">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-0 pb-0">
-          <div>
-            <h5 class="modal-title fw-bold">Retargeting Pixels</h5>
-            <p class="text-muted small mb-0">
-              <code class="small">{{ link?.slug }}</code>
-            </p>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">
+      Retargeting Pixels
+      <span style="font-size:0.82rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);display:block;margin-top:2px">
+        <code>{{ link?.slug }}</code>
+      </span>
+    </div>
+
+    <div slot="content" style="min-width:520px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+      <!-- Enable/disable toggle -->
+      <div class="pixels-toggle-row" :class="isEnabled ? 'pixels-toggle-row--active' : ''">
+        <div>
+          <div class="pixels-toggle-title">Pixel tracking</div>
+          <div class="pixels-toggle-subtitle">
+            When enabled, clicks serve an HTML page that fires all pixels then redirects
           </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
+        <md-switch
+          :selected="isEnabled"
+          :disabled="toggling"
+          @change="isEnabled = ($event.target as HTMLInputElement).checked; toggleTracking()"
+        />
+      </div>
 
-        <div class="modal-body">
-          <!-- Enable/disable toggle -->
-          <div class="d-flex align-items-center justify-content-between p-3 rounded mb-4"
-               :class="isEnabled ? 'bg-primary bg-opacity-10 border border-primary border-opacity-25' : 'bg-light'">
-            <div>
-              <div class="fw-semibold small">Pixel tracking</div>
-              <div class="text-muted" style="font-size:0.8rem">
-                When enabled, clicks serve an HTML page that fires all pixels then redirects
+      <!-- Warning when enabled with no pixels -->
+      <div v-if="isEnabled && pixels.length === 0 && !loading" class="pixels-warning-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:#F4A100">warning</span>
+        <span>Pixel tracking is enabled but no pixels are configured. Add at least one pixel below.</span>
+      </div>
+
+      <!-- Existing pixels loading -->
+      <div v-if="loading" class="pixels-loading">
+        <md-circular-progress indeterminate style="--md-circular-progress-size:28px" />
+      </div>
+
+      <!-- Existing pixels list -->
+      <div v-else-if="pixels.length > 0" class="pixels-list-section">
+        <div class="pixels-list-label">Configured pixels</div>
+        <div class="pixels-list">
+          <div v-for="px in pixels" :key="px.id" class="pixel-item">
+            <span class="pixel-item-icon">{{ pixelIcon(px.pixel_type) }}</span>
+            <div class="pixel-item-info">
+              <div class="pixel-item-name">{{ pixelLabel(px.pixel_type) }}</div>
+              <div class="pixel-item-id">
+                {{ px.pixel_type === 'custom' ? 'Custom script' : px.pixel_id }}
               </div>
             </div>
-            <div class="form-check form-switch mb-0">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                v-model="isEnabled"
-                :disabled="toggling"
-                @change="toggleTracking"
-                style="width:2.5rem;height:1.25rem;cursor:pointer"
-              />
-            </div>
-          </div>
-
-          <!-- Warning when enabled with no pixels -->
-          <div v-if="isEnabled && pixels.length === 0 && !loading" class="alert alert-warning py-2 small mb-3">
-            Pixel tracking is enabled but no pixels are configured. Add at least one pixel below.
-          </div>
-
-          <!-- Existing pixels -->
-          <div v-if="loading" class="text-center py-3">
-            <div class="spinner-border spinner-border-sm text-primary"></div>
-          </div>
-
-          <div v-else-if="pixels.length > 0" class="mb-3">
-            <h6 class="fw-semibold small text-muted text-uppercase mb-2">Configured pixels</h6>
-            <div class="list-group list-group-flush border rounded">
-              <div
-                v-for="px in pixels"
-                :key="px.id"
-                class="list-group-item d-flex align-items-center gap-3 py-2"
-              >
-                <span style="font-size:1.25rem">{{ pixelIcon(px.pixel_type) }}</span>
-                <div class="flex-fill min-w-0">
-                  <div class="fw-medium small">{{ pixelLabel(px.pixel_type) }}</div>
-                  <div class="text-muted" style="font-size:0.78rem;word-break:break-all">
-                    {{ px.pixel_type === 'custom' ? 'Custom script' : px.pixel_id }}
-                  </div>
-                </div>
-                <button
-                  class="btn btn-outline-danger btn-sm flex-shrink-0"
-                  @click="deletePixel(px.id)"
-                  title="Remove pixel"
-                >
-                  <i class="bi bi-trash"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Add pixel form -->
-          <div class="border rounded p-3">
-            <h6 class="fw-semibold small mb-3">Add pixel</h6>
-
-            <!-- Pixel type selector -->
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Pixel type</label>
-              <div class="d-flex flex-wrap gap-2">
-                <button
-                  v-for="pt in PIXEL_TYPES"
-                  :key="pt.value"
-                  class="btn btn-sm"
-                  :class="selectedType === pt.value ? 'btn-primary' : 'btn-outline-secondary'"
-                  @click="selectedType = pt.value; pixelID = ''; customScript = ''"
-                >
-                  {{ pt.icon }} {{ pt.label }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Pixel ID input (for named types) -->
-            <div v-if="selectedTypeMeta?.requiresId" class="mb-3">
-              <label class="form-label small fw-medium">Pixel / Tag ID</label>
-              <input
-                v-model="pixelID"
-                type="text"
-                class="form-control"
-                :placeholder="selectedTypeMeta?.placeholder"
-              />
-              <div class="form-text">{{ selectedTypeMeta?.description }}</div>
-            </div>
-
-            <!-- Custom script textarea -->
-            <div v-if="selectedType === 'custom'" class="mb-3">
-              <label class="form-label small fw-medium">Custom script</label>
-              <textarea
-                v-model="customScript"
-                class="form-control font-monospace small"
-                rows="5"
-                :placeholder="selectedTypeMeta?.placeholder"
-              ></textarea>
-              <div class="form-text text-warning">
-                ⚠️ Custom scripts are inserted verbatim into the redirect page. Ensure the code is trusted.
-              </div>
-            </div>
-
-            <div v-if="addError" class="alert alert-danger py-2 small mb-2">{{ addError }}</div>
-
-            <button
-              class="btn btn-primary btn-sm"
-              :disabled="adding || !canAdd"
-              @click="addPixel"
+            <md-icon-button
+              @click="deletePixel(px.id)"
+              title="Remove pixel"
+              style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)"
             >
-              <span v-if="adding" class="spinner-border spinner-border-sm me-1"></span>
-              Add pixel
-            </button>
-          </div>
-
-          <!-- Info box -->
-          <div class="mt-3 p-3 bg-light rounded small text-muted">
-            <strong>How it works:</strong> When pixel tracking is enabled, clicking your short link
-            loads a lightweight HTML page that fires all your tracking pixels, then immediately
-            redirects visitors to the destination URL via JavaScript.
+              <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+            </md-icon-button>
           </div>
         </div>
       </div>
+
+      <!-- Add pixel form -->
+      <div class="add-pixel-section">
+        <div class="add-pixel-title">Add pixel</div>
+
+        <!-- Pixel type selector -->
+        <div class="pixel-type-section">
+          <div class="pixel-type-label">Pixel type</div>
+          <div class="pixel-type-buttons">
+            <button
+              v-for="pt in PIXEL_TYPES"
+              :key="pt.value"
+              class="pixel-type-btn"
+              :class="{ 'pixel-type-btn--active': selectedType === pt.value }"
+              @click="selectedType = pt.value; pixelID = ''; customScript = ''"
+            >
+              {{ pt.icon }} {{ pt.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Pixel ID input (for named types) -->
+        <div v-if="selectedTypeMeta?.requiresId" class="field-group">
+          <md-outlined-text-field
+            :value="pixelID"
+            @input="pixelID = ($event.target as HTMLInputElement).value"
+            label="Pixel / Tag ID"
+            :placeholder="selectedTypeMeta?.placeholder"
+            :supporting-text="selectedTypeMeta?.description"
+            style="width:100%"
+          />
+        </div>
+
+        <!-- Custom script textarea -->
+        <div v-if="selectedType === 'custom'" class="field-group">
+          <md-outlined-text-field
+            type="textarea"
+            :value="customScript"
+            @input="customScript = ($event.target as HTMLInputElement).value"
+            label="Custom script"
+            :placeholder="selectedTypeMeta?.placeholder"
+            rows="5"
+            style="width:100%;font-family:monospace"
+          />
+          <div class="custom-script-warning">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#F4A100">warning</span>
+            Custom scripts are inserted verbatim into the redirect page. Ensure the code is trusted.
+          </div>
+        </div>
+
+        <div v-if="addError" class="add-error-banner">
+          <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-error)">error</span>
+          {{ addError }}
+        </div>
+
+        <md-filled-button :disabled="adding || !canAdd" @click="addPixel">
+          <md-circular-progress v-if="adding" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+          <span v-else class="material-symbols-outlined" slot="icon">add</span>
+          Add pixel
+        </md-filled-button>
+      </div>
+
+      <!-- Info box -->
+      <div class="pixels-info-box">
+        <strong>How it works:</strong> When pixel tracking is enabled, clicking your short link
+        loads a lightweight HTML page that fires all your tracking pixels, then immediately
+        redirects visitors to the destination URL via JavaScript.
+      </div>
     </div>
-  </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide">Close</md-text-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import type { Modal } from 'bootstrap';
 import pixelsApi from '@/api/pixels';
 import { PIXEL_TYPES } from '@/types/pixels';
 import type { RetargetingPixel, PixelType } from '@/types/pixels';
@@ -159,8 +149,9 @@ const emit = defineEmits<{
 }>();
 
 const modalEl = ref<HTMLElement | null>(null);
-let bsModal: Modal | null = null;
+let bsModal: any = null;
 
+const isOpen = ref(false);
 const pixels = ref<RetargetingPixel[]>([]);
 const loading = ref(false);
 const isEnabled = ref(false);
@@ -239,20 +230,222 @@ async function deletePixel(pixelId: string) {
 }
 
 onMounted(() => {
-  if (modalEl.value) {
-    import('bootstrap').then(({ Modal }) => {
-      bsModal = new Modal(modalEl.value!);
-      modalEl.value!.addEventListener('shown.bs.modal', () => {
-        isEnabled.value = props.link?.is_pixel_tracking ?? false;
-        loadPixels();
-      });
-    });
-  }
+  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
 });
 
 onBeforeUnmount(() => {
   bsModal?.dispose();
 });
 
-defineExpose({ show: () => bsModal?.show(), hide: () => bsModal?.hide() });
+function show() {
+  isOpen.value = true;
+  isEnabled.value = props.link?.is_pixel_tracking ?? false;
+  loadPixels();
+  bsModal?.show();
+}
+
+function hide() {
+  isOpen.value = false;
+  bsModal?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
+}
+
+defineExpose({ show, hide });
 </script>
+
+<style scoped>
+/* Toggle row */
+.pixels-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+  margin-bottom: 16px;
+  transition: background 0.2s;
+}
+
+.pixels-toggle-row--active {
+  background: rgba(99, 91, 255, 0.08);
+  border: 1px solid rgba(99, 91, 255, 0.2);
+}
+
+.pixels-toggle-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.pixels-toggle-subtitle {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+}
+
+/* Warning banner */
+.pixels-warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(244, 161, 0, 0.1);
+  border: 1px solid rgba(244, 161, 0, 0.4);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+}
+
+/* Loading */
+.pixels-loading {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Pixels list */
+.pixels-list-section {
+  margin-bottom: 20px;
+}
+
+.pixels-list-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 8px;
+}
+
+.pixels-list {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pixel-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.pixel-item:last-child {
+  border-bottom: none;
+}
+
+.pixel-item-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.pixel-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pixel-item-name {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.pixel-item-id {
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+  word-break: break-all;
+}
+
+/* Add pixel section */
+.add-pixel-section {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.add-pixel-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 12px;
+}
+
+.pixel-type-section {
+  margin-bottom: 16px;
+}
+
+.pixel-type-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.pixel-type-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pixel-type-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pixel-type-btn:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.pixel-type-btn--active {
+  background: var(--md-sys-color-primary-container, rgba(99,91,255,0.12));
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-primary);
+}
+
+.field-group {
+  margin-bottom: 16px;
+}
+
+.custom-script-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #F4A100;
+}
+
+.add-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--md-sys-color-error-container, #FFDAD6);
+  color: var(--md-sys-color-on-error-container, #410002);
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+
+/* Info box */
+.pixels-info-box {
+  padding: 12px 16px;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+}
+</style>

@@ -1,169 +1,176 @@
 <template>
-  <div ref="modalEl" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div>
-            <h5 class="modal-title fw-semibold mb-0">A/B Split Test</h5>
-            <p class="text-muted mb-0" style="font-size: 0.8rem;">{{ props.slug }}</p>
-          </div>
-          <button type="button" class="btn-close" @click="hide" aria-label="Close"></button>
-        </div>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">
+      A/B Split Test
+      <span style="font-size:0.8rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);display:block;margin-top:2px">{{ props.slug }}</span>
+    </div>
 
-        <div class="modal-body">
-          <!-- Error -->
-          <div v-if="error" class="alert alert-danger alert-dismissible" role="alert">
-            {{ error }}
-            <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
-          </div>
+    <div slot="content" style="min-width:560px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+      <!-- Error -->
+      <div v-if="error" class="split-error-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
+        <span style="flex:1;font-size:0.875rem">{{ error }}</span>
+        <md-icon-button @click="error = ''" style="width:32px;height:32px">
+          <span class="material-symbols-outlined" style="font-size:18px">close</span>
+        </md-icon-button>
+      </div>
 
-          <!-- Enable toggle -->
-          <div class="d-flex align-items-center justify-content-between mb-4 p-3 border rounded bg-light">
-            <div>
-              <div class="fw-semibold" style="font-size: 0.9rem;">Split Test {{ isSplitTest ? 'Enabled' : 'Disabled' }}</div>
-              <div class="text-muted" style="font-size: 0.8rem;">
-                {{ isSplitTest ? 'Traffic is being distributed across variants.' : 'Enable to start routing traffic to variants.' }}
-              </div>
-            </div>
-            <div class="form-check form-switch mb-0">
-              <input
-                class="form-check-input"
-                type="checkbox"
-                role="switch"
-                :checked="isSplitTest"
-                :disabled="toggling || loading"
-                @change="toggleSplitTest"
-                style="width: 2.5rem; height: 1.25rem; cursor: pointer;"
-              />
-            </div>
-          </div>
-
-          <!-- Weight summary bar -->
-          <div v-if="variants.length > 0" class="mb-4">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="small fw-medium">Traffic distribution</span>
-              <span class="small text-muted">Total weight: {{ totalWeight }}</span>
-            </div>
-            <div class="progress" style="height: 18px; border-radius: 6px;">
-              <div
-                v-for="(v, i) in variants"
-                :key="v.id"
-                class="progress-bar"
-                :style="{ width: variantPercent(v.weight) + '%', backgroundColor: variantColor(i) }"
-                :title="`${v.name}: ${variantPercent(v.weight).toFixed(1)}%`"
-              ></div>
-            </div>
-            <div class="d-flex flex-wrap gap-2 mt-2">
-              <span v-for="(v, i) in variants" :key="v.id" class="d-flex align-items-center gap-1" style="font-size: 0.78rem;">
-                <span class="rounded-circle d-inline-block" :style="{ width: '8px', height: '8px', backgroundColor: variantColor(i) }"></span>
-                {{ v.name }}: {{ variantPercent(v.weight).toFixed(1) }}%
-              </span>
-            </div>
-          </div>
-
-          <!-- Variants list -->
-          <div v-if="loading" class="text-center py-4">
-            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-          </div>
-
-          <div v-else>
-            <div v-if="variants.length === 0" class="text-center text-muted py-3" style="font-size: 0.88rem;">
-              No variants yet. Add one below to get started.
-            </div>
-
-            <div v-for="(v, i) in variants" :key="v.id" class="variant-card border rounded p-3 mb-2">
-              <div v-if="editingId === v.id">
-                <!-- Edit mode -->
-                <div class="row g-2">
-                  <div class="col-12 col-md-4">
-                    <input v-model="editForm.name" class="form-control form-control-sm" placeholder="Variant name" />
-                  </div>
-                  <div class="col-12 col-md-5">
-                    <input v-model="editForm.destination_url" class="form-control form-control-sm" placeholder="https://..." />
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <input v-model.number="editForm.weight" class="form-control form-control-sm" type="number" min="1" max="1000" placeholder="Weight" />
-                  </div>
-                  <div class="col-6 col-md-1 d-flex gap-1 justify-content-end">
-                    <button class="btn btn-sm btn-primary px-2" @click="submitEdit(v)" :disabled="saving">✓</button>
-                    <button class="btn btn-sm btn-outline-secondary px-2" @click="cancelEdit">✕</button>
-                  </div>
-                </div>
-              </div>
-
-              <div v-else class="d-flex align-items-start gap-3">
-                <span class="variant-dot flex-shrink-0 rounded-circle mt-1" :style="{ backgroundColor: variantColor(i) }"></span>
-                <div class="flex-grow-1 min-width-0">
-                  <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="fw-semibold" style="font-size: 0.88rem;">{{ v.name }}</span>
-                    <span class="badge bg-light text-secondary border" style="font-size: 0.72rem;">weight {{ v.weight }}</span>
-                    <span class="badge text-bg-secondary" style="font-size: 0.72rem;">{{ v.click_count.toLocaleString() }} clicks</span>
-                  </div>
-                  <div class="text-muted text-truncate mt-1" style="font-size: 0.8rem;" :title="v.destination_url">
-                    {{ v.destination_url }}
-                  </div>
-                </div>
-                <div class="d-flex gap-1 flex-shrink-0">
-                  <button class="btn btn-sm border-0 p-1 text-muted" title="Edit" @click="startEdit(v)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                    </svg>
-                  </button>
-                  <button class="btn btn-sm border-0 p-1 text-danger" title="Delete" @click="deleteVariant(v)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Add variant form -->
-            <div class="border rounded p-3 mt-3 bg-light" v-if="showAddForm">
-              <p class="fw-medium small mb-2">New Variant</p>
-              <div class="row g-2">
-                <div class="col-12 col-md-4">
-                  <input v-model="newForm.name" class="form-control form-control-sm" placeholder="Variant name (e.g. Variant B)" />
-                </div>
-                <div class="col-12 col-md-5">
-                  <input v-model="newForm.destination_url" class="form-control form-control-sm" placeholder="https://destination.com" />
-                </div>
-                <div class="col-6 col-md-2">
-                  <input v-model.number="newForm.weight" class="form-control form-control-sm" type="number" min="1" max="1000" placeholder="Weight" />
-                </div>
-                <div class="col-6 col-md-1 d-flex gap-1 justify-content-end">
-                  <button class="btn btn-sm btn-primary px-2" @click="submitAdd" :disabled="saving">✓</button>
-                  <button class="btn btn-sm btn-outline-secondary px-2" @click="showAddForm = false">✕</button>
-                </div>
-              </div>
-              <div class="form-text">Weight is relative (e.g., 50 + 50 = 50/50 split; 70 + 30 = 70/30 split).</div>
-            </div>
-
-            <button
-              v-if="!showAddForm && editingId === ''"
-              class="btn btn-sm btn-outline-primary mt-3 d-flex align-items-center gap-1"
-              @click="openAddForm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-              </svg>
-              Add Variant
-            </button>
+      <!-- Enable toggle -->
+      <div class="split-toggle-row">
+        <div>
+          <div class="split-toggle-title">Split Test {{ isSplitTest ? 'Enabled' : 'Disabled' }}</div>
+          <div class="split-toggle-subtitle">
+            {{ isSplitTest ? 'Traffic is being distributed across variants.' : 'Enable to start routing traffic to variants.' }}
           </div>
         </div>
+        <md-switch
+          :selected="isSplitTest"
+          :disabled="toggling || loading"
+          @change="toggleSplitTest($event)"
+        />
+      </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" @click="hide">Close</button>
+      <!-- Weight summary bar -->
+      <div v-if="variants.length > 0" class="split-distribution">
+        <div class="split-distribution-header">
+          <span class="split-distribution-label">Traffic distribution</span>
+          <span class="split-distribution-total">Total weight: {{ totalWeight }}</span>
+        </div>
+        <div class="split-bar">
+          <div
+            v-for="(v, i) in variants"
+            :key="v.id"
+            class="split-bar-segment"
+            :style="{ width: variantPercent(v.weight) + '%', backgroundColor: variantColor(i) }"
+            :title="`${v.name}: ${variantPercent(v.weight).toFixed(1)}%`"
+          ></div>
+        </div>
+        <div class="split-legend">
+          <span v-for="(v, i) in variants" :key="v.id" class="split-legend-item">
+            <span class="split-legend-dot" :style="{ backgroundColor: variantColor(i) }"></span>
+            {{ v.name }}: {{ variantPercent(v.weight).toFixed(1) }}%
+          </span>
         </div>
       </div>
+
+      <!-- Variants list loading -->
+      <div v-if="loading" class="split-loading">
+        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+      </div>
+
+      <div v-else>
+        <div v-if="variants.length === 0" class="split-empty">
+          No variants yet. Add one below to get started.
+        </div>
+
+        <div v-for="(v, i) in variants" :key="v.id" class="variant-card">
+          <!-- Edit mode -->
+          <div v-if="editingId === v.id" class="variant-edit-form">
+            <md-outlined-text-field
+              :value="editForm.name"
+              @input="editForm.name = ($event.target as HTMLInputElement).value"
+              label="Variant name"
+              style="flex:2"
+            />
+            <md-outlined-text-field
+              :value="editForm.destination_url"
+              @input="editForm.destination_url = ($event.target as HTMLInputElement).value"
+              label="Destination URL"
+              style="flex:3"
+            />
+            <md-outlined-text-field
+              :value="String(editForm.weight)"
+              @input="editForm.weight = Number(($event.target as HTMLInputElement).value)"
+              label="Weight"
+              type="number"
+              style="width:80px"
+            />
+            <md-icon-button @click="submitEdit(v)" :disabled="saving" style="--md-icon-button-icon-color:#1AA563;width:36px;height:36px">
+              <span class="material-symbols-outlined">check</span>
+            </md-icon-button>
+            <md-icon-button @click="cancelEdit" style="width:36px;height:36px">
+              <span class="material-symbols-outlined">close</span>
+            </md-icon-button>
+          </div>
+
+          <!-- View mode -->
+          <div v-else class="variant-view">
+            <span class="variant-dot" :style="{ backgroundColor: variantColor(i) }"></span>
+            <div class="variant-info">
+              <div class="variant-name-row">
+                <span class="variant-name">{{ v.name }}</span>
+                <span class="m3-badge m3-badge--neutral" style="font-size:0.72rem">weight {{ v.weight }}</span>
+                <span class="m3-badge m3-badge--secondary" style="font-size:0.72rem">{{ v.click_count.toLocaleString() }} clicks</span>
+              </div>
+              <div class="variant-url" :title="v.destination_url">{{ v.destination_url }}</div>
+            </div>
+            <div class="variant-actions">
+              <md-icon-button @click="startEdit(v)" title="Edit" style="width:32px;height:32px">
+                <span class="material-symbols-outlined" style="font-size:15px">edit</span>
+              </md-icon-button>
+              <md-icon-button @click="deleteVariant(v)" title="Delete" style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)">
+                <span class="material-symbols-outlined" style="font-size:15px">delete</span>
+              </md-icon-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add variant form -->
+        <div v-if="showAddForm" class="add-variant-card">
+          <p class="add-variant-title">New Variant</p>
+          <div class="variant-edit-form">
+            <md-outlined-text-field
+              :value="newForm.name"
+              @input="newForm.name = ($event.target as HTMLInputElement).value"
+              label="Variant name"
+              placeholder="Variant B"
+              style="flex:2"
+            />
+            <md-outlined-text-field
+              :value="newForm.destination_url"
+              @input="newForm.destination_url = ($event.target as HTMLInputElement).value"
+              label="Destination URL"
+              placeholder="https://destination.com"
+              style="flex:3"
+            />
+            <md-outlined-text-field
+              :value="String(newForm.weight)"
+              @input="newForm.weight = Number(($event.target as HTMLInputElement).value)"
+              label="Weight"
+              type="number"
+              style="width:80px"
+            />
+            <md-icon-button @click="submitAdd" :disabled="saving" style="--md-icon-button-icon-color:#1AA563;width:36px;height:36px">
+              <span class="material-symbols-outlined">check</span>
+            </md-icon-button>
+            <md-icon-button @click="showAddForm = false" style="width:36px;height:36px">
+              <span class="material-symbols-outlined">close</span>
+            </md-icon-button>
+          </div>
+          <div class="add-variant-hint">
+            Weight is relative (e.g., 50 + 50 = 50/50 split; 70 + 30 = 70/30 split).
+          </div>
+        </div>
+
+        <md-text-button
+          v-if="!showAddForm && editingId === ''"
+          @click="openAddForm"
+          style="margin-top:12px"
+        >
+          <span class="material-symbols-outlined" slot="icon">add</span>
+          Add Variant
+        </md-text-button>
+      </div>
     </div>
-  </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide">Close</md-text-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { Modal } from 'bootstrap';
 import variantsApi from '@/api/variants';
 import type { LinkVariant } from '@/types/links';
 
@@ -179,8 +186,9 @@ const emit = defineEmits<{
 }>();
 
 const modalEl = ref<HTMLElement | null>(null);
-let modalInstance: Modal | null = null;
+let modalInstance: any = null;
 
+const isOpen = ref(false);
 const variants = ref<LinkVariant[]>([]);
 const isSplitTest = ref(props.isSplitTestInitial);
 const loading = ref(false);
@@ -212,9 +220,7 @@ function variantColor(i: number): string {
 }
 
 onMounted(() => {
-  if (modalEl.value) {
-    modalInstance = new Modal(modalEl.value, { backdrop: 'static' });
-  }
+  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
 });
 
 async function loadVariants() {
@@ -236,12 +242,18 @@ function show() {
   error.value = '';
   showAddForm.value = false;
   editingId.value = '';
+  isOpen.value = true;
   loadVariants();
   modalInstance?.show();
 }
 
 function hide() {
+  isOpen.value = false;
   modalInstance?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
 }
 
 async function toggleSplitTest(e: Event) {
@@ -332,43 +344,203 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.split-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: var(--md-sys-color-error-container, #FFDAD6);
+  color: var(--md-sys-color-on-error-container, #410002);
+  border-radius: 8px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #5249e0;
-  border-color: #5249e0;
+/* Toggle row */
+.split-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+  margin-bottom: 20px;
 }
 
-.btn-outline-primary {
-  color: #635bff;
-  border-color: #635bff;
+.split-toggle-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface);
 }
 
-.btn-outline-primary:hover {
-  background-color: #635bff;
-  color: white;
+.split-toggle-subtitle {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
 }
 
+/* Distribution bar */
+.split-distribution {
+  margin-bottom: 20px;
+}
+
+.split-distribution-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.split-distribution-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.split-distribution-total {
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.split-bar {
+  height: 18px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+}
+
+.split-bar-segment {
+  height: 100%;
+  transition: width 0.3s;
+}
+
+.split-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.split-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.split-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Loading / empty */
+.split-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+.split-empty {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  padding: 16px;
+}
+
+/* Variant cards */
 .variant-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
   transition: box-shadow 0.15s;
 }
 
 .variant-card:hover {
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.variant-view {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
 }
 
 .variant-dot {
   width: 10px;
   height: 10px;
+  border-radius: 50%;
   display: inline-block;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.variant-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.variant-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.variant-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.variant-url {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.variant-actions {
+  display: flex;
+  gap: 2px;
   flex-shrink: 0;
 }
 
-.form-check-input:checked {
-  background-color: #635bff;
-  border-color: #635bff;
+/* Edit form */
+.variant-edit-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  flex-wrap: wrap;
+}
+
+/* Add variant */
+.add-variant-card {
+  border: 1px dashed var(--md-sys-color-outline-variant);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.add-variant-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0 0 10px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.add-variant-hint {
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 8px;
 }
 </style>

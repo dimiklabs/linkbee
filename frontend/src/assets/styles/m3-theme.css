@@ -1,0 +1,276 @@
+/* ─── Material Design 3 Theme Tokens ─────────────────────────────────────── */
+
+/* Apply M3 color scheme to all md-* components via --md-sys-color-* */
+:root,
+[data-theme="light"] {
+  /* Primary — #635BFF brand purple */
+  --md-sys-color-primary: #635BFF;
+  --md-sys-color-primary-rgb: 99, 91, 255;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #E5E2FF;
+  --md-sys-color-on-primary-container: #1A0162;
+
+  /* Secondary */
+  --md-sys-color-secondary: #5F5D72;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E4E1F9;
+  --md-sys-color-on-secondary-container: #1B1A2D;
+
+  /* Tertiary */
+  --md-sys-color-tertiary: #14B8A6;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #CCFBF1;
+  --md-sys-color-on-tertiary-container: #003731;
+
+  /* Error */
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+
+  /* Background */
+  --md-sys-color-background: #F7F9FC;
+  --md-sys-color-on-background: #1A1F36;
+
+  /* Surface */
+  --md-sys-color-surface: #FFFFFF;
+  --md-sys-color-on-surface: #1A1F36;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-surface-container-highest: #ECE6F0;
+  --md-sys-color-surface-container-high: #F2ECF4;
+  --md-sys-color-surface-container: #F3EDF7;
+  --md-sys-color-surface-container-low: #F7F2FA;
+  --md-sys-color-surface-container-lowest: #FFFFFF;
+
+  /* Outline */
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+
+  /* Inverse */
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F4EFF4;
+  --md-sys-color-inverse-primary: #CFBCFF;
+
+  /* Shadow */
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+
+  /* Custom app tokens */
+  --app-nav-width: 256px;
+  --app-nav-rail-width: 80px;
+  --app-surface-1: #F4F0FF;
+  --app-border-radius-card: 12px;
+  --app-border-radius-dialog: 28px;
+}
+
+[data-theme="dark"] {
+  --md-sys-color-primary: #CFBCFF;
+  --md-sys-color-primary-rgb: 207, 188, 255;
+  --md-sys-color-on-primary: #381E72;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #EADDFF;
+
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #E8DEF8;
+
+  --md-sys-color-tertiary: #99D7D0;
+  --md-sys-color-on-tertiary: #003A36;
+  --md-sys-color-tertiary-container: #00504B;
+  --md-sys-color-on-tertiary-container: #B2F2EB;
+
+  --md-sys-color-error: #F2B8B5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+
+  --md-sys-color-background: #141218;
+  --md-sys-color-on-background: #E6E1E5;
+
+  --md-sys-color-surface: #141218;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  --md-sys-color-surface-container-highest: #36343B;
+  --md-sys-color-surface-container-high: #2B2930;
+  --md-sys-color-surface-container: #211F26;
+  --md-sys-color-surface-container-low: #1D1B20;
+  --md-sys-color-surface-container-lowest: #0F0D13;
+
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+
+  --md-sys-color-inverse-surface: #E6E1E5;
+  --md-sys-color-inverse-on-surface: #313033;
+  --md-sys-color-inverse-primary: #6750A4;
+
+  --md-sys-color-shadow: #000000;
+  --md-sys-color-scrim: #000000;
+
+  --app-surface-1: #1D1B20;
+}
+
+/* ─── Global Base Styles ──────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-on-background);
+  min-height: 100vh;
+}
+
+/* ─── M3 Typography Scale ─────────────────────────────────────────────────── */
+.md-display-large    { font-size: 57px; font-weight: 400; line-height: 64px; letter-spacing: -0.25px; }
+.md-display-medium   { font-size: 45px; font-weight: 400; line-height: 52px; }
+.md-display-small    { font-size: 36px; font-weight: 400; line-height: 44px; }
+.md-headline-large   { font-size: 32px; font-weight: 400; line-height: 40px; }
+.md-headline-medium  { font-size: 28px; font-weight: 400; line-height: 36px; }
+.md-headline-small   { font-size: 24px; font-weight: 400; line-height: 32px; }
+.md-title-large      { font-size: 22px; font-weight: 400; line-height: 28px; }
+.md-title-medium     { font-size: 16px; font-weight: 500; line-height: 24px; letter-spacing: 0.15px; }
+.md-title-small      { font-size: 14px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
+.md-label-large      { font-size: 14px; font-weight: 500; line-height: 20px; letter-spacing: 0.1px; }
+.md-label-medium     { font-size: 12px; font-weight: 500; line-height: 16px; letter-spacing: 0.5px; }
+.md-label-small      { font-size: 11px; font-weight: 500; line-height: 16px; letter-spacing: 0.5px; }
+.md-body-large       { font-size: 16px; font-weight: 400; line-height: 24px; letter-spacing: 0.5px; }
+.md-body-medium      { font-size: 14px; font-weight: 400; line-height: 20px; letter-spacing: 0.25px; }
+.md-body-small       { font-size: 12px; font-weight: 400; line-height: 16px; letter-spacing: 0.4px; }
+
+/* ─── M3 Elevation ────────────────────────────────────────────────────────── */
+.md-elevation-1 { box-shadow: 0px 1px 2px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15); }
+.md-elevation-2 { box-shadow: 0px 1px 2px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15); }
+.md-elevation-3 { box-shadow: 0px 4px 8px 3px rgba(0,0,0,0.15), 0px 1px 3px rgba(0,0,0,0.3); }
+.md-elevation-4 { box-shadow: 0px 6px 10px 4px rgba(0,0,0,0.15), 0px 2px 3px rgba(0,0,0,0.3); }
+.md-elevation-5 { box-shadow: 0px 8px 12px 6px rgba(0,0,0,0.15), 0px 4px 4px rgba(0,0,0,0.3); }
+
+/* ─── M3 Card (not in @material/web) ─────────────────────────────────────── */
+.m3-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--app-border-radius-card);
+  padding: 16px;
+  transition: box-shadow 0.2s;
+}
+.m3-card--elevated {
+  background-color: var(--md-sys-color-surface-container-low);
+}
+.m3-card--filled {
+  background-color: var(--md-sys-color-surface-container-highest);
+}
+.m3-card--outlined {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* ─── M3 Data Table ────────────────────────────────────────────────────────── */
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--md-sys-color-surface);
+  border-radius: var(--app-border-radius-card);
+  overflow: hidden;
+}
+.m3-table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  white-space: nowrap;
+}
+.m3-table tbody td {
+  font-size: 14px;
+  color: var(--md-sys-color-on-surface);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  vertical-align: middle;
+}
+.m3-table tbody tr:last-child td { border-bottom: none; }
+.m3-table tbody tr:hover td { background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+
+/* ─── M3 Snackbar ─────────────────────────────────────────────────────────── */
+.m3-snackbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--md-sys-color-inverse-surface);
+  color: var(--md-sys-color-inverse-on-surface);
+  padding: 14px 24px;
+  border-radius: 4px;
+  font-size: 14px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 288px;
+  max-width: 568px;
+  box-shadow: 0px 3px 5px -1px rgba(0,0,0,.2),0px 6px 10px 0px rgba(0,0,0,.14),0px 1px 18px 0px rgba(0,0,0,.12);
+}
+
+/* ─── M3 Badge ────────────────────────────────────────────────────────────── */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.m3-badge--primary { background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); }
+.m3-badge--secondary { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+.m3-badge--error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
+.m3-badge--success { background: #CCFBF1; color: #003731; }
+.m3-badge--warning { background: #FEF3C7; color: #92400E; }
+.m3-badge--neutral { background: var(--md-sys-color-surface-container-highest); color: var(--md-sys-color-on-surface-variant); }
+
+/* ─── Layout helpers ──────────────────────────────────────────────────────── */
+.m3-page {
+  min-height: 100vh;
+  background-color: var(--md-sys-color-background);
+}
+
+.m3-page-content {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ─── Form helpers ─────────────────────────────────────────────────────────── */
+md-outlined-text-field,
+md-filled-text-field {
+  width: 100%;
+}
+
+md-filled-button,
+md-outlined-button,
+md-text-button,
+md-filled-tonal-button {
+  --md-sys-color-primary: var(--md-sys-color-primary);
+}
+
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--md-sys-color-outline-variant); border-radius: 3px; }
+
+/* ─── Utility ─────────────────────────────────────────────────────────────── */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+
+/* ECharts containers */
+.echarts-container { width: 100%; height: 300px; }

@@ -1,213 +1,175 @@
 <template>
-  <div class="container-fluid py-4" style="max-width: 1100px;">
+  <div class="page-wrapper">
+
     <!-- Impersonation Banner -->
-    <div v-if="isImpersonating" class="alert alert-warning d-flex align-items-center gap-3 mb-4">
-      <i class="bi bi-person-fill-gear fs-5"></i>
-      <span class="flex-grow-1">You are currently impersonating a user.</span>
-      <button class="btn btn-sm btn-warning" @click="stopImpersonation">Stop Impersonation</button>
+    <div v-if="isImpersonating" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);padding:12px 24px;display:flex;align-items:center;gap:12px">
+      <span class="material-symbols-outlined">person_off</span>
+      <span style="flex:1" class="md-body-medium">You are impersonating a user.</span>
+      <md-outlined-button @click="stopImpersonation" style="--md-outlined-button-label-text-color:var(--md-sys-color-on-error-container);--md-outlined-button-outline-color:var(--md-sys-color-on-error-container)">Stop</md-outlined-button>
     </div>
 
-    <div class="mb-4">
-      <h4 class="mb-1 fw-bold">Admin Dashboard</h4>
-      <p class="text-muted small mb-0">Platform overview and user management.</p>
-    </div>
-
-    <!-- ── Stats ──────────────────────────────────────────────────────────── -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body px-4 py-3">
-            <div class="text-muted small mb-1">Total Users</div>
-            <div class="fw-bold fs-4">{{ stats?.total_users ?? '—' }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body px-4 py-3">
-            <div class="text-muted small mb-1">Active Users</div>
-            <div class="fw-bold fs-4 text-success">{{ stats?.active_users ?? '—' }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body px-4 py-3">
-            <div class="text-muted small mb-1">Inactive Users</div>
-            <div class="fw-bold fs-4 text-warning">{{ stats?.inactive_users ?? '—' }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body px-4 py-3">
-            <div class="text-muted small mb-1">Total Links</div>
-            <div class="fw-bold fs-4">{{ stats?.total_links ?? '—' }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body px-4 py-3">
-            <div class="text-muted small mb-1">&#128070; Total Clicks</div>
-            <div class="fw-bold fs-4">{{ stats != null ? stats.total_clicks.toLocaleString() : '—' }}</div>
-          </div>
-        </div>
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Admin Dashboard</h1>
+        <p class="page-subtitle">Platform overview and user management.</p>
       </div>
     </div>
 
-    <!-- ── Platform Overview charts ───────────────────────────────────────── -->
-    <div class="row g-3 mb-4" v-if="stats">
-      <!-- Horizontal bar: Platform metrics comparison -->
-      <div class="col-12 col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white border-bottom py-3 px-4">
-            <span class="fw-semibold">Platform Overview</span>
-          </div>
-          <div class="card-body px-4 py-3">
-            <VChart :option="platformBarOption" style="height: 160px;" autoresize />
-          </div>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="m3-card m3-card--elevated stat-card">
+        <span class="material-symbols-outlined stat-icon" style="color:var(--md-sys-color-primary)">group</span>
+        <div class="stat-value">{{ stats?.total_users ?? '—' }}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="m3-card m3-card--elevated stat-card">
+        <span class="material-symbols-outlined stat-icon" style="color:#22c55e">person_check</span>
+        <div class="stat-value" style="color:#22c55e">{{ stats?.active_users ?? '—' }}</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="m3-card m3-card--elevated stat-card">
+        <span class="material-symbols-outlined stat-icon" style="color:#f59e0b">person_off</span>
+        <div class="stat-value" style="color:#f59e0b">{{ stats?.inactive_users ?? '—' }}</div>
+        <div class="stat-label">Inactive Users</div>
+      </div>
+      <div class="m3-card m3-card--elevated stat-card">
+        <span class="material-symbols-outlined stat-icon" style="color:var(--md-sys-color-primary)">link</span>
+        <div class="stat-value">{{ stats?.total_links ?? '—' }}</div>
+        <div class="stat-label">Total Links</div>
+      </div>
+      <div class="m3-card m3-card--elevated stat-card">
+        <span class="material-symbols-outlined stat-icon" style="color:var(--md-sys-color-primary)">ads_click</span>
+        <div class="stat-value">{{ stats != null ? stats.total_clicks.toLocaleString() : '—' }}</div>
+        <div class="stat-label">Total Clicks</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div v-if="stats" class="charts-row">
+      <div class="m3-card m3-card--elevated chart-card chart-card--wide">
+        <div class="chart-card-header">Platform Overview</div>
+        <div class="chart-body">
+          <VChart :option="platformBarOption" style="height: 160px;" autoresize />
         </div>
       </div>
-
-      <!-- Donut ring: Active vs Inactive users -->
-      <div class="col-12 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-header bg-white border-bottom py-3 px-4">
-            <span class="fw-semibold">User Activity</span>
-          </div>
-          <div class="card-body px-4 py-3 d-flex flex-column align-items-center justify-content-center">
-            <VChart :option="userRingOption" style="height: 160px; width: 100%;" autoresize />
-            <div class="d-flex gap-3 mt-2" style="font-size: 0.78rem;">
-              <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:#22c55e;"></span>Active</span>
-              <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:#f59e0b;"></span>Inactive</span>
-            </div>
+      <div class="m3-card m3-card--elevated chart-card">
+        <div class="chart-card-header">User Activity</div>
+        <div class="chart-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <VChart :option="userRingOption" style="height: 160px; width: 100%;" autoresize />
+          <div style="display:flex;gap:12px;font-size:0.78rem;margin-top:8px;">
+            <span><span style="display:inline-block;border-radius:50%;width:10px;height:10px;background:#22c55e;margin-right:4px;"></span>Active</span>
+            <span><span style="display:inline-block;border-radius:50%;width:10px;height:10px;background:#f59e0b;margin-right:4px;"></span>Inactive</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── Platform Growth Chart ──────────────────────────────────────────── -->
-    <div class="row g-3 mb-4">
-      <div class="col-12">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white border-bottom py-3 px-4">
-            <span class="fw-semibold">Platform Growth (Last 30 Days)</span>
-          </div>
-          <div class="card-body px-4 py-3">
-            <div v-if="growthLoading" class="text-center py-4">
-              <div class="spinner-border spinner-border-sm text-primary"></div>
-            </div>
-            <VChart v-else :option="growthLineOption" style="height: 240px;" autoresize />
-          </div>
+    <!-- Growth Chart -->
+    <div class="m3-card m3-card--elevated" style="margin-bottom:24px;">
+      <div class="chart-card-header">Platform Growth (Last 30 Days)</div>
+      <div class="chart-body">
+        <div v-if="growthLoading" style="display:flex;justify-content:center;padding:24px;">
+          <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
         </div>
+        <VChart v-else :option="growthLineOption" style="height: 240px;" autoresize />
       </div>
     </div>
 
-    <!-- ── Users Table ────────────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between gap-3 flex-wrap">
-        <span class="fw-semibold">Users</span>
-        <div style="max-width: 280px; width: 100%;">
-          <input
-            v-model="search"
-            type="search"
-            class="form-control form-control-sm"
-            placeholder="Search by email or name…"
-            @input="onSearchInput"
-          />
+    <!-- Users Section -->
+    <div class="m3-card m3-card--elevated">
+      <!-- Users header -->
+      <div class="section-header">
+        <span class="section-title">Users</span>
+        <div style="max-width:280px;width:100%;">
+          <md-outlined-text-field
+            :value="search"
+            @input="search=($event.target as HTMLInputElement).value; onSearchInput()"
+            label="Search by email or name"
+            style="width:100%;"
+          >
+            <span slot="leading-icon" class="material-symbols-outlined">search</span>
+          </md-outlined-text-field>
         </div>
       </div>
 
-      <div v-if="usersLoading" class="text-center py-5">
-        <div class="spinner-border text-primary spinner-border-sm"></div>
+      <div v-if="usersLoading" style="display:flex;justify-content:center;padding:40px;">
+        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
       </div>
 
-      <div v-else-if="users.length === 0" class="text-center text-muted py-5 small">
+      <div v-else-if="users.length === 0" style="text-align:center;padding:40px;color:var(--md-sys-color-on-surface-variant);">
         No users found.
       </div>
 
-      <div v-else class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
-          <thead class="table-light">
+      <div v-else class="table-container">
+        <table class="m3-table">
+          <thead>
             <tr>
-              <th class="px-4 py-3 fw-medium small text-muted">User</th>
-              <th class="py-3 fw-medium small text-muted">Provider</th>
-              <th class="py-3 fw-medium small text-muted">Role</th>
-              <th class="py-3 fw-medium small text-muted">Status</th>
-              <th class="py-3 fw-medium small text-muted">Joined</th>
-              <th class="py-3 fw-medium small text-muted">Last Login</th>
-              <th class="py-3 fw-medium small text-muted text-end px-4">Actions</th>
+              <th>User</th>
+              <th>Provider</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th>Last Login</th>
+              <th style="text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="u in users" :key="u.id">
-              <td class="px-4 py-3">
-                <div class="fw-medium small">{{ displayName(u) }}</div>
-                <div class="text-muted" style="font-size: 0.78rem;">{{ u.email }}</div>
+              <td>
+                <div style="font-weight:500;font-size:0.875rem;">{{ displayName(u) }}</div>
+                <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.75rem;">{{ u.email }}</div>
               </td>
-              <td class="py-3">
-                <span class="badge bg-light text-secondary border text-capitalize" style="font-size: 0.72rem;">
-                  {{ u.auth_provider }}
-                </span>
+              <td>
+                <span class="m3-badge m3-badge--neutral" style="text-transform:capitalize;">{{ u.auth_provider }}</span>
               </td>
-              <td class="py-3">
-                <span
-                  class="badge"
-                  :class="u.role === 'admin' ? 'text-bg-primary' : 'bg-light text-secondary border'"
-                  style="font-size: 0.72rem;"
-                >{{ u.role }}</span>
+              <td>
+                <span :class="['m3-badge', u.role === 'admin' ? 'm3-badge--primary' : 'm3-badge--neutral']">{{ u.role }}</span>
               </td>
-              <td class="py-3">
-                <span
-                  class="badge"
-                  :class="statusBadge(u.status)"
-                  style="font-size: 0.72rem;"
-                >{{ u.status }}</span>
+              <td>
+                <span :class="['m3-badge', statusBadge(u.status)]">{{ u.status }}</span>
               </td>
-              <td class="py-3 small text-muted">{{ formatDate(u.created_at) }}</td>
-              <td class="py-3 small text-muted">{{ u.last_login ? formatDate(u.last_login) : '—' }}</td>
-              <td class="py-3 px-4 text-end">
-                <div class="d-flex gap-2 justify-content-end align-items-center">
-                  <!-- Role change -->
-                  <select
-                    class="form-select form-select-sm"
-                    style="width: auto; min-width: 90px;"
+              <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ formatDate(u.created_at) }}</td>
+              <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ u.last_login ? formatDate(u.last_login) : '—' }}</td>
+              <td>
+                <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
+                  <md-outlined-select
+                    style="--md-outlined-select-container-height:36px;min-width:90px;"
                     :value="u.role"
                     :disabled="changingRole === u.id || u.id === authStore.profile?.id"
                     @change="setRole(u, ($event.target as HTMLSelectElement).value)"
                   >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <!-- Impersonate -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary"
+                    <md-select-option value="user"><div slot="headline">User</div></md-select-option>
+                    <md-select-option value="admin"><div slot="headline">Admin</div></md-select-option>
+                  </md-outlined-select>
+                  <md-icon-button
                     :disabled="impersonating === u.id || u.id === authStore.profile?.id"
                     @click="startImpersonation(u)"
                     title="Impersonate user"
                   >
-                    <span v-if="impersonating === u.id" class="spinner-border spinner-border-sm"></span>
-                    <i v-else class="bi bi-person-fill-exclamation"></i>
-                  </button>
-                  <button
+                    <span v-if="impersonating === u.id">
+                      <md-circular-progress indeterminate style="--md-circular-progress-size:20px" />
+                    </span>
+                    <span v-else class="material-symbols-outlined">manage_accounts</span>
+                  </md-icon-button>
+                  <md-outlined-button
                     v-if="u.status !== 'active'"
-                    class="btn btn-sm btn-outline-success"
                     :disabled="updatingId === u.id"
                     @click="setStatus(u, 'active')"
+                    style="--md-outlined-button-label-text-color:#16a34a;--md-outlined-button-outline-color:#16a34a;"
                   >
-                    <span v-if="updatingId === u.id" class="spinner-border spinner-border-sm"></span>
+                    <md-circular-progress v-if="updatingId === u.id" indeterminate style="--md-circular-progress-size:16px" />
                     <span v-else>Activate</span>
-                  </button>
-                  <button
+                  </md-outlined-button>
+                  <md-outlined-button
                     v-if="u.status !== 'banned'"
-                    class="btn btn-sm btn-outline-danger"
                     :disabled="updatingId === u.id"
                     @click="setStatus(u, 'banned')"
+                    style="--md-outlined-button-label-text-color:var(--md-sys-color-error);--md-outlined-button-outline-color:var(--md-sys-color-error);"
                   >
-                    <span v-if="updatingId === u.id" class="spinner-border spinner-border-sm"></span>
+                    <md-circular-progress v-if="updatingId === u.id" indeterminate style="--md-circular-progress-size:16px" />
                     <span v-else>Ban</span>
-                  </button>
+                  </md-outlined-button>
                 </div>
               </td>
             </tr>
@@ -216,24 +178,23 @@
       </div>
 
       <!-- Pagination -->
-      <div v-if="totalPages > 1" class="card-footer bg-white border-top px-4 py-3 d-flex align-items-center justify-content-between">
-        <span class="text-muted small">
+      <div v-if="totalPages > 1" class="pagination-bar">
+        <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;">
           Page {{ currentPage }} of {{ totalPages }} &mdash; {{ totalUsers }} users
         </span>
-        <div class="d-flex gap-2">
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="currentPage <= 1"
-            @click="goToPage(currentPage - 1)"
-          >Previous</button>
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="currentPage >= totalPages"
-            @click="goToPage(currentPage + 1)"
-          >Next</button>
+        <div style="display:flex;gap:8px;">
+          <md-outlined-button :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">
+            <span class="material-symbols-outlined" slot="icon">chevron_left</span>
+            Previous
+          </md-outlined-button>
+          <md-outlined-button :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">
+            Next
+            <span class="material-symbols-outlined" slot="trailing-icon">chevron_right</span>
+          </md-outlined-button>
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
@@ -438,10 +399,10 @@ function formatDate(dateStr: string) {
 
 function statusBadge(status: string) {
   switch (status) {
-    case 'active':   return 'text-bg-success';
-    case 'inactive': return 'text-bg-warning';
-    case 'banned':   return 'text-bg-danger';
-    default:         return 'bg-light text-secondary border';
+    case 'active':   return 'm3-badge--success';
+    case 'inactive': return 'm3-badge--warning';
+    case 'banned':   return 'm3-badge--error';
+    default:         return 'm3-badge--neutral';
   }
 }
 
@@ -492,5 +453,204 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.btn-outline-success { --bs-btn-hover-color: #fff; }
+.page-wrapper {
+  padding: 24px;
+  max-width: 1100px;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 500;
+}
+
+/* Charts */
+.charts-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+  overflow: hidden;
+}
+
+.chart-card-header {
+  padding: 16px 20px 12px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--md-sys-color-on-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.chart-body {
+  padding: 16px 20px;
+}
+
+/* Users section */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.m3-table thead tr {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.m3-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.m3-table tbody tr:hover td {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+/* M3 Cards */
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+.m3-card--elevated {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+/* Badges */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.m3-badge--primary {
+  background: var(--md-sys-color-primary-container, #e8def8);
+  color: var(--md-sys-color-on-primary-container, #21005d);
+}
+
+.m3-badge--neutral {
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-badge--success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.m3-badge--warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.m3-badge--error {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Pagination */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+  gap: 8px;
+}
 </style>

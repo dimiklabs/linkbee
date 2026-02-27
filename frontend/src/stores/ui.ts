@@ -1,42 +1,28 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 
-export const useUiStore = defineStore('ui', () => {
+export const useUIStore = defineStore('ui', () => {
   const sidebarCollapsed = ref(false);
   const sidebarOpen = ref(false);
   const userMenuOpen = ref(false);
   const darkMode = ref(false);
 
-  const initDarkMode = () => {
-    // Restore dark mode preference
-    const storedDark = localStorage.getItem('darkMode');
-    if (storedDark !== null) {
-      darkMode.value = storedDark === 'true';
-    } else {
-      darkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    applyDarkMode(darkMode.value);
+  // Initialize from localStorage or system preference
+  const storedDark = localStorage.getItem('darkMode');
+  if (storedDark !== null) {
+    darkMode.value = storedDark === 'true';
+  } else {
+    darkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
 
-    // Restore sidebar collapsed state (desktop only)
-    const storedCollapsed = localStorage.getItem('sidebarCollapsed');
-    if (storedCollapsed !== null) {
-      sidebarCollapsed.value = storedCollapsed === 'true';
-    }
-  };
+  const storedCollapsed = localStorage.getItem('sidebarCollapsed');
+  if (storedCollapsed !== null) {
+    sidebarCollapsed.value = storedCollapsed === 'true';
+  }
 
-  const applyDarkMode = (isDark: boolean) => {
-    if (isDark) {
-      document.documentElement.classList.add('dark-mode');
-      document.body.classList.add('dark-mode');
-    } else {
-      document.documentElement.classList.remove('dark-mode');
-      document.body.classList.remove('dark-mode');
-    }
-  };
-
+  // Persist darkMode to localStorage
   watch(darkMode, (newValue) => {
     localStorage.setItem('darkMode', String(newValue));
-    applyDarkMode(newValue);
   });
 
   watch(sidebarCollapsed, (newValue) => {
@@ -63,6 +49,9 @@ export const useUiStore = defineStore('ui', () => {
   return {
     sidebarCollapsed, sidebarOpen, userMenuOpen, darkMode, isMobile,
     toggleSidebar, closeSidebar, toggleUserMenu, closeUserMenu,
-    handleResize, initDarkMode, toggleDarkMode, setDarkMode,
+    handleResize, toggleDarkMode, setDarkMode,
   };
 });
+
+// Alias for backward compatibility
+export const useUiStore = useUIStore;

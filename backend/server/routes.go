@@ -50,6 +50,8 @@ import (
 func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	logger.Debug("Configuring routes")
 
+	router.MaxMultipartMemory = 5 << 20 // 5 MB
+
 	s.setupMiddleware(router)
 
 	// ── Repositories ─────────────────────────────────────────────────────────

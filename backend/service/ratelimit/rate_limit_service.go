@@ -29,6 +29,14 @@ type RateLimitServiceI interface {
 
 	// GetRateLimitStatus returns current rate limit status for email and IP
 	GetRateLimitStatus(ctx context.Context, email, ipAddress string) (*response.RateLimitStatusResponse, error)
+
+	// CheckForgotPasswordRateLimit checks if a forgot-password request is allowed for the given email and IP
+	// Returns nil if allowed, or a ServiceError if rate limited (max 5 per 15 minutes per IP)
+	CheckForgotPasswordRateLimit(ctx context.Context, email, ip string) *dto.ServiceError
+
+	// CheckSignupRateLimit checks if a signup request is allowed for the given IP
+	// Returns nil if allowed, or a ServiceError if rate limited (max 10 per hour per IP)
+	CheckSignupRateLimit(ctx context.Context, ip string) *dto.ServiceError
 }
 
 type RateLimitService struct {
@@ -225,6 +233,108 @@ func (s *RateLimitService) GetRateLimitStatus(ctx context.Context, email, ipAddr
 		IPLockoutRemaining:       int(ipTTL.Seconds()),
 		Violations:               violations,
 	}, nil
+}
+
+func (s *RateLimitService) CheckForgotPasswordRateLimit(ctx context.Context, email, ip string) *dto.ServiceError {
+	if !s.config.Enabled {
+		return nil
+	}
+
+	// Use a prefixed compound key so forgot-password attempts are namespaced
+	// separately from login IP attempts in the cache store.
+	scopedIP := "forgot_pwd:" + ip
+	window := 15 * time.Minute
+	const maxAttempts = 5
+
+	locked, ttl, err := s.rateLimitRepo.IsIPLocked(ctx, scopedIP)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to check forgot-password rate limit", zap.Error(err))
+		return nil
+	}
+	if locked {
+		logger.WarnCtx(ctx, "Forgot-password rate limited",
+			zap.String("ip", ip),
+			zap.Duration("remaining", ttl))
+		return dto.NewServiceErrorWithData(
+			constant.ErrCodeRateLimited,
+			"Too many password reset requests. Please try again later.",
+			http.StatusTooManyRequests,
+			map[string]interface{}{
+				"retry_after_seconds": int(ttl.Seconds()),
+			},
+		)
+	}
+
+	attempts, err := s.rateLimitRepo.IncrementIPAttempts(ctx, scopedIP, window)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to increment forgot-password attempts", zap.Error(err))
+		return nil
+	}
+
+	if attempts >= maxAttempts {
+		_ = s.rateLimitRepo.SetIPLockout(ctx, scopedIP, window)
+		return dto.NewServiceErrorWithData(
+			constant.ErrCodeRateLimited,
+			"Too many password reset requests. Please try again later.",
+			http.StatusTooManyRequests,
+			map[string]interface{}{
+				"retry_after_seconds": int(window.Seconds()),
+			},
+		)
+	}
+
+	return nil
+}
+
+func (s *RateLimitService) CheckSignupRateLimit(ctx context.Context, ip string) *dto.ServiceError {
+	if !s.config.Enabled {
+		return nil
+	}
+
+	// Use a prefixed compound key so signup attempts are namespaced
+	// separately from login IP attempts in the cache store.
+	scopedIP := "signup:" + ip
+	window := time.Hour
+	const maxAttempts = 10
+
+	locked, ttl, err := s.rateLimitRepo.IsIPLocked(ctx, scopedIP)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to check signup rate limit", zap.Error(err))
+		return nil
+	}
+	if locked {
+		logger.WarnCtx(ctx, "Signup rate limited",
+			zap.String("ip", ip),
+			zap.Duration("remaining", ttl))
+		return dto.NewServiceErrorWithData(
+			constant.ErrCodeRateLimited,
+			"Too many signup attempts. Please try again later.",
+			http.StatusTooManyRequests,
+			map[string]interface{}{
+				"retry_after_seconds": int(ttl.Seconds()),
+			},
+		)
+	}
+
+	attempts, err := s.rateLimitRepo.IncrementIPAttempts(ctx, scopedIP, window)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to increment signup attempts", zap.Error(err))
+		return nil
+	}
+
+	if attempts >= maxAttempts {
+		_ = s.rateLimitRepo.SetIPLockout(ctx, scopedIP, window)
+		return dto.NewServiceErrorWithData(
+			constant.ErrCodeRateLimited,
+			"Too many signup attempts. Please try again later.",
+			http.StatusTooManyRequests,
+			map[string]interface{}{
+				"retry_after_seconds": int(window.Seconds()),
+			},
+		)
+	}
+
+	return nil
 }
 
 func (s *RateLimitService) lockAccount(ctx context.Context, email string) error {

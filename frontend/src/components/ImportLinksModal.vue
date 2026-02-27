@@ -1,131 +1,120 @@
 <template>
-  <div ref="modalEl" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-semibold">Bulk Import Links</h5>
-          <button type="button" class="btn-close" @click="hide" aria-label="Close"></button>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">Bulk Import Links</div>
+
+    <div slot="content" style="min-width:540px;max-width:100%;padding:0 4px">
+      <!-- Instructions -->
+      <div class="import-info-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0;margin-top:1px">info</span>
+        <div class="import-info-text">
+          Upload a CSV file with up to <strong>500 rows</strong>. Required column:
+          <code>destination_url</code>. Optional: <code>slug</code>, <code>title</code>,
+          <code>tags</code> (semicolon-separated), <code>redirect_type</code> (301 or 302),
+          <code>folder_id</code>.
+          <md-text-button @click="downloadTemplate" style="--md-text-button-label-text-size:0.82rem;vertical-align:baseline">
+            Download template
+          </md-text-button>
         </div>
+      </div>
 
-        <div class="modal-body">
-          <!-- Instructions -->
-          <div class="alert alert-info d-flex gap-2 align-items-start py-2 px-3 mb-4" style="font-size: 0.85rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="flex-shrink-0 mt-1" viewBox="0 0 16 16">
-              <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
-            </svg>
-            <div>
-              Upload a CSV file with up to <strong>500 rows</strong>. Required column:
-              <code>destination_url</code>. Optional: <code>slug</code>, <code>title</code>,
-              <code>tags</code> (semicolon-separated), <code>redirect_type</code> (301 or 302),
-              <code>folder_id</code>.
-              <button class="btn btn-link btn-sm p-0 ms-1 text-info" style="font-size: 0.82rem; vertical-align: baseline;" @click="downloadTemplate">
-                Download template
-              </button>
-            </div>
+      <!-- Error alert -->
+      <div v-if="error" class="import-error-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
+        <span style="flex:1;font-size:0.875rem">{{ error }}</span>
+        <md-icon-button @click="error = ''" style="width:32px;height:32px">
+          <span class="material-symbols-outlined" style="font-size:18px">close</span>
+        </md-icon-button>
+      </div>
+
+      <!-- File picker -->
+      <div v-if="!result" class="file-section">
+        <div
+          class="drop-zone"
+          :class="{ 'drop-zone--over': isDragOver }"
+          @dragover.prevent="isDragOver = true"
+          @dragleave.prevent="isDragOver = false"
+          @drop.prevent="onDrop"
+          @click="fileInput?.click()"
+        >
+          <span class="material-symbols-outlined drop-zone-icon">upload_file</span>
+          <div class="drop-zone-text">
+            <span v-if="selectedFile" class="drop-zone-filename">{{ selectedFile.name }}</span>
+            <span v-else class="drop-zone-hint">
+              Drag &amp; drop a CSV file or <span style="color:var(--md-sys-color-primary);text-decoration:underline;cursor:pointer">browse</span>
+            </span>
           </div>
+        </div>
+        <input ref="fileInput" type="file" accept=".csv,text/csv" style="display:none" @change="onFileChange" />
+        <div v-if="selectedFile" class="file-meta">
+          <span>{{ (selectedFile.size / 1024).toFixed(1) }} KB</span>
+          <md-text-button @click.stop="clearFile" style="--md-text-button-label-text-color:var(--md-sys-color-error);--md-text-button-label-text-size:0.82rem">
+            Remove
+          </md-text-button>
+        </div>
+      </div>
 
-          <!-- Error alert -->
-          <div v-if="error" class="alert alert-danger alert-dismissible" role="alert">
-            {{ error }}
-            <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
+      <!-- Results -->
+      <div v-if="result" class="results-section">
+        <div class="results-stats">
+          <div class="stat-card">
+            <div class="stat-value">{{ result.total }}</div>
+            <div class="stat-label">Total rows</div>
           </div>
-
-          <!-- File picker -->
-          <div v-if="!result" class="mb-3">
-            <label class="form-label fw-medium">CSV File <span class="text-danger">*</span></label>
-            <div
-              class="drop-zone border rounded d-flex flex-column align-items-center justify-content-center gap-2 py-4 px-3"
-              :class="{ 'drop-zone-over': isDragOver }"
-              @dragover.prevent="isDragOver = true"
-              @dragleave.prevent="isDragOver = false"
-              @drop.prevent="onDrop"
-              @click="fileInput?.click()"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="text-muted" viewBox="0 0 16 16">
-                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-                <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
-              </svg>
-              <div class="text-center">
-                <span v-if="selectedFile" class="fw-medium text-primary">{{ selectedFile.name }}</span>
-                <span v-else class="text-muted" style="font-size: 0.9rem;">
-                  Drag &amp; drop a CSV file or <span class="text-primary text-decoration-underline" style="cursor:pointer;">browse</span>
-                </span>
-              </div>
-            </div>
-            <input ref="fileInput" type="file" accept=".csv,text/csv" class="d-none" @change="onFileChange" />
-            <div v-if="selectedFile" class="form-text">
-              {{ (selectedFile.size / 1024).toFixed(1) }} KB &mdash;
-              <button class="btn btn-link btn-sm p-0 text-danger" style="font-size: 0.82rem;" @click.stop="clearFile">Remove</button>
-            </div>
+          <div class="stat-card stat-card--success">
+            <div class="stat-value stat-value--success">{{ result.created }}</div>
+            <div class="stat-label">Created</div>
           </div>
-
-          <!-- Results -->
-          <div v-if="result">
-            <div class="d-flex gap-3 mb-3 flex-wrap">
-              <div class="stat-card border rounded p-3 text-center flex-fill">
-                <div class="fs-4 fw-bold">{{ result.total }}</div>
-                <div class="text-muted small">Total rows</div>
-              </div>
-              <div class="stat-card border rounded p-3 text-center flex-fill" :class="result.created > 0 ? 'border-success' : ''">
-                <div class="fs-4 fw-bold text-success">{{ result.created }}</div>
-                <div class="text-muted small">Created</div>
-              </div>
-              <div class="stat-card border rounded p-3 text-center flex-fill" :class="result.failed > 0 ? 'border-danger' : ''">
-                <div class="fs-4 fw-bold" :class="result.failed > 0 ? 'text-danger' : 'text-muted'">{{ result.failed }}</div>
-                <div class="text-muted small">Failed</div>
-              </div>
-            </div>
-
-            <div v-if="result.errors && result.errors.length > 0">
-              <p class="fw-medium small text-danger mb-2">Failed rows:</p>
-              <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
-                <table class="table table-sm table-bordered mb-0" style="font-size: 0.82rem;">
-                  <thead class="table-light sticky-top">
-                    <tr>
-                      <th style="width: 50px;">Row</th>
-                      <th>URL</th>
-                      <th>Error</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="e in result.errors" :key="e.row">
-                      <td>{{ e.row }}</td>
-                      <td class="text-truncate" style="max-width: 220px;" :title="e.url">{{ e.url || '—' }}</td>
-                      <td class="text-danger">{{ e.error }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+          <div class="stat-card" :class="result.failed > 0 ? 'stat-card--error' : ''">
+            <div class="stat-value" :class="result.failed > 0 ? 'stat-value--error' : ''">{{ result.failed }}</div>
+            <div class="stat-label">Failed</div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" @click="hide" :disabled="importing">
-            {{ result ? 'Close' : 'Cancel' }}
-          </button>
-          <button
-            v-if="!result"
-            type="button"
-            class="btn btn-primary"
-            :disabled="!selectedFile || importing"
-            @click="handleImport"
-          >
-            <span v-if="importing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            {{ importing ? 'Importing...' : 'Import' }}
-          </button>
-          <button v-else type="button" class="btn btn-outline-primary" @click="reset">
-            Import Another File
-          </button>
+        <div v-if="result.errors && result.errors.length > 0" class="results-errors">
+          <p class="results-errors-title">Failed rows:</p>
+          <div class="results-errors-scroll">
+            <table class="m3-table" style="font-size:0.82rem">
+              <thead>
+                <tr>
+                  <th style="width:50px">Row</th>
+                  <th>URL</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="e in result.errors" :key="e.row">
+                  <td>{{ e.row }}</td>
+                  <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" :title="e.url">{{ e.url || '—' }}</td>
+                  <td style="color:var(--md-sys-color-error)">{{ e.error }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide" :disabled="importing">
+        {{ result ? 'Close' : 'Cancel' }}
+      </md-text-button>
+      <md-filled-tonal-button v-if="result" @click="reset">
+        Import Another File
+      </md-filled-tonal-button>
+      <md-filled-button
+        v-else
+        :disabled="!selectedFile || importing"
+        @click="handleImport"
+      >
+        <md-circular-progress v-if="importing" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
+        {{ importing ? 'Importing...' : 'Import' }}
+      </md-filled-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { Modal } from 'bootstrap';
 import linksApi from '@/api/links';
 import type { ImportLinksResponse } from '@/types/links';
 
@@ -134,8 +123,9 @@ const emit = defineEmits<{
 }>();
 
 const modalEl = ref<HTMLElement | null>(null);
-let modalInstance: Modal | null = null;
+let modalInstance: any = null;
 
+const isOpen = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFile = ref<File | null>(null);
 const isDragOver = ref(false);
@@ -144,19 +134,22 @@ const error = ref('');
 const result = ref<ImportLinksResponse | null>(null);
 
 onMounted(() => {
-  if (modalEl.value) {
-    modalInstance = new Modal(modalEl.value, { backdrop: 'static' });
-    modalEl.value.addEventListener('hidden.bs.modal', reset);
-  }
+  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
 });
 
 function show() {
   reset();
+  isOpen.value = true;
   modalInstance?.show();
 }
 
 function hide() {
+  isOpen.value = false;
   modalInstance?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
 }
 
 function reset() {
@@ -223,31 +216,143 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.import-info-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: rgba(99, 91, 255, 0.06);
+  border: 1px solid rgba(99, 91, 255, 0.2);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #5249e0;
-  border-color: #5249e0;
+.import-info-text {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.import-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: var(--md-sys-color-error-container, #FFDAD6);
+  color: var(--md-sys-color-on-error-container, #410002);
+  border-radius: 8px;
+}
+
+.file-section {
+  margin-bottom: 8px;
 }
 
 .drop-zone {
   cursor: pointer;
   min-height: 120px;
+  border: 2px dashed var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px 16px;
   transition: background 0.15s, border-color 0.15s;
-  border-style: dashed !important;
-  border-color: #dee2e6;
 }
 
 .drop-zone:hover,
-.drop-zone-over {
-  background-color: rgba(99, 91, 255, 0.04);
-  border-color: #635bff !important;
+.drop-zone--over {
+  background: rgba(99, 91, 255, 0.04);
+  border-color: var(--md-sys-color-primary);
+}
+
+.drop-zone-icon {
+  font-size: 36px;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.6;
+}
+
+.drop-zone-filename {
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  font-size: 0.9rem;
+}
+
+.drop-zone-hint {
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: center;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* Results */
+.results-section {
+  padding-top: 4px;
+}
+
+.results-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .stat-card {
-  min-width: 90px;
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+}
+
+.stat-card--success {
+  border-color: #1AA563;
+}
+
+.stat-card--error {
+  border-color: var(--md-sys-color-error);
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.stat-value--success {
+  color: #1AA563;
+}
+
+.stat-value--error {
+  color: var(--md-sys-color-error);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.results-errors-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--md-sys-color-error);
+  margin: 0 0 8px;
+}
+
+.results-errors-scroll {
+  max-height: 260px;
+  overflow-y: auto;
 }
 </style>

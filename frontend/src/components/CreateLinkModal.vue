@@ -1,237 +1,191 @@
 <template>
-  <div ref="modalEl" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title fw-semibold">{{ isEditMode ? 'Edit Link' : 'Create Link' }}</h5>
-          <button type="button" class="btn-close" @click="hide" aria-label="Close"></button>
-        </div>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
+    <div slot="headline">{{ isEditMode ? 'Edit Link' : 'Create Link' }}</div>
 
-        <div class="modal-body">
-          <div v-if="error" class="alert alert-danger alert-dismissible" role="alert">
-            {{ error }}
-            <button type="button" class="btn-close" @click="error = ''" aria-label="Close"></button>
+    <div slot="content" style="min-width:540px;max-width:100%;padding:0 4px">
+      <!-- Error banner -->
+      <div v-if="error" class="create-error-banner">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
+        <span style="flex:1;font-size:0.875rem">{{ error }}</span>
+        <md-icon-button @click="error = ''" style="width:32px;height:32px">
+          <span class="material-symbols-outlined" style="font-size:18px">close</span>
+        </md-icon-button>
+      </div>
+
+      <!-- Destination URL -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="form.destination_url"
+          @input="form.destination_url = ($event.target as HTMLInputElement).value"
+          label="Destination URL *"
+          type="url"
+          placeholder="https://example.com/your-long-url"
+          style="width:100%"
+          :error="!!validationErrors.destination_url"
+          :error-text="validationErrors.destination_url"
+        />
+        <!-- Duplicate check feedback -->
+        <div v-if="!isEditMode && checkingDuplicate" class="dup-checking">
+          <md-circular-progress indeterminate style="--md-circular-progress-size:16px" />
+          <span>Checking for duplicates…</span>
+        </div>
+        <div v-else-if="!isEditMode && duplicateLink && !ignoreDuplicate" class="dup-warning">
+          <span class="material-symbols-outlined" style="font-size:18px;color:#F4A100">warning</span>
+          <div style="flex:1;font-size:0.85rem">
+            <strong>Duplicate URL detected.</strong>
+            This destination is already shortened as
+            <a :href="duplicateLink.short_url" target="_blank" rel="noopener noreferrer" style="color:var(--md-sys-color-primary);font-weight:600">
+              {{ duplicateLink.short_url }}
+            </a>
+            <span style="color:var(--md-sys-color-on-surface-variant)"> (slug: <code>{{ duplicateLink.slug }}</code>)</span>.
           </div>
-
-          <form @submit.prevent="handleSave" novalidate>
-            <!-- Destination URL -->
-            <div class="mb-3">
-              <label for="destinationUrl" class="form-label fw-medium">
-                Destination URL <span class="text-danger">*</span>
-              </label>
-              <input
-                id="destinationUrl"
-                v-model="form.destination_url"
-                type="url"
-                class="form-control"
-                :class="{ 'is-invalid': validationErrors.destination_url }"
-                placeholder="https://example.com/your-long-url"
-                required
-              />
-              <div v-if="validationErrors.destination_url" class="invalid-feedback">
-                {{ validationErrors.destination_url }}
-              </div>
-
-              <!-- Duplicate check feedback -->
-              <div v-if="!isEditMode && checkingDuplicate" class="mt-2 text-muted small d-flex align-items-center gap-1">
-                <span class="spinner-border spinner-border-sm"></span> Checking for duplicates&hellip;
-              </div>
-              <div
-                v-else-if="!isEditMode && duplicateLink && !ignoreDuplicate"
-                class="alert alert-warning py-2 px-3 mt-2 mb-0 d-flex align-items-start gap-2"
-                style="font-size: 0.85rem;"
-              >
-                <div class="flex-fill">
-                  <strong>Duplicate URL detected.</strong>
-                  This destination is already shortened as
-                  <a :href="duplicateLink.short_url" target="_blank" rel="noopener noreferrer" class="fw-semibold alert-link">
-                    {{ duplicateLink.short_url }}
-                  </a>
-                  <span class="text-muted">(slug: <code>{{ duplicateLink.slug }}</code>)</span>.
-                </div>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary flex-shrink-0"
-                  @click="ignoreDuplicate = true"
-                >
-                  Create anyway
-                </button>
-              </div>
-            </div>
-
-            <!-- Custom Slug -->
-            <div class="mb-3">
-              <label for="slug" class="form-label fw-medium">Custom Slug</label>
-              <input
-                id="slug"
-                v-model="form.slug"
-                type="text"
-                class="form-control"
-                placeholder="my-custom-slug"
-                :readonly="isEditMode"
-                :class="{ 'bg-light text-muted': isEditMode }"
-              />
-              <div class="form-text">
-                {{ isEditMode ? 'Slug cannot be changed after creation.' : 'Leave blank to auto-generate.' }}
-              </div>
-            </div>
-
-            <!-- Title -->
-            <div class="mb-3">
-              <label for="title" class="form-label fw-medium">Title</label>
-              <input
-                id="title"
-                v-model="form.title"
-                type="text"
-                class="form-control"
-                placeholder="My Link Title"
-              />
-            </div>
-
-            <!-- Password -->
-            <div class="mb-3">
-              <label for="password" class="form-label fw-medium">Password</label>
-              <input
-                id="password"
-                v-model="form.password"
-                type="password"
-                class="form-control"
-                placeholder="Leave blank for no password"
-                autocomplete="new-password"
-              />
-            </div>
-
-            <div class="row g-3 mb-3">
-              <!-- Expires At -->
-              <div class="col-md-6">
-                <label for="expiresAt" class="form-label fw-medium">Expires At</label>
-                <input
-                  id="expiresAt"
-                  v-model="form.expires_at"
-                  type="datetime-local"
-                  class="form-control"
-                />
-              </div>
-
-              <!-- Max Clicks -->
-              <div class="col-md-6">
-                <label for="maxClicks" class="form-label fw-medium">Max Clicks</label>
-                <input
-                  id="maxClicks"
-                  v-model.number="form.max_clicks"
-                  type="number"
-                  class="form-control"
-                  min="1"
-                  placeholder="Unlimited"
-                />
-              </div>
-            </div>
-
-            <!-- Redirect Type -->
-            <div class="mb-3">
-              <label for="redirectType" class="form-label fw-medium">Redirect Type</label>
-              <select id="redirectType" v-model.number="form.redirect_type" class="form-select">
-                <option :value="302">302 — Temporary Redirect</option>
-                <option :value="301">301 — Permanent Redirect</option>
-              </select>
-            </div>
-
-            <!-- Folder -->
-            <div class="mb-3">
-              <label for="folder" class="form-label fw-medium">Folder</label>
-              <select id="folder" v-model="form.folder_id" class="form-select">
-                <option value="">— No folder —</option>
-                <option v-for="f in props.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-              </select>
-            </div>
-
-            <!-- Tags -->
-            <div class="mb-3">
-              <label for="tags" class="form-label fw-medium">Tags</label>
-              <input
-                id="tags"
-                v-model="tagsInput"
-                type="text"
-                class="form-control"
-                placeholder="marketing, social, campaign"
-              />
-              <div class="form-text">Comma-separated list of tags.</div>
-            </div>
-
-            <!-- UTM Parameters (collapsible) -->
-            <div class="accordion accordion-flush border rounded mb-3" id="utmAccordion">
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button
-                    class="accordion-button collapsed fw-medium"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#utmCollapse"
-                    aria-expanded="false"
-                    aria-controls="utmCollapse"
-                  >
-                    UTM Parameters
-                    <span class="badge bg-secondary ms-2 fw-normal" style="font-size: 0.7rem;">Optional</span>
-                  </button>
-                </h2>
-                <div id="utmCollapse" class="accordion-collapse collapse" data-bs-parent="#utmAccordion">
-                  <div class="accordion-body">
-                    <div class="row g-3">
-                      <div class="col-md-4">
-                        <label for="utmSource" class="form-label fw-medium">UTM Source</label>
-                        <input
-                          id="utmSource"
-                          v-model="form.utm_source"
-                          type="text"
-                          class="form-control"
-                          placeholder="google"
-                        />
-                      </div>
-                      <div class="col-md-4">
-                        <label for="utmMedium" class="form-label fw-medium">UTM Medium</label>
-                        <input
-                          id="utmMedium"
-                          v-model="form.utm_medium"
-                          type="text"
-                          class="form-control"
-                          placeholder="cpc"
-                        />
-                      </div>
-                      <div class="col-md-4">
-                        <label for="utmCampaign" class="form-label fw-medium">UTM Campaign</label>
-                        <input
-                          id="utmCampaign"
-                          v-model="form.utm_campaign"
-                          type="text"
-                          class="form-control"
-                          placeholder="spring_sale"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </form>
+          <md-text-button @click="ignoreDuplicate = true">Create anyway</md-text-button>
         </div>
+      </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" @click="hide" :disabled="saving">
-            Cancel
-          </button>
-          <button type="button" class="btn btn-primary" @click="handleSave" :disabled="saving">
-            <span v-if="saving" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            {{ saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Link') }}
-          </button>
+      <!-- Custom Slug -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="form.slug"
+          @input="form.slug = ($event.target as HTMLInputElement).value"
+          label="Custom Slug"
+          placeholder="my-custom-slug"
+          :disabled="isEditMode"
+          style="width:100%"
+          :supporting-text="isEditMode ? 'Slug cannot be changed after creation.' : 'Leave blank to auto-generate.'"
+        />
+      </div>
+
+      <!-- Title -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="form.title"
+          @input="form.title = ($event.target as HTMLInputElement).value"
+          label="Title"
+          placeholder="My Link Title"
+          style="width:100%"
+        />
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="form.password"
+          @input="form.password = ($event.target as HTMLInputElement).value"
+          label="Password"
+          type="password"
+          placeholder="Leave blank for no password"
+          autocomplete="new-password"
+          style="width:100%"
+        />
+      </div>
+
+      <!-- Expires At / Max Clicks row -->
+      <div class="field-row">
+        <md-outlined-text-field
+          :value="form.expires_at"
+          @input="form.expires_at = ($event.target as HTMLInputElement).value"
+          label="Expires At"
+          type="datetime-local"
+          style="flex:1"
+        />
+        <md-outlined-text-field
+          :value="form.max_clicks !== null ? String(form.max_clicks) : ''"
+          @input="form.max_clicks = ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null"
+          label="Max Clicks"
+          type="number"
+          placeholder="Unlimited"
+          style="flex:1"
+        />
+      </div>
+
+      <!-- Redirect Type -->
+      <div class="field-group">
+        <md-outlined-select
+          :value="String(form.redirect_type)"
+          @change="form.redirect_type = Number(($event.target as HTMLSelectElement).value) as 301 | 302"
+          label="Redirect Type"
+          style="width:100%"
+        >
+          <md-select-option value="302"><div slot="headline">302 — Temporary Redirect</div></md-select-option>
+          <md-select-option value="301"><div slot="headline">301 — Permanent Redirect</div></md-select-option>
+        </md-outlined-select>
+      </div>
+
+      <!-- Folder -->
+      <div class="field-group">
+        <md-outlined-select
+          :value="form.folder_id"
+          @change="form.folder_id = ($event.target as HTMLSelectElement).value"
+          label="Folder"
+          style="width:100%"
+        >
+          <md-select-option value=""><div slot="headline">— No folder —</div></md-select-option>
+          <md-select-option v-for="f in props.folders" :key="f.id" :value="f.id">
+            <div slot="headline">{{ f.name }}</div>
+          </md-select-option>
+        </md-outlined-select>
+      </div>
+
+      <!-- Tags -->
+      <div class="field-group">
+        <md-outlined-text-field
+          :value="tagsInput"
+          @input="tagsInput = ($event.target as HTMLInputElement).value"
+          label="Tags"
+          placeholder="marketing, social, campaign"
+          style="width:100%"
+          supporting-text="Comma-separated list of tags."
+        />
+      </div>
+
+      <!-- UTM Parameters (collapsible) -->
+      <div class="utm-section">
+        <button class="utm-toggle" type="button" @click="utmExpanded = !utmExpanded">
+          <span>UTM Parameters</span>
+          <span class="m3-badge m3-badge--neutral" style="font-size:0.7rem">Optional</span>
+          <span class="material-symbols-outlined utm-chevron" :class="{ 'utm-chevron--open': utmExpanded }">expand_more</span>
+        </button>
+        <div v-if="utmExpanded" class="utm-fields">
+          <div class="field-row">
+            <md-outlined-text-field
+              :value="form.utm_source"
+              @input="form.utm_source = ($event.target as HTMLInputElement).value"
+              label="UTM Source"
+              placeholder="google"
+              style="flex:1"
+            />
+            <md-outlined-text-field
+              :value="form.utm_medium"
+              @input="form.utm_medium = ($event.target as HTMLInputElement).value"
+              label="UTM Medium"
+              placeholder="cpc"
+              style="flex:1"
+            />
+            <md-outlined-text-field
+              :value="form.utm_campaign"
+              @input="form.utm_campaign = ($event.target as HTMLInputElement).value"
+              label="UTM Campaign"
+              placeholder="spring_sale"
+              style="flex:1"
+            />
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    <div slot="actions">
+      <md-text-button @click="hide" :disabled="saving">Cancel</md-text-button>
+      <md-filled-button @click="handleSave" :disabled="saving">
+        <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
+        {{ saving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Link') }}
+      </md-filled-button>
+    </div>
+  </md-dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue';
-import { Modal } from 'bootstrap';
 import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
@@ -250,12 +204,14 @@ const emit = defineEmits<{
 const linksStore = useLinksStore();
 
 const modalEl = ref<HTMLElement | null>(null);
-let modalInstance: Modal | null = null;
+let modalInstance: any = null;
 
+const isOpen = ref(false);
 const saving = ref(false);
 const error = ref('');
 const validationErrors = ref<Record<string, string>>({});
 const tagsInput = ref('');
+const utmExpanded = ref(false);
 
 // Duplicate detection
 const duplicateLink = ref<LinkResponse | null>(null);
@@ -319,6 +275,7 @@ function resetForm() {
   validationErrors.value = {};
   duplicateLink.value = null;
   ignoreDuplicate.value = false;
+  utmExpanded.value = false;
   if (duplicateTimer) { clearTimeout(duplicateTimer); duplicateTimer = null; }
 }
 
@@ -425,14 +382,7 @@ async function handleSave() {
 }
 
 onMounted(() => {
-  if (modalEl.value) {
-    modalInstance = new Modal(modalEl.value, { backdrop: 'static' });
-
-    modalEl.value.addEventListener('hidden.bs.modal', () => {
-      resetForm();
-    });
-  }
-
+  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
   if (props.link) {
     populateForm(props.link);
   }
@@ -456,34 +406,103 @@ function show() {
   } else {
     resetForm();
   }
+  isOpen.value = true;
   modalInstance?.show();
 }
 
 function hide() {
+  isOpen.value = false;
   modalInstance?.hide();
+}
+
+function onDialogClosed() {
+  isOpen.value = false;
 }
 
 defineExpose({ show, hide });
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.field-group {
+  margin-bottom: 16px;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #5249e0;
-  border-color: #5249e0;
+.field-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-.accordion-button:not(.collapsed) {
-  color: #635bff;
-  background-color: rgba(99, 91, 255, 0.05);
-  box-shadow: inset 0 -1px 0 rgba(99, 91, 255, 0.15);
+.create-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  background: var(--md-sys-color-error-container, #FFDAD6);
+  color: var(--md-sys-color-on-error-container, #410002);
+  border-radius: 8px;
 }
 
-.accordion-button:focus {
-  box-shadow: 0 0 0 0.25rem rgba(99, 91, 255, 0.25);
+.dup-checking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.dup-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: rgba(244, 161, 0, 0.1);
+  border: 1px solid rgba(244, 161, 0, 0.4);
+  border-radius: 8px;
+}
+
+/* UTM section */
+.utm-section {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.utm-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  text-align: left;
+}
+
+.utm-toggle:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.utm-chevron {
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+
+.utm-chevron--open {
+  transform: rotate(180deg);
+}
+
+.utm-fields {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 </style>

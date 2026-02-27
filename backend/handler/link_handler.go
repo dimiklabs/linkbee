@@ -356,6 +356,11 @@ func (h *LinkHandler) ImportLinks(c *gin.Context) {
 		return
 	}
 
+	if c.Request.ContentLength > 5*1024*1024 {
+		transport.RespondWithError(c, http.StatusRequestEntityTooLarge, constant.ErrCodeBadRequest, "File too large. Maximum file size is 5MB")
+		return
+	}
+
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
 		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "A CSV file is required (field name: file)")

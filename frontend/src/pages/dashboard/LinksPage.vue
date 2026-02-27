@@ -1,800 +1,614 @@
 <template>
-  <div class="container-fluid py-4">
-    <div class="row g-3 align-items-start">
+  <div class="links-page">
+    <div class="links-layout">
 
       <!-- ── Folder Sidebar ──────────────────────────────────────── -->
-      <div class="col-md-3 col-lg-2 d-none d-md-block">
-        <div class="card border-0 shadow-sm">
-          <div class="card-header bg-white border-bottom py-3 px-3">
-            <span class="fw-semibold small">Folders</span>
+      <aside class="folder-sidebar">
+        <div class="m3-card m3-card--elevated sidebar-card">
+          <div class="sidebar-header">
+            <span class="sidebar-title">Folders</span>
           </div>
-          <div class="list-group list-group-flush">
+          <div class="sidebar-list">
             <!-- All Links -->
             <button
-              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': selectedFolderID === '' && !starredOnly && healthFilter === '' && !expiringSoonFilter }"
-              style="font-size: 0.85rem;"
+              class="sidebar-item"
+              :class="{ 'sidebar-item--active': selectedFolderID === '' && !starredOnly && healthFilter === '' && !expiringSoonFilter }"
               @click="selectFolder('')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16">
-                <path d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
-              </svg>
-              <span class="flex-grow-1 text-truncate">All Links</span>
+              <span class="material-symbols-outlined" style="font-size:16px">bar_chart</span>
+              <span class="sidebar-item-label">All Links</span>
             </button>
 
             <!-- Starred -->
             <button
-              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': starredOnly }"
-              style="font-size: 0.85rem;"
+              class="sidebar-item"
+              :class="{ 'sidebar-item--active': starredOnly }"
               @click="selectStarred"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16">
-                <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-              </svg>
-              <span class="flex-grow-1 text-truncate">Starred</span>
+              <span class="material-symbols-outlined" style="font-size:16px">star</span>
+              <span class="sidebar-item-label">Starred</span>
             </button>
 
             <!-- Unhealthy -->
             <button
-              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': healthFilter === 'unhealthy' }"
-              style="font-size: 0.85rem;"
+              class="sidebar-item"
+              :class="{ 'sidebar-item--active': healthFilter === 'unhealthy' }"
               @click="selectHealthFilter('unhealthy')"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0 text-danger" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
-              </svg>
-              <span class="flex-grow-1 text-truncate">Unhealthy</span>
+              <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-error)">error</span>
+              <span class="sidebar-item-label">Unhealthy</span>
             </button>
 
             <!-- Expiring Soon -->
             <button
-              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': expiringSoonFilter }"
-              style="font-size: 0.85rem;"
+              class="sidebar-item"
+              :class="{ 'sidebar-item--active': expiringSoonFilter }"
               @click="selectExpiringSoon"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0 text-warning" viewBox="0 0 16 16">
-                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-              </svg>
-              <span class="flex-grow-1 text-truncate">Expiring Soon</span>
+              <span class="material-symbols-outlined" style="font-size:16px;color:#F4A100">schedule</span>
+              <span class="sidebar-item-label">Expiring Soon</span>
             </button>
 
             <!-- Folder rows -->
             <template v-for="folder in folders" :key="folder.id">
               <!-- Rename mode -->
-              <div v-if="renamingFolderID === folder.id"
-                class="d-flex align-items-center gap-1 px-2 py-1">
-                <input
-                  v-model="renameValue"
-                  class="form-control form-control-sm flex-grow-1"
-                  style="font-size: 0.8rem;"
+              <div v-if="renamingFolderID === folder.id" class="sidebar-rename-row">
+                <md-outlined-text-field
+                  :value="renameValue"
+                  @input="renameValue = ($event.target as HTMLInputElement).value"
+                  label="Folder name"
+                  style="flex:1;--md-outlined-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:0.82rem"
                   @keydown.enter="submitRename(folder)"
                   @keydown.esc="cancelRename"
                   ref="renameInputRef"
-                  maxlength="100"
                 />
-                <button class="btn btn-sm btn-primary px-1 py-0 lh-1" style="font-size: 0.8rem;" @click="submitRename(folder)">✓</button>
+                <md-icon-button @click="submitRename(folder)">
+                  <span class="material-symbols-outlined">check</span>
+                </md-icon-button>
               </div>
 
               <!-- Normal mode -->
-              <div v-else class="folder-row d-flex align-items-center gap-1 px-2 py-1"
-                :class="{ 'folder-row-active': selectedFolderID === folder.id }">
+              <div v-else class="folder-row" :class="{ 'folder-row--active': selectedFolderID === folder.id }">
                 <button
-                  class="d-flex align-items-center gap-2 border-0 bg-transparent text-start flex-grow-1 py-1 rounded"
-                  style="font-size: 0.85rem; min-width: 0;"
-                  :class="{ 'fw-semibold': selectedFolderID === folder.id }"
+                  class="folder-row-btn"
+                  :class="{ 'folder-row-btn--active': selectedFolderID === folder.id }"
                   @click="selectFolder(folder.id)"
                 >
-                  <span class="flex-shrink-0 rounded-circle"
-                    :style="{ width: '8px', height: '8px', backgroundColor: folder.color, display: 'inline-block' }">
-                  </span>
-                  <span class="text-truncate" :title="folder.name">{{ folder.name }}</span>
-                  <span class="text-muted ms-auto" style="font-size:0.7rem;">{{ folder.click_count?.toLocaleString() }}</span>
+                  <span class="folder-dot" :style="{ backgroundColor: folder.color }"></span>
+                  <span class="folder-row-name">{{ folder.name }}</span>
+                  <span class="folder-row-count">{{ folder.click_count?.toLocaleString() }}</span>
                 </button>
-                <div class="folder-actions d-flex gap-0 flex-shrink-0">
-                  <button class="btn btn-sm border-0 p-1 lh-1 text-muted folder-action-btn" title="Rename" @click.stop="startRename(folder)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                    </svg>
-                  </button>
-                  <button class="btn btn-sm border-0 p-1 lh-1 text-danger folder-action-btn" title="Delete folder" @click.stop="deleteFolder(folder)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                    </svg>
-                  </button>
+                <div class="folder-actions">
+                  <md-icon-button @click.stop="startRename(folder)" title="Rename">
+                    <span class="material-symbols-outlined" style="font-size:14px">edit</span>
+                  </md-icon-button>
+                  <md-icon-button @click.stop="deleteFolder(folder)" title="Delete folder" style="--md-icon-button-icon-color:var(--md-sys-color-error)">
+                    <span class="material-symbols-outlined" style="font-size:14px">delete</span>
+                  </md-icon-button>
                 </div>
               </div>
             </template>
           </div>
 
           <!-- New folder -->
-          <div class="card-footer bg-white border-top p-2">
-            <div v-if="showNewFolderInput" class="d-flex gap-1">
-              <input
-                v-model="newFolderName"
-                class="form-control form-control-sm flex-grow-1"
-                placeholder="Folder name"
-                maxlength="100"
+          <div class="sidebar-footer">
+            <div v-if="showNewFolderInput" class="new-folder-row">
+              <md-outlined-text-field
+                :value="newFolderName"
+                @input="newFolderName = ($event.target as HTMLInputElement).value"
+                label="Folder name"
+                style="flex:1;--md-outlined-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:0.82rem"
                 ref="newFolderInputRef"
                 @keydown.enter="createFolder"
                 @keydown.esc="showNewFolderInput = false; newFolderName = ''"
               />
-              <button class="btn btn-sm btn-primary px-2" @click="createFolder" :disabled="!newFolderName.trim()">✓</button>
+              <md-icon-button @click="createFolder" :disabled="!newFolderName.trim()">
+                <span class="material-symbols-outlined">check</span>
+              </md-icon-button>
             </div>
-            <button
-              v-else
-              class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1"
-              @click="openNewFolderInput"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-              </svg>
-              <span style="font-size: 0.8rem;">New Folder</span>
-            </button>
+            <md-text-button v-else @click="openNewFolderInput" style="width:100%">
+              <span class="material-symbols-outlined" slot="icon">create_new_folder</span>
+              New Folder
+            </md-text-button>
           </div>
         </div>
 
         <!-- Tag filter card -->
-        <div v-if="allTags.length > 0" class="card border-0 shadow-sm mt-3">
-          <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
-            <span class="fw-semibold small">Tags</span>
-            <button v-if="selectedTags.length > 0" class="btn btn-sm border-0 p-0 text-muted" style="font-size: 0.75rem;" @click="clearTagFilter">Clear</button>
+        <div v-if="allTags.length > 0" class="m3-card m3-card--elevated sidebar-tags-card">
+          <div class="sidebar-tags-header">
+            <span class="sidebar-title">Tags</span>
+            <md-text-button v-if="selectedTags.length > 0" @click="clearTagFilter" style="--md-text-button-label-text-size:0.75rem">Clear</md-text-button>
           </div>
-          <div class="card-body py-2 px-3">
-            <div class="d-flex flex-wrap gap-1">
-              <button
+          <div class="sidebar-tags-body">
+            <md-chip-set>
+              <md-filter-chip
                 v-for="tag in allTags"
                 :key="tag"
-                class="badge rounded-pill border fw-normal"
-                :class="selectedTags.includes(tag) ? 'bg-primary text-white border-primary' : 'bg-light text-secondary border-light'"
-                style="cursor: pointer; font-size: 0.72rem; line-height: 1.4;"
+                :label="tag"
+                :selected="selectedTags.includes(tag)"
                 @click="toggleTag(tag)"
-              >
-                {{ tag }}
-              </button>
+              />
+            </md-chip-set>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Main content ──────────────────────────────────────────── -->
+      <div class="links-main">
+
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h4 class="page-title">My Links</h4>
+            <p class="page-subtitle">
+              {{ linksStore.total }} link{{ linksStore.total !== 1 ? 's' : '' }} total
+            </p>
+          </div>
+          <div class="page-header-actions">
+            <md-outlined-text-field
+              :value="searchQuery"
+              @input="searchQuery = ($event.target as HTMLInputElement).value"
+              label="Search links..."
+              style="min-width:240px;max-width:320px"
+            >
+              <span class="material-symbols-outlined" slot="leading-icon">search</span>
+            </md-outlined-text-field>
+
+            <md-outlined-button @click="exportCSV" :disabled="exporting">
+              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
+              <span v-else class="material-symbols-outlined" slot="icon">download</span>
+              Export CSV
+            </md-outlined-button>
+
+            <md-outlined-button @click="openImportModal">
+              <span class="material-symbols-outlined" slot="icon">upload_file</span>
+              Import CSV
+            </md-outlined-button>
+
+            <md-filled-button @click="openCreateModal">
+              <span class="material-symbols-outlined" slot="icon">add</span>
+              Create Link
+            </md-filled-button>
+          </div>
+        </div>
+
+        <!-- Usage warning banner -->
+        <div
+          v-if="usageWarning"
+          class="m3-card m3-card--outlined usage-banner"
+          :style="{ borderColor: usageWarning.level === 'danger' ? 'var(--md-sys-color-error)' : '#F4A100' }"
+        >
+          <span class="material-symbols-outlined" :style="{ color: usageWarning.level === 'danger' ? 'var(--md-sys-color-error)' : '#F4A100' }">
+            {{ usageWarning.level === 'danger' ? 'block' : 'warning' }}
+          </span>
+          <span class="usage-banner-msg">{{ usageWarning.msg }}</span>
+          <router-link to="/dashboard/billing">
+            <md-filled-tonal-button style="--md-filled-tonal-button-container-color:var(--md-sys-color-error-container)">Upgrade</md-filled-tonal-button>
+          </router-link>
+        </div>
+
+        <!-- Error alert -->
+        <div v-if="linksStore.error" class="m3-card m3-card--outlined error-banner">
+          <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">error</span>
+          <span>{{ linksStore.error }}</span>
+        </div>
+
+        <!-- Loading state -->
+        <div v-if="linksStore.loading" class="loading-state">
+          <md-circular-progress indeterminate style="--md-circular-progress-size:48px" />
+          <p class="loading-text">Loading your links...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div
+          v-else-if="!linksStore.loading && linksStore.links.length === 0"
+          class="empty-state"
+        >
+          <span class="material-symbols-outlined empty-state-icon">link_off</span>
+          <h5 class="empty-state-title">
+            {{ searchQuery ? 'No links match your search' : selectedTags.length ? 'No links with these tags' : 'No links yet' }}
+          </h5>
+          <p class="empty-state-subtitle">
+            {{ searchQuery ? 'Try a different search term.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Get started by creating your first shortened link.' }}
+          </p>
+          <md-filled-button v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
+            Create your first link
+          </md-filled-button>
+          <md-outlined-button v-else-if="selectedTags.length" @click="clearTagFilter">
+            Clear tag filter
+          </md-outlined-button>
+          <md-outlined-button v-else @click="searchQuery = ''">
+            Clear search
+          </md-outlined-button>
+        </div>
+
+        <!-- Links table -->
+        <div v-else class="m3-card m3-card--elevated links-table-card">
+
+          <!-- Bulk action bar -->
+          <div v-if="selectedIDs.size > 0" class="bulk-bar">
+            <span class="bulk-bar-count">{{ selectedIDs.size }} selected</span>
+            <md-divider vertical style="height:24px;margin:0 4px" />
+
+            <md-outlined-button :disabled="bulkLoading" @click="bulkActivate">Activate</md-outlined-button>
+            <md-outlined-button :disabled="bulkLoading" @click="bulkDeactivate">Deactivate</md-outlined-button>
+
+            <!-- Move to folder -->
+            <div class="bulk-popover-wrap">
+              <md-outlined-button :disabled="bulkLoading" @click="showBulkFolderBar = !showBulkFolderBar; showBulkTagsBar = false">
+                Move to Folder
+              </md-outlined-button>
+              <div v-if="showBulkFolderBar" class="bulk-popover">
+                <button class="bulk-popover-item" @click="bulkMoveFolder(null)">— Remove from folder</button>
+                <button
+                  v-for="f in folders"
+                  :key="f.id"
+                  class="bulk-popover-item"
+                  @click="bulkMoveFolder(f.id)"
+                >{{ f.name }}</button>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="bulk-popover-wrap">
+              <md-outlined-button :disabled="bulkLoading" @click="bulkTagsMode = 'add_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">+ Tags</md-outlined-button>
+              <md-outlined-button :disabled="bulkLoading" @click="bulkTagsMode = 'remove_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">− Tags</md-outlined-button>
+              <div v-if="showBulkTagsBar" class="bulk-popover bulk-tags-popover">
+                <md-outlined-text-field
+                  :value="bulkTagsInput"
+                  @input="bulkTagsInput = ($event.target as HTMLInputElement).value"
+                  label="tag1, tag2, ..."
+                  style="flex:1"
+                  @keydown.enter="bulkApplyTags"
+                />
+                <md-filled-button @click="bulkApplyTags">
+                  {{ bulkTagsMode === 'add_tags' ? 'Add' : 'Remove' }}
+                </md-filled-button>
+              </div>
+            </div>
+
+            <md-outlined-button :disabled="qrDownloading" @click="downloadBulkQR">
+              <md-circular-progress v-if="qrDownloading" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+              <span v-else class="material-symbols-outlined" slot="icon">qr_code_2</span>
+              QR Codes
+            </md-outlined-button>
+
+            <div class="bulk-bar-end">
+              <md-outlined-button :disabled="bulkLoading" @click="bulkDelete" style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error)">
+                <md-circular-progress v-if="bulkLoading" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+                Delete
+              </md-outlined-button>
+              <md-text-button @click="clearSelection">Clear</md-text-button>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table class="m3-table">
+              <thead>
+                <tr>
+                  <th style="width:44px">
+                    <md-checkbox
+                      :checked="isAllSelected"
+                      :indeterminate="selectedIDs.size > 0 && !isAllSelected"
+                      @change="toggleSelectAll"
+                    />
+                  </th>
+                  <th>Title / URL</th>
+                  <th>Short URL</th>
+                  <th>Clicks</th>
+                  <th>Status</th>
+                  <th>Health</th>
+                  <th>Created</th>
+                  <th style="text-align:right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="link in linksStore.links"
+                  :key="link.id"
+                  :class="{ 'row--selected': selectedIDs.has(link.id) }"
+                >
+                  <!-- Select -->
+                  <td>
+                    <md-checkbox
+                      :checked="selectedIDs.has(link.id)"
+                      @change="toggleSelect(link.id)"
+                    />
+                  </td>
+
+                  <!-- Title / URL -->
+                  <td style="max-width:280px">
+                    <div class="link-title" :title="link.title || link.destination_url">
+                      {{ link.title || '—' }}
+                    </div>
+                    <div class="link-dest" :title="link.destination_url">
+                      {{ link.destination_url }}
+                    </div>
+                    <div v-if="link.tags && link.tags.length > 0" class="link-tags">
+                      <span v-for="tag in link.tags.slice(0, 3)" :key="tag" class="m3-badge m3-badge--neutral" style="font-size:0.68rem">{{ tag }}</span>
+                      <span v-if="link.tags.length > 3" class="m3-badge m3-badge--neutral" style="font-size:0.68rem">+{{ link.tags.length - 3 }}</span>
+                    </div>
+                    <div class="link-meta">
+                      <span v-if="link.has_password" class="link-meta-item">
+                        <span class="material-symbols-outlined" style="font-size:13px">lock</span> Protected
+                      </span>
+                      <span
+                        v-if="link.expires_at"
+                        class="link-meta-item"
+                        :style="{ color: isExpired(link) ? 'var(--md-sys-color-error)' : isExpiringSoon(link) ? '#F4A100' : 'inherit', fontWeight: (isExpired(link) || isExpiringSoon(link)) ? '600' : 'normal' }"
+                        :title="isExpired(link) ? 'This link has expired' : isExpiringSoon(link) ? 'Expiring within 3 days' : 'Expiry date'"
+                      >
+                        <span class="material-symbols-outlined" style="font-size:13px">schedule</span>
+                        {{ isExpired(link) ? 'Expired' : 'Expires' }} {{ formatDate(link.expires_at) }}
+                      </span>
+                      <span
+                        v-if="link.max_clicks"
+                        class="link-meta-item"
+                        :style="{ color: isClickLimitReached(link) ? '#F4A100' : 'inherit', fontWeight: isClickLimitReached(link) ? '600' : 'normal' }"
+                        :title="isClickLimitReached(link) ? 'Click limit reached' : 'Max clicks'"
+                      >
+                        <span class="material-symbols-outlined" style="font-size:13px">bolt</span>
+                        {{ link.click_count }}/{{ link.max_clicks }} clicks
+                      </span>
+                    </div>
+                  </td>
+
+                  <!-- Short URL -->
+                  <td>
+                    <div class="short-url-cell">
+                      <a :href="link.short_url" target="_blank" rel="noopener noreferrer" class="short-url-link">
+                        {{ link.short_url }}
+                      </a>
+                      <span v-if="expiryBadgeClass(link)" :class="['m3-badge', expiryBadgeClass(link) === 'text-bg-danger' ? 'm3-badge--error' : 'm3-badge--warning']" style="font-size:0.65rem">
+                        {{ expiryBadgeLabel(link) }}
+                      </span>
+                      <span v-if="clickLimitBadgeClass(link)" :class="['m3-badge', clickLimitBadgeClass(link) === 'text-bg-danger' ? 'm3-badge--error' : 'm3-badge--warning']" style="font-size:0.65rem">
+                        {{ clickLimitBadgeLabel(link) }}
+                      </span>
+                      <md-icon-button
+                        :title="copiedId === link.id ? 'Copied!' : 'Copy to clipboard'"
+                        @click="copyShortUrl(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                      >
+                        <span class="material-symbols-outlined" :style="{ color: copiedId === link.id ? '#1AA563' : 'inherit' }">
+                          {{ copiedId === link.id ? 'check_circle' : 'content_copy' }}
+                        </span>
+                      </md-icon-button>
+                    </div>
+                  </td>
+
+                  <!-- Clicks -->
+                  <td>
+                    <span class="click-count">{{ link.click_count.toLocaleString() }}</span>
+                  </td>
+
+                  <!-- Status -->
+                  <td>
+                    <span :class="['m3-badge', statusM3BadgeClass(link)]">
+                      {{ statusLabel(link) }}
+                    </span>
+                  </td>
+
+                  <!-- Health -->
+                  <td>
+                    <span
+                      :class="['m3-badge', healthM3BadgeClass(link.health_status)]"
+                      :title="link.health_checked_at ? `Last checked: ${formatDate(link.health_checked_at)}` : 'Not yet checked'"
+                    >
+                      {{ healthLabel(link.health_status) }}
+                    </span>
+                  </td>
+
+                  <!-- Created -->
+                  <td class="date-cell">
+                    {{ formatDate(link.created_at) }}
+                  </td>
+
+                  <!-- Actions -->
+                  <td style="text-align:right">
+                    <div class="actions-cell">
+                      <!-- Star -->
+                      <md-icon-button
+                        :title="link.is_starred ? 'Unstar' : 'Star'"
+                        @click="toggleStar(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                      >
+                        <span class="material-symbols-outlined" :style="{ color: link.is_starred ? '#F4A100' : 'inherit', fontVariationSettings: link.is_starred ? '\'FILL\' 1' : '\'FILL\' 0' }">star</span>
+                      </md-icon-button>
+
+                      <!-- Health check -->
+                      <md-icon-button
+                        :title="checkingHealthId === link.id ? 'Checking...' : 'Check link health'"
+                        :disabled="checkingHealthId === link.id"
+                        @click="runHealthCheck(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                      >
+                        <md-circular-progress v-if="checkingHealthId === link.id" indeterminate style="--md-circular-progress-size:16px" />
+                        <span v-else class="material-symbols-outlined">health_and_safety</span>
+                      </md-icon-button>
+
+                      <!-- Analytics -->
+                      <RouterLink :to="`/dashboard/links/${link.id}`">
+                        <md-icon-button title="View Analytics" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                          <span class="material-symbols-outlined">bar_chart</span>
+                        </md-icon-button>
+                      </RouterLink>
+
+                      <!-- Preview -->
+                      <md-icon-button title="Link Preview" @click="openPreviewModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                        <span class="material-symbols-outlined">visibility</span>
+                      </md-icon-button>
+
+                      <!-- QR Code -->
+                      <md-icon-button title="View QR Code" @click="openQRModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                        <span class="material-symbols-outlined">qr_code_2</span>
+                      </md-icon-button>
+
+                      <!-- A/B Split Test -->
+                      <md-icon-button
+                        title="A/B Split Test"
+                        @click="openSplitModal(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                        :style="link.is_split_test ? { '--md-icon-button-icon-color': 'var(--md-sys-color-primary)' } : {}"
+                      >
+                        <span class="material-symbols-outlined">join</span>
+                      </md-icon-button>
+
+                      <!-- Geo Routing -->
+                      <md-icon-button
+                        title="Geo Routing"
+                        @click="openGeoModal(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                        :style="link.is_geo_routing ? { '--md-icon-button-icon-color': '#1AA563' } : {}"
+                      >
+                        <span class="material-symbols-outlined">public</span>
+                      </md-icon-button>
+
+                      <!-- Retargeting Pixels -->
+                      <md-icon-button
+                        title="Retargeting Pixels"
+                        @click="openPixelModal(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                        :style="link.is_pixel_tracking ? { '--md-icon-button-icon-color': 'var(--md-sys-color-error)' } : {}"
+                      >
+                        <span class="material-symbols-outlined">track_changes</span>
+                      </md-icon-button>
+
+                      <!-- Edit -->
+                      <md-icon-button title="Edit Link" @click="openEditModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                        <span class="material-symbols-outlined">edit</span>
+                      </md-icon-button>
+
+                      <!-- Clone -->
+                      <md-icon-button title="Clone Link" @click="openCloneModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                        <span class="material-symbols-outlined">file_copy</span>
+                      </md-icon-button>
+
+                      <!-- Delete -->
+                      <md-icon-button
+                        title="Delete Link"
+                        :disabled="deletingId === link.id"
+                        @click="confirmDelete(link)"
+                        style="--md-icon-button-icon-size:18px;width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)"
+                      >
+                        <md-circular-progress v-if="deletingId === link.id" indeterminate style="--md-circular-progress-size:16px" />
+                        <span v-else class="material-symbols-outlined">delete</span>
+                      </md-icon-button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div v-if="linksStore.totalPages > 1" class="pagination-bar">
+            <p class="pagination-info">
+              Page {{ linksStore.page }} of {{ linksStore.totalPages }} &mdash; {{ linksStore.total }} total
+            </p>
+            <div class="pagination-controls">
+              <md-outlined-button @click="goToPage(linksStore.page - 1)" :disabled="linksStore.page <= 1">
+                Previous
+              </md-outlined-button>
+
+              <template v-for="(p, idx) in visiblePages" :key="idx">
+                <md-filled-button v-if="p === linksStore.page" style="min-width:40px">{{ p }}</md-filled-button>
+                <md-outlined-button v-else-if="p !== '...'" @click="goToPage(Number(p))" style="min-width:40px">{{ p }}</md-outlined-button>
+                <span v-else class="pagination-ellipsis">...</span>
+              </template>
+
+              <md-outlined-button @click="goToPage(linksStore.page + 1)" :disabled="linksStore.page >= linksStore.totalPages">
+                Next
+              </md-outlined-button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ── Main content ──────────────────────────────────────────── -->
-      <div class="col-md-9 col-lg-10">
+        <!-- Create / Edit Modal -->
+        <CreateLinkModal
+          ref="createModalRef"
+          :link="editingLink ?? undefined"
+          :folders="folders"
+          @saved="onLinkSaved"
+        />
 
-    <!-- Page Header -->
-    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
-      <div>
-        <h4 class="mb-1 fw-bold">My Links</h4>
-        <p class="text-muted small mb-0">
-          {{ linksStore.total }} link{{ linksStore.total !== 1 ? 's' : '' }} total
-        </p>
-      </div>
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <!-- Search -->
-        <div class="input-group" style="min-width: 240px; max-width: 320px;">
-          <span class="input-group-text bg-white border-end-0">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="text-muted" viewBox="0 0 16 16">
-              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-            </svg>
-          </span>
-          <input
-            v-model="searchQuery"
-            type="search"
-            class="form-control border-start-0 ps-0"
-            placeholder="Search links..."
-            aria-label="Search links"
-          />
-        </div>
+        <!-- QR Code Modal -->
+        <QRCodeModal
+          v-if="qrLink"
+          ref="qrModalRef"
+          :link-id="qrLink.id"
+          :slug="qrLink.slug"
+        />
 
-        <!-- Export button -->
-        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" :disabled="exporting" @click="exportCSV">
-          <span v-if="exporting" class="spinner-border spinner-border-sm"></span>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
-          </svg>
-          Export CSV
-        </button>
+        <!-- Import CSV Modal -->
+        <ImportLinksModal
+          ref="importModalRef"
+          @imported="onImportDone"
+        />
 
-        <!-- Import button -->
-        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @click="openImportModal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
-          </svg>
-          Import CSV
-        </button>
+        <!-- A/B Split Test Modal -->
+        <SplitTestModal
+          v-if="splitLink"
+          ref="splitModalRef"
+          :link-id="splitLink.id"
+          :slug="splitLink.slug"
+          :is-split-test-initial="splitLink.is_split_test"
+          @updated="onSplitTestUpdated"
+        />
 
-        <!-- Create button -->
-        <button class="btn btn-primary d-flex align-items-center gap-2" @click="openCreateModal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-          </svg>
-          Create Link
-        </button>
-      </div>
-    </div>
+        <!-- Geo Routing Modal -->
+        <GeoRulesModal
+          v-if="geoLink"
+          ref="geoModalRef"
+          :link-id="geoLink.id"
+          :slug="geoLink.slug"
+          :is-geo-routing-initial="geoLink.is_geo_routing"
+          @updated="onGeoRoutingUpdated"
+        />
 
-    <!-- Usage warning banner -->
-    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
-      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
-      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
-      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
-    </div>
+        <!-- Retargeting Pixels Modal -->
+        <PixelsModal
+          v-if="pixelLink"
+          ref="pixelModalRef"
+          modal-id="pixels-modal"
+          :link="pixelLink"
+          @pixel-tracking-updated="onPixelTrackingUpdated"
+        />
 
-    <!-- Error alert -->
-    <div v-if="linksStore.error" class="alert alert-danger d-flex align-items-center gap-2" role="alert">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-      </svg>
-      {{ linksStore.error }}
-    </div>
+        <!-- Link Preview Modal -->
+        <LinkPreviewModal
+          v-if="previewLink"
+          ref="previewModalRef"
+          modal-id="preview-modal"
+          :link="previewLink"
+        />
 
-    <!-- Loading state -->
-    <div v-if="linksStore.loading" class="text-center py-5">
-      <div class="spinner-border text-primary" style="width: 2.5rem; height: 2.5rem;" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p class="text-muted mt-3 mb-0">Loading your links...</p>
-    </div>
+        <!-- Clone Link Modal -->
+        <CloneLinkModal
+          v-if="cloneLink"
+          ref="cloneModalRef"
+          modal-id="clone-link-modal"
+          :link="cloneLink"
+          @cloned="onLinkCloned"
+        />
 
-    <!-- Empty state -->
-    <div
-      v-else-if="!linksStore.loading && linksStore.links.length === 0"
-      class="text-center py-5"
-    >
-      <div class="mb-3">
-        <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" fill="currentColor" class="text-muted opacity-50" viewBox="0 0 16 16">
-          <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/>
-          <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/>
-        </svg>
-      </div>
-      <h5 class="fw-semibold text-muted">
-        {{ searchQuery ? 'No links match your search' : selectedTags.length ? 'No links with these tags' : 'No links yet' }}
-      </h5>
-      <p class="text-muted small mb-4">
-        {{ searchQuery ? 'Try a different search term.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Get started by creating your first shortened link.' }}
-      </p>
-      <button v-if="!searchQuery && !selectedTags.length" class="btn btn-primary" @click="openCreateModal">
-        Create your first link
-      </button>
-      <button v-else-if="selectedTags.length" class="btn btn-outline-secondary btn-sm" @click="clearTagFilter">
-        Clear tag filter
-      </button>
-      <button v-else class="btn btn-outline-secondary btn-sm" @click="searchQuery = ''">
-        Clear search
-      </button>
-    </div>
-
-    <!-- Links table -->
-    <div v-else class="card shadow-sm border-0">
-
-      <!-- Bulk action bar -->
-      <div
-        v-if="selectedIDs.size > 0"
-        class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-bottom"
-        style="background: #f5f4ff;"
-      >
-        <span class="fw-semibold small text-primary">{{ selectedIDs.size }} selected</span>
-        <div class="vr mx-1"></div>
-
-        <button class="btn btn-sm btn-outline-success" :disabled="bulkLoading" @click="bulkActivate">Activate</button>
-        <button class="btn btn-sm btn-outline-warning" :disabled="bulkLoading" @click="bulkDeactivate">Deactivate</button>
-
-        <!-- Move to folder -->
-        <div class="d-flex align-items-center gap-1 position-relative">
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="bulkLoading"
-            @click="showBulkFolderBar = !showBulkFolderBar; showBulkTagsBar = false"
-          >Move to Folder</button>
-          <div
-            v-if="showBulkFolderBar"
-            class="position-absolute top-100 start-0 mt-1 bg-white border rounded shadow-sm p-1"
-            style="z-index: 200; min-width: 160px;"
-          >
-            <button class="dropdown-item rounded small py-1 px-2" @click="bulkMoveFolder(null)">— Remove from folder</button>
-            <button
-              v-for="f in folders"
-              :key="f.id"
-              class="dropdown-item rounded small py-1 px-2"
-              @click="bulkMoveFolder(f.id)"
-            >{{ f.name }}</button>
+        <!-- Copy snackbar -->
+        <Transition name="snack">
+          <div v-if="copiedId" class="m3-snackbar">
+            <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
+            <span style="flex:1">Copied to clipboard!</span>
+            <md-text-button @click="copiedId = null" style="--md-text-button-label-text-color:#CFBCFF">Dismiss</md-text-button>
           </div>
-        </div>
+        </Transition>
 
-        <!-- Tags -->
-        <div class="d-flex align-items-center gap-1 position-relative">
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="bulkLoading"
-            @click="bulkTagsMode = 'add_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false"
-          >+ Tags</button>
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            :disabled="bulkLoading"
-            @click="bulkTagsMode = 'remove_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false"
-          >− Tags</button>
-          <div
-            v-if="showBulkTagsBar"
-            class="position-absolute top-100 start-0 mt-1 bg-white border rounded shadow-sm p-2 d-flex gap-1"
-            style="z-index: 200; min-width: 240px;"
-          >
-            <input
-              v-model="bulkTagsInput"
-              type="text"
-              class="form-control form-control-sm"
-              placeholder="tag1, tag2, ..."
-              @keydown.enter="bulkApplyTags"
-            />
-            <button class="btn btn-sm btn-primary" @click="bulkApplyTags">
-              {{ bulkTagsMode === 'add_tags' ? 'Add' : 'Remove' }}
-            </button>
-          </div>
-        </div>
-
-        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" :disabled="qrDownloading" @click="downloadBulkQR">
-          <span v-if="qrDownloading" class="spinner-border spinner-border-sm me-1"></span>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
-            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
-          </svg>
-          QR Codes
-        </button>
-
-        <div class="ms-auto d-flex gap-2">
-          <button class="btn btn-sm btn-outline-danger" :disabled="bulkLoading" @click="bulkDelete">
-            <span v-if="bulkLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
-            Delete
-          </button>
-          <button class="btn btn-sm btn-outline-secondary" @click="clearSelection">Clear</button>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="ps-3 py-3" style="width: 44px;">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  :checked="isAllSelected"
-                  :indeterminate="selectedIDs.size > 0 && !isAllSelected"
-                  @change="toggleSelectAll"
-                />
-              </th>
-              <th class="ps-2 py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Title / URL</th>
-              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Short URL</th>
-              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Clicks</th>
-              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Status</th>
-              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Health</th>
-              <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Created</th>
-              <th class="pe-4 py-3 fw-semibold text-muted small text-uppercase text-end" style="letter-spacing: 0.05em;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="link in linksStore.links"
-              :key="link.id"
-              :class="{ 'table-active': selectedIDs.has(link.id) }"
-            >
-              <!-- Select -->
-              <td class="ps-3 py-3">
-                <input
-                  type="checkbox"
-                  class="form-check-input"
-                  :checked="selectedIDs.has(link.id)"
-                  @change="toggleSelect(link.id)"
-                />
-              </td>
-
-              <!-- Title / URL -->
-              <td class="ps-2 py-3" style="max-width: 280px;">
-                <div class="fw-medium text-truncate" :title="link.title || link.destination_url">
-                  {{ link.title || '—' }}
-                </div>
-                <div class="text-muted small text-truncate" :title="link.destination_url">
-                  {{ link.destination_url }}
-                </div>
-                <div v-if="link.tags && link.tags.length > 0" class="mt-1 d-flex flex-wrap gap-1">
-                  <span
-                    v-for="tag in link.tags.slice(0, 3)"
-                    :key="tag"
-                    class="badge rounded-pill bg-light text-secondary border"
-                    style="font-size: 0.68rem; font-weight: 500;"
-                  >
-                    {{ tag }}
-                  </span>
-                  <span v-if="link.tags.length > 3" class="badge rounded-pill bg-light text-secondary border" style="font-size: 0.68rem;">
-                    +{{ link.tags.length - 3 }}
-                  </span>
-                </div>
-                <!-- Expiry / limit / password meta -->
-                <div class="mt-1 d-flex flex-wrap gap-2" style="font-size: 0.72rem; color: #697386;">
-                  <span v-if="link.has_password" title="Password protected">🔒 Protected</span>
-                  <span
-                    v-if="link.expires_at"
-                    :class="isExpired(link) ? 'text-danger fw-medium' : isExpiringSoon(link) ? 'text-warning fw-medium' : ''"
-                    :title="isExpired(link) ? 'This link has expired' : isExpiringSoon(link) ? 'Expiring within 3 days' : 'Expiry date'"
-                  >
-                    ⏱ {{ isExpired(link) ? 'Expired' : 'Expires' }} {{ formatDate(link.expires_at) }}
-                  </span>
-                  <span
-                    v-if="link.max_clicks"
-                    :class="isClickLimitReached(link) ? 'text-warning fw-medium' : ''"
-                    :title="isClickLimitReached(link) ? 'Click limit reached' : 'Max clicks'"
-                  >
-                    ⚡ {{ link.click_count }}/{{ link.max_clicks }} clicks
-                  </span>
-                </div>
-              </td>
-
-              <!-- Short URL -->
-              <td class="py-3">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <a :href="link.short_url" target="_blank" rel="noopener noreferrer" class="link-primary text-decoration-none fw-medium small">
-                    {{ link.short_url }}
-                  </a>
-                  <span v-if="expiryBadgeClass(link)" :class="['badge', 'rounded-pill', 'ms-1', expiryBadgeClass(link)]" style="font-size:0.65rem;">
-                    {{ expiryBadgeLabel(link) }}
-                  </span>
-                  <span v-if="clickLimitBadgeClass(link)" :class="['badge', 'rounded-pill', 'ms-1', clickLimitBadgeClass(link)]" style="font-size:0.65rem;">
-                    {{ clickLimitBadgeLabel(link) }}
-                  </span>
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1 copy-btn"
-                    :title="copiedId === link.id ? 'Copied!' : 'Copy to clipboard'"
-                    @click="copyShortUrl(link)"
-                    style="line-height: 1;"
-                  >
-                    <template v-if="copiedId === link.id">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#198754" viewBox="0 0 16 16">
-                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
-                      </svg>
-                    </template>
-                    <template v-else>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
-                        <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
-                      </svg>
-                    </template>
-                  </button>
-                </div>
-              </td>
-
-              <!-- Clicks -->
-              <td class="py-3">
-                <span class="fw-semibold">{{ link.click_count.toLocaleString() }}</span>
-              </td>
-
-              <!-- Status -->
-              <td class="py-3">
-                <span
-                  class="badge rounded-pill px-3 py-2"
-                  :class="statusBadgeClass(link)"
-                  style="font-size: 0.75rem;"
-                >
-                  {{ statusLabel(link) }}
-                </span>
-              </td>
-
-              <!-- Health -->
-              <td class="py-3">
-                <span
-                  class="badge rounded-pill px-2 py-1"
-                  :class="healthBadgeClass(link.health_status)"
-                  style="font-size: 0.72rem;"
-                  :title="link.health_checked_at ? `Last checked: ${formatDate(link.health_checked_at)}` : 'Not yet checked'"
-                >
-                  {{ healthLabel(link.health_status) }}
-                </span>
-              </td>
-
-              <!-- Created -->
-              <td class="py-3 text-muted small">
-                {{ formatDate(link.created_at) }}
-              </td>
-
-              <!-- Actions -->
-              <td class="pe-4 py-3 text-end">
-                <div class="d-flex align-items-center justify-content-end gap-1">
-                  <!-- Star -->
-                  <button
-                    class="btn btn-sm border-0 p-1"
-                    :class="link.is_starred ? 'text-warning' : 'btn-outline-secondary'"
-                    :title="link.is_starred ? 'Unstar' : 'Star'"
-                    @click="toggleStar(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" :fill="link.is_starred ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1" viewBox="0 0 16 16">
-                      <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-                    </svg>
-                  </button>
-
-                  <!-- Health check -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    :title="checkingHealthId === link.id ? 'Checking...' : 'Check link health'"
-                    :disabled="checkingHealthId === link.id"
-                    @click="runHealthCheck(link)"
-                  >
-                    <span v-if="checkingHealthId === link.id" class="spinner-border spinner-border-sm" style="width: 14px; height: 14px;" role="status"></span>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71z"/>
-                      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0"/>
-                    </svg>
-                  </button>
-
-                  <!-- Analytics -->
-                  <RouterLink
-                    :to="`/dashboard/links/${link.id}`"
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    title="View Analytics"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M4 11H2v3h2zm5-4H7v7h2zm5-5v12h-2V2zm-2-1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM6 7a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-5 4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
-                    </svg>
-                  </RouterLink>
-
-                  <!-- Preview -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    title="Link Preview"
-                    @click="openPreviewModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
-                      <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
-                    </svg>
-                  </button>
-
-                  <!-- QR Code -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    title="View QR Code"
-                    @click="openQRModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M2 2h2v2H2z"/>
-                      <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
-                      <path d="M6 10v6H0v-6zm-5 1v4h4v-4zm11-9h2v2h-2z"/>
-                      <path d="M10 0v6h6V0zm5 1v4h-4V1zM8 1V0h1v2H8v2H7V1zm0 5H7V4h1zM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8zm0 0v1H2V8H1v1H0V7h3v1zm10 1h-1V7h1zm-1 0h-1v2h2v-1h-1zm-4 0h2v1h-1v1h-1zm2 3v-1h-1v1h-1v1H9v1h3v-2zm0 0h3v1h-2v1h-1zm-4-1v1h1v-2H7v1z"/>
-                    </svg>
-                  </button>
-
-                  <!-- A/B Split Test -->
-                  <button
-                    class="btn btn-sm border-0 p-1"
-                    :class="link.is_split_test ? 'text-primary' : 'btn-outline-secondary'"
-                    title="A/B Split Test"
-                    @click="openSplitModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M9.05 3.5a2.5 2.5 0 0 1 4.9 0H16v1h-2.05a2.5 2.5 0 0 1-4.9 0H0v-1zM0 9.5h2.05a2.5 2.5 0 0 1 4.9 0H16v1H6.95a2.5 2.5 0 0 1-4.9 0zm4.5-1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
-                    </svg>
-                  </button>
-
-                  <!-- Geo Routing -->
-                  <button
-                    class="btn btn-sm border-0 p-1"
-                    :class="link.is_geo_routing ? 'text-success' : 'btn-outline-secondary'"
-                    title="Geo Routing"
-                    @click="openGeoModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0M2.04 4.326c.325 1.329 2.532 2.54 3.717 3.19.48.263.793.434.743.484q-.121.12-.242.234c-.416.396-.787.749-.758 1.266.035.634.618.824 1.214 1.017.577.188 1.168.38 1.286.983.082.417-.075.988-.22 1.52-.215.782-.406 1.48.22 1.48 1.5-.5 3.798-3.186 4-5 .138-1.243-2-2-3.5-2.5-.478-.16-.755.081-.99.284-.172.15-.322.279-.51.216-.445-.148-2.614-1.208-2.614-2 0-.56.23-1.272.55-2zm6.959 0c.922.065 1.459.22 1.459.22 -.12.1-.32.3-.39.5-.069.2.049.3.2.4.15.1.29.2.31.4.019.2-.11.3-.23.4-.11.1-.22.2-.19.4.03.2.18.3.33.4.16.1.32.2.36.4.039.2-.08.3-.19.4-.12.1-.25.2-.25.4 0 .2.17.3.33.4.17.1.35.2.37.4.02.2-.1.4-.24.5-.14.1-.3.2-.32.4l-.015.046c-.023.068-.04.12-.06.16.9-.2 1.6-.5 1.9-1.1.3-.6.1-1.3-.2-2z"/>
-                    </svg>
-                  </button>
-
-                  <!-- Retargeting Pixels -->
-                  <button
-                    class="btn btn-sm border-0 p-1"
-                    :class="link.is_pixel_tracking ? 'text-danger' : 'btn-outline-secondary'"
-                    title="Retargeting Pixels"
-                    @click="openPixelModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0m.5 11.5a.5.5 0 0 1-1 0v-4a.5.5 0 0 1 1 0zm-.5-6a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5"/>
-                    </svg>
-                  </button>
-
-                  <!-- Edit -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    title="Edit Link"
-                    @click="openEditModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
-                    </svg>
-                  </button>
-
-                  <!-- Clone -->
-                  <button
-                    class="btn btn-sm btn-outline-secondary border-0 p-1"
-                    title="Clone Link"
-                    @click="openCloneModal(link)"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
-                      <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
-                    </svg>
-                  </button>
-
-                  <!-- Delete -->
-                  <button
-                    class="btn btn-sm btn-outline-danger border-0 p-1"
-                    title="Delete Link"
-                    :disabled="deletingId === link.id"
-                    @click="confirmDelete(link)"
-                  >
-                    <span v-if="deletingId === link.id" class="spinner-border spinner-border-sm" style="width: 14px; height: 14px;" role="status"></span>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                      <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      <div
-        v-if="linksStore.totalPages > 1"
-        class="card-footer bg-white border-top d-flex align-items-center justify-content-between flex-wrap gap-2 py-3 px-4"
-      >
-        <p class="text-muted small mb-0">
-          Page {{ linksStore.page }} of {{ linksStore.totalPages }}
-          &mdash; {{ linksStore.total }} total
-        </p>
-        <nav aria-label="Links pagination">
-          <ul class="pagination pagination-sm mb-0">
-            <li class="page-item" :class="{ disabled: linksStore.page <= 1 }">
-              <button class="page-link" @click="goToPage(linksStore.page - 1)" :disabled="linksStore.page <= 1">
-                Previous
-              </button>
-            </li>
-
-            <li
-              v-for="(p, idx) in visiblePages"
-              :key="idx"
-              class="page-item"
-              :class="{ active: p === linksStore.page, disabled: p === '...' }"
-            >
-              <button
-                v-if="p !== '...'"
-                class="page-link"
-                @click="goToPage(Number(p))"
-              >
-                {{ p }}
-              </button>
-              <span v-else class="page-link border-0 bg-transparent text-muted">...</span>
-            </li>
-
-            <li class="page-item" :class="{ disabled: linksStore.page >= linksStore.totalPages }">
-              <button
-                class="page-link"
-                @click="goToPage(linksStore.page + 1)"
-                :disabled="linksStore.page >= linksStore.totalPages"
-              >
-                Next
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-
-    <!-- Create / Edit Modal -->
-    <CreateLinkModal
-      ref="createModalRef"
-      :link="editingLink ?? undefined"
-      :folders="folders"
-      @saved="onLinkSaved"
-    />
-
-    <!-- QR Code Modal -->
-    <QRCodeModal
-      v-if="qrLink"
-      ref="qrModalRef"
-      :link-id="qrLink.id"
-      :slug="qrLink.slug"
-    />
-
-    <!-- Import CSV Modal -->
-    <ImportLinksModal
-      ref="importModalRef"
-      @imported="onImportDone"
-    />
-
-    <!-- A/B Split Test Modal -->
-    <SplitTestModal
-      v-if="splitLink"
-      ref="splitModalRef"
-      :link-id="splitLink.id"
-      :slug="splitLink.slug"
-      :is-split-test-initial="splitLink.is_split_test"
-      @updated="onSplitTestUpdated"
-    />
-
-    <!-- Geo Routing Modal -->
-    <GeoRulesModal
-      v-if="geoLink"
-      ref="geoModalRef"
-      :link-id="geoLink.id"
-      :slug="geoLink.slug"
-      :is-geo-routing-initial="geoLink.is_geo_routing"
-      @updated="onGeoRoutingUpdated"
-    />
-
-    <!-- Retargeting Pixels Modal -->
-    <PixelsModal
-      v-if="pixelLink"
-      ref="pixelModalRef"
-      modal-id="pixels-modal"
-      :link="pixelLink"
-      @pixel-tracking-updated="onPixelTrackingUpdated"
-    />
-
-    <!-- Link Preview Modal -->
-    <LinkPreviewModal
-      v-if="previewLink"
-      ref="previewModalRef"
-      modal-id="preview-modal"
-      :link="previewLink"
-    />
-
-    <!-- Clone Link Modal -->
-    <CloneLinkModal
-      v-if="cloneLink"
-      ref="cloneModalRef"
-      modal-id="clone-link-modal"
-      :link="cloneLink"
-      @cloned="onLinkCloned"
-    />
-
-    <!-- Copy toast -->
-    <div
-      class="position-fixed bottom-0 end-0 p-3"
-      style="z-index: 1100;"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      <div
-        ref="toastEl"
-        class="toast align-items-center text-bg-dark border-0"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
-        <div class="d-flex">
-          <div class="toast-body d-flex align-items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="#4ade80" viewBox="0 0 16 16">
-              <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
-            </svg>
-            Copied to clipboard!
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-      </div>
-    </div>
-
-      </div><!-- end main content col -->
-    </div><!-- end row -->
+      </div><!-- end main content -->
+    </div><!-- end layout -->
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, computed } from 'vue';
 import { RouterLink } from 'vue-router';
-import { Toast } from 'bootstrap';
 import { useLinksStore } from '@/stores/links';
 import type { LinkResponse } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
@@ -885,7 +699,7 @@ const previewLink = ref<LinkResponse | null>(null);
 const cloneModalRef = ref<InstanceType<typeof CloneLinkModal> | null>(null);
 const cloneLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
-let toastInstance: Toast | null = null;
+let toastInstance: any = null;
 
 // ── Bulk selection ────────────────────────────────────────────────────────────
 const selectedIDs = ref<Set<string>>(new Set());
@@ -1154,9 +968,7 @@ onMounted(async () => {
   linksStore.fetchLinks(1, 20, '');
   loadFolders();
   loadTags();
-  if (toastEl.value) {
-    toastInstance = new Toast(toastEl.value, { delay: 2000 });
-  }
+  // Bootstrap Toast removed — will use Vuetify snackbar in page rewrite
   try {
     const res = await billingApi.getUsage();
     usage.value = res.data.data;
@@ -1331,6 +1143,12 @@ function statusBadgeClass(link: LinkResponse): string {
   return link.is_active ? 'text-bg-success' : 'text-bg-danger';
 }
 
+function statusM3BadgeClass(link: LinkResponse): string {
+  if (isExpired(link)) return 'm3-badge--neutral';
+  if (isClickLimitReached(link)) return 'm3-badge--warning';
+  return link.is_active ? 'm3-badge--success' : 'm3-badge--error';
+}
+
 function statusLabel(link: LinkResponse): string {
   if (isExpired(link)) return 'Expired';
   if (isClickLimitReached(link)) return 'Limit Reached';
@@ -1344,6 +1162,16 @@ function healthBadgeClass(status: string): string {
     case 'timeout':   return 'text-bg-warning';
     case 'error':     return 'text-bg-secondary';
     default:          return 'bg-light text-secondary border';
+  }
+}
+
+function healthM3BadgeClass(status: string): string {
+  switch (status) {
+    case 'healthy':   return 'm3-badge--success';
+    case 'unhealthy': return 'm3-badge--error';
+    case 'timeout':   return 'm3-badge--warning';
+    case 'error':     return 'm3-badge--neutral';
+    default:          return 'm3-badge--neutral';
   }
 }
 
@@ -1404,63 +1232,488 @@ const visiblePages = computed<(number | string)[]>(() => {
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+/* ── Layout ──────────────────────────────────────────────────────────────────── */
+.links-page {
+  padding: 24px;
+  min-height: 100%;
 }
 
-.btn-primary:hover {
-  background-color: #5249e0;
-  border-color: #5249e0;
+.links-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-.link-primary {
-  color: #635bff;
+@media (max-width: 768px) {
+  .links-layout {
+    grid-template-columns: 1fr;
+  }
+  .folder-sidebar {
+    display: none;
+  }
 }
 
-.link-primary:hover {
-  color: #5249e0;
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+.folder-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.page-item.active .page-link {
-  background-color: #635bff;
-  border-color: #635bff;
+.sidebar-card {
+  overflow: hidden;
 }
 
-.page-link:focus {
-  box-shadow: 0 0 0 0.25rem rgba(99, 91, 255, 0.25);
+.sidebar-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.copy-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05) !important;
+.sidebar-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
 }
 
-/* Folder sidebar */
-.folder-active {
-  background-color: rgba(99, 91, 255, 0.08) !important;
-  color: #635bff !important;
+.sidebar-list {
+  padding: 4px 0;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.sidebar-item:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.sidebar-item--active {
+  background: rgba(99, 91, 255, 0.08);
+  color: var(--md-sys-color-primary);
   font-weight: 600;
 }
 
+.sidebar-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .folder-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
   border-radius: 6px;
   transition: background 0.15s;
 }
 
 .folder-row:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.folder-row-active {
-  background-color: rgba(99, 91, 255, 0.08);
+.folder-row--active {
+  background: rgba(99, 91, 255, 0.08);
 }
 
-.folder-action-btn {
+.folder-row-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding: 6px 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+  min-width: 0;
+  text-align: left;
+}
+
+.folder-row-btn--active {
+  color: var(--md-sys-color-primary);
+  font-weight: 600;
+}
+
+.folder-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.folder-row-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-row-count {
+  font-size: 0.7rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-left: auto;
+}
+
+.folder-actions {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
   opacity: 0;
   transition: opacity 0.15s;
 }
 
-.folder-row:hover .folder-action-btn {
+.folder-row:hover .folder-actions {
   opacity: 1;
 }
+
+.sidebar-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+}
+
+.sidebar-footer {
+  padding: 8px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.new-folder-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sidebar-tags-card {
+  overflow: hidden;
+}
+
+.sidebar-tags-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.sidebar-tags-body {
+  padding: 8px 12px 12px;
+}
+
+/* ── Page Header ─────────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Banners ─────────────────────────────────────────────────────────────────── */
+.usage-banner,
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+}
+
+.usage-banner-msg {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+/* ── Loading / Empty ─────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+}
+
+.loading-text {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  font-size: 56px;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.4;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 8px;
+}
+
+.empty-state-subtitle {
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 24px;
+  max-width: 360px;
+}
+
+/* ── Table Card ──────────────────────────────────────────────────────────────── */
+.links-table-card {
+  overflow: hidden;
+}
+
+/* ── Bulk bar ────────────────────────────────────────────────────────────────── */
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(99, 91, 255, 0.05);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.bulk-bar-count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+}
+
+.bulk-bar-end {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-popover-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bulk-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  min-width: 160px;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  padding: 4px;
+}
+
+.bulk-tags-popover {
+  display: flex;
+  gap: 8px;
+  min-width: 280px;
+  padding: 8px;
+}
+
+.bulk-popover-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  text-align: left;
+  border-radius: 6px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.bulk-popover-item:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+/* ── Table scroll ────────────────────────────────────────────────────────────── */
+.table-scroll {
+  overflow-x: auto;
+}
+
+/* ── Row states ──────────────────────────────────────────────────────────────── */
+.row--selected {
+  background: rgba(99, 91, 255, 0.04);
+}
+
+/* ── Link cell content ───────────────────────────────────────────────────────── */
+.link-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface);
+}
+
+.link-dest {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.link-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.link-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.link-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* ── Short URL cell ──────────────────────────────────────────────────────────── */
+.short-url-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.short-url-link {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.short-url-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Other cells ─────────────────────────────────────────────────────────────── */
+.click-count {
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.date-cell {
+  font-size: 0.82rem;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────────────── */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pagination-ellipsis {
+  padding: 0 6px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Snackbar ────────────────────────────────────────────────────────────────── */
+.m3-snackbar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #1C1B1F;
+  color: #E6E1E5;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.snack-enter-active,
+.snack-leave-active { transition: all 0.25s; }
+.snack-enter-from,
+.snack-leave-to { transform: translateY(80px); opacity: 0; }
 </style>

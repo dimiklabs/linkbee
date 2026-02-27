@@ -67,9 +67,10 @@ func NewLinkService(linkRepo repository.LinkRepositoryI, appCfg *config.AppConfi
 }
 
 func (s *linkService) CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError) {
-	// Validate destination URL
-	if _, err := url.ParseRequestURI(req.DestinationURL); err != nil {
-		return nil, dto.NewBadRequestError(constant.ErrCodeInvalidURL, constant.ErrMsgInvalidURL)
+	// Validate destination URL — only allow http and https schemes
+	parsedURL, err := url.Parse(req.DestinationURL)
+	if err != nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+		return nil, dto.NewBadRequestError(constant.ErrCodeInvalidURL, "Only HTTP and HTTPS URLs are supported")
 	}
 
 	// Determine slug

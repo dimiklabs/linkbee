@@ -1,23 +1,18 @@
-<script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { useUiStore } from '@/stores/ui';
-
-const uiStore = useUiStore();
-
-onMounted(() => {
-  uiStore.initDarkMode();
-  window.addEventListener('resize', uiStore.handleResize);
-});
-
-onUnmounted(() => {
-  window.removeEventListener('resize', uiStore.handleResize);
-});
-</script>
-
 <template>
-  <router-view/>
+  <router-view />
 </template>
 
-<style lang="scss">
-@import '@/assets/styles/main.scss';
-</style>
+<script setup lang="ts">
+import { watch, onMounted } from 'vue';
+import { useUIStore } from '@/stores/ui';
+
+const uiStore = useUIStore();
+
+function applyTheme(dark: boolean) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+}
+
+onMounted(() => applyTheme(uiStore.darkMode));
+watch(() => uiStore.darkMode, applyTheme);
+</script>

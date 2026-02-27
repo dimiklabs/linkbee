@@ -1,198 +1,168 @@
 <template>
   <div class="auth-wrapper">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12" style="max-width: 420px;">
+    <div class="auth-container">
 
-          <!-- Logo -->
-          <div class="text-center mb-4">
-            <div class="auth-logo">🔗 Shortlink</div>
-            <p class="text-muted small mt-1">Create your account</p>
-          </div>
-
-          <!-- Success state -->
-          <div v-if="successState" class="card shadow-sm border-0 auth-card">
-            <div class="card-body p-4 text-center">
-              <div class="mb-3" style="font-size: 3rem;">✅</div>
-              <h5 class="fw-semibold mb-2">Check your email!</h5>
-              <p class="text-muted small mb-4">
-                We've sent a verification link to <strong>{{ registeredEmail }}</strong>.
-                Click the link in the email to verify your account and get started.
-              </p>
-              <router-link to="/auth/login" class="btn btn-primary px-4">
-                Go to Sign In
-              </router-link>
-            </div>
-          </div>
-
-          <!-- Signup Card -->
-          <div v-else class="card shadow-sm border-0 auth-card">
-            <div class="card-body p-4">
-
-              <!-- Error Alert -->
-              <div v-if="errorMessage" class="alert alert-danger alert-dismissible py-2 small" role="alert">
-                {{ errorMessage }}
-                <button type="button" class="btn-close btn-close-sm" @click="errorMessage = ''"></button>
-              </div>
-
-              <!-- Signup Form -->
-              <form @submit.prevent="handleSignup" novalidate>
-
-                <!-- First Name + Last Name row -->
-                <div class="row g-2 mb-3">
-                  <div class="col-6">
-                    <label for="firstName" class="form-label">First Name</label>
-                    <input
-                      id="firstName"
-                      v-model="form.firstName"
-                      type="text"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.firstName }"
-                      placeholder="John"
-                      autocomplete="given-name"
-                    />
-                    <div v-if="errors.firstName" class="invalid-feedback">{{ errors.firstName }}</div>
-                  </div>
-                  <div class="col-6">
-                    <label for="lastName" class="form-label">Last Name</label>
-                    <input
-                      id="lastName"
-                      v-model="form.lastName"
-                      type="text"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.lastName }"
-                      placeholder="Doe"
-                      autocomplete="family-name"
-                    />
-                    <div v-if="errors.lastName" class="invalid-feedback">{{ errors.lastName }}</div>
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="email" class="form-label">Email address</label>
-                  <input
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="form-control"
-                    :class="{ 'is-invalid': errors.email }"
-                    placeholder="you@example.com"
-                    autocomplete="email"
-                    required
-                  />
-                  <div v-if="errors.email" class="invalid-feedback">{{ errors.email }}</div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="password" class="form-label">Password</label>
-                  <div class="input-group">
-                    <input
-                      id="password"
-                      v-model="form.password"
-                      :type="showPassword ? 'text' : 'password'"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.password }"
-                      placeholder="Min. 8 characters"
-                      autocomplete="new-password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      @click="showPassword = !showPassword"
-                      tabindex="-1"
-                    >
-                      {{ showPassword ? '🙈' : '👁️' }}
-                    </button>
-                    <div v-if="errors.password" class="invalid-feedback">{{ errors.password }}</div>
-                  </div>
-                  <div class="form-text text-muted" style="font-size: 0.75rem;">
-                    Must be at least 8 characters long.
-                  </div>
-                </div>
-
-                <div class="mb-4">
-                  <label for="confirmPassword" class="form-label">Confirm Password</label>
-                  <div class="input-group">
-                    <input
-                      id="confirmPassword"
-                      v-model="form.confirmPassword"
-                      :type="showConfirmPassword ? 'text' : 'password'"
-                      class="form-control"
-                      :class="{ 'is-invalid': errors.confirmPassword }"
-                      placeholder="••••••••"
-                      autocomplete="new-password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      @click="showConfirmPassword = !showConfirmPassword"
-                      tabindex="-1"
-                    >
-                      {{ showConfirmPassword ? '🙈' : '👁️' }}
-                    </button>
-                    <div v-if="errors.confirmPassword" class="invalid-feedback">{{ errors.confirmPassword }}</div>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  class="btn btn-primary w-100"
-                  :disabled="loading"
-                >
-                  <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Create Account
-                </button>
-              </form>
-
-              <!-- Divider -->
-              <div class="auth-divider my-4">
-                <span class="text-muted small">Or sign up with</span>
-              </div>
-
-              <!-- OAuth Buttons -->
-              <div class="d-flex gap-2">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('google')"
-                >
-                  <span class="fw-bold" style="font-size: 0.75rem;">G</span>
-                  <span class="d-none d-sm-inline ms-1">Google</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('github')"
-                >
-                  <span class="fw-bold" style="font-size: 0.75rem;">GH</span>
-                  <span class="d-none d-sm-inline ms-1">GitHub</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('facebook')"
-                >
-                  <span class="fw-bold" style="font-size: 0.75rem;">FB</span>
-                  <span class="d-none d-sm-inline ms-1">Facebook</span>
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Sign in link -->
-          <p class="text-center mt-4 text-muted small">
-            Already have an account?
-            <router-link to="/auth/login" class="text-decoration-none fw-medium" style="color: #635bff;">Sign in</router-link>
-          </p>
-
-        </div>
+      <!-- Logo -->
+      <div class="auth-logo-wrap">
+        <div class="logo-icon">S</div>
+        <span class="logo-text">Shortlink</span>
       </div>
+
+      <!-- Success state -->
+      <div v-if="successState" class="m3-card m3-card--elevated auth-card text-center">
+        <span class="material-symbols-outlined success-icon">check_circle</span>
+        <h2 class="md-headline-small" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">Check your email!</h2>
+        <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 28px;">
+          We've sent a verification link to <strong>{{ registeredEmail }}</strong>.
+          Click the link in the email to verify your account and get started.
+        </p>
+        <router-link to="/auth/login" style="text-decoration: none;">
+          <md-filled-button>Go to Sign In</md-filled-button>
+        </router-link>
+      </div>
+
+      <!-- Signup Card -->
+      <div v-else class="m3-card m3-card--elevated auth-card">
+
+        <h1 class="md-headline-small auth-heading">Create your account</h1>
+
+        <!-- Error Banner -->
+        <div v-if="errorMessage" class="error-banner">
+          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+          <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+          <md-icon-button @click="errorMessage = ''">
+            <span class="material-symbols-outlined">close</span>
+          </md-icon-button>
+        </div>
+
+        <!-- Signup Form -->
+        <form @submit.prevent="handleSignup" novalidate>
+
+          <!-- First Name + Last Name row -->
+          <div class="name-row">
+            <div class="field-wrap" style="flex: 1;">
+              <md-outlined-text-field
+                :value="form.firstName"
+                @input="form.firstName = ($event.target as HTMLInputElement).value"
+                label="First Name"
+                type="text"
+                autocomplete="given-name"
+                :error="!!errors.firstName"
+                :error-text="errors.firstName"
+                style="width: 100%;"
+              />
+            </div>
+            <div class="field-wrap" style="flex: 1;">
+              <md-outlined-text-field
+                :value="form.lastName"
+                @input="form.lastName = ($event.target as HTMLInputElement).value"
+                label="Last Name"
+                type="text"
+                autocomplete="family-name"
+                :error="!!errors.lastName"
+                :error-text="errors.lastName"
+                style="width: 100%;"
+              />
+            </div>
+          </div>
+
+          <div class="field-wrap">
+            <md-outlined-text-field
+              :value="form.email"
+              @input="form.email = ($event.target as HTMLInputElement).value"
+              label="Email address"
+              type="email"
+              autocomplete="email"
+              :error="!!errors.email"
+              :error-text="errors.email"
+              style="width: 100%;"
+            />
+          </div>
+
+          <div class="field-wrap">
+            <md-outlined-text-field
+              :value="form.password"
+              @input="form.password = ($event.target as HTMLInputElement).value"
+              label="Password"
+              :type="showPassword ? 'text' : 'password'"
+              autocomplete="new-password"
+              :error="!!errors.password"
+              :error-text="errors.password"
+              supporting-text="Must be at least 8 characters long."
+              style="width: 100%;"
+            >
+              <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+              </md-icon-button>
+            </md-outlined-text-field>
+          </div>
+
+          <div class="field-wrap">
+            <md-outlined-text-field
+              :value="form.confirmPassword"
+              @input="form.confirmPassword = ($event.target as HTMLInputElement).value"
+              label="Confirm Password"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              autocomplete="new-password"
+              :error="!!errors.confirmPassword"
+              :error-text="errors.confirmPassword"
+              style="width: 100%;"
+            >
+              <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
+                <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+              </md-icon-button>
+            </md-outlined-text-field>
+          </div>
+
+          <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-top: 8px;">
+            <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            Create Account
+          </md-filled-button>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+          <md-divider />
+          <span class="divider-label md-body-small">Or sign up with</span>
+          <md-divider />
+        </div>
+
+        <!-- OAuth Buttons -->
+        <div class="oauth-row">
+          <md-outlined-button
+            :disabled="oauthLoading"
+            @click="handleOAuth('google')"
+            style="flex: 1;"
+          >
+            <span class="oauth-icon">G</span>
+            <span class="oauth-label">Google</span>
+          </md-outlined-button>
+          <md-outlined-button
+            :disabled="oauthLoading"
+            @click="handleOAuth('github')"
+            style="flex: 1;"
+          >
+            <span class="oauth-icon">GH</span>
+            <span class="oauth-label">GitHub</span>
+          </md-outlined-button>
+          <md-outlined-button
+            :disabled="oauthLoading"
+            @click="handleOAuth('facebook')"
+            style="flex: 1;"
+          >
+            <span class="oauth-icon">FB</span>
+            <span class="oauth-label">Facebook</span>
+          </md-outlined-button>
+        </div>
+
+      </div>
+
+      <!-- Sign in link -->
+      <p class="auth-footer-text md-body-medium">
+        Already have an account?
+        <router-link to="/auth/login" class="auth-link">Sign in</router-link>
+      </p>
+
     </div>
   </div>
 </template>
@@ -316,47 +286,128 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #f7f9fc 0%, #eef0ff 100%);
-  padding: 2rem 1rem;
+  justify-content: center;
+  background: var(--md-sys-color-background);
+  padding: 32px 16px;
 }
 
-.auth-logo {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #635bff;
-  letter-spacing: -0.5px;
+.auth-container {
+  width: 100%;
+  max-width: 420px;
 }
 
-.auth-card {
-  border-radius: 12px;
-}
-
-.auth-divider {
-  position: relative;
-  text-align: center;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background-color: #dee2e6;
-  }
-
-  span {
-    position: relative;
-    background: #fff;
-    padding: 0 1rem;
-  }
-}
-
-.oauth-btn {
+.auth-logo-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
-  padding: 0.5rem 0.5rem;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 700;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.logo-text {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.auth-card {
+  padding: 32px;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.auth-heading {
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 24px;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.success-icon {
+  font-size: 56px;
+  color: var(--md-sys-color-primary);
+  display: block;
+  margin-bottom: 16px;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.name-row {
+  display: flex;
+  gap: 12px;
+}
+
+.field-wrap {
+  margin-bottom: 16px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0;
+
+  md-divider {
+    flex: 1;
+  }
+}
+
+.divider-label {
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.oauth-row {
+  display: flex;
+  gap: 8px;
+}
+
+.oauth-icon {
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.oauth-label {
+  margin-left: 4px;
+}
+
+.auth-footer-text {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.auth-link {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 </style>

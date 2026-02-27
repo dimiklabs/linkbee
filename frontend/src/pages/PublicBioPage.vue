@@ -1,78 +1,69 @@
 <template>
   <div
-    class="min-vh-100 d-flex flex-column align-items-center py-5 px-3"
-    :class="theme === 'dark' ? 'bg-dark text-white' : 'bg-light text-dark'"
+    class="bio-page"
+    :class="theme === 'dark' ? 'bio-page--dark' : 'bio-page--light'"
   >
     <!-- Loading -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border" :class="theme === 'dark' ? 'text-light' : 'text-primary'" role="status"></div>
+    <div v-if="loading" class="bio-loading">
+      <md-circular-progress indeterminate style="--md-circular-progress-size:48px;" />
     </div>
 
     <!-- Not found -->
-    <div v-else-if="notFound" class="text-center py-5">
-      <h3 class="fw-bold mb-2">Page not found</h3>
-      <p class="text-muted mb-4">This bio page doesn't exist or has been unpublished.</p>
-      <a href="/" class="btn btn-primary">Go home</a>
+    <div v-else-if="notFound" class="bio-not-found">
+      <span class="material-symbols-outlined not-found-icon">link_off</span>
+      <h3 class="md-headline-small not-found-title">Page not found</h3>
+      <p class="md-body-medium not-found-desc">This bio page doesn't exist or has been unpublished.</p>
+      <a href="/">
+        <md-filled-button>Go home</md-filled-button>
+      </a>
     </div>
 
     <!-- Bio page -->
-    <div v-else-if="page" class="w-100" style="max-width: 480px;">
+    <div v-else-if="page" class="bio-content">
 
       <!-- Profile header -->
-      <div class="text-center mb-5">
+      <div class="bio-profile">
         <!-- Avatar -->
-        <div class="mb-3">
+        <div class="bio-avatar-wrap">
           <img
-            v-if="page.avatar_url"
+            v-if="page.avatar_url && !avatarError"
             :src="page.avatar_url"
             :alt="page.title"
-            class="rounded-circle border"
-            :class="theme === 'dark' ? 'border-secondary' : 'border-light'"
-            style="width: 88px; height: 88px; object-fit: cover;"
+            class="bio-avatar"
             @error="avatarError = true"
           />
-          <div
-            v-else
-            class="rounded-circle d-inline-flex align-items-center justify-content-center fw-bold"
-            :class="theme === 'dark' ? 'bg-secondary text-white' : 'bg-primary text-white'"
-            style="width: 88px; height: 88px; font-size: 2rem;"
-          >
+          <div v-else class="bio-avatar bio-avatar--fallback">
             {{ (page.title || page.username).charAt(0).toUpperCase() }}
           </div>
         </div>
 
-        <h1 class="fw-bold mb-1" style="font-size: 1.4rem;">{{ page.title || page.username }}</h1>
-        <p
-          v-if="page.description"
-          class="mb-0"
-          :class="theme === 'dark' ? 'text-light opacity-75' : 'text-muted'"
-          style="font-size: 0.92rem;"
-        >
+        <h1 class="md-title-large bio-name">{{ page.title || page.username }}</h1>
+        <p v-if="page.description" class="md-body-medium bio-description">
           {{ page.description }}
         </p>
       </div>
 
       <!-- Links -->
-      <div class="d-flex flex-column gap-3">
+      <div class="bio-links">
         <a
           v-for="link in activeLinks"
           :key="link.id"
           :href="link.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="bio-link-btn text-decoration-none text-center px-4 py-3 rounded-3 fw-semibold"
-          :class="theme === 'dark' ? 'bio-link-dark' : 'bio-link-light'"
+          class="bio-link-card m3-card--outlined"
+          :class="theme === 'dark' ? 'bio-link-card--dark' : 'bio-link-card--light'"
         >
-          {{ link.title }}
+          <span class="md-label-large bio-link-title">{{ link.title }}</span>
+          <span class="material-symbols-outlined bio-link-arrow">open_in_new</span>
         </a>
       </div>
 
       <!-- Powered by footer -->
-      <div class="text-center mt-5">
+      <div class="bio-footer">
         <a
           href="/"
-          :class="theme === 'dark' ? 'text-light opacity-50' : 'text-muted opacity-75'"
-          style="font-size: 0.78rem; text-decoration: none;"
+          class="bio-powered-link md-body-small"
         >
           Powered by Shortlink
         </a>
@@ -116,33 +107,163 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
-.bio-link-light {
-  background-color: #ffffff;
-  border: 1.5px solid #e2e2e2;
-  color: #1a1a2e;
-  transition: background-color 0.15s, transform 0.1s;
-}
-.bio-link-light:hover {
-  background-color: #f4f4f6;
-  transform: translateY(-1px);
-  color: #1a1a2e;
+<style scoped lang="scss">
+.bio-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px;
+
+  &--light {
+    background: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+  }
+
+  &--dark {
+    background: #0f0f1a;
+    color: #e8e8f0;
+  }
 }
 
-.bio-link-dark {
-  background-color: #2a2a3e;
-  border: 1.5px solid #3d3d5c;
-  color: #e8e8f0;
-  transition: background-color 0.15s, transform 0.1s;
-}
-.bio-link-dark:hover {
-  background-color: #35354f;
-  transform: translateY(-1px);
-  color: #ffffff;
+.bio-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
 }
 
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.bio-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  gap: 12px;
+
+  a {
+    text-decoration: none;
+    margin-top: 8px;
+  }
+}
+
+.not-found-icon {
+  font-size: 56px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.not-found-title {
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
+}
+
+.not-found-desc {
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+.bio-content {
+  width: 100%;
+  max-width: 480px;
+}
+
+.bio-profile {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.bio-avatar-wrap {
+  margin-bottom: 16px;
+}
+
+.bio-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--md-sys-color-outline-variant);
+
+  &--fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    font-size: 2rem;
+    font-weight: 700;
+    border: none;
+  }
+}
+
+.bio-name {
+  margin-bottom: 8px;
+  color: inherit;
+}
+
+.bio-description {
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.6;
+}
+
+.bio-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bio-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &--light {
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &--dark {
+    background: #1e1e30;
+    border-color: #3d3d5c;
+    color: #e8e8f0;
+
+    &:hover {
+      background: #28283d;
+    }
+  }
+}
+
+.bio-link-title {
+  color: inherit;
+}
+
+.bio-link-arrow {
+  font-size: 18px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.bio-footer {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.bio-powered-link {
+  color: var(--md-sys-color-on-surface-variant);
+  text-decoration: none;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 </style>

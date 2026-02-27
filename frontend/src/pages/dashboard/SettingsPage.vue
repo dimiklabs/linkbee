@@ -1,366 +1,378 @@
 <template>
-  <div class="container-fluid py-4" style="max-width: 780px;">
-    <div class="mb-4">
-      <h4 class="mb-1 fw-bold">Profile & Settings</h4>
-      <p class="text-muted small mb-0">Manage your account information and security preferences.</p>
+  <div class="settings-page">
+    <!-- Page header -->
+    <div class="page-header">
+      <h1 class="md-headline-small">Profile &amp; Settings</h1>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:4px 0 0;">
+        Manage your account information and security preferences.
+      </p>
     </div>
 
     <!-- ── Profile ──────────────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white border-bottom py-3 px-4">
-        <span class="fw-semibold">Profile Information</span>
+    <div class="m3-card m3-card--outlined section-card">
+      <div class="card-section-header">
+        <span class="md-title-medium">Profile Information</span>
       </div>
-      <div class="card-body px-4 py-4">
-        <div class="d-flex align-items-center gap-4 mb-4">
-          <!-- Avatar preview -->
-          <div class="flex-shrink-0">
-            <div
-              class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
-              :style="{ width: '80px', height: '80px', fontSize: '1.75rem', backgroundImage: avatarPreviewUrl ? `url(${avatarPreviewUrl})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center', backgroundColor: avatarPreviewUrl ? 'transparent' : '#635bff' }"
-            >
-              <span v-if="!avatarPreviewUrl">{{ authStore.userInitials }}</span>
-            </div>
+      <div class="card-section-body">
+        <!-- Avatar row -->
+        <div class="avatar-row">
+          <div
+            class="avatar-circle"
+            :style="{
+              backgroundImage: avatarPreviewUrl ? `url(${avatarPreviewUrl})` : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundColor: avatarPreviewUrl ? 'transparent' : 'var(--md-sys-color-primary)',
+            }"
+          >
+            <span v-if="!avatarPreviewUrl" style="color:#fff;font-weight:700;font-size:1.75rem;">
+              {{ authStore.userInitials }}
+            </span>
           </div>
-          <div class="flex-fill">
-            <!-- Primary: file picker -->
-            <label class="form-label small fw-medium mb-1">Profile photo</label>
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <label class="btn btn-sm btn-outline-secondary choose-photo-btn" style="cursor:pointer;white-space:nowrap;">
+          <div class="avatar-controls">
+            <div class="md-label-large" style="margin-bottom:8px;">Profile photo</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <label class="choose-photo-label">
+                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">upload</span>
                 Choose photo
                 <input
                   ref="avatarFileInputRef"
                   type="file"
                   accept="image/*"
-                  class="visually-hidden"
+                  style="display:none"
                   @change="onAvatarFileChange"
                 />
               </label>
-              <span class="text-muted small text-truncate" style="max-width:180px;">
+              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                 {{ avatarFileName || 'No file chosen' }}
               </span>
             </div>
-            <!-- Secondary: URL input (collapsed by default) -->
-            <div>
-              <button
-                class="btn btn-link btn-sm p-0 text-muted small"
-                type="button"
-                @click="showUrlInput = !showUrlInput"
-                style="text-decoration:none;"
-              >
+            <div style="margin-top:8px;">
+              <md-text-button @click="showUrlInput = !showUrlInput" style="--md-text-button-label-text-color:var(--md-sys-color-on-surface-variant);">
                 {{ showUrlInput ? 'Hide URL input' : 'Or enter image URL manually' }}
-              </button>
-              <div v-if="showUrlInput" class="mt-1">
-                <input
-                  v-model="profileForm.profile_picture"
+              </md-text-button>
+              <div v-if="showUrlInput" style="margin-top:8px;">
+                <md-outlined-text-field
+                  :value="profileForm.profile_picture"
+                  @input="profileForm.profile_picture = ($event.target as HTMLInputElement).value"
+                  label="Image URL"
                   type="url"
-                  class="form-control form-control-sm"
-                  placeholder="https://example.com/avatar.png"
+                  style="width:100%;"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        <div class="row g-3 mb-3">
-          <div class="col-sm-6">
-            <label class="form-label small fw-medium">First name</label>
-            <input v-model="profileForm.first_name" type="text" class="form-control" placeholder="First name" maxlength="50" />
-          </div>
-          <div class="col-sm-6">
-            <label class="form-label small fw-medium">Last name</label>
-            <input v-model="profileForm.last_name" type="text" class="form-control" placeholder="Last name" maxlength="50" />
-          </div>
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Email</label>
-          <input
-            :value="authStore.profile?.email"
-            type="email"
-            class="form-control bg-light text-muted"
-            readonly
+        <!-- Name row -->
+        <div class="form-row-2">
+          <md-outlined-text-field
+            :value="profileForm.first_name"
+            @input="profileForm.first_name = ($event.target as HTMLInputElement).value"
+            label="First name"
+            maxlength="50"
+            style="width:100%;"
           />
-          <div class="form-text">Email cannot be changed here.</div>
+          <md-outlined-text-field
+            :value="profileForm.last_name"
+            @input="profileForm.last_name = ($event.target as HTMLInputElement).value"
+            label="Last name"
+            maxlength="50"
+            style="width:100%;"
+          />
         </div>
 
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Phone</label>
-          <input v-model="profileForm.phone" type="tel" class="form-control" placeholder="+1 555 000 0000" maxlength="20" />
+        <!-- Email (readonly) -->
+        <md-outlined-text-field
+          :value="authStore.profile?.email ?? ''"
+          label="Email"
+          type="email"
+          readonly
+          style="width:100%;margin-bottom:16px;"
+        >
+          <span slot="supporting-text">Email cannot be changed here.</span>
+        </md-outlined-text-field>
+
+        <!-- Phone -->
+        <md-outlined-text-field
+          :value="profileForm.phone"
+          @input="profileForm.phone = ($event.target as HTMLInputElement).value"
+          label="Phone"
+          type="tel"
+          maxlength="20"
+          style="width:100%;margin-bottom:20px;"
+        />
+
+        <!-- Feedback -->
+        <div v-if="profileSuccess" class="feedback-success">
+          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          {{ profileSuccess }}
+        </div>
+        <div v-if="profileError" class="feedback-error">
+          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          {{ profileError }}
         </div>
 
-        <div v-if="profileSuccess" class="alert alert-success py-2 small">{{ profileSuccess }}</div>
-        <div v-if="profileError" class="alert alert-danger py-2 small">{{ profileError }}</div>
-
-        <button class="btn btn-primary" :disabled="savingProfile" @click="saveProfile">
-          <span v-if="savingProfile" class="spinner-border spinner-border-sm me-2"></span>
+        <md-filled-button :disabled="savingProfile" @click="saveProfile">
+          <md-circular-progress v-if="savingProfile" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Save profile
-        </button>
+        </md-filled-button>
       </div>
     </div>
 
     <!-- ── Change Password ──────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white border-bottom py-3 px-4">
-        <span class="fw-semibold">Change Password</span>
+    <div class="m3-card m3-card--outlined section-card">
+      <div class="card-section-header">
+        <span class="md-title-medium">Change Password</span>
       </div>
-      <div class="card-body px-4 py-4">
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Current password</label>
-          <input
-            v-model="passwordForm.old_password"
-            type="password"
-            class="form-control"
-            autocomplete="current-password"
-            placeholder="Enter current password"
-          />
+      <div class="card-section-body">
+        <md-outlined-text-field
+          :value="passwordForm.old_password"
+          @input="passwordForm.old_password = ($event.target as HTMLInputElement).value"
+          label="Current password"
+          type="password"
+          autocomplete="current-password"
+          style="width:100%;margin-bottom:16px;"
+        />
+        <md-outlined-text-field
+          :value="passwordForm.new_password"
+          @input="passwordForm.new_password = ($event.target as HTMLInputElement).value"
+          label="New password (at least 8 characters)"
+          type="password"
+          autocomplete="new-password"
+          style="width:100%;margin-bottom:16px;"
+        />
+        <md-outlined-text-field
+          :value="passwordForm.confirm_password"
+          @input="passwordForm.confirm_password = ($event.target as HTMLInputElement).value"
+          label="Confirm new password"
+          type="password"
+          autocomplete="new-password"
+          style="width:100%;margin-bottom:4px;"
+          :error="passwordMismatch"
+        >
+          <span v-if="passwordMismatch" slot="error-text">Passwords do not match.</span>
+        </md-outlined-text-field>
+        <div style="margin-bottom:20px;" />
+
+        <div v-if="passwordSuccess" class="feedback-success">
+          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          {{ passwordSuccess }}
         </div>
-        <div class="mb-3">
-          <label class="form-label small fw-medium">New password</label>
-          <input
-            v-model="passwordForm.new_password"
-            type="password"
-            class="form-control"
-            autocomplete="new-password"
-            placeholder="At least 8 characters"
-          />
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-medium">Confirm new password</label>
-          <input
-            v-model="passwordForm.confirm_password"
-            type="password"
-            class="form-control"
-            autocomplete="new-password"
-            placeholder="Repeat new password"
-            :class="{ 'is-invalid': passwordMismatch }"
-          />
-          <div v-if="passwordMismatch" class="invalid-feedback">Passwords do not match.</div>
+        <div v-if="passwordError" class="feedback-error">
+          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          {{ passwordError }}
         </div>
 
-        <div v-if="passwordSuccess" class="alert alert-success py-2 small">{{ passwordSuccess }}</div>
-        <div v-if="passwordError" class="alert alert-danger py-2 small">{{ passwordError }}</div>
-
-        <button class="btn btn-primary" :disabled="savingPassword || !canChangePassword" @click="changePassword">
-          <span v-if="savingPassword" class="spinner-border spinner-border-sm me-2"></span>
+        <md-filled-button :disabled="savingPassword || !canChangePassword" @click="changePassword">
+          <md-circular-progress v-if="savingPassword" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Update password
-        </button>
+        </md-filled-button>
       </div>
     </div>
 
     <!-- ── Notification Preferences ────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white border-bottom py-3 px-4">
-        <span class="fw-semibold">Notification Preferences</span>
+    <div class="m3-card m3-card--outlined section-card">
+      <div class="card-section-header">
+        <span class="md-title-medium">Notification Preferences</span>
       </div>
-      <div class="card-body px-4 py-4">
-
+      <div class="card-section-body">
         <!-- Link expiry warnings -->
-        <div class="d-flex align-items-start gap-3 mb-4">
-          <div class="form-check form-switch flex-shrink-0 mt-1 mb-0">
-            <input
-              id="notif-expiry"
-              v-model="notifPrefs.expiry_warnings"
-              type="checkbox"
-              role="switch"
-              class="form-check-input"
-            />
-          </div>
+        <div class="switch-row">
           <div>
-            <label for="notif-expiry" class="fw-medium mb-1 d-block" style="cursor: pointer;">Link expiry warnings</label>
-            <div class="text-muted small">Get emailed 7 days before a link expires.</div>
+            <div class="md-title-small">Link expiry warnings</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Get emailed 7 days before a link expires.</div>
           </div>
+          <md-switch
+            :selected="notifPrefs.expiry_warnings"
+            @change="notifPrefs.expiry_warnings = ($event.target as HTMLInputElement).checked"
+          />
         </div>
 
         <!-- Health alert emails -->
-        <div class="d-flex align-items-start gap-3 mb-4">
-          <div class="form-check form-switch flex-shrink-0 mt-1 mb-0">
-            <input
-              id="notif-health"
-              v-model="notifPrefs.health_alerts"
-              type="checkbox"
-              role="switch"
-              class="form-check-input"
-            />
-          </div>
+        <div class="switch-row">
           <div>
-            <label for="notif-health" class="fw-medium mb-1 d-block" style="cursor: pointer;">Health alert emails</label>
-            <div class="text-muted small">Notify when a link becomes unhealthy.</div>
+            <div class="md-title-small">Health alert emails</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Notify when a link becomes unhealthy.</div>
           </div>
+          <md-switch
+            :selected="notifPrefs.health_alerts"
+            @change="notifPrefs.health_alerts = ($event.target as HTMLInputElement).checked"
+          />
         </div>
 
         <!-- Weekly analytics digest -->
-        <div class="d-flex align-items-start gap-3 mb-4">
-          <div class="form-check form-switch flex-shrink-0 mt-1 mb-0">
-            <input
-              id="notif-digest"
-              v-model="notifPrefs.weekly_digest"
-              type="checkbox"
-              role="switch"
-              class="form-check-input"
-            />
-          </div>
+        <div class="switch-row">
           <div>
-            <label for="notif-digest" class="fw-medium mb-1 d-block" style="cursor: pointer;">Weekly analytics digest</label>
-            <div class="text-muted small">Summary of clicks sent every Monday.</div>
+            <div class="md-title-small">Weekly analytics digest</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Summary of clicks sent every Monday.</div>
           </div>
+          <md-switch
+            :selected="notifPrefs.weekly_digest"
+            @change="notifPrefs.weekly_digest = ($event.target as HTMLInputElement).checked"
+          />
         </div>
 
         <!-- Click milestone alerts -->
-        <div class="d-flex align-items-start gap-3 mb-4">
-          <div class="form-check form-switch flex-shrink-0 mt-1 mb-0">
-            <input
-              id="notif-milestone"
-              v-model="notifPrefs.milestone_alerts"
-              type="checkbox"
-              role="switch"
-              class="form-check-input"
-            />
-          </div>
+        <div class="switch-row" style="border-bottom:none;">
           <div>
-            <label for="notif-milestone" class="fw-medium mb-1 d-block" style="cursor: pointer;">Click milestone alerts</label>
-            <div class="text-muted small">Notified at 100, 1K, 10K clicks per link.</div>
+            <div class="md-title-small">Click milestone alerts</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Notified at 100, 1K, 10K clicks per link.</div>
           </div>
+          <md-switch
+            :selected="notifPrefs.milestone_alerts"
+            @change="notifPrefs.milestone_alerts = ($event.target as HTMLInputElement).checked"
+          />
         </div>
 
-        <p class="text-muted small mb-3">
+        <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:16px 0 20px;">
           Email preferences affect automated system emails. Transactional emails (password reset, verification) are always sent.
         </p>
 
-        <div v-if="notifSaved" class="alert alert-success py-2 small mb-3">Preferences saved.</div>
+        <div v-if="notifSaved" class="feedback-success" style="margin-bottom:16px;">
+          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          Preferences saved.
+        </div>
 
-        <button class="btn btn-primary" @click="saveNotifPrefs">Save preferences</button>
+        <md-filled-button @click="saveNotifPrefs">Save preferences</md-filled-button>
       </div>
     </div>
 
     <!-- ── Active Sessions ──────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
-        <span class="fw-semibold">Active Sessions</span>
-        <button
-          class="btn btn-sm btn-outline-danger"
+    <div class="m3-card m3-card--outlined section-card">
+      <div class="card-section-header" style="display:flex;align-items:center;justify-content:space-between;">
+        <span class="md-title-medium">Active Sessions</span>
+        <md-outlined-button
           :disabled="revokingAll"
           @click="logoutAllOther"
+          style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
         >
-          <span v-if="revokingAll" class="spinner-border spinner-border-sm me-1"></span>
+          <md-circular-progress v-if="revokingAll" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           Logout all other devices
-        </button>
+        </md-outlined-button>
       </div>
-      <div class="card-body px-0 py-0">
-        <div v-if="sessionsLoading" class="text-center py-4">
-          <div class="spinner-border spinner-border-sm text-primary"></div>
+      <div>
+        <div v-if="sessionsLoading" style="text-align:center;padding:32px 24px;">
+          <md-circular-progress indeterminate />
         </div>
-        <div v-else-if="sessions.length === 0" class="text-center text-muted py-4 small">
-          No active sessions found.
+        <div v-else-if="sessions.length === 0" style="text-align:center;padding:32px 24px;" class="md-body-medium">
+          <span style="color:var(--md-sys-color-on-surface-variant);">No active sessions found.</span>
         </div>
-        <div v-else class="list-group list-group-flush">
+        <div v-else>
           <div
             v-for="session in sessions"
             :key="session.id"
-            class="list-group-item py-3 px-4"
+            class="session-row"
           >
-            <div class="d-flex align-items-start gap-3">
-              <!-- Device icon -->
-              <div class="flex-shrink-0 text-muted mt-1" style="font-size: 1.2rem;">
-                {{ deviceIcon(session.device_type) }}
+            <span class="material-symbols-outlined session-device-icon">
+              {{ session.device_type?.toLowerCase() === 'mobile' ? 'smartphone' : session.device_type?.toLowerCase() === 'tablet' ? 'tablet' : 'computer' }}
+            </span>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="md-label-large">{{ sessionLabel(session) }}</span>
+                <span v-if="session.is_current" class="m3-badge m3-badge--success">Current</span>
+                <span v-if="session.login_method" class="m3-badge m3-badge--neutral">{{ session.login_method }}</span>
               </div>
-              <div class="flex-fill min-w-0">
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                  <span class="fw-medium small">{{ sessionLabel(session) }}</span>
-                  <span v-if="session.is_current" class="badge text-bg-success" style="font-size: 0.7rem;">Current</span>
-                  <span v-if="session.login_method" class="badge bg-light text-secondary border" style="font-size: 0.7rem;">{{ session.login_method }}</span>
-                </div>
-                <div class="text-muted" style="font-size: 0.78rem;">
-                  <span v-if="session.ip_address">{{ session.ip_address }}</span>
-                  <span v-if="session.ip_address && session.last_activity_at"> &middot; </span>
-                  <span>Last active {{ formatRelative(session.last_activity_at) }}</span>
-                </div>
-                <div class="text-muted" style="font-size: 0.75rem;">
-                  Signed in {{ formatDate(session.created_at) }}
-                </div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:2px;">
+                <span v-if="session.ip_address">{{ session.ip_address }}</span>
+                <span v-if="session.ip_address && session.last_activity_at"> · </span>
+                <span>Last active {{ formatRelative(session.last_activity_at) }}</span>
               </div>
-              <button
-                v-if="!session.is_current"
-                class="btn btn-sm btn-outline-danger flex-shrink-0"
-                :disabled="revokingId === session.id"
-                @click="revokeSession(session)"
-              >
-                <span v-if="revokingId === session.id" class="spinner-border spinner-border-sm"></span>
-                <span v-else>Revoke</span>
-              </button>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+                Signed in {{ formatDate(session.created_at) }}
+              </div>
             </div>
+            <md-text-button
+              v-if="!session.is_current"
+              :disabled="revokingId === session.id"
+              @click="revokeSession(session)"
+              style="--md-text-button-label-text-color:var(--md-sys-color-error);"
+            >
+              <md-circular-progress v-if="revokingId === session.id" indeterminate style="--md-circular-progress-size:18px;" />
+              <span v-else>Revoke</span>
+            </md-text-button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ── Data Export ──────────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-header bg-white border-bottom py-3 px-4">
-        <span class="fw-semibold">Data Export</span>
+    <div class="m3-card m3-card--outlined section-card">
+      <div class="card-section-header">
+        <span class="md-title-medium">Data Export</span>
       </div>
-      <div class="card-body px-4 py-4">
-        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div class="card-section-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div>
-            <div class="fw-medium mb-1">Download your data</div>
-            <p class="text-muted small mb-0">
+            <div class="md-label-large" style="margin-bottom:4px;">Download your data</div>
+            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;max-width:480px;">
               Export a JSON file containing your profile information and all your short links.
               Your data will be ready to download immediately.
             </p>
           </div>
-          <button class="btn btn-outline-primary flex-shrink-0" :disabled="exportingData" @click="downloadExport">
-            <span v-if="exportingData" class="spinner-border spinner-border-sm me-2"></span>
-            <span v-else>Download my data</span>
-          </button>
+          <md-filled-tonal-button :disabled="exportingData" @click="downloadExport">
+            <md-circular-progress v-if="exportingData" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+            <span v-else>
+              <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">download</span>
+            </span>
+            Download my data
+          </md-filled-tonal-button>
         </div>
-        <div v-if="exportError" class="alert alert-danger py-2 small mt-3 mb-0">{{ exportError }}</div>
+        <div v-if="exportError" class="feedback-error" style="margin-top:16px;">
+          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          {{ exportError }}
+        </div>
       </div>
     </div>
 
     <!-- ── Danger Zone ──────────────────────────────────────────────────── -->
-    <div class="card border-0 shadow-sm border border-danger border-opacity-25">
-      <div class="card-header bg-danger bg-opacity-10 border-bottom border-danger border-opacity-25 py-3 px-4">
-        <span class="fw-semibold text-danger">Danger Zone</span>
+    <div class="m3-card m3-card--outlined section-card" style="border:1px solid var(--md-sys-color-error);">
+      <div class="card-section-header" style="border-bottom:1px solid var(--md-sys-color-error);background:color-mix(in srgb, var(--md-sys-color-error) 8%, transparent);">
+        <span class="md-title-medium" style="color:var(--md-sys-color-error);">Danger Zone</span>
       </div>
-      <div class="card-body px-4 py-4">
-        <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+      <div class="card-section-body">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
           <div>
-            <div class="fw-medium mb-1">Delete account</div>
-            <p class="text-muted small mb-0">
+            <div class="md-label-large" style="margin-bottom:4px;">Delete account</div>
+            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;max-width:480px;">
               Permanently delete your account and all associated links, analytics, and data.
               This action <strong>cannot be undone</strong>.
             </p>
           </div>
-          <button class="btn btn-outline-danger flex-shrink-0" @click="showDeleteConfirm = true">
+          <md-outlined-button
+            @click="showDeleteConfirm = true"
+            style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
+          >
             Delete account
-          </button>
+          </md-outlined-button>
         </div>
 
         <!-- Delete confirmation -->
-        <div v-if="showDeleteConfirm" class="mt-4 p-3 border border-danger border-opacity-25 rounded bg-danger bg-opacity-5">
-          <p class="small fw-medium mb-2">
+        <div v-if="showDeleteConfirm" class="delete-confirm-box">
+          <p class="md-body-medium" style="margin-bottom:12px;">
             To confirm, type <code>DELETE</code> in the box below:
           </p>
-          <div class="d-flex gap-2 align-items-center">
-            <input
-              v-model="deleteConfirmText"
-              type="text"
-              class="form-control form-control-sm"
-              placeholder="DELETE"
-              style="max-width: 200px;"
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <md-outlined-text-field
+              :value="deleteConfirmText"
+              @input="deleteConfirmText = ($event.target as HTMLInputElement).value"
+              label="Type DELETE"
+              style="max-width:200px;"
             />
-            <button
-              class="btn btn-sm btn-danger"
+            <md-filled-button
               :disabled="deleteConfirmText !== 'DELETE' || deletingAccount"
               @click="deleteAccount"
+              style="--md-filled-button-container-color:var(--md-sys-color-error);"
             >
-              <span v-if="deletingAccount" class="spinner-border spinner-border-sm me-1"></span>
+              <md-circular-progress v-if="deletingAccount" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
               Confirm delete
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" @click="showDeleteConfirm = false; deleteConfirmText = ''">
-              Cancel
-            </button>
+            </md-filled-button>
+            <md-outlined-button @click="showDeleteConfirm = false; deleteConfirmText = ''">Cancel</md-outlined-button>
           </div>
-          <div v-if="deleteError" class="alert alert-danger py-2 small mt-2 mb-0">{{ deleteError }}</div>
+          <div v-if="deleteError" class="feedback-error" style="margin-top:12px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+            {{ deleteError }}
+          </div>
         </div>
       </div>
     </div>
@@ -667,20 +679,138 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.btn-primary {
-  background-color: #635bff;
-  border-color: #635bff;
+.settings-page {
+  max-width: 780px;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-.btn-primary:hover:not(:disabled) {
-  background-color: #5249e0;
-  border-color: #5249e0;
+
+.page-header {
+  margin-bottom: 8px;
 }
-.choose-photo-btn {
-  border-color: #d1d5db;
-  color: #374151;
+
+.section-card {
+  border-radius: 12px;
+  overflow: hidden;
 }
-.choose-photo-btn:hover {
-  background-color: #f3f4f6;
-  border-color: #9ca3af;
+
+.card-section-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.card-section-body {
+  padding: 24px;
+}
+
+.avatar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-controls {
+  flex: 1;
+}
+
+.choose-photo-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  transition: background 0.15s;
+}
+
+.choose-photo-label:hover {
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 540px) {
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.session-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.session-row:last-child {
+  border-bottom: none;
+}
+
+.session-device-icon {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.feedback-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: color-mix(in srgb, #1e7e34 10%, transparent);
+  color: #1e7e34;
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.feedback-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-error);
+  font-size: 0.875rem;
+  margin-bottom: 16px;
+}
+
+.delete-confirm-box {
+  margin-top: 24px;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--md-sys-color-error);
+  background: color-mix(in srgb, var(--md-sys-color-error) 5%, transparent);
 }
 </style>

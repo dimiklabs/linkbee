@@ -1,505 +1,405 @@
 <template>
-  <div class="container-fluid py-4">
+  <div class="page-wrapper">
 
-    <!-- Header + filters -->
-    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+    <!-- Page Header + Filters -->
+    <div class="page-header">
       <div>
-        <h4 class="fw-bold mb-1">Analytics</h4>
-        <p class="text-muted small mb-0">Account-wide click performance across all your links.</p>
+        <h1 class="md-title-large">Analytics</h1>
+        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.25rem;">Account-wide click performance across all your links.</p>
       </div>
-      <div class="d-flex align-items-end gap-2 flex-wrap">
-        <div>
-          <label class="form-label fw-medium small mb-1">From</label>
-          <input v-model="filterFrom" type="date" class="form-control form-control-sm" style="width:140px;" />
-        </div>
-        <div>
-          <label class="form-label fw-medium small mb-1">To</label>
-          <input v-model="filterTo" type="date" class="form-control form-control-sm" style="width:140px;" />
-        </div>
-        <button
-          class="btn btn-primary btn-sm d-flex align-items-center gap-2"
-          :disabled="loading"
-          @click="load"
-        >
-          <span v-if="loading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <div class="page-header__filters">
+        <md-outlined-text-field
+          type="date"
+          label="From"
+          :value="filterFrom"
+          @input="filterFrom = ($event.target as HTMLInputElement).value"
+          style="min-width:150px;"
+        />
+        <md-outlined-text-field
+          type="date"
+          label="To"
+          :value="filterTo"
+          @input="filterTo = ($event.target as HTMLInputElement).value"
+          style="min-width:150px;"
+        />
+        <md-filled-button :disabled="loading" @click="load">
+          <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
           Apply
-        </button>
-        <!-- Quick presets -->
-        <div class="btn-group btn-group-sm">
-          <button
+        </md-filled-button>
+        <md-chip-set>
+          <md-filter-chip
             v-for="p in presets"
             :key="p.label"
-            class="btn btn-outline-secondary"
-            :class="{ active: activePreset === p.label }"
+            :label="p.label"
+            :selected="activePreset === p.label"
             @click="applyPreset(p)"
-          >{{ p.label }}</button>
-        </div>
+          />
+        </md-chip-set>
       </div>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="alert alert-danger d-flex align-items-center gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
-      </svg>
-      {{ error }}
+    <div v-if="error" class="error-banner" style="margin-bottom:1rem;">
+      <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
+      <span class="md-body-medium" style="flex:1;">{{ error }}</span>
     </div>
 
     <!-- Loading skeleton -->
     <template v-if="loading && !data">
-      <div class="stat-grid mb-4">
-        <div v-for="i in 4" :key="i" class="card p-4">
-          <div class="skeleton mb-2" style="width:60%;height:1.8rem;"></div>
-          <div class="skeleton" style="width:40%;height:0.85rem;"></div>
+      <div class="stat-grid" style="margin-bottom:1.5rem;">
+        <div v-for="i in 4" :key="i" class="m3-card m3-card--elevated" style="padding:1.25rem;">
+          <div class="skeleton" style="width:60%;height:1.8rem;border-radius:4px;margin-bottom:0.5rem;"></div>
+          <div class="skeleton" style="width:40%;height:0.85rem;border-radius:4px;"></div>
         </div>
       </div>
     </template>
 
     <template v-else-if="data">
 
-      <!-- ── Stat cards ─────────────────────────────────────────────────── -->
-      <div class="stat-grid mb-4">
-        <div class="stat-card card">
-          <div class="stat-icon">👆</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.total_clicks.toLocaleString() }}</div>
-            <div class="stat-label">Total Clicks</div>
+      <!-- Stat Cards -->
+      <div class="stat-grid" style="margin-bottom:1.5rem;">
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-card__icon" style="background:rgba(99,91,255,0.12);">
+            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);font-size:20px;">ads_click</span>
+          </div>
+          <div class="stat-card__body">
+            <div class="md-headline-small stat-value">{{ data.total_clicks.toLocaleString() }}</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Total Clicks</div>
           </div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">👤</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ data.unique_clicks.toLocaleString() }}</div>
-            <div class="stat-label">Unique Visitors</div>
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-card__icon" style="background:rgba(20,184,166,0.12);">
+            <span class="material-symbols-outlined" style="color:#14b8a6;font-size:20px;">person</span>
+          </div>
+          <div class="stat-card__body">
+            <div class="md-headline-small stat-value">{{ data.unique_clicks.toLocaleString() }}</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Unique Visitors</div>
           </div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">🌍</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ topCountry }}</div>
-            <div class="stat-label">Top Country</div>
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-card__icon" style="background:rgba(245,158,11,0.12);">
+            <span class="material-symbols-outlined" style="color:#f59e0b;font-size:20px;">public</span>
+          </div>
+          <div class="stat-card__body">
+            <div class="md-title-medium stat-value">{{ topCountry }}</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Country</div>
           </div>
         </div>
-        <div class="stat-card card">
-          <div class="stat-icon">📱</div>
-          <div class="stat-body">
-            <div class="stat-value">{{ topDevice }}</div>
-            <div class="stat-label">Top Device</div>
+        <div class="m3-card m3-card--elevated stat-card">
+          <div class="stat-card__icon" style="background:rgba(99,91,255,0.12);">
+            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);font-size:20px;">smartphone</span>
+          </div>
+          <div class="stat-card__body">
+            <div class="md-title-medium stat-value" style="text-transform:capitalize;">{{ topDevice }}</div>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Device</div>
           </div>
         </div>
       </div>
 
-      <!-- ── Period Comparison card ──────────────────────────────────────── -->
-      <div v-if="comparison" class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+      <!-- Period Comparison Card -->
+      <div v-if="comparison" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
+        <div class="card-header-row">
           <div>
-            <h6 class="mb-0 fw-semibold">Period Comparison</h6>
-            <p class="text-muted mb-0" style="font-size: 0.72rem;">
-              Current vs preceding period of equal length
-            </p>
+            <span class="md-title-medium">Period Comparison</span>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Current vs preceding period of equal length</div>
           </div>
-          <span class="badge bg-light text-muted border fw-normal small">
+          <span class="m3-badge m3-badge--neutral">
             {{ formatShortDate(comparison.previous.from) }} → {{ formatShortDate(comparison.current.to) }}
           </span>
         </div>
-        <div class="card-body">
-          <div class="row g-3">
+        <md-divider />
+        <div style="padding:1rem 1.25rem;">
+          <div class="comparison-grid">
             <!-- Total Clicks comparison -->
-            <div class="col-sm-6 col-lg-3">
-              <div class="comparison-metric">
-                <div class="comp-label text-muted small mb-1">Total Clicks</div>
-                <div class="d-flex align-items-baseline gap-2 flex-wrap">
-                  <span class="comp-current fw-bold fs-5">{{ comparison.current.total_clicks.toLocaleString() }}</span>
-                  <span
-                    class="comp-badge"
-                    :class="trendClass(comparison.clicks.trend)"
-                  >
-                    {{ trendArrow(comparison.clicks.trend) }}{{ Math.abs(comparison.clicks.percent_change).toFixed(1) }}%
-                  </span>
-                </div>
-                <div class="comp-prev text-muted" style="font-size: 0.75rem;">
-                  vs {{ comparison.previous.total_clicks.toLocaleString() }} prev. period
-                </div>
+            <div class="comparison-metric">
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Total Clicks</div>
+              <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
+                <span class="md-headline-small">{{ comparison.current.total_clicks.toLocaleString() }}</span>
+                <span
+                  :style="{ color: comparison.clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }"
+                  class="trend-indicator"
+                >
+                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">{{ comparison.clicks.trend === 'up' ? 'trending_up' : 'trending_down' }}</span>
+                  {{ Math.abs(comparison.clicks.percent_change).toFixed(1) }}%
+                </span>
+              </div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
+                vs {{ comparison.previous.total_clicks.toLocaleString() }} prev.
               </div>
             </div>
-
             <!-- Unique Clicks comparison -->
-            <div class="col-sm-6 col-lg-3">
-              <div class="comparison-metric">
-                <div class="comp-label text-muted small mb-1">Unique Clicks</div>
-                <div class="d-flex align-items-baseline gap-2 flex-wrap">
-                  <span class="comp-current fw-bold fs-5">{{ comparison.current.unique_clicks.toLocaleString() }}</span>
-                  <span
-                    class="comp-badge"
-                    :class="trendClass(comparison.unique_clicks.trend)"
-                  >
-                    {{ trendArrow(comparison.unique_clicks.trend) }}{{ Math.abs(comparison.unique_clicks.percent_change).toFixed(1) }}%
-                  </span>
-                </div>
-                <div class="comp-prev text-muted" style="font-size: 0.75rem;">
-                  vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev. period
-                </div>
+            <div class="comparison-metric">
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Unique Clicks</div>
+              <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
+                <span class="md-headline-small">{{ comparison.current.unique_clicks.toLocaleString() }}</span>
+                <span
+                  :style="{ color: comparison.unique_clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }"
+                  class="trend-indicator"
+                >
+                  <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">{{ comparison.unique_clicks.trend === 'up' ? 'trending_up' : 'trending_down' }}</span>
+                  {{ Math.abs(comparison.unique_clicks.percent_change).toFixed(1) }}%
+                </span>
+              </div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
+                vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev.
               </div>
             </div>
-
             <!-- Current period summary -->
-            <div class="col-sm-6 col-lg-3">
-              <div class="comparison-period-box current-period">
-                <div class="comp-period-label">Current Period</div>
-                <div class="comp-period-dates">{{ formatShortDate(comparison.current.from) }} – {{ formatShortDate(comparison.current.to) }}</div>
-                <div class="d-flex gap-3 mt-1">
-                  <span class="small"><strong>{{ comparison.current.total_clicks.toLocaleString() }}</strong> clicks</span>
-                  <span class="small text-muted"><strong>{{ comparison.current.unique_clicks.toLocaleString() }}</strong> unique</span>
-                </div>
+            <div class="comparison-period-box comparison-period-box--current">
+              <div class="md-label-large" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--md-sys-color-primary);margin-bottom:0.2rem;">Current Period</div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:0.25rem;">{{ formatShortDate(comparison.current.from) }} – {{ formatShortDate(comparison.current.to) }}</div>
+              <div style="display:flex;gap:1rem;">
+                <span class="md-body-small"><strong>{{ comparison.current.total_clicks.toLocaleString() }}</strong> clicks</span>
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);"><strong>{{ comparison.current.unique_clicks.toLocaleString() }}</strong> unique</span>
               </div>
             </div>
-
             <!-- Previous period summary -->
-            <div class="col-sm-6 col-lg-3">
-              <div class="comparison-period-box previous-period">
-                <div class="comp-period-label">Previous Period</div>
-                <div class="comp-period-dates">{{ formatShortDate(comparison.previous.from) }} – {{ formatShortDate(comparison.previous.to) }}</div>
-                <div class="d-flex gap-3 mt-1">
-                  <span class="small"><strong>{{ comparison.previous.total_clicks.toLocaleString() }}</strong> clicks</span>
-                  <span class="small text-muted"><strong>{{ comparison.previous.unique_clicks.toLocaleString() }}</strong> unique</span>
-                </div>
+            <div class="comparison-period-box comparison-period-box--previous">
+              <div class="md-label-large" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--md-sys-color-on-surface-variant);margin-bottom:0.2rem;">Previous Period</div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:0.25rem;">{{ formatShortDate(comparison.previous.from) }} – {{ formatShortDate(comparison.previous.to) }}</div>
+              <div style="display:flex;gap:1rem;">
+                <span class="md-body-small"><strong>{{ comparison.previous.total_clicks.toLocaleString() }}</strong> clicks</span>
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);"><strong>{{ comparison.previous.unique_clicks.toLocaleString() }}</strong> unique</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Click Trend ────────────────────────────────────────────────── -->
-      <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-transparent border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
-          <h6 class="mb-0 fw-semibold">Click Trend</h6>
-          <span class="text-muted small">{{ formatDate(data.from) }} – {{ formatDate(data.to) }}</span>
+      <!-- Click Trend Chart -->
+      <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
+        <div class="card-header-row">
+          <span class="md-title-medium">Click Trend</span>
+          <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ formatDate(data.from) }} – {{ formatDate(data.to) }}</span>
         </div>
-        <div class="card-body px-3 pb-3 pt-2">
-          <div v-if="!data.time_series.length" class="text-center py-4 text-muted small">
+        <md-divider />
+        <div style="padding:0.75rem 1rem;">
+          <div v-if="!data.time_series.length" class="empty-state">
             No click data for this period.
           </div>
-          <VChart v-else :option="trendOption" style="height: 240px;" autoresize />
+          <VChart v-else :option="trendOption" style="height:240px;" autoresize />
         </div>
       </div>
 
-      <!-- ── Two-column: Countries + Devices ────────────────────────────── -->
-      <div class="row g-4 mb-4">
+      <!-- Two-column: Countries + Devices -->
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
         <!-- Top Countries -->
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Top Countries</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.top_countries.length" class="text-center text-muted small py-3">No country data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(c, idx) in data.top_countries"
-                  :key="c.country"
-                  class="country-row d-flex align-items-center gap-3 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
-                  <span class="flex-grow-1 small fw-medium">{{ countryName(c.country) }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:120px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: countryPct(c.count) + '%', backgroundColor: '#635bff' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Top Countries</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.top_countries.length" class="empty-state">No country data yet.</div>
+            <div v-else class="breakdown-list">
+              <div
+                v-for="(c, idx) in data.top_countries"
+                :key="c.country"
+                class="country-item"
+              >
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
+                <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ countryName(c.country) }}</span>
+                <md-linear-progress :value="countryPct(c.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Device Breakdown -->
-        <div class="col-lg-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Device Breakdown</h6>
-            </div>
-            <div class="card-body d-flex flex-column align-items-center justify-content-center py-3">
-              <div v-if="!data.device_breakdown.length" class="text-center text-muted small py-3">No device data yet.</div>
-              <template v-else>
-                <VChart :option="deviceOption" style="height: 200px;width:100%;" autoresize />
-                <div class="d-flex flex-wrap justify-content-center gap-3 mt-1">
-                  <div v-for="(d, idx) in data.device_breakdown" :key="d.device_type" class="d-flex align-items-center gap-1">
-                    <span class="legend-dot" :style="{ backgroundColor: DEVICE_COLORS[idx % DEVICE_COLORS.length] }"></span>
-                    <span class="small text-muted">{{ deviceLabel(d.device_type) }}</span>
-                    <span class="small fw-medium">{{ d.count.toLocaleString() }}</span>
-                  </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Device Breakdown</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.device_breakdown.length" class="empty-state">No device data yet.</div>
+            <template v-else>
+              <VChart :option="deviceOption" style="height:200px;width:100%;" autoresize />
+              <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:0.75rem;margin-top:0.5rem;">
+                <div v-for="(d, idx) in data.device_breakdown" :key="d.device_type" style="display:flex;align-items:center;gap:0.35rem;">
+                  <span class="legend-dot" :style="{ backgroundColor: DEVICE_COLORS[idx % DEVICE_COLORS.length] }"></span>
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ deviceLabel(d.device_type) }}</span>
+                  <span class="md-body-small" style="font-weight:600;">{{ d.count.toLocaleString() }}</span>
                 </div>
-              </template>
-            </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
 
-      <!-- ── Two-column: OS + City ───────────────────────────────────────── -->
-      <div class="row g-4 mb-4">
+      <!-- Two-column: OS + Top Cities -->
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
         <!-- OS Breakdown -->
-        <div class="col-lg-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Operating Systems</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.os_breakdown.length" class="text-center text-muted small py-3">No OS data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(o, idx) in data.os_breakdown"
-                  :key="o.os"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium">{{ o.os || 'Unknown' }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:100px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: osPct(o.count) + '%', backgroundColor: '#6366f1' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ o.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Operating Systems</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.os_breakdown.length" class="empty-state">No OS data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(o, idx) in data.os_breakdown" :key="o.os" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ o.os || 'Unknown' }}</span>
+                <md-linear-progress :value="osPct(o.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ o.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Top Cities -->
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Top Cities</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.top_cities.length" class="text-center text-muted small py-3">No city data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(c, idx) in data.top_cities"
-                  :key="c.city + c.country"
-                  class="d-flex align-items-center gap-3 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
-                  <span class="flex-grow-1 small fw-medium">{{ c.city }}</span>
-                  <span class="text-muted small">{{ countryName(c.country) }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:100px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: cityPct(c.count) + '%', backgroundColor: '#635bff' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Top Cities</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.top_cities.length" class="empty-state">No city data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(c, idx) in data.top_cities" :key="c.city + c.country" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
+                <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.city }}</span>
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ countryName(c.country) }}</span>
+                <md-linear-progress :value="cityPct(c.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Two-column: Browsers + Top Referrers ───────────────────────── -->
-      <div class="row g-4 mb-4">
+      <!-- Two-column: Browsers + Referrers -->
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
         <!-- Top Browsers -->
-        <div class="col-lg-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Top Browsers</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.top_browsers.length" class="text-center text-muted small py-3">No browser data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(b, idx) in data.top_browsers"
-                  :key="b.browser"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium">{{ b.browser || 'Unknown' }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:100px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: browserPct(b.count) + '%', backgroundColor: '#14b8a6' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ b.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Top Browsers</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.top_browsers.length" class="empty-state">No browser data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(b, idx) in data.top_browsers" :key="b.browser" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.browser || 'Unknown' }}</span>
+                <md-linear-progress :value="browserPct(b.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ b.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Top Referrers -->
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Top Referrers</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.top_referrers.length" class="text-center text-muted small py-3">No referrer data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(r, idx) in data.top_referrers"
-                  :key="r.referrer"
-                  class="d-flex align-items-center gap-3 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium text-truncate" style="max-width:260px;" :title="r.referrer">{{ r.referrer }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:120px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: referrerPct(r.count) + '%', backgroundColor: '#f59e0b' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ r.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Top Referrers</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.top_referrers.length" class="empty-state">No referrer data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(r, idx) in data.top_referrers" :key="r.referrer" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;" :title="r.referrer">{{ r.referrer }}</span>
+                <md-linear-progress :value="referrerPct(r.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ r.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Two-column: Click Source + Referrer Categories ────────────── -->
-      <div class="row g-4 mb-4">
+      <!-- Two-column: Click Source + Traffic Channels -->
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
         <!-- Click Source -->
-        <div class="col-lg-5">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Click Source</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.source_breakdown.length" class="text-center text-muted small py-3">No source data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(s, idx) in data.source_breakdown"
-                  :key="s.source"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="me-1">{{ sourceIcon(s.source) }}</span>
-                  <span class="flex-grow-1 small fw-medium text-capitalize">{{ s.source }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:100px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: sourcePct(s.count) + '%', backgroundColor: '#ec4899' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ s.count.toLocaleString() }}</span>
-                </div>
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Click Source</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.source_breakdown.length" class="empty-state">No source data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(s, idx) in data.source_breakdown" :key="s.source" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="md-body-small">{{ sourceIcon(s.source) }}</span>
+                <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ s.source }}</span>
+                <md-linear-progress :value="sourcePct(s.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ s.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Referrer Categories -->
-        <div class="col-lg-7">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-transparent border-bottom py-3 px-4">
-              <h6 class="mb-0 fw-semibold">Traffic Channels</h6>
-            </div>
-            <div class="card-body px-4 py-3">
-              <div v-if="!data.referrer_categories.length" class="text-center text-muted small py-3">No channel data yet.</div>
-              <div v-else>
-                <div
-                  v-for="(rc, idx) in data.referrer_categories"
-                  :key="rc.category"
-                  class="d-flex align-items-center gap-3 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="me-1">{{ channelIcon(rc.category) }}</span>
-                  <span class="flex-grow-1 small fw-medium text-capitalize">{{ rc.category }}</span>
-                  <div class="progress flex-grow-1" style="height:6px;max-width:120px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: refCatPct(rc.count) + '%', backgroundColor: '#f59e0b' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:36px;text-align:right;">{{ rc.count.toLocaleString() }}</span>
-                </div>
+        <!-- Traffic Channels -->
+        <div class="m3-card m3-card--outlined">
+          <div class="card-header-row">
+            <span class="md-title-medium">Traffic Channels</span>
+          </div>
+          <md-divider />
+          <div style="padding:0.75rem 1.25rem;">
+            <div v-if="!data.referrer_categories.length" class="empty-state">No channel data yet.</div>
+            <div v-else class="breakdown-list">
+              <div v-for="(rc, idx) in data.referrer_categories" :key="rc.category" class="country-item">
+                <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                <span class="md-body-small">{{ channelIcon(rc.category) }}</span>
+                <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ rc.category }}</span>
+                <md-linear-progress :value="refCatPct(rc.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ rc.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── UTM Tracking ────────────────────────────────────────────────── -->
-      <div
-        v-if="hasUTMData"
-        class="card border-0 shadow-sm mb-4"
-      >
-        <div class="card-header bg-transparent border-bottom py-3 px-4">
-          <h6 class="mb-0 fw-semibold">UTM Tracking</h6>
+      <!-- UTM Tracking -->
+      <div v-if="hasUTMData" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
+        <div class="card-header-row">
+          <span class="md-title-medium">UTM Tracking</span>
         </div>
-        <div class="card-body">
-          <div class="row g-4">
+        <md-divider />
+        <div style="padding:1rem 1.25rem;">
+          <div class="utm-grid">
             <!-- UTM Sources -->
-            <div class="col-lg-4">
-              <div class="utm-section-label text-muted small fw-semibold mb-2 text-uppercase" style="letter-spacing:0.04em;font-size:0.7rem;">UTM Source</div>
-              <div v-if="!data.utm_sources.length" class="text-muted small">No UTM source data.</div>
-              <div v-else>
-                <div
-                  v-for="(u, idx) in data.utm_sources"
-                  :key="u.value"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium text-truncate" :title="u.value">{{ u.value || '—' }}</span>
-                  <div class="progress flex-grow-1" style="height:5px;max-width:80px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: utmSrcPct(u.count) + '%', backgroundColor: '#635bff' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
+            <div>
+              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Source</div>
+              <div v-if="!data.utm_sources.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM source data.</div>
+              <div v-else class="breakdown-list">
+                <div v-for="(u, idx) in data.utm_sources" :key="u.value" class="country-item">
+                  <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                  <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
+                  <md-linear-progress :value="utmSrcPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
             </div>
-
             <!-- UTM Mediums -->
-            <div class="col-lg-4">
-              <div class="utm-section-label text-muted small fw-semibold mb-2 text-uppercase" style="letter-spacing:0.04em;font-size:0.7rem;">UTM Medium</div>
-              <div v-if="!data.utm_mediums.length" class="text-muted small">No UTM medium data.</div>
-              <div v-else>
-                <div
-                  v-for="(u, idx) in data.utm_mediums"
-                  :key="u.value"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium text-truncate" :title="u.value">{{ u.value || '—' }}</span>
-                  <div class="progress flex-grow-1" style="height:5px;max-width:80px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: utmMedPct(u.count) + '%', backgroundColor: '#14b8a6' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
+            <div>
+              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Medium</div>
+              <div v-if="!data.utm_mediums.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM medium data.</div>
+              <div v-else class="breakdown-list">
+                <div v-for="(u, idx) in data.utm_mediums" :key="u.value" class="country-item">
+                  <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                  <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
+                  <md-linear-progress :value="utmMedPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
             </div>
-
             <!-- UTM Campaigns -->
-            <div class="col-lg-4">
-              <div class="utm-section-label text-muted small fw-semibold mb-2 text-uppercase" style="letter-spacing:0.04em;font-size:0.7rem;">UTM Campaign</div>
-              <div v-if="!data.utm_campaigns.length" class="text-muted small">No UTM campaign data.</div>
-              <div v-else>
-                <div
-                  v-for="(u, idx) in data.utm_campaigns"
-                  :key="u.value"
-                  class="d-flex align-items-center gap-2 mb-2"
-                >
-                  <span class="rank-num text-muted">{{ idx + 1 }}</span>
-                  <span class="flex-grow-1 small fw-medium text-truncate" :title="u.value">{{ u.value || '—' }}</span>
-                  <div class="progress flex-grow-1" style="height:5px;max-width:80px;">
-                    <div
-                      class="progress-bar"
-                      :style="{ width: utmCamPct(u.count) + '%', backgroundColor: '#f59e0b' }"
-                    ></div>
-                  </div>
-                  <span class="text-muted small" style="min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
+            <div>
+              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Campaign</div>
+              <div v-if="!data.utm_campaigns.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM campaign data.</div>
+              <div v-else class="breakdown-list">
+                <div v-for="(u, idx) in data.utm_campaigns" :key="u.value" class="country-item">
+                  <span class="rank-num md-body-small">{{ idx + 1 }}</span>
+                  <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
+                  <md-linear-progress :value="utmCamPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
             </div>
@@ -509,10 +409,10 @@
 
     </template>
 
-    <!-- Empty state (no data, not loading) -->
-    <div v-else-if="!loading && !error" class="text-center py-5 text-muted">
-      <div style="font-size:3rem;line-height:1;margin-bottom:0.75rem;">📊</div>
-      <p class="mb-0">No analytics data yet. Clicks will appear here as your links are visited.</p>
+    <!-- Empty state -->
+    <div v-else-if="!loading && !error" class="empty-state" style="padding:4rem 2rem;">
+      <span class="material-symbols-outlined" style="font-size:3rem;display:block;margin-bottom:0.75rem;color:var(--md-sys-color-on-surface-variant);">bar_chart</span>
+      <p class="md-body-medium">No analytics data yet. Clicks will appear here as your links are visited.</p>
     </div>
 
   </div>
@@ -778,8 +678,51 @@ const deviceOption = computed(() => {
 </script>
 
 <style scoped lang="scss">
-$primary: #635bff;
+.page-wrapper {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
+/* Page header */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-header__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Card header row */
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Error banner */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: rgba(176, 0, 32, 0.08);
+  border: 1px solid var(--md-sys-color-error);
+}
+
+/* Stat grid */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -794,20 +737,101 @@ $primary: #635bff;
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
+}
 
-  .stat-icon  { font-size: 2rem; line-height: 1; flex-shrink: 0; }
-  .stat-value { font-size: 1.75rem; font-weight: 700; color: #1a1f36; line-height: 1; }
-  .stat-label { font-size: 0.8125rem; color: #697386; margin-top: 0.25rem; }
+.stat-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card__body {
+  min-width: 0;
+}
+
+.stat-value {
+  color: var(--md-sys-color-on-surface);
+  line-height: 1.2;
+  margin-bottom: 0.15rem;
+}
+
+/* Trend indicator */
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Comparison grid */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 991px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 575px) { grid-template-columns: 1fr; }
+}
+
+.comparison-metric {
+  padding: 0.5rem 0;
+}
+
+.comparison-period-box {
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+
+  &--current {
+    background: rgba(99, 91, 255, 0.06);
+    border: 1px solid rgba(99, 91, 255, 0.2);
+  }
+
+  &--previous {
+    background: rgba(107, 114, 128, 0.06);
+    border: 1px solid rgba(107, 114, 128, 0.15);
+  }
+}
+
+/* Two column */
+.two-col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+
+  @media (max-width: 767px) { grid-template-columns: 1fr; }
+}
+
+/* Breakdown list */
+.breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .rank-num {
-  font-size: 0.75rem;
-  font-weight: 600;
-  min-width: 16px;
+  min-width: 18px;
   text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
-.flag-emoji { font-size: 1.1rem; line-height: 1; }
+.flag-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
 
 .legend-dot {
   width: 10px;
@@ -816,83 +840,64 @@ $primary: #635bff;
   flex-shrink: 0;
 }
 
+/* UTM grid */
+.utm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+
+  @media (max-width: 991px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 575px) { grid-template-columns: 1fr; }
+}
+
+/* M3 Cards */
+.m3-card {
+  border-radius: 12px;
+  overflow: hidden;
+
+  &--elevated {
+    background: var(--md-sys-color-surface-container-low, #fff);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  }
+
+  &--outlined {
+    background: var(--md-sys-color-surface, #fff);
+    border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  }
+}
+
+/* M3 Badges */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+
+  &--primary { background: rgba(99, 91, 255, 0.12); color: var(--md-sys-color-primary, #635bff); }
+  &--neutral { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+}
+
+/* Skeleton */
 .skeleton {
-  background: linear-gradient(90deg, #e3e8ee 25%, #f0f2f5 50%, #e3e8ee 75%);
+  background: linear-gradient(90deg, var(--md-sys-color-outline-variant, #e3e8ee) 25%, #f0f2f5 50%, var(--md-sys-color-outline-variant, #e3e8ee) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite;
   border-radius: 4px;
   display: block;
 }
+
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-// ── Period comparison ──────────────────────────────────────────────────────────
-.comparison-metric {
-  padding: 0.25rem 0;
-}
-
-.comp-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-
-  &--up   { background-color: rgba(22, 163, 74, 0.1);  color: #16a34a; }
-  &--down { background-color: rgba(220, 38,  38, 0.1);  color: #dc2626; }
-  &--flat { background-color: rgba(107, 114, 128, 0.1); color: #6b7280; }
-}
-
-.comparison-period-box {
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-
-  .comp-period-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 0.2rem;
-  }
-
-  .comp-period-dates {
-    font-size: 0.8rem;
-    color: #697386;
-    margin-bottom: 0.25rem;
-  }
-
-  &.current-period {
-    background-color: rgba(99, 91, 255, 0.06);
-    border: 1px solid rgba(99, 91, 255, 0.2);
-    .comp-period-label { color: $primary; }
-  }
-
-  &.previous-period {
-    background-color: rgba(107, 114, 128, 0.06);
-    border: 1px solid rgba(107, 114, 128, 0.2);
-    .comp-period-label { color: #6b7280; }
-  }
-}
-
-// ── Dark mode ──────────────────────────────────────────────────────────────────
-:global(.dark-mode) .stat-card .stat-value { color: #e6edf3; }
-:global(.dark-mode) .skeleton { background: linear-gradient(90deg, #21262d 25%, #30363d 50%, #21262d 75%); background-size: 200% 100%; }
-:global(.dark-mode) .comparison-period-box.current-period  { background-color: rgba(99, 91, 255, 0.12); border-color: rgba(99, 91, 255, 0.3); }
-:global(.dark-mode) .comparison-period-box.previous-period { background-color: rgba(107, 114, 128, 0.12); border-color: rgba(107, 114, 128, 0.3); }
-:global(.dark-mode) .card-header.bg-white { background-color: transparent !important; }
-
-.btn-outline-secondary.active {
-  background-color: $primary;
-  border-color: $primary;
-  color: #fff;
-}
-
-.btn-primary {
-  background-color: $primary;
-  border-color: $primary;
-  &:hover:not(:disabled) { background-color: #5249e0; border-color: #5249e0; }
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
 }
 </style>

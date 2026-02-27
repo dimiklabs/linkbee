@@ -1,129 +1,153 @@
 <template>
-  <div class="container-fluid py-4">
+  <div class="security-page">
 
-    <!-- Header -->
-    <div class="mb-4">
-      <h1 class="h4 fw-bold mb-0">Security</h1>
-      <p class="text-muted small mb-0">Manage two-factor authentication and account security.</p>
+    <!-- Page header -->
+    <div class="page-header">
+      <h1 class="md-headline-small">Security</h1>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:4px 0 0;">
+        Manage two-factor authentication and account security.
+      </p>
     </div>
 
     <!-- Loading -->
-    <div v-if="loadingStatus" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading…</span>
-      </div>
+    <div v-if="loadingStatus" style="text-align:center;padding:64px 0;">
+      <md-circular-progress indeterminate />
     </div>
 
     <template v-else>
 
-      <!-- 2FA Card -->
-      <div class="card mb-4">
-        <div class="card-body">
-          <div class="d-flex align-items-start justify-content-between gap-3">
-            <div>
-              <h5 class="fw-semibold mb-1">Two-Factor Authentication (2FA)</h5>
-              <p class="text-muted small mb-0">
+      <!-- ── 2FA Card ───────────────────────────────────────────────────── -->
+      <div class="m3-card m3-card--outlined section-card">
+        <div class="card-section-header">
+          <span class="md-title-medium">Two-Factor Authentication (2FA)</span>
+        </div>
+        <div class="card-section-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;">
+              <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 12px;">
                 Add an extra layer of security. When enabled, you'll need a 6-digit code from
                 an authenticator app (e.g. Google Authenticator, Authy) at each login.
               </p>
-              <span v-if="totpEnabled" class="badge text-bg-success mt-2">Enabled</span>
-              <span v-else class="badge text-bg-secondary mt-2">Disabled</span>
+              <span v-if="totpEnabled" class="m3-badge m3-badge--success">Enabled</span>
+              <span v-else class="m3-badge m3-badge--neutral">Disabled</span>
             </div>
-            <div class="flex-shrink-0">
-              <button v-if="!totpEnabled" class="btn btn-primary btn-sm" @click="startSetup">
-                Enable 2FA
-              </button>
-              <button v-else class="btn btn-outline-danger btn-sm" @click="showDisableModal = true">
+            <div style="flex-shrink:0;">
+              <md-filled-button v-if="!totpEnabled" @click="startSetup">Enable 2FA</md-filled-button>
+              <md-outlined-button
+                v-else
+                @click="showDisableModal = true"
+                style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
+              >
                 Disable 2FA
-              </button>
+              </md-outlined-button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Setup Wizard (shown after clicking Enable) -->
-      <div v-if="setupStep && !totpEnabled" class="card">
-        <div class="card-body">
+      <!-- ── Setup Wizard ──────────────────────────────────────────────── -->
+      <div v-if="setupStep && !totpEnabled" class="m3-card m3-card--outlined section-card">
+        <div class="card-section-body">
 
           <!-- Step 1: Scan QR -->
           <div v-if="setupStep === 'scan'">
-            <h6 class="fw-semibold mb-3">Step 1 — Scan this QR code</h6>
-            <p class="text-muted small">
+            <div class="md-title-medium" style="margin-bottom:12px;">Step 1 — Scan this QR code</div>
+            <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">
               Open your authenticator app and scan the QR code below. If you can't scan,
               manually enter the secret key.
             </p>
 
-            <!-- QR image rendered via qrserver.com public API (client-side only, no server dependency) -->
-            <div class="text-center mb-3">
+            <div style="text-align:center;margin-bottom:20px;">
               <img
                 :src="qrImageUrl"
                 alt="TOTP QR Code"
                 width="180"
                 height="180"
-                class="border rounded"
+                style="border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;"
               />
             </div>
 
-            <div class="mb-3">
-              <label class="form-label small fw-medium">Manual secret key</label>
-              <div class="input-group input-group-sm">
-                <input type="text" class="form-control font-monospace" :value="totpSecret" readonly />
-                <button class="btn btn-outline-secondary" type="button" @click="copySecret">
-                  {{ copied ? '✓' : 'Copy' }}
-                </button>
+            <div style="margin-bottom:20px;">
+              <div class="md-label-large" style="margin-bottom:8px;">Manual secret key</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <md-outlined-text-field
+                  :value="totpSecret"
+                  label="Secret key"
+                  readonly
+                  style="flex:1;font-family:monospace;"
+                />
+                <md-outlined-button @click="copySecret">
+                  <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">
+                    {{ copied ? 'check' : 'content_copy' }}
+                  </span>
+                  {{ copied ? 'Copied' : 'Copy' }}
+                </md-outlined-button>
               </div>
             </div>
 
-            <button class="btn btn-primary" @click="setupStep = 'confirm'">
-              I've scanned it →
-            </button>
+            <md-filled-button @click="setupStep = 'confirm'">
+              I've scanned it
+              <span class="material-symbols-outlined" slot="icon">arrow_forward</span>
+            </md-filled-button>
           </div>
 
           <!-- Step 2: Confirm code -->
           <div v-else-if="setupStep === 'confirm'">
-            <h6 class="fw-semibold mb-3">Step 2 — Enter the code to confirm</h6>
-            <p class="text-muted small">
+            <div class="md-title-medium" style="margin-bottom:12px;">Step 2 — Enter the code to confirm</div>
+            <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">
               Enter the 6-digit code shown in your authenticator app to verify that setup is correct.
             </p>
 
-            <div v-if="setupError" class="alert alert-danger py-2 small">{{ setupError }}</div>
-
-            <div class="mb-3" style="max-width: 200px;">
-              <input
-                v-model="confirmCode"
-                type="text"
-                class="form-control form-control-lg text-center font-monospace"
-                placeholder="000000"
-                maxlength="6"
-                autocomplete="one-time-code"
-              />
+            <div v-if="setupError" class="feedback-error" style="margin-bottom:16px;">
+              <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+              {{ setupError }}
             </div>
 
-            <div class="d-flex gap-2">
-              <button class="btn btn-outline-secondary btn-sm" @click="setupStep = 'scan'">← Back</button>
-              <button class="btn btn-primary" :disabled="confirmLoading" @click="confirmSetup">
-                <span v-if="confirmLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+            <md-outlined-text-field
+              :value="confirmCode"
+              @input="confirmCode = ($event.target as HTMLInputElement).value"
+              label="6-digit code"
+              maxlength="6"
+              autocomplete="one-time-code"
+              style="max-width:200px;margin-bottom:20px;font-family:monospace;font-size:1.25rem;"
+            />
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <md-outlined-button @click="setupStep = 'scan'">
+                <span class="material-symbols-outlined" slot="icon">arrow_back</span>
+                Back
+              </md-outlined-button>
+              <md-filled-button :disabled="confirmLoading" @click="confirmSetup">
+                <md-circular-progress v-if="confirmLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
                 Confirm &amp; Enable
-              </button>
+              </md-filled-button>
             </div>
           </div>
 
           <!-- Step 3: Backup codes -->
           <div v-else-if="setupStep === 'backup'">
-            <h6 class="fw-semibold mb-2">2FA Enabled!</h6>
-            <div class="alert alert-warning py-2 small">
-              <strong>Save these backup codes now.</strong> They are shown only once and can be used
-              to access your account if you lose your authenticator app.
+            <div class="md-title-medium" style="margin-bottom:12px;">2FA Enabled!</div>
+            <div class="feedback-warning" style="margin-bottom:20px;">
+              <span class="material-symbols-outlined" style="font-size:18px;">warning</span>
+              <span><strong>Save these backup codes now.</strong> They are shown only once and can be used
+              to access your account if you lose your authenticator app.</span>
             </div>
-            <div class="row g-2 mb-3">
-              <div v-for="code in backupCodes" :key="code" class="col-6">
-                <code class="d-block bg-light border rounded px-2 py-1 text-center small">{{ code }}</code>
-              </div>
+            <div class="backup-codes-grid">
+              <code
+                v-for="code in backupCodes"
+                :key="code"
+                class="backup-code"
+              >{{ code }}</code>
             </div>
-            <button class="btn btn-outline-secondary btn-sm me-2" @click="copyBackupCodes">
-              {{ copiedBackup ? '✓ Copied' : 'Copy all' }}
-            </button>
-            <button class="btn btn-primary btn-sm" @click="finishSetup">Done</button>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
+              <md-outlined-button @click="copyBackupCodes">
+                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">
+                  {{ copiedBackup ? 'check' : 'content_copy' }}
+                </span>
+                {{ copiedBackup ? 'Copied' : 'Copy all' }}
+              </md-outlined-button>
+              <md-filled-button @click="finishSetup">Done</md-filled-button>
+            </div>
           </div>
 
         </div>
@@ -131,45 +155,38 @@
 
     </template>
 
-    <!-- Disable Modal -->
-    <div v-if="showDisableModal" class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-          <div class="modal-header border-0 pb-0">
-            <h5 class="modal-title fw-semibold">Disable Two-Factor Authentication</h5>
-            <button type="button" class="btn-close" @click="closeDisableModal"></button>
-          </div>
-          <div class="modal-body">
-            <p class="text-muted small mb-3">
-              Enter your account password to confirm you want to disable 2FA.
-            </p>
-            <div v-if="disableError" class="alert alert-danger py-2 small">{{ disableError }}</div>
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input
-                v-model="disablePassword"
-                type="password"
-                class="form-control"
-                placeholder="••••••••"
-                autocomplete="current-password"
-              />
-            </div>
-          </div>
-          <div class="modal-footer border-0 pt-0">
-            <button type="button" class="btn btn-outline-secondary" @click="closeDisableModal">Cancel</button>
-            <button
-              type="button"
-              class="btn btn-danger"
-              :disabled="disableLoading"
-              @click="disableTOTP"
-            >
-              <span v-if="disableLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-              Disable 2FA
-            </button>
-          </div>
+    <!-- ── Disable 2FA Dialog ────────────────────────────────────────────── -->
+    <md-dialog :open="showDisableModal" @closed="closeDisableModal">
+      <div slot="headline">Disable Two-Factor Authentication</div>
+      <div slot="content" style="min-width:360px;max-width:100%;">
+        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">
+          Enter your account password to confirm you want to disable 2FA.
+        </p>
+        <div v-if="disableError" class="feedback-error" style="margin-bottom:16px;">
+          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          {{ disableError }}
         </div>
+        <md-outlined-text-field
+          :value="disablePassword"
+          @input="disablePassword = ($event.target as HTMLInputElement).value"
+          label="Password"
+          type="password"
+          autocomplete="current-password"
+          style="width:100%;"
+        />
       </div>
-    </div>
+      <div slot="actions">
+        <md-text-button @click="closeDisableModal">Cancel</md-text-button>
+        <md-filled-button
+          :disabled="disableLoading"
+          @click="disableTOTP"
+          style="--md-filled-button-container-color:var(--md-sys-color-error);"
+        >
+          <md-circular-progress v-if="disableLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          Disable 2FA
+        </md-filled-button>
+      </div>
+    </md-dialog>
 
   </div>
 </template>
@@ -295,3 +312,71 @@ async function disableTOTP() {
   }
 }
 </script>
+
+<style scoped>
+.security-page {
+  max-width: 780px;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.page-header {
+  margin-bottom: 8px;
+}
+
+.section-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-section-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.card-section-body {
+  padding: 24px;
+}
+
+.feedback-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-error);
+  font-size: 0.875rem;
+}
+
+.feedback-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: color-mix(in srgb, #f59e0b 12%, transparent);
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.backup-codes-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.backup-code {
+  display: block;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: center;
+  font-family: monospace;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+</style>
