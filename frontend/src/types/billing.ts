@@ -1,3 +1,9 @@
+export interface UsageCounts {
+  links: number;
+  api_keys: number;
+  webhooks: number;
+}
+
 export interface PlanInfo {
   id: string;
   name: string;

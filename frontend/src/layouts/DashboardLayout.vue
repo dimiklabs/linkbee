@@ -67,6 +67,15 @@
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Link-in-Bio</span>
         </router-link>
         <router-link
+          to="/dashboard/billing"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/billing') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">💳</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Billing</span>
+        </router-link>
+        <router-link
           to="/dashboard/settings"
           class="nav-item"
           :class="{ active: $route.path.startsWith('/dashboard/settings') }"
@@ -213,6 +222,12 @@ const pageTitle = computed(() => {
   const titles: Record<string, string> = {
     links: 'My Links',
     'link-analytics': 'Link Analytics',
+    'api-keys': 'API Keys',
+    webhooks: 'Webhooks',
+    billing: 'Billing & Plan',
+    settings: 'Settings',
+    bio: 'Link-in-Bio',
+    admin: 'Admin',
   };
   return titles[name] || 'Dashboard';
 });

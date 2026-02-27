@@ -111,7 +111,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
-	billingHandler   := handler.NewBillingHandler(billingService)
+	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
 	adminHandler     := handler.NewAdminHandler(adminService)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)
 	bioHandler       := handler.NewBioHandler(bioService)
@@ -245,8 +245,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
 			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
 
-			// Billing (subscription + checkout)
+			// Billing (subscription + usage + checkout)
 			v1Auth.GET("/billing/subscription", billingHandler.GetSubscription)
+			v1Auth.GET("/billing/usage", billingHandler.GetUsage)
 			v1Auth.GET("/billing/checkout/:plan", billingHandler.GetCheckoutURL)
 
 			// Admin (role=admin only)
