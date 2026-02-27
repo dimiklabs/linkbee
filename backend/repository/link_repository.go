@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
@@ -19,8 +20,9 @@ type LinkRepositoryI interface {
 	// Read
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) ([]model.Link, int64, error)
 	GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.Link, error)
+	GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
 
 	// Duplicate check
@@ -128,7 +130,7 @@ func (r *LinkRepository) FindByDestinationURL(ctx context.Context, userID uuid.U
 	return &link, nil
 }
 
-func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) ([]model.Link, int64, error) {
+func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) ([]model.Link, int64, error) {
 	logger.DebugCtx(ctx, "Fetching links for user",
 		zap.String("user_id", userID.String()),
 		zap.Int("page", page),
@@ -150,6 +152,11 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 
 	if healthStatus != "" {
 		query = query.Where("health_status = ?", healthStatus)
+	}
+
+	if len(tags) > 0 {
+		// Match links whose tags array overlaps (&&) the requested tags
+		query = query.Where("tags && ?", pq.Array(tags))
 	}
 
 	if search != "" {
@@ -192,6 +199,24 @@ func (r *LinkRepository) GetAllByUserID(ctx context.Context, userID uuid.UUID) (
 		return nil, err
 	}
 	return links, nil
+}
+
+func (r *LinkRepository) GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	type tagRow struct{ Tag string }
+	var rows []tagRow
+	if err := r.replicaDB.WithContext(ctx).
+		Raw("SELECT DISTINCT unnest(tags) AS tag FROM links WHERE user_id = ? AND deleted_at IS NULL ORDER BY tag", userID).
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get user tags", zap.String("user_id", userID.String()), zap.Error(err))
+		return nil, err
+	}
+	tags := make([]string, 0, len(rows))
+	for _, r := range rows {
+		if r.Tag != "" {
+			tags = append(tags, r.Tag)
+		}
+	}
+	return tags, nil
 }
 
 func (r *LinkRepository) SlugExists(ctx context.Context, slug string) (bool, error) {

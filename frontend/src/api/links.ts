@@ -12,8 +12,13 @@ import type {
 } from '@/types/links';
 
 export const linksApi = {
-  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string): Promise<ApiResponse<LinkListResponse>> => {
-    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred, health_status: healthStatus || undefined } });
+  getAllTags: async (): Promise<ApiResponse<string[]>> => {
+    const response = await apiClient.get('/links/tags');
+    return response.data;
+  },
+
+  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string, tags?: string[]): Promise<ApiResponse<LinkListResponse>> => {
+    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred, health_status: healthStatus || undefined, tags: tags?.length ? tags : undefined } });
     return response.data;
   },
 

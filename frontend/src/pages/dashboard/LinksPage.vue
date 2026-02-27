@@ -123,6 +123,28 @@
             </button>
           </div>
         </div>
+
+        <!-- Tag filter card -->
+        <div v-if="allTags.length > 0" class="card border-0 shadow-sm mt-3">
+          <div class="card-header bg-white border-bottom py-2 px-3 d-flex align-items-center justify-content-between">
+            <span class="fw-semibold small">Tags</span>
+            <button v-if="selectedTags.length > 0" class="btn btn-sm border-0 p-0 text-muted" style="font-size: 0.75rem;" @click="clearTagFilter">Clear</button>
+          </div>
+          <div class="card-body py-2 px-3">
+            <div class="d-flex flex-wrap gap-1">
+              <button
+                v-for="tag in allTags"
+                :key="tag"
+                class="badge rounded-pill border fw-normal"
+                :class="selectedTags.includes(tag) ? 'bg-primary text-white border-primary' : 'bg-light text-secondary border-light'"
+                style="cursor: pointer; font-size: 0.72rem; line-height: 1.4;"
+                @click="toggleTag(tag)"
+              >
+                {{ tag }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ── Main content ──────────────────────────────────────────── -->
@@ -210,13 +232,16 @@
         </svg>
       </div>
       <h5 class="fw-semibold text-muted">
-        {{ searchQuery ? 'No links match your search' : 'No links yet' }}
+        {{ searchQuery ? 'No links match your search' : selectedTags.length ? 'No links with these tags' : 'No links yet' }}
       </h5>
       <p class="text-muted small mb-4">
-        {{ searchQuery ? 'Try a different search term.' : 'Get started by creating your first shortened link.' }}
+        {{ searchQuery ? 'Try a different search term.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Get started by creating your first shortened link.' }}
       </p>
-      <button v-if="!searchQuery" class="btn btn-primary" @click="openCreateModal">
+      <button v-if="!searchQuery && !selectedTags.length" class="btn btn-primary" @click="openCreateModal">
         Create your first link
+      </button>
+      <button v-else-if="selectedTags.length" class="btn btn-outline-secondary btn-sm" @click="clearTagFilter">
+        Clear tag filter
       </button>
       <button v-else class="btn btn-outline-secondary btn-sm" @click="searchQuery = ''">
         Clear search
@@ -632,6 +657,8 @@ const linksStore = useLinksStore();
 
 const exporting = ref(false);
 const searchQuery = ref('');
+const allTags = ref<string[]>([]);
+const selectedTags = ref<string[]>([]);
 const editingLink = ref<LinkResponse | null>(null);
 const qrLink = ref<LinkResponse | null>(null);
 const copiedId = ref<string | null>(null);
@@ -681,6 +708,7 @@ function selectFolder(id: string) {
   selectedFolderID.value = id;
   starredOnly.value = false;
   healthFilter.value = '';
+  selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, id);
 }
 
@@ -688,6 +716,7 @@ function selectStarred() {
   starredOnly.value = true;
   selectedFolderID.value = '';
   healthFilter.value = '';
+  selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', true);
 }
 
@@ -695,7 +724,35 @@ function selectHealthFilter(status: string) {
   healthFilter.value = status;
   selectedFolderID.value = '';
   starredOnly.value = false;
+  selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, status);
+}
+
+async function loadTags() {
+  try {
+    const res = await linksApi.getAllTags();
+    if (res.data) allTags.value = res.data;
+  } catch {
+    // non-critical
+  }
+}
+
+function toggleTag(tag: string) {
+  const idx = selectedTags.value.indexOf(tag);
+  if (idx === -1) {
+    selectedTags.value = [...selectedTags.value, tag];
+  } else {
+    selectedTags.value = selectedTags.value.filter((t) => t !== tag);
+  }
+  selectedFolderID.value = '';
+  starredOnly.value = false;
+  healthFilter.value = '';
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, undefined, selectedTags.value.length ? selectedTags.value : undefined);
+}
+
+function clearTagFilter() {
+  selectedTags.value = [];
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
 }
 
 function openNewFolderInput() {
@@ -755,7 +812,7 @@ async function deleteFolder(folder: FolderResponse) {
     folders.value = folders.value.filter(f => f.id !== folder.id);
     if (selectedFolderID.value === folder.id) {
       selectedFolderID.value = '';
-      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined, healthFilter.value || undefined);
+      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
     }
   } catch {
     // silent
@@ -767,13 +824,14 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, (val) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
   }, 400);
 });
 
 onMounted(() => {
   linksStore.fetchLinks(1, 20, '');
   loadFolders();
+  loadTags();
   if (toastEl.value) {
     toastInstance = new Toast(toastEl.value, { delay: 2000 });
   }
@@ -865,7 +923,8 @@ function openPreviewModal(link: LinkResponse) {
 }
 
 async function onImportDone(_result: ImportLinksResponse) {
-  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+  await loadTags();
 }
 
 function openEditModal(link: LinkResponse) {
@@ -882,8 +941,9 @@ function openQRModal(link: LinkResponse) {
 }
 
 async function onLinkSaved(_link: LinkResponse) {
-  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
   editingLink.value = null;
+  await loadTags();
 }
 
 async function toggleStar(link: LinkResponse) {
@@ -961,7 +1021,8 @@ async function confirmDelete(link: LinkResponse) {
     const newTotal = linksStore.total - 1;
     const maxPage = Math.ceil(newTotal / linksStore.limit) || 1;
     const targetPage = Math.min(linksStore.page, maxPage);
-    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+    await loadTags();
   } finally {
     deletingId.value = null;
   }
@@ -969,7 +1030,7 @@ async function confirmDelete(link: LinkResponse) {
 
 function goToPage(page: number) {
   if (page < 1 || page > linksStore.totalPages) return;
-  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
 }
 
 const visiblePages = computed<(number | string)[]>(() => {

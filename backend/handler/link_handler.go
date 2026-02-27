@@ -69,13 +69,42 @@ func (h *LinkHandler) ListLinks(c *gin.Context) {
 		}
 	}
 
-	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred, req.HealthStatus)
+	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred, req.HealthStatus, req.Tags)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Links retrieved successfully", result)
+}
+
+// GetUserTags godoc
+//
+//	@Summary		List all tags
+//	@Description	Returns all unique tags used across the authenticated user's links.
+//	@Tags			links
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/tags [get]
+func (h *LinkHandler) GetUserTags(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	tags, svcErr := h.linkService.GetUserTags(ctx, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Tags retrieved successfully", tags)
 }
 
 // CreateLink godoc

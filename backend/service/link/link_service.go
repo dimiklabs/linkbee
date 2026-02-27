@@ -29,7 +29,8 @@ import (
 type LinkServiceI interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
-	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) (*response.LinkListResponse, *dto.ServiceError)
+	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) (*response.LinkListResponse, *dto.ServiceError)
+	GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, *dto.ServiceError)
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
@@ -173,8 +174,8 @@ func (s *linkService) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return s.toLinkResponse(link), nil
 }
 
-func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string) (*response.LinkListResponse, *dto.ServiceError) {
-	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred, healthStatus)
+func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) (*response.LinkListResponse, *dto.ServiceError) {
+	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred, healthStatus, tags)
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
@@ -196,6 +197,14 @@ func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, lim
 		Limit:      limit,
 		TotalPages: totalPages,
 	}, nil
+}
+
+func (s *linkService) GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, *dto.ServiceError) {
+	tags, err := s.linkRepo.GetUserTags(ctx, userID)
+	if err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	return tags, nil
 }
 
 func (s *linkService) UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError) {

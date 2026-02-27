@@ -69,6 +69,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	customDomainRepo      := repository.NewCustomDomainRepository(s.MasterDB, s.ReplicaDB)
 	auditLogRepo          := repository.NewAuditLogRepository(s.MasterDB, s.ReplicaDB)
 	totpBackupCodeRepo    := repository.NewTotpBackupCodeRepository(s.MasterDB, s.ReplicaDB)
+	webhookDeliveryRepo   := repository.NewWebhookDeliveryRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
@@ -87,7 +88,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	previewService     := previewSvc.NewPreviewService(s.Cache)
 	folderService      := folderSvc.NewFolderService(folderRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
-	webhookService     := webhookSvc.NewWebhookService(webhookRepo)
+	webhookService     := webhookSvc.NewWebhookService(webhookRepo, webhookDeliveryRepo)
 	pixelService       := pixelSvc.NewPixelService(pixelRepo, linkRepo)
 	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
 	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
@@ -216,6 +217,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 			// Link CRUD
 			v1Auth.GET("/links", linkHandler.ListLinks)
+			v1Auth.GET("/links/tags", linkHandler.GetUserTags)
 			v1Auth.GET("/links/export", exportHandler.ExportLinksCSV)
 			v1Auth.GET("/links/duplicate", linkHandler.CheckDuplicate)
 			v1Auth.POST("/links", linkHandler.CreateLink)
@@ -261,6 +263,10 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.POST("/webhooks", webhookHandler.CreateWebhook)
 			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
 			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
+			v1Auth.GET("/webhooks/:id/secret", webhookHandler.GetWebhookSecret)
+			v1Auth.POST("/webhooks/:id/test", webhookHandler.TestWebhook)
+			v1Auth.GET("/webhooks/:id/deliveries", webhookHandler.GetDeliveries)
+			v1Auth.POST("/webhooks/:id/deliveries/:deliveryId/resend", webhookHandler.ResendDelivery)
 
 			// Billing (subscription + usage + checkout)
 			v1Auth.GET("/billing/subscription", billingHandler.GetSubscription)
