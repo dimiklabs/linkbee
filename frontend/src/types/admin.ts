@@ -3,6 +3,7 @@ export interface AdminStats {
   active_users: number;
   inactive_users: number;
   total_links: number;
+  total_clicks: number;
 }
 
 export interface AdminUser {
@@ -23,4 +24,14 @@ export interface AdminUsersResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+export interface GrowthTimeSeriesPoint {
+  timestamp: string;
+  count: number;
+}
+
+export interface GrowthTimeSeriesResponse {
+  users: GrowthTimeSeriesPoint[];
+  links: GrowthTimeSeriesPoint[];
 }

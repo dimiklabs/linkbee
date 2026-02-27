@@ -12,7 +12,7 @@
             <!-- All Links -->
             <button
               class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
-              :class="{ 'folder-active': selectedFolderID === '' && !starredOnly }"
+              :class="{ 'folder-active': selectedFolderID === '' && !starredOnly && healthFilter === '' && !expiringSoonFilter }"
               style="font-size: 0.85rem;"
               @click="selectFolder('')"
             >
@@ -49,6 +49,20 @@
               <span class="flex-grow-1 text-truncate">Unhealthy</span>
             </button>
 
+            <!-- Expiring Soon -->
+            <button
+              class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-2 px-3 border-0"
+              :class="{ 'folder-active': expiringSoonFilter }"
+              style="font-size: 0.85rem;"
+              @click="selectExpiringSoon"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="flex-shrink-0 text-warning" viewBox="0 0 16 16">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+              </svg>
+              <span class="flex-grow-1 text-truncate">Expiring Soon</span>
+            </button>
+
             <!-- Folder rows -->
             <template v-for="folder in folders" :key="folder.id">
               <!-- Rename mode -->
@@ -79,6 +93,7 @@
                     :style="{ width: '8px', height: '8px', backgroundColor: folder.color, display: 'inline-block' }">
                   </span>
                   <span class="text-truncate" :title="folder.name">{{ folder.name }}</span>
+                  <span class="text-muted ms-auto" style="font-size:0.7rem;">{{ folder.click_count?.toLocaleString() }}</span>
                 </button>
                 <div class="folder-actions d-flex gap-0 flex-shrink-0">
                   <button class="btn btn-sm border-0 p-1 lh-1 text-muted folder-action-btn" title="Rename" @click.stop="startRename(folder)">
@@ -204,6 +219,13 @@
       </div>
     </div>
 
+    <!-- Usage warning banner -->
+    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
+      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
+      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
+      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
+    </div>
+
     <!-- Error alert -->
     <div v-if="linksStore.error" class="alert alert-danger d-flex align-items-center gap-2" role="alert">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -250,11 +272,103 @@
 
     <!-- Links table -->
     <div v-else class="card shadow-sm border-0">
+
+      <!-- Bulk action bar -->
+      <div
+        v-if="selectedIDs.size > 0"
+        class="d-flex flex-wrap align-items-center gap-2 px-3 py-2 border-bottom"
+        style="background: #f5f4ff;"
+      >
+        <span class="fw-semibold small text-primary">{{ selectedIDs.size }} selected</span>
+        <div class="vr mx-1"></div>
+
+        <button class="btn btn-sm btn-outline-success" :disabled="bulkLoading" @click="bulkActivate">Activate</button>
+        <button class="btn btn-sm btn-outline-warning" :disabled="bulkLoading" @click="bulkDeactivate">Deactivate</button>
+
+        <!-- Move to folder -->
+        <div class="d-flex align-items-center gap-1 position-relative">
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            :disabled="bulkLoading"
+            @click="showBulkFolderBar = !showBulkFolderBar; showBulkTagsBar = false"
+          >Move to Folder</button>
+          <div
+            v-if="showBulkFolderBar"
+            class="position-absolute top-100 start-0 mt-1 bg-white border rounded shadow-sm p-1"
+            style="z-index: 200; min-width: 160px;"
+          >
+            <button class="dropdown-item rounded small py-1 px-2" @click="bulkMoveFolder(null)">— Remove from folder</button>
+            <button
+              v-for="f in folders"
+              :key="f.id"
+              class="dropdown-item rounded small py-1 px-2"
+              @click="bulkMoveFolder(f.id)"
+            >{{ f.name }}</button>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="d-flex align-items-center gap-1 position-relative">
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            :disabled="bulkLoading"
+            @click="bulkTagsMode = 'add_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false"
+          >+ Tags</button>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            :disabled="bulkLoading"
+            @click="bulkTagsMode = 'remove_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false"
+          >− Tags</button>
+          <div
+            v-if="showBulkTagsBar"
+            class="position-absolute top-100 start-0 mt-1 bg-white border rounded shadow-sm p-2 d-flex gap-1"
+            style="z-index: 200; min-width: 240px;"
+          >
+            <input
+              v-model="bulkTagsInput"
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="tag1, tag2, ..."
+              @keydown.enter="bulkApplyTags"
+            />
+            <button class="btn btn-sm btn-primary" @click="bulkApplyTags">
+              {{ bulkTagsMode === 'add_tags' ? 'Add' : 'Remove' }}
+            </button>
+          </div>
+        </div>
+
+        <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1" :disabled="qrDownloading" @click="downloadBulkQR">
+          <span v-if="qrDownloading" class="spinner-border spinner-border-sm me-1"></span>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+          </svg>
+          QR Codes
+        </button>
+
+        <div class="ms-auto d-flex gap-2">
+          <button class="btn btn-sm btn-outline-danger" :disabled="bulkLoading" @click="bulkDelete">
+            <span v-if="bulkLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Delete
+          </button>
+          <button class="btn btn-sm btn-outline-secondary" @click="clearSelection">Clear</button>
+        </div>
+      </div>
+
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
-              <th class="ps-4 py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Title / URL</th>
+              <th class="ps-3 py-3" style="width: 44px;">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  :checked="isAllSelected"
+                  :indeterminate="selectedIDs.size > 0 && !isAllSelected"
+                  @change="toggleSelectAll"
+                />
+              </th>
+              <th class="ps-2 py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Title / URL</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Short URL</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Clicks</th>
               <th class="py-3 fw-semibold text-muted small text-uppercase" style="letter-spacing: 0.05em;">Status</th>
@@ -264,9 +378,23 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="link in linksStore.links" :key="link.id">
+            <tr
+              v-for="link in linksStore.links"
+              :key="link.id"
+              :class="{ 'table-active': selectedIDs.has(link.id) }"
+            >
+              <!-- Select -->
+              <td class="ps-3 py-3">
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  :checked="selectedIDs.has(link.id)"
+                  @change="toggleSelect(link.id)"
+                />
+              </td>
+
               <!-- Title / URL -->
-              <td class="ps-4 py-3" style="max-width: 280px;">
+              <td class="ps-2 py-3" style="max-width: 280px;">
                 <div class="fw-medium text-truncate" :title="link.title || link.destination_url">
                   {{ link.title || '—' }}
                 </div>
@@ -291,8 +419,8 @@
                   <span v-if="link.has_password" title="Password protected">🔒 Protected</span>
                   <span
                     v-if="link.expires_at"
-                    :class="isExpired(link) ? 'text-danger fw-medium' : ''"
-                    :title="isExpired(link) ? 'This link has expired' : 'Expiry date'"
+                    :class="isExpired(link) ? 'text-danger fw-medium' : isExpiringSoon(link) ? 'text-warning fw-medium' : ''"
+                    :title="isExpired(link) ? 'This link has expired' : isExpiringSoon(link) ? 'Expiring within 3 days' : 'Expiry date'"
                   >
                     ⏱ {{ isExpired(link) ? 'Expired' : 'Expires' }} {{ formatDate(link.expires_at) }}
                   </span>
@@ -308,10 +436,16 @@
 
               <!-- Short URL -->
               <td class="py-3">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                   <a :href="link.short_url" target="_blank" rel="noopener noreferrer" class="link-primary text-decoration-none fw-medium small">
                     {{ link.short_url }}
                   </a>
+                  <span v-if="expiryBadgeClass(link)" :class="['badge', 'rounded-pill', 'ms-1', expiryBadgeClass(link)]" style="font-size:0.65rem;">
+                    {{ expiryBadgeLabel(link) }}
+                  </span>
+                  <span v-if="clickLimitBadgeClass(link)" :class="['badge', 'rounded-pill', 'ms-1', clickLimitBadgeClass(link)]" style="font-size:0.65rem;">
+                    {{ clickLimitBadgeLabel(link) }}
+                  </span>
                   <button
                     class="btn btn-sm btn-outline-secondary border-0 p-1 copy-btn"
                     :title="copiedId === link.id ? 'Copied!' : 'Copy to clipboard'"
@@ -479,6 +613,18 @@
                     </svg>
                   </button>
 
+                  <!-- Clone -->
+                  <button
+                    class="btn btn-sm btn-outline-secondary border-0 p-1"
+                    title="Clone Link"
+                    @click="openCloneModal(link)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+                      <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+                    </svg>
+                  </button>
+
                   <!-- Delete -->
                   <button
                     class="btn btn-sm btn-outline-danger border-0 p-1"
@@ -605,6 +751,15 @@
       :link="previewLink"
     />
 
+    <!-- Clone Link Modal -->
+    <CloneLinkModal
+      v-if="cloneLink"
+      ref="cloneModalRef"
+      modal-id="clone-link-modal"
+      :link="cloneLink"
+      @cloned="onLinkCloned"
+    />
+
     <!-- Copy toast -->
     <div
       class="position-fixed bottom-0 end-0 p-3"
@@ -643,7 +798,10 @@ import { Toast } from 'bootstrap';
 import { useLinksStore } from '@/stores/links';
 import type { LinkResponse } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
+import linksApi from '@/api/links';
 import foldersApi from '@/api/folders';
+import billingApi from '@/api/billing';
+import type { UsageCounts, PlanInfo } from '@/types/billing';
 import CreateLinkModal from '@/components/CreateLinkModal.vue';
 import QRCodeModal from '@/components/QRCodeModal.vue';
 import ImportLinksModal from '@/components/ImportLinksModal.vue';
@@ -651,9 +809,58 @@ import SplitTestModal from '@/components/SplitTestModal.vue';
 import GeoRulesModal from '@/components/GeoRulesModal.vue';
 import PixelsModal from '@/components/PixelsModal.vue';
 import LinkPreviewModal from '@/components/LinkPreviewModal.vue';
+import CloneLinkModal from '@/components/CloneLinkModal.vue';
 import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
+
+// ── Billing / Usage ───────────────────────────────────────────────────────────
+const usage = ref<UsageCounts | null>(null);
+const plan = ref<PlanInfo | null>(null);
+
+const usageWarning = computed(() => {
+  if (!usage.value || !plan.value) return null;
+  const used = usage.value.links;
+  const max = plan.value.max_links;
+  if (max === -1) return null;
+  const pct = used / max;
+  if (pct >= 1) return { level: 'danger', msg: `You've reached your limit of ${max} links. Upgrade to add more.` };
+  if (pct >= 0.8) return { level: 'warning', msg: `You've used ${used} of ${max} links (${Math.round(pct * 100)}%). Consider upgrading.` };
+  return null;
+});
+
+// ── Expiry / Click-limit badge helpers ────────────────────────────────────────
+function expiryBadgeClass(link: LinkResponse): string | null {
+  if (!link.expires_at) return null;
+  const days = Math.ceil((new Date(link.expires_at).getTime() - Date.now()) / 86400000);
+  if (days <= 0) return 'text-bg-danger';
+  if (days <= 3) return 'text-bg-danger';
+  if (days <= 7) return 'text-bg-warning';
+  return null;
+}
+
+function expiryBadgeLabel(link: LinkResponse): string | null {
+  if (!link.expires_at) return null;
+  const days = Math.ceil((new Date(link.expires_at).getTime() - Date.now()) / 86400000);
+  if (days <= 0) return 'Expired';
+  return `Exp. ${days}d`;
+}
+
+function clickLimitBadgeClass(link: LinkResponse): string | null {
+  if (!link.max_clicks) return null;
+  const pct = link.click_count / link.max_clicks;
+  if (pct >= 1) return 'text-bg-danger';
+  if (pct >= 0.9) return 'text-bg-warning';
+  return null;
+}
+
+function clickLimitBadgeLabel(link: LinkResponse): string | null {
+  if (!link.max_clicks) return null;
+  const pct = link.click_count / link.max_clicks;
+  if (pct >= 1) return 'At limit';
+  if (pct >= 0.9) return `${Math.round(pct * 100)}% used`;
+  return null;
+}
 
 const exporting = ref(false);
 const searchQuery = ref('');
@@ -675,14 +882,116 @@ const pixelModalRef = ref<InstanceType<typeof PixelsModal> | null>(null);
 const pixelLink = ref<LinkResponse | null>(null);
 const previewModalRef = ref<InstanceType<typeof LinkPreviewModal> | null>(null);
 const previewLink = ref<LinkResponse | null>(null);
+const cloneModalRef = ref<InstanceType<typeof CloneLinkModal> | null>(null);
+const cloneLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: Toast | null = null;
+
+// ── Bulk selection ────────────────────────────────────────────────────────────
+const selectedIDs = ref<Set<string>>(new Set());
+const bulkLoading = ref(false);
+const qrDownloading = ref(false);
+const bulkTagsInput = ref('');
+const bulkTagsMode = ref<'add_tags' | 'remove_tags'>('add_tags');
+const showBulkTagsBar = ref(false);
+const showBulkFolderBar = ref(false);
+
+const isAllSelected = computed(
+  () => linksStore.links.length > 0 && selectedIDs.value.size === linksStore.links.length,
+);
+
+function toggleSelect(id: string) {
+  const s = new Set(selectedIDs.value);
+  if (s.has(id)) s.delete(id);
+  else s.add(id);
+  selectedIDs.value = s;
+}
+
+function toggleSelectAll() {
+  if (isAllSelected.value) {
+    selectedIDs.value = new Set();
+  } else {
+    selectedIDs.value = new Set(linksStore.links.map((l) => l.id));
+  }
+}
+
+function clearSelection() {
+  selectedIDs.value = new Set();
+  bulkTagsInput.value = '';
+  showBulkTagsBar.value = false;
+  showBulkFolderBar.value = false;
+}
+
+async function executeBulkAction(action: string, extra: Record<string, unknown> = {}) {
+  if (selectedIDs.value.size === 0) return;
+  bulkLoading.value = true;
+  try {
+    await linksApi.bulkAction({
+      ids: [...selectedIDs.value],
+      action: action as 'delete' | 'activate' | 'deactivate' | 'move_folder' | 'add_tags' | 'remove_tags',
+      ...extra,
+    });
+    clearSelection();
+    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
+    await loadTags();
+  } catch {
+    // silent — store errors are shown by the table error banner
+  } finally {
+    bulkLoading.value = false;
+  }
+}
+
+async function bulkActivate() { await executeBulkAction('activate'); }
+async function bulkDeactivate() { await executeBulkAction('deactivate'); }
+
+async function bulkDelete() {
+  const n = selectedIDs.value.size;
+  if (!window.confirm(`Delete ${n} selected link${n !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+  await executeBulkAction('delete');
+}
+
+async function bulkMoveFolder(folderID: string | null) {
+  await executeBulkAction('move_folder', { folder_id: folderID });
+  showBulkFolderBar.value = false;
+}
+
+async function bulkApplyTags() {
+  const tags = bulkTagsInput.value.split(',').map((t) => t.trim()).filter(Boolean);
+  if (!tags.length) return;
+  await executeBulkAction(bulkTagsMode.value, { tags });
+  bulkTagsInput.value = '';
+  showBulkTagsBar.value = false;
+}
+
+async function downloadBulkQR() {
+  if (selectedIDs.value.size === 0) return;
+  qrDownloading.value = true;
+  try {
+    for (const id of selectedIDs.value) {
+      const link = linksStore.links.find(l => l.id === id);
+      const url = linksApi.getQRUrl(id);
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl;
+      a.download = `qr-${link?.slug ?? id}.png`;
+      a.click();
+      URL.revokeObjectURL(objUrl);
+      await new Promise(r => setTimeout(r, 150));
+    }
+  } finally {
+    qrDownloading.value = false;
+  }
+}
 
 // ── Folder / filter state ────────────────────────────────────────────────────
 const folders = ref<FolderResponse[]>([]);
 const selectedFolderID = ref('');
 const starredOnly = ref(false);
 const healthFilter = ref('');
+const expiringSoonFilter = ref(false);
 const checkingHealthId = ref<string | null>(null);
 
 // New folder creation
@@ -708,6 +1017,7 @@ function selectFolder(id: string) {
   selectedFolderID.value = id;
   starredOnly.value = false;
   healthFilter.value = '';
+  expiringSoonFilter.value = false;
   selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, id);
 }
@@ -716,6 +1026,7 @@ function selectStarred() {
   starredOnly.value = true;
   selectedFolderID.value = '';
   healthFilter.value = '';
+  expiringSoonFilter.value = false;
   selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', true);
 }
@@ -724,8 +1035,18 @@ function selectHealthFilter(status: string) {
   healthFilter.value = status;
   selectedFolderID.value = '';
   starredOnly.value = false;
+  expiringSoonFilter.value = false;
   selectedTags.value = [];
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, status);
+}
+
+function selectExpiringSoon() {
+  expiringSoonFilter.value = true;
+  selectedFolderID.value = '';
+  starredOnly.value = false;
+  healthFilter.value = '';
+  selectedTags.value = [];
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, undefined, undefined, true);
 }
 
 async function loadTags() {
@@ -747,12 +1068,13 @@ function toggleTag(tag: string) {
   selectedFolderID.value = '';
   starredOnly.value = false;
   healthFilter.value = '';
+  expiringSoonFilter.value = false;
   linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', undefined, undefined, selectedTags.value.length ? selectedTags.value : undefined);
 }
 
 function clearTagFilter() {
   selectedTags.value = [];
-  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined);
+  linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, undefined, expiringSoonFilter.value || undefined);
 }
 
 function openNewFolderInput() {
@@ -812,7 +1134,7 @@ async function deleteFolder(folder: FolderResponse) {
     folders.value = folders.value.filter(f => f.id !== folder.id);
     if (selectedFolderID.value === folder.id) {
       selectedFolderID.value = '';
-      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+      linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, '', starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
     }
   } catch {
     // silent
@@ -824,17 +1146,25 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null;
 watch(searchQuery, (val) => {
   if (searchTimer) clearTimeout(searchTimer);
   searchTimer = setTimeout(() => {
-    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+    linksStore.fetchLinks(1, linksStore.limit, val, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
   }, 400);
 });
 
-onMounted(() => {
+onMounted(async () => {
   linksStore.fetchLinks(1, 20, '');
   loadFolders();
   loadTags();
   if (toastEl.value) {
     toastInstance = new Toast(toastEl.value, { delay: 2000 });
   }
+  try {
+    const res = await billingApi.getUsage();
+    usage.value = res.data.data;
+  } catch {}
+  try {
+    const res = await billingApi.getSubscription();
+    plan.value = res.data.data.plan;
+  } catch {}
 });
 
 function formatDate(dateStr: string): string {
@@ -922,8 +1252,18 @@ function openPreviewModal(link: LinkResponse) {
   setTimeout(() => previewModalRef.value?.show(), 50);
 }
 
+function openCloneModal(link: LinkResponse) {
+  cloneLink.value = link;
+  setTimeout(() => cloneModalRef.value?.show(), 50);
+}
+
+async function onLinkCloned(newLink: LinkResponse) {
+  linksStore.links.unshift(newLink);
+  await loadTags();
+}
+
 async function onImportDone(_result: ImportLinksResponse) {
-  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+  await linksStore.fetchLinks(1, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
   await loadTags();
 }
 
@@ -941,7 +1281,7 @@ function openQRModal(link: LinkResponse) {
 }
 
 async function onLinkSaved(_link: LinkResponse) {
-  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+  await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
   editingLink.value = null;
   await loadTags();
 }
@@ -949,7 +1289,7 @@ async function onLinkSaved(_link: LinkResponse) {
 async function toggleStar(link: LinkResponse) {
   await linksStore.toggleStar(link.id);
   if (starredOnly.value && !linksStore.links.find(l => l.id === link.id)?.is_starred) {
-    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, '', true, healthFilter.value || undefined);
+    await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, '', true, healthFilter.value || undefined, undefined, expiringSoonFilter.value || undefined);
   }
 }
 
@@ -961,7 +1301,7 @@ async function runHealthCheck(link: LinkResponse) {
     if (healthFilter.value === 'unhealthy') {
       const updated = linksStore.links.find(l => l.id === link.id);
       if (updated && updated.health_status !== 'unhealthy') {
-        await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, 'unhealthy');
+        await linksStore.fetchLinks(linksStore.page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, 'unhealthy', undefined, expiringSoonFilter.value || undefined);
       }
     }
   } finally {
@@ -971,6 +1311,14 @@ async function runHealthCheck(link: LinkResponse) {
 
 function isExpired(link: LinkResponse): boolean {
   return !!link.expires_at && new Date(link.expires_at) < new Date();
+}
+
+function isExpiringSoon(link: LinkResponse): boolean {
+  if (!link.expires_at) return false;
+  const exp = new Date(link.expires_at);
+  const now = new Date();
+  const threeDays = 3 * 24 * 60 * 60 * 1000;
+  return exp > now && exp.getTime() - now.getTime() <= threeDays;
 }
 
 function isClickLimitReached(link: LinkResponse): boolean {
@@ -1021,7 +1369,7 @@ async function confirmDelete(link: LinkResponse) {
     const newTotal = linksStore.total - 1;
     const maxPage = Math.ceil(newTotal / linksStore.limit) || 1;
     const targetPage = Math.min(linksStore.page, maxPage);
-    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+    await linksStore.fetchLinks(targetPage, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
     await loadTags();
   } finally {
     deletingId.value = null;
@@ -1030,7 +1378,7 @@ async function confirmDelete(link: LinkResponse) {
 
 function goToPage(page: number) {
   if (page < 1 || page > linksStore.totalPages) return;
-  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined);
+  linksStore.fetchLinks(page, linksStore.limit, searchQuery.value, selectedFolderID.value, starredOnly.value || undefined, healthFilter.value || undefined, selectedTags.value.length ? selectedTags.value : undefined, expiringSoonFilter.value || undefined);
 }
 
 const visiblePages = computed<(number | string)[]>(() => {

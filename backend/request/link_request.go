@@ -37,10 +37,25 @@ type ListLinksRequest struct {
 	Page         int      `form:"page,default=1" binding:"min=1"`
 	Limit        int      `form:"limit,default=20" binding:"min=1,max=100"`
 	Search       string   `form:"search"`
-	FolderID     string   `form:"folder_id"`     // optional UUID filter
-	Starred      *bool    `form:"starred"`        // optional; true = starred only
-	HealthStatus string   `form:"health_status"` // optional; healthy|unhealthy|timeout|error|unknown
-	Tags         []string `form:"tags"`          // optional; filter links that contain any of these tags
+	FolderID     string   `form:"folder_id"`       // optional UUID filter
+	Starred      *bool    `form:"starred"`          // optional; true = starred only
+	HealthStatus string   `form:"health_status"`   // optional; healthy|unhealthy|timeout|error|unknown
+	Tags         []string `form:"tags"`            // optional; filter links that contain any of these tags
+	ExpiringSoon *bool    `form:"expiring_soon"`   // optional; true = expiring within 3 days
+}
+
+// BulkLinkActionRequest is the request body for bulk link operations.
+type BulkLinkActionRequest struct {
+	IDs      []string `json:"ids"       binding:"required,min=1,max=100"`
+	Action   string   `json:"action"    binding:"required,oneof=delete activate deactivate move_folder add_tags remove_tags"`
+	FolderID *string  `json:"folder_id"` // for move_folder; null removes from folder
+	Tags     []string `json:"tags"      binding:"omitempty,max=10"` // for add_tags / remove_tags
+}
+
+// CloneLinkRequest is the optional request body for cloning an existing link.
+type CloneLinkRequest struct {
+	NewTitle string `json:"new_title" binding:"omitempty,max=500"`
+	NewSlug  string `json:"new_slug"  binding:"omitempty,min=3,max=20,alphanum"`
 }
 
 // DemoShortenRequest is for the unauthenticated demo shorten endpoint.

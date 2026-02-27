@@ -3,9 +3,14 @@ import type { ApiResponse } from '@/types/auth';
 import type {
   CreateLinkRequest,
   UpdateLinkRequest,
+  CloneLinkRequest,
+  BulkLinkActionRequest,
+  BulkActionResponse,
   LinkResponse,
   LinkListResponse,
   AnalyticsResponse,
+  PeriodComparisonResponse,
+  MultiLinkComparisonResponse,
   DemoShortenRequest,
   DemoShortenResponse,
   ImportLinksResponse,
@@ -17,8 +22,8 @@ export const linksApi = {
     return response.data;
   },
 
-  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string, tags?: string[]): Promise<ApiResponse<LinkListResponse>> => {
-    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred, health_status: healthStatus || undefined, tags: tags?.length ? tags : undefined } });
+  list: async (page = 1, limit = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string, tags?: string[], expiringSoon?: boolean): Promise<ApiResponse<LinkListResponse>> => {
+    const response = await apiClient.get('/links', { params: { page, limit, search, folder_id: folderID || undefined, starred, health_status: healthStatus || undefined, tags: tags?.length ? tags : undefined, expiring_soon: expiringSoon || undefined } });
     return response.data;
   },
 
@@ -91,6 +96,20 @@ export const linksApi = {
     return `${base}/links/${id}/analytics/live?token=${token}`;
   },
 
+  compareLinks: async (ids: string[], from?: string, to?: string): Promise<ApiResponse<MultiLinkComparisonResponse>> => {
+    const response = await apiClient.get('/links/comparison', {
+      params: { ids: ids.join(','), from, to },
+    });
+    return response.data;
+  },
+
+  getComparison: async (id: string, from?: string, to?: string): Promise<ApiResponse<PeriodComparisonResponse>> => {
+    const response = await apiClient.get(`/links/${id}/analytics/comparison`, {
+      params: { from, to },
+    });
+    return response.data;
+  },
+
   getAnalytics: async (id: string, from?: string, to?: string, granularity = 'day'): Promise<ApiResponse<AnalyticsResponse>> => {
     const response = await apiClient.get(`/links/${id}/analytics`, {
       params: { from, to, granularity },
@@ -100,6 +119,16 @@ export const linksApi = {
 
   demoShorten: async (data: DemoShortenRequest): Promise<ApiResponse<DemoShortenResponse>> => {
     const response = await apiClient.post('/demo/shorten', data);
+    return response.data;
+  },
+
+  bulkAction: async (data: BulkLinkActionRequest): Promise<ApiResponse<BulkActionResponse>> => {
+    const response = await apiClient.post('/links/bulk', data);
+    return response.data;
+  },
+
+  clone: async (id: string, data: CloneLinkRequest = {}): Promise<ApiResponse<LinkResponse>> => {
+    const response = await apiClient.post(`/links/${id}/clone`, data);
     return response.data;
   },
 

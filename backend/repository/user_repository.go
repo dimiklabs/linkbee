@@ -60,6 +60,9 @@ type UserRepositoryI interface {
 	// Count
 	Count(ctx context.Context) (int64, error)
 	CountByStatus(ctx context.Context, status string) (int64, error)
+
+	// Time series
+	GetRegistrationTimeSeries(ctx context.Context, from, to time.Time) ([]TimeSeriesPoint, error)
 }
 
 type UserRepository struct {
@@ -664,4 +667,29 @@ func (r *UserRepository) CountByStatus(ctx context.Context, status string) (int6
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r *UserRepository) GetRegistrationTimeSeries(ctx context.Context, from, to time.Time) ([]TimeSeriesPoint, error) {
+	type result struct {
+		Timestamp time.Time
+		Count     int64
+	}
+
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Raw(`SELECT date_trunc('day', created_at) AS timestamp, COUNT(*) AS count
+		     FROM users
+		     WHERE created_at BETWEEN ? AND ? AND deleted_at IS NULL
+		     GROUP BY 1
+		     ORDER BY 1`, from, to).
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get registration time series", zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]TimeSeriesPoint, len(rows))
+	for i, row := range rows {
+		points[i] = TimeSeriesPoint{Timestamp: row.Timestamp, Count: row.Count}
+	}
+	return points, nil
 }

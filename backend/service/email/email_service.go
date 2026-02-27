@@ -23,6 +23,8 @@ type EmailServiceI interface {
 	SendVerificationEmail(ctx context.Context, user *model.User) error
 	VerifyEmail(ctx context.Context, token string) error
 	ResendVerificationEmail(ctx context.Context, userID uuid.UUID, email string) error
+	// SendHTML sends a generic HTML email. Used by other services (e.g., reporting).
+	SendHTML(ctx context.Context, to, subject, body string) error
 }
 
 type EmailService struct {
@@ -173,6 +175,11 @@ func (s *EmailService) ResendVerificationEmail(ctx context.Context, userID uuid.
 
 	// Send new verification email
 	return s.SendVerificationEmail(ctx, user)
+}
+
+// SendHTML sends a raw HTML email to the given address.
+func (s *EmailService) SendHTML(ctx context.Context, to, subject, body string) error {
+	return s.sendEmail(ctx, to, subject, body)
 }
 
 func (s *EmailService) renderVerificationEmail(user *model.User, verificationURL string) (string, error) {

@@ -29,7 +29,7 @@ import (
 type LinkServiceI interface {
 	CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
-	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) (*response.LinkListResponse, *dto.ServiceError)
+	ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string, expiringSoon *bool) (*response.LinkListResponse, *dto.ServiceError)
 	GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, *dto.ServiceError)
 	UpdateLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.UpdateLinkRequest) (*response.LinkResponse, *dto.ServiceError)
 	DeleteLink(ctx context.Context, id uuid.UUID, userID uuid.UUID) *dto.ServiceError
@@ -37,6 +37,8 @@ type LinkServiceI interface {
 	ImportLinks(ctx context.Context, userID uuid.UUID, r io.Reader) (*response.ImportLinksResponse, *dto.ServiceError)
 	CheckLinkHealth(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*response.LinkResponse, *dto.ServiceError)
 	CheckDuplicate(ctx context.Context, userID uuid.UUID, destURL string) (*response.LinkResponse, *dto.ServiceError)
+	CloneLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.CloneLinkRequest) (*response.LinkResponse, *dto.ServiceError)
+	BulkAction(ctx context.Context, userID uuid.UUID, req *request.BulkLinkActionRequest) (*response.BulkActionResponse, *dto.ServiceError)
 }
 
 // healthHTTPClient is shared across all on-demand health checks.
@@ -174,8 +176,8 @@ func (s *linkService) GetLink(ctx context.Context, id uuid.UUID, userID uuid.UUI
 	return s.toLinkResponse(link), nil
 }
 
-func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) (*response.LinkListResponse, *dto.ServiceError) {
-	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred, healthStatus, tags)
+func (s *linkService) ListLinks(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string, expiringSoon *bool) (*response.LinkListResponse, *dto.ServiceError) {
+	links, total, err := s.linkRepo.GetByUserID(ctx, userID, page, limit, search, folderID, starred, healthStatus, tags, expiringSoon)
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
@@ -553,6 +555,85 @@ func (s *linkService) toLinkResponse(link *model.Link) *response.LinkResponse {
 	}
 }
 
+func (s *linkService) CloneLink(ctx context.Context, id uuid.UUID, userID uuid.UUID, req *request.CloneLinkRequest) (*response.LinkResponse, *dto.ServiceError) {
+	src, err := s.linkRepo.GetByID(ctx, id)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	if src.UserID != userID {
+		return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+	}
+
+	// Determine slug
+	slug := req.NewSlug
+	if slug == "" {
+		for attempt := 0; attempt < 5; attempt++ {
+			generated, err := util.GenerateSlug(s.linkCfg.SlugLength)
+			if err != nil {
+				logger.ErrorCtx(ctx, "Failed to generate slug", zap.Error(err))
+				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+			}
+			exists, err := s.linkRepo.SlugExists(ctx, generated)
+			if err != nil {
+				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+			}
+			if !exists {
+				slug = generated
+				break
+			}
+		}
+		if slug == "" {
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "Failed to generate unique slug")
+		}
+	} else {
+		exists, err := s.linkRepo.SlugExists(ctx, slug)
+		if err != nil {
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+		}
+		if exists {
+			return nil, dto.NewConflictError(constant.ErrCodeSlugTaken, constant.ErrMsgSlugTaken)
+		}
+	}
+
+	title := src.Title
+	if req.NewTitle != "" {
+		title = req.NewTitle
+	}
+
+	clone := &model.Link{
+		UserID:         userID,
+		FolderID:       src.FolderID,
+		Slug:           slug,
+		DestinationURL: src.DestinationURL,
+		Title:          title,
+		RedirectType:   src.RedirectType,
+		IsActive:       true,
+		Tags:           src.Tags,
+		UTMSource:      src.UTMSource,
+		UTMMedium:      src.UTMMedium,
+		UTMCampaign:    src.UTMCampaign,
+		MaxClicks:      src.MaxClicks,
+		ExpiresAt:      src.ExpiresAt,
+		// reset counters and flags
+		ClickCount:      0,
+		IsStarred:       false,
+		IsSplitTest:     false,
+		IsGeoRouting:    false,
+		IsPixelTracking: false,
+		HealthStatus:    "unknown",
+	}
+
+	if err := s.linkRepo.Create(ctx, clone); err != nil {
+		logger.ErrorCtx(ctx, "Failed to clone link", zap.Error(err))
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	return s.toLinkResponse(clone), nil
+}
+
 func (s *linkService) CheckDuplicate(ctx context.Context, userID uuid.UUID, destURL string) (*response.LinkResponse, *dto.ServiceError) {
 	link, err := s.linkRepo.FindByDestinationURL(ctx, userID, destURL)
 	if err == gorm.ErrRecordNotFound {
@@ -562,4 +643,59 @@ func (s *linkService) CheckDuplicate(ctx context.Context, userID uuid.UUID, dest
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to check duplicate")
 	}
 	return s.toLinkResponse(link), nil
+}
+
+func (s *linkService) BulkAction(ctx context.Context, userID uuid.UUID, req *request.BulkLinkActionRequest) (*response.BulkActionResponse, *dto.ServiceError) {
+	ids := make([]uuid.UUID, 0, len(req.IDs))
+	for _, idStr := range req.IDs {
+		id, err := uuid.Parse(idStr)
+		if err != nil {
+			continue
+		}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "No valid link IDs provided")
+	}
+
+	var affected int64
+	var err error
+
+	switch req.Action {
+	case "delete":
+		affected, err = s.linkRepo.BulkDelete(ctx, ids, userID)
+	case "activate":
+		affected, err = s.linkRepo.BulkSetActive(ctx, ids, userID, true)
+	case "deactivate":
+		affected, err = s.linkRepo.BulkSetActive(ctx, ids, userID, false)
+	case "move_folder":
+		var folderID *uuid.UUID
+		if req.FolderID != nil && *req.FolderID != "" {
+			parsed, parseErr := uuid.Parse(*req.FolderID)
+			if parseErr != nil {
+				return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "Invalid folder_id")
+			}
+			folderID = &parsed
+		}
+		affected, err = s.linkRepo.BulkSetFolder(ctx, ids, userID, folderID)
+	case "add_tags":
+		if len(req.Tags) == 0 {
+			return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "Tags are required for add_tags action")
+		}
+		affected, err = s.linkRepo.BulkAddTags(ctx, ids, userID, req.Tags)
+	case "remove_tags":
+		if len(req.Tags) == 0 {
+			return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "Tags are required for remove_tags action")
+		}
+		affected, err = s.linkRepo.BulkRemoveTags(ctx, ids, userID, req.Tags)
+	default:
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "Unknown action")
+	}
+
+	if err != nil {
+		logger.ErrorCtx(ctx, "Bulk action failed", zap.String("action", req.Action), zap.Error(err))
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	return &response.BulkActionResponse{Affected: affected, Action: req.Action}, nil
 }

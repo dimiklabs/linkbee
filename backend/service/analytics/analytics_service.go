@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"context"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +18,8 @@ import (
 
 type AnalyticsServiceI interface {
 	GetLinkAnalytics(ctx context.Context, linkID uuid.UUID, userID uuid.UUID, from, to time.Time, granularity string) (*response.AnalyticsResponse, *dto.ServiceError)
+	GetPeriodComparison(ctx context.Context, linkID uuid.UUID, userID uuid.UUID, from, to time.Time) (*response.PeriodComparisonResponse, *dto.ServiceError)
+	GetMultiLinkComparison(ctx context.Context, userID uuid.UUID, linkIDs []uuid.UUID, from, to time.Time) (*response.MultiLinkComparisonResponse, *dto.ServiceError)
 }
 
 type analyticsService struct {
@@ -86,6 +89,11 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		logger.ErrorCtx(ctx, "Failed to get OS breakdown", zap.Error(err))
 	}
 
+	sources, err := s.clickEventRepo.GetSourceBreakdown(ctx, linkID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get source breakdown", zap.Error(err))
+	}
+
 	heatmap, err := s.clickEventRepo.GetHeatmapData(ctx, linkID, from, to)
 	if err != nil {
 		logger.ErrorCtx(ctx, "Failed to get heatmap data", zap.Error(err))
@@ -104,6 +112,31 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 	utmCampaigns, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_campaign", 10)
 	if err != nil {
 		logger.ErrorCtx(ctx, "Failed to get UTM campaign breakdown", zap.Error(err))
+	}
+
+	utmContents, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_content", 10)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM content breakdown", zap.Error(err))
+	}
+
+	utmTerms, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_term", 10)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM term breakdown", zap.Error(err))
+	}
+
+	cities, err := s.clickEventRepo.GetCityBreakdown(ctx, linkID, 20)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get city breakdown", zap.Error(err))
+	}
+
+	referrerCategories, err := s.clickEventRepo.GetReferrerCategoryBreakdown(ctx, linkID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get referrer category breakdown", zap.Error(err))
+	}
+
+	firstTimeVisitors, returningVisitors, err := s.clickEventRepo.GetReturnVisitorStats(ctx, linkID)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get return visitor stats", zap.Error(err))
 	}
 
 	tsData := make([]response.TimeSeriesData, len(timeSeries))
@@ -136,6 +169,11 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		osData[i] = response.OSData{OS: o.OS, Count: o.Count}
 	}
 
+	sourceData := make([]response.SourceData, len(sources))
+	for i, s := range sources {
+		sourceData[i] = response.SourceData{Source: s.Source, Count: s.Count}
+	}
+
 	heatmapData := make([]response.HeatmapData, len(heatmap))
 	for i, h := range heatmap {
 		heatmapData[i] = response.HeatmapData{DayOfWeek: h.DayOfWeek, Hour: h.Hour, Count: h.Count}
@@ -156,19 +194,198 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		utmCampaignData[i] = response.UTMData{Value: u.Value, Count: u.Count}
 	}
 
+	utmContentData := make([]response.UTMData, len(utmContents))
+	for i, u := range utmContents {
+		utmContentData[i] = response.UTMData{Value: u.Value, Count: u.Count}
+	}
+
+	utmTermData := make([]response.UTMData, len(utmTerms))
+	for i, u := range utmTerms {
+		utmTermData[i] = response.UTMData{Value: u.Value, Count: u.Count}
+	}
+
+	cityData := make([]response.CityData, len(cities))
+	for i, c := range cities {
+		cityData[i] = response.CityData{City: c.City, Country: c.Country, Count: c.Count}
+	}
+
+	refCatData := make([]response.ReferrerCategoryData, len(referrerCategories))
+	for i, rc := range referrerCategories {
+		refCatData[i] = response.ReferrerCategoryData{Category: rc.Category, Count: rc.Count}
+	}
+
 	return &response.AnalyticsResponse{
-		LinkID:       linkID,
-		TotalClicks:  totalClicks,
-		UniqueClicks: uniqueClicks,
+		LinkID:            linkID,
+		TotalClicks:       totalClicks,
+		UniqueClicks:      uniqueClicks,
+		FirstTimeVisitors: firstTimeVisitors,
+		ReturningVisitors: returningVisitors,
 		TimeSeries:   tsData,
 		Referrers:    refData,
 		Devices:      devData,
 		Countries:    countryData,
 		Browsers:     browserData,
 		OSBreakdown:  osData,
+		Sources:      sourceData,
 		Heatmap:      heatmapData,
 		UTMSources:   utmSourceData,
 		UTMMediums:   utmMediumData,
 		UTMCampaigns: utmCampaignData,
+		UTMContents:        utmContentData,
+		UTMTerms:           utmTermData,
+		Cities:             cityData,
+		ReferrerCategories: refCatData,
+	}, nil
+}
+
+func (s *analyticsService) GetPeriodComparison(ctx context.Context, linkID uuid.UUID, userID uuid.UUID, from, to time.Time) (*response.PeriodComparisonResponse, *dto.ServiceError) {
+	// Verify ownership
+	link, err := s.linkRepo.GetByID(ctx, linkID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	if link.UserID != userID {
+		return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+	}
+
+	// Current period metrics
+	curClicks, err := s.clickEventRepo.GetClicksInPeriodByLinkID(ctx, linkID, from, to)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get current period clicks", zap.Error(err))
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	curUnique, err := s.clickEventRepo.GetUniqueClicksInPeriodByLinkID(ctx, linkID, from, to)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get current period unique clicks", zap.Error(err))
+	}
+
+	// Previous period: same duration shifted back
+	duration := to.Sub(from)
+	prevFrom := from.Add(-duration)
+	prevTo := from
+
+	prevClicks, err := s.clickEventRepo.GetClicksInPeriodByLinkID(ctx, linkID, prevFrom, prevTo)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get previous period clicks", zap.Error(err))
+	}
+	prevUnique, err := s.clickEventRepo.GetUniqueClicksInPeriodByLinkID(ctx, linkID, prevFrom, prevTo)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get previous period unique clicks", zap.Error(err))
+	}
+
+	return &response.PeriodComparisonResponse{
+		LinkID: linkID,
+		Current: response.PeriodMetrics{
+			From:         from.Format(time.RFC3339),
+			To:           to.Format(time.RFC3339),
+			TotalClicks:  curClicks,
+			UniqueClicks: curUnique,
+		},
+		Previous: response.PeriodMetrics{
+			From:         prevFrom.Format(time.RFC3339),
+			To:           prevTo.Format(time.RFC3339),
+			TotalClicks:  prevClicks,
+			UniqueClicks: prevUnique,
+		},
+		Clicks:       periodChange(curClicks, prevClicks),
+		UniqueClicks: periodChange(curUnique, prevUnique),
+	}, nil
+}
+
+// periodChange computes the delta between current and previous values.
+func periodChange(current, previous int64) response.PeriodChange {
+	diff := current - previous
+	var pct float64
+	if previous > 0 {
+		pct = math.Round((float64(diff)/float64(previous))*1000) / 10 // 1 decimal
+	} else if current > 0 {
+		pct = 100.0
+	}
+
+	trend := "stable"
+	if pct > 5.0 {
+		trend = "up"
+	} else if pct < -5.0 {
+		trend = "down"
+	}
+
+	return response.PeriodChange{
+		CountChange:   diff,
+		PercentChange: pct,
+		Trend:         trend,
+	}
+}
+
+func (s *analyticsService) GetMultiLinkComparison(ctx context.Context, userID uuid.UUID, linkIDs []uuid.UUID, from, to time.Time) (*response.MultiLinkComparisonResponse, *dto.ServiceError) {
+	if len(linkIDs) < 2 || len(linkIDs) > 5 {
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "provide between 2 and 5 link IDs")
+	}
+
+	spanDays := int64(math.Round(to.Sub(from).Hours() / 24))
+	if spanDays < 1 {
+		spanDays = 1
+	}
+
+	metrics := make([]response.LinkComparisonMetric, 0, len(linkIDs))
+
+	for _, linkID := range linkIDs {
+		link, err := s.linkRepo.GetByID(ctx, linkID)
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+			}
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+		}
+		if link.UserID != userID {
+			return nil, dto.NewNotFoundError(constant.ErrCodeLinkNotFound, constant.ErrMsgLinkNotFound)
+		}
+
+		clicks, _ := s.clickEventRepo.GetClicksInPeriodByLinkID(ctx, linkID, from, to)
+		unique, _ := s.clickEventRepo.GetUniqueClicksInPeriodByLinkID(ctx, linkID, from, to)
+
+		clicksPerDay := math.Round(float64(clicks)/float64(spanDays)*100) / 100
+
+		topReferrer := ""
+		if refs, _ := s.clickEventRepo.GetTopReferrers(ctx, linkID, 1); len(refs) > 0 {
+			topReferrer = refs[0].Referrer
+		}
+
+		topCountry := ""
+		if countries, _ := s.clickEventRepo.GetCountryBreakdown(ctx, linkID); len(countries) > 0 {
+			topCountry = countries[0].Country
+		}
+
+		topBrowser := ""
+		if browsers, _ := s.clickEventRepo.GetBrowserBreakdown(ctx, linkID); len(browsers) > 0 {
+			topBrowser = browsers[0].Browser
+		}
+
+		topDevice := ""
+		if devices, _ := s.clickEventRepo.GetDeviceBreakdown(ctx, linkID); len(devices) > 0 {
+			topDevice = devices[0].DeviceType
+		}
+
+		metrics = append(metrics, response.LinkComparisonMetric{
+			LinkID:       linkID,
+			Slug:         link.Slug,
+			Title:        link.Title,
+			TotalClicks:  clicks,
+			UniqueClicks: unique,
+			ClicksPerDay: clicksPerDay,
+			TopReferrer:  topReferrer,
+			TopCountry:   topCountry,
+			TopBrowser:   topBrowser,
+			TopDevice:    topDevice,
+		})
+	}
+
+	return &response.MultiLinkComparisonResponse{
+		Links:    metrics,
+		From:     from.Format(time.RFC3339),
+		To:       to.Format(time.RFC3339),
+		SpanDays: spanDays,
 	}, nil
 }

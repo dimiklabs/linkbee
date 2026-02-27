@@ -11,6 +11,13 @@
       </button>
     </div>
 
+    <!-- Usage warning banner -->
+    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
+      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
+      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
+      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
+    </div>
+
     <!-- Create form -->
     <div v-if="showCreate" class="card border-0 shadow-sm mb-4">
       <div class="card-body">
@@ -286,10 +293,28 @@ def verify(secret: str, body: bytes, header: str) -> bool:
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { RouterLink } from 'vue-router';
 import webhooksApi from '@/api/webhooks';
 import { WEBHOOK_EVENTS } from '@/types/webhooks';
 import type { Webhook, WebhookDelivery } from '@/types/webhooks';
+import billingApi from '@/api/billing';
+import type { UsageCounts, PlanInfo } from '@/types/billing';
+
+// ── Billing / Usage ───────────────────────────────────────────────────────────
+const usage = ref<UsageCounts | null>(null);
+const plan = ref<PlanInfo | null>(null);
+
+const usageWarning = computed(() => {
+  if (!usage.value || !plan.value) return null;
+  const used = usage.value.webhooks;
+  const max = plan.value.max_webhooks;
+  if (max === -1) return null;
+  const pct = used / max;
+  if (pct >= 1) return { level: 'danger', msg: `You've reached your limit of ${max} webhooks. Upgrade to add more.` };
+  if (pct >= 0.8) return { level: 'warning', msg: `You've used ${used} of ${max} webhooks (${Math.round(pct * 100)}%). Consider upgrading.` };
+  return null;
+});
 
 const webhooks = ref<Webhook[]>([]);
 const loading = ref(false);
@@ -502,5 +527,15 @@ watch(showCreate, async (val) => {
   }
 });
 
-onMounted(fetchWebhooks);
+onMounted(async () => {
+  await fetchWebhooks();
+  try {
+    const res = await billingApi.getUsage();
+    usage.value = res.data.data;
+  } catch {}
+  try {
+    const res = await billingApi.getSubscription();
+    plan.value = res.data.data.plan;
+  } catch {}
+});
 </script>

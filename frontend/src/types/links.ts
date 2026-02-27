@@ -84,6 +84,17 @@ export interface CountryPoint {
   count: number;
 }
 
+export interface CityPoint {
+  city: string;
+  country: string;
+  count: number;
+}
+
+export interface ReferrerCategoryPoint {
+  category: 'direct' | 'search' | 'social' | 'email' | 'referral';
+  count: number;
+}
+
 export interface BrowserPoint {
   browser: string;
   count: number;
@@ -105,20 +116,53 @@ export interface UTMPoint {
   count: number;
 }
 
+export interface SourcePoint {
+  source: string;
+  count: number;
+}
+
 export interface AnalyticsResponse {
   link_id: string;
   total_clicks: number;
   unique_clicks: number;
+  first_time_visitors: number;
+  returning_visitors: number;
   time_series: TimeSeriesPoint[];
   referrers: ReferrerPoint[];
   devices: DevicePoint[];
   countries: CountryPoint[];
   browsers: BrowserPoint[];
   os_breakdown: OSPoint[];
+  sources: SourcePoint[];
   heatmap: HeatmapPoint[];
   utm_sources: UTMPoint[];
   utm_mediums: UTMPoint[];
   utm_campaigns: UTMPoint[];
+  utm_contents: UTMPoint[];
+  utm_terms: UTMPoint[];
+  cities: CityPoint[];
+  referrer_categories: ReferrerCategoryPoint[];
+}
+
+export interface PeriodMetrics {
+  from: string;
+  to: string;
+  total_clicks: number;
+  unique_clicks: number;
+}
+
+export interface PeriodChange {
+  count_change: number;
+  percent_change: number;
+  trend: 'up' | 'down' | 'stable';
+}
+
+export interface PeriodComparisonResponse {
+  link_id: string;
+  current: PeriodMetrics;
+  previous: PeriodMetrics;
+  clicks: PeriodChange;
+  unique_clicks: PeriodChange;
 }
 
 export interface DemoShortenRequest {
@@ -172,6 +216,44 @@ export interface UpdateGeoRuleRequest {
   country_code?: string;
   destination_url?: string;
   priority?: number;
+}
+
+export interface LinkComparisonMetric {
+  link_id: string;
+  slug: string;
+  short_url: string;
+  title?: string;
+  total_clicks: number;
+  unique_clicks: number;
+  clicks_per_day: number;
+  top_referrer?: string;
+  top_country?: string;
+  top_browser?: string;
+  top_device?: string;
+}
+
+export interface MultiLinkComparisonResponse {
+  links: LinkComparisonMetric[];
+  from: string;
+  to: string;
+  span_days: number;
+}
+
+export interface CloneLinkRequest {
+  new_title?: string;
+  new_slug?: string;
+}
+
+export interface BulkLinkActionRequest {
+  ids: string[];
+  action: 'delete' | 'activate' | 'deactivate' | 'move_folder' | 'add_tags' | 'remove_tags';
+  folder_id?: string | null;
+  tags?: string[];
+}
+
+export interface BulkActionResponse {
+  affected: number;
+  action: string;
 }
 
 export interface ImportLinkError {

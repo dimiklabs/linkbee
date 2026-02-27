@@ -39,6 +39,62 @@
           </div>
         </div>
       </div>
+      <div class="col-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body px-4 py-3">
+            <div class="text-muted small mb-1">&#128070; Total Clicks</div>
+            <div class="fw-bold fs-4">{{ stats != null ? stats.total_clicks.toLocaleString() : '—' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Platform Overview charts ───────────────────────────────────────── -->
+    <div class="row g-3 mb-4" v-if="stats">
+      <!-- Horizontal bar: Platform metrics comparison -->
+      <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-bottom py-3 px-4">
+            <span class="fw-semibold">Platform Overview</span>
+          </div>
+          <div class="card-body px-4 py-3">
+            <VChart :option="platformBarOption" style="height: 160px;" autoresize />
+          </div>
+        </div>
+      </div>
+
+      <!-- Donut ring: Active vs Inactive users -->
+      <div class="col-12 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-white border-bottom py-3 px-4">
+            <span class="fw-semibold">User Activity</span>
+          </div>
+          <div class="card-body px-4 py-3 d-flex flex-column align-items-center justify-content-center">
+            <VChart :option="userRingOption" style="height: 160px; width: 100%;" autoresize />
+            <div class="d-flex gap-3 mt-2" style="font-size: 0.78rem;">
+              <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:#22c55e;"></span>Active</span>
+              <span><span class="d-inline-block rounded-circle me-1" style="width:10px;height:10px;background:#f59e0b;"></span>Inactive</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Platform Growth Chart ──────────────────────────────────────────── -->
+    <div class="row g-3 mb-4">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white border-bottom py-3 px-4">
+            <span class="fw-semibold">Platform Growth (Last 30 Days)</span>
+          </div>
+          <div class="card-body px-4 py-3">
+            <div v-if="growthLoading" class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-primary"></div>
+            </div>
+            <VChart v-else :option="growthLineOption" style="height: 240px;" autoresize />
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── Users Table ────────────────────────────────────────────────────── -->
@@ -155,8 +211,15 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { use } from 'echarts/core';
+import { BarChart, PieChart, LineChart } from 'echarts/charts';
+import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+import VChart from 'vue-echarts';
 import adminApi from '@/api/admin';
-import type { AdminStats, AdminUser } from '@/types/admin';
+import type { AdminStats, AdminUser, GrowthTimeSeriesPoint } from '@/types/admin';
+
+use([BarChart, PieChart, LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 const LIMIT = 20;
 
@@ -167,10 +230,108 @@ const currentPage = ref(1);
 const usersLoading = ref(false);
 const search = ref('');
 const updatingId = ref<string | null>(null);
+const growthLoading = ref(true);
+const growthUsers = ref<GrowthTimeSeriesPoint[]>([]);
+const growthLinks = ref<GrowthTimeSeriesPoint[]>([]);
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
 const totalPages = computed(() => Math.max(1, Math.ceil(totalUsers.value / LIMIT)));
+
+const platformBarOption = computed(() => ({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { top: 8, right: 16, bottom: 8, left: 100, containLabel: false },
+  xAxis: { type: 'value', axisLabel: { color: '#697386', fontSize: 11 } },
+  yAxis: {
+    type: 'category',
+    data: ['Total Links', 'Inactive Users', 'Active Users', 'Total Users'],
+    axisLabel: { color: '#697386', fontSize: 11 },
+  },
+  series: [{
+    type: 'bar',
+    data: [
+      { value: stats.value?.total_links ?? 0, itemStyle: { color: '#635bff' } },
+      { value: stats.value?.inactive_users ?? 0, itemStyle: { color: '#f59e0b' } },
+      { value: stats.value?.active_users ?? 0, itemStyle: { color: '#22c55e' } },
+      { value: stats.value?.total_users ?? 0, itemStyle: { color: '#635bff', opacity: 0.5 } },
+    ],
+    barMaxWidth: 28,
+    borderRadius: [0, 4, 4, 0],
+  }],
+}));
+
+const userRingOption = computed(() => ({
+  tooltip: { trigger: 'item' },
+  series: [{
+    type: 'pie',
+    radius: ['55%', '80%'],
+    label: { show: false },
+    data: [
+      { name: 'Active', value: stats.value?.active_users ?? 0, itemStyle: { color: '#22c55e' } },
+      { name: 'Inactive', value: stats.value?.inactive_users ?? 0, itemStyle: { color: '#f59e0b' } },
+    ],
+  }],
+}));
+
+const growthLineOption = computed(() => {
+  const formatLabel = (ts: string) => {
+    const d = new Date(ts);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+
+  const userDates = growthUsers.value.map(p => formatLabel(p.timestamp));
+  const linkDates = growthLinks.value.map(p => formatLabel(p.timestamp));
+  // Merge and deduplicate x-axis dates
+  const allDates = Array.from(new Set([...userDates, ...linkDates])).sort((a, b) =>
+    new Date(a).getTime() - new Date(b).getTime()
+  );
+
+  // Build lookup maps for fast access
+  const userMap = Object.fromEntries(growthUsers.value.map(p => [formatLabel(p.timestamp), p.count]));
+  const linkMap = Object.fromEntries(growthLinks.value.map(p => [formatLabel(p.timestamp), p.count]));
+
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['New Users', 'New Links'], bottom: 0, textStyle: { color: '#697386', fontSize: 12 } },
+    grid: { top: 16, right: 16, bottom: 36, left: 40 },
+    xAxis: {
+      type: 'category',
+      data: allDates,
+      axisLabel: { color: '#697386', fontSize: 11, rotate: 30 },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1,
+      axisLabel: { color: '#697386', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+    },
+    series: [
+      {
+        name: 'New Users',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        data: allDates.map(d => userMap[d] ?? 0),
+        lineStyle: { color: '#635bff', width: 2 },
+        itemStyle: { color: '#635bff' },
+        areaStyle: { color: 'rgba(99,91,255,0.08)' },
+      },
+      {
+        name: 'New Links',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        data: allDates.map(d => linkMap[d] ?? 0),
+        lineStyle: { color: '#14b8a6', width: 2 },
+        itemStyle: { color: '#14b8a6' },
+        areaStyle: { color: 'rgba(20,184,166,0.08)' },
+      },
+    ],
+  };
+});
 
 async function loadStats() {
   try {
@@ -178,6 +339,19 @@ async function loadStats() {
     stats.value = res.data?.data ?? null;
   } catch {
     // non-critical
+  }
+}
+
+async function loadGrowth() {
+  growthLoading.value = true;
+  try {
+    const res = await adminApi.getGrowthTimeSeries();
+    growthUsers.value = res.data?.data?.users ?? [];
+    growthLinks.value = res.data?.data?.links ?? [];
+  } catch {
+    // non-critical
+  } finally {
+    growthLoading.value = false;
   }
 }
 
@@ -238,6 +412,7 @@ function statusBadge(status: string) {
 onMounted(() => {
   loadStats();
   loadUsers();
+  loadGrowth();
 });
 </script>
 

@@ -39,6 +39,50 @@
       </div>
     </div>
 
+    <!-- Copy Public URL button in header area -->
+    <div v-if="bioPage && bioPage.is_published && bioPage.username" class="mb-3">
+      <button
+        class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
+        @click="copyBioUrl"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1z"/>
+          <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0z"/>
+        </svg>
+        {{ bioCopied ? 'Copied!' : 'Copy public URL' }}
+      </button>
+    </div>
+
+    <!-- Page Overview Stats Bar -->
+    <div v-if="bioPage" class="d-flex gap-3 flex-wrap mb-4">
+      <!-- Total Links -->
+      <div class="stat-chip">
+        <span class="stat-chip__label">Total Links</span>
+        <span class="stat-chip__value">{{ bioStats.total }}</span>
+      </div>
+      <!-- Active Links -->
+      <div class="stat-chip">
+        <span class="stat-chip__label">Active Links</span>
+        <span class="stat-chip__value text-success">{{ bioStats.active }}</span>
+      </div>
+      <!-- Inactive Links -->
+      <div class="stat-chip">
+        <span class="stat-chip__label">Inactive Links</span>
+        <span class="stat-chip__value text-secondary">{{ bioStats.inactive }}</span>
+      </div>
+      <!-- Status -->
+      <div class="stat-chip">
+        <span class="stat-chip__label">Status</span>
+        <span
+          class="badge rounded-pill px-2 py-1"
+          :class="bioPage.is_published ? 'text-bg-success' : 'bg-secondary bg-opacity-25 text-secondary'"
+          style="font-size: 0.72rem;"
+        >
+          {{ bioPage.is_published ? 'Published' : 'Draft' }}
+        </span>
+      </div>
+    </div>
+
     <!-- Loading -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status"></div>
@@ -208,7 +252,7 @@
               v-for="(link, idx) in links"
               :key="link.id"
               class="list-group-item py-2 px-4"
-              :class="{ 'opacity-50': !link.is_active }"
+              :style="{ opacity: link.is_active ? '1' : '0.6' }"
               draggable="true"
               @dragstart="onDragStart(idx)"
               @dragover.prevent="onDragOver(idx)"
@@ -218,6 +262,19 @@
               <!-- View mode -->
               <div v-if="editingLinkId !== link.id" class="d-flex align-items-center gap-2">
                 <span class="text-muted flex-shrink-0" style="cursor: grab; font-size: 1rem;">⠿</span>
+                <!-- Rank indicator -->
+                <span
+                  class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 text-secondary bg-light border"
+                  style="width: 1.4rem; height: 1.4rem; font-size: 0.68rem; padding: 0;"
+                  :title="`Position ${idx + 1}`"
+                >{{ idx + 1 }}</span>
+                <!-- Active/Inactive dot -->
+                <span
+                  class="flex-shrink-0"
+                  style="width: 8px; height: 8px; border-radius: 50%; display: inline-block;"
+                  :style="{ backgroundColor: link.is_active ? '#198754' : '#adb5bd' }"
+                  :title="link.is_active ? 'Active' : 'Inactive'"
+                ></span>
                 <div class="flex-fill min-w-0">
                   <div class="fw-medium small text-truncate">{{ link.title }}</div>
                   <div class="text-muted text-truncate" style="font-size: 0.78rem;">{{ link.url }}</div>
@@ -314,6 +371,25 @@ let dragFrom = -1;
 const publicUrl = computed(() =>
   bioPage.value ? `${window.location.origin}/bio/${bioPage.value.username}` : ''
 );
+
+const bioPagePublicUrl = computed(() => {
+  if (!bioPage.value?.username) return '';
+  return `${window.location.origin}/bio/${bioPage.value.username}`;
+});
+
+const bioStats = computed(() => ({
+  total: bioPage.value?.links.length ?? 0,
+  active: bioPage.value?.links.filter(l => l.is_active).length ?? 0,
+  inactive: bioPage.value?.links.filter(l => !l.is_active).length ?? 0,
+}));
+
+const bioCopied = ref(false);
+async function copyBioUrl() {
+  if (!bioPagePublicUrl.value) return;
+  await navigator.clipboard.writeText(bioPagePublicUrl.value);
+  bioCopied.value = true;
+  setTimeout(() => (bioCopied.value = false), 2000);
+}
 
 onMounted(async () => {
   try {
@@ -457,5 +533,35 @@ function onDragEnd() {
 .list-group-item[draggable="true"] {
   cursor: default;
   user-select: none;
+}
+
+/* Page Overview stat chips */
+.stat-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  min-width: 90px;
+}
+
+.stat-chip__label {
+  font-size: 0.7rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.stat-chip__value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #212529;
+  line-height: 1.2;
 }
 </style>

@@ -18,6 +18,13 @@
       </button>
     </div>
 
+    <!-- Usage warning banner -->
+    <div v-if="usageWarning" :class="['alert', usageWarning.level === 'danger' ? 'alert-danger' : 'alert-warning', 'd-flex', 'align-items-center', 'gap-2', 'mb-3']">
+      <span>{{ usageWarning.level === 'danger' ? '🚫' : '⚠️' }}</span>
+      <span class="flex-grow-1 small">{{ usageWarning.msg }}</span>
+      <router-link to="/dashboard/billing" class="btn btn-sm" :class="usageWarning.level === 'danger' ? 'btn-danger' : 'btn-warning'">Upgrade</router-link>
+    </div>
+
     <!-- One-time key reveal banner -->
     <div v-if="newKey" class="alert border-0 mb-4 rounded-3 new-key-banner" role="alert">
       <div class="d-flex align-items-start gap-3">
@@ -170,8 +177,26 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
+import { RouterLink } from 'vue-router';
 import apiKeysApi from '@/api/apikeys';
 import type { APIKey, CreateAPIKeyResponse } from '@/types/apikeys';
+import billingApi from '@/api/billing';
+import type { UsageCounts, PlanInfo } from '@/types/billing';
+
+// ── Billing / Usage ───────────────────────────────────────────────────────────
+const usage = ref<UsageCounts | null>(null);
+const plan = ref<PlanInfo | null>(null);
+
+const usageWarning = computed(() => {
+  if (!usage.value || !plan.value) return null;
+  const used = usage.value.api_keys;
+  const max = plan.value.max_api_keys;
+  if (max === -1) return null;
+  const pct = used / max;
+  if (pct >= 1) return { level: 'danger', msg: `You've reached your limit of ${max} API keys. Upgrade to add more.` };
+  if (pct >= 0.8) return { level: 'warning', msg: `You've used ${used} of ${max} API keys (${Math.round(pct * 100)}%). Consider upgrading.` };
+  return null;
+});
 
 // ── State ──────────────────────────────────────────────────────────────────────
 const keys = ref<APIKey[]>([]);
@@ -278,7 +303,17 @@ watch(showCreate, async (v) => {
   }
 });
 
-onMounted(loadKeys);
+onMounted(async () => {
+  await loadKeys();
+  try {
+    const res = await billingApi.getUsage();
+    usage.value = res.data.data;
+  } catch {}
+  try {
+    const res = await billingApi.getSubscription();
+    plan.value = res.data.data.plan;
+  } catch {}
+});
 </script>
 
 <style scoped>

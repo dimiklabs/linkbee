@@ -28,6 +28,7 @@ type Link struct {
 	HealthStatus       string         `gorm:"type:varchar(20);not null;default:'unknown'" json:"health_status"`
 	HealthStatusCode   int            `gorm:"default:0;not null" json:"health_status_code"`
 	HealthCheckedAt    *time.Time     `gorm:"type:timestamptz" json:"health_checked_at,omitempty"`
+	ExpiryNotifiedAt   *time.Time     `gorm:"type:timestamptz" json:"-"`
 	Tags           pq.StringArray `gorm:"type:text[]" json:"tags,omitempty"`
 	UTMSource      string         `gorm:"type:varchar(255)" json:"utm_source,omitempty"`
 	UTMMedium      string         `gorm:"type:varchar(255)" json:"utm_medium,omitempty"`

@@ -36,6 +36,10 @@
           <div class="col-sm-6 col-md-3 d-flex gap-2">
             <button class="btn btn-sm btn-primary flex-fill" @click="applyFilters">Apply</button>
             <button class="btn btn-sm btn-outline-secondary" @click="resetFilters">Reset</button>
+            <button class="btn btn-sm btn-outline-primary" :disabled="exporting" @click="exportLogs">
+              <span v-if="exporting" class="spinner-border spinner-border-sm me-1" role="status"></span>
+              <span>Export CSV</span>
+            </button>
           </div>
         </div>
       </div>
@@ -124,6 +128,7 @@ const total = ref(0);
 const page = ref(1);
 const limit = 20;
 const loading = ref(true);
+const exporting = ref(false);
 
 const filters = reactive({
   action: '',
@@ -191,6 +196,24 @@ function formatDate(iso: string) {
     year: 'numeric', month: 'short', day: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
+}
+
+async function exportLogs() {
+  exporting.value = true;
+  try {
+    const fromIso = filters.from ? new Date(filters.from).toISOString() : undefined;
+    let toIso: string | undefined;
+    if (filters.to) {
+      const d = new Date(filters.to);
+      d.setHours(23, 59, 59, 999);
+      toIso = d.toISOString();
+    }
+    await auditApi.exportAuditLogs(filters.action || undefined, fromIso, toIso);
+  } catch {
+    // silently ignore export errors
+  } finally {
+    exporting.value = false;
+  }
 }
 
 onMounted(fetchLogs);

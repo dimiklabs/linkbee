@@ -22,11 +22,12 @@ type FolderServiceI interface {
 }
 
 type folderService struct {
-	folderRepo repository.FolderRepositoryI
+	folderRepo     repository.FolderRepositoryI
+	clickEventRepo repository.ClickEventRepositoryI
 }
 
-func NewFolderService(folderRepo repository.FolderRepositoryI) FolderServiceI {
-	return &folderService{folderRepo: folderRepo}
+func NewFolderService(folderRepo repository.FolderRepositoryI, clickEventRepo repository.ClickEventRepositoryI) FolderServiceI {
+	return &folderService{folderRepo: folderRepo, clickEventRepo: clickEventRepo}
 }
 
 func (s *folderService) CreateFolder(ctx context.Context, userID uuid.UUID, req *request.CreateFolderRequest) (*response.FolderResponse, *dto.ServiceError) {
@@ -52,7 +53,11 @@ func (s *folderService) ListFolders(ctx context.Context, userID uuid.UUID) ([]re
 	}
 	result := make([]response.FolderResponse, len(folders))
 	for i := range folders {
-		result[i] = *toFolderResponse(&folders[i])
+		r := toFolderResponse(&folders[i])
+		if count, cErr := s.clickEventRepo.GetClickCountByFolderID(ctx, folders[i].ID); cErr == nil {
+			r.ClickCount = count
+		}
+		result[i] = *r
 	}
 	return result, nil
 }

@@ -9,8 +9,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -40,6 +42,13 @@ type WebhookResponse struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type DeliveriesResponse struct {
+	Deliveries []*model.WebhookDelivery `json:"deliveries"`
+	Total      int64                    `json:"total"`
+	Page       int                      `json:"page"`
+	Limit      int                      `json:"limit"`
+}
+
 // WebhookServiceI defines operations for managing and firing webhooks.
 type WebhookServiceI interface {
 	List(ctx context.Context, userID uuid.UUID) ([]WebhookResponse, *dto.ServiceError)
@@ -49,16 +58,27 @@ type WebhookServiceI interface {
 	// Trigger fires all active webhooks for userID that subscribe to event.
 	// It is intentionally fire-and-forget — errors are logged, not returned.
 	Trigger(userID uuid.UUID, event string, data any)
+	// Delivery history & operations
+	GetDeliveries(ctx context.Context, webhookID, userID uuid.UUID, page, limit int) (*DeliveriesResponse, *dto.ServiceError)
+	ResendDelivery(ctx context.Context, deliveryID, userID uuid.UUID) (*model.WebhookDelivery, *dto.ServiceError)
+	GetWebhookSecret(ctx context.Context, webhookID, userID uuid.UUID) (string, *dto.ServiceError)
+	TestWebhook(ctx context.Context, webhookID, userID uuid.UUID) (*model.WebhookDelivery, *dto.ServiceError)
 }
 
 var deliveryClient = &http.Client{Timeout: 10 * time.Second}
 
+const (
+	maxRequestBodyLog  = 4 * 1024 // 4 KB stored in DB
+	maxResponseBodyLog = 1024      // 1 KB
+)
+
 type webhookService struct {
-	webhookRepo repository.WebhookRepositoryI
+	webhookRepo  repository.WebhookRepositoryI
+	deliveryRepo repository.WebhookDeliveryRepositoryI
 }
 
-func NewWebhookService(webhookRepo repository.WebhookRepositoryI) WebhookServiceI {
-	return &webhookService{webhookRepo: webhookRepo}
+func NewWebhookService(webhookRepo repository.WebhookRepositoryI, deliveryRepo repository.WebhookDeliveryRepositoryI) WebhookServiceI {
+	return &webhookService{webhookRepo: webhookRepo, deliveryRepo: deliveryRepo}
 }
 
 func (s *webhookService) List(ctx context.Context, userID uuid.UUID) ([]WebhookResponse, *dto.ServiceError) {
@@ -153,44 +173,167 @@ func (s *webhookService) Trigger(userID uuid.UUID, event string, data any) {
 		}
 
 		for _, w := range webhooks {
-			go deliver(w.URL, w.Secret, body, event)
+			wCopy := w
+			go s.deliverAndLog(context.Background(), wCopy.ID, userID, wCopy.URL, wCopy.Secret, body, event)
 		}
 	}()
 }
 
-// deliver sends one webhook POST with HMAC-SHA256 signature.
-func deliver(url, secret string, body []byte, event string) {
+// deliverAndLog sends one webhook POST and persists the delivery result.
+func (s *webhookService) deliverAndLog(ctx context.Context, webhookID, userID uuid.UUID, url, secret string, body []byte, event string) *model.WebhookDelivery {
 	sig := signPayload(secret, body)
+	start := time.Now()
+
+	delivery := &model.WebhookDelivery{
+		WebhookID:   webhookID,
+		UserID:      userID,
+		Event:       event,
+		RequestBody: truncateString(string(body), maxRequestBodyLog),
+	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
+		delivery.ErrorMessage = err.Error()
+		delivery.Success = false
+		_ = s.deliveryRepo.Create(ctx, delivery)
 		logger.Error("webhook deliver: failed to build request",
 			zap.String("url", url), zap.Error(err))
-		return
+		return delivery
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Webhook-Event", event)
 	req.Header.Set("X-Webhook-Signature", "sha256="+sig)
 
 	resp, err := deliveryClient.Do(req)
+	delivery.DurationMs = time.Since(start).Milliseconds()
+
 	if err != nil {
+		delivery.ErrorMessage = err.Error()
+		delivery.Success = false
+		_ = s.deliveryRepo.Create(ctx, delivery)
 		logger.Warn("webhook deliver: request failed",
 			zap.String("url", url), zap.Error(err))
-		return
+		return delivery
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+	delivery.ResponseCode = resp.StatusCode
+	delivery.Success = resp.StatusCode >= 200 && resp.StatusCode < 300
+
+	if respBody, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBodyLog)); err == nil {
+		delivery.ResponseBody = string(respBody)
+	}
+
+	if delivery.Success {
 		logger.Info("webhook delivered",
 			zap.String("url", url),
 			zap.String("event", event),
-			zap.Int("status", resp.StatusCode))
+			zap.Int("status", resp.StatusCode),
+			zap.Int64("duration_ms", delivery.DurationMs))
 	} else {
+		delivery.ErrorMessage = fmt.Sprintf("HTTP %d", resp.StatusCode)
 		logger.Warn("webhook deliver: non-2xx response",
 			zap.String("url", url),
 			zap.String("event", event),
 			zap.Int("status", resp.StatusCode))
 	}
+
+	_ = s.deliveryRepo.Create(ctx, delivery)
+	return delivery
+}
+
+func (s *webhookService) GetDeliveries(ctx context.Context, webhookID, userID uuid.UUID, page, limit int) (*DeliveriesResponse, *dto.ServiceError) {
+	// Verify webhook ownership
+	if _, err := s.webhookRepo.GetByID(ctx, webhookID, userID); err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "Webhook not found")
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+
+	deliveries, total, err := s.deliveryRepo.ListByWebhookID(ctx, webhookID, userID, page, limit)
+	if err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	return &DeliveriesResponse{
+		Deliveries: deliveries,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+	}, nil
+}
+
+func (s *webhookService) ResendDelivery(ctx context.Context, deliveryID, userID uuid.UUID) (*model.WebhookDelivery, *dto.ServiceError) {
+	original, err := s.deliveryRepo.GetByID(ctx, deliveryID, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "Delivery not found")
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	webhook, err := s.webhookRepo.GetByID(ctx, original.WebhookID, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "Webhook not found")
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	delivery := s.deliverAndLog(ctx, webhook.ID, userID, webhook.URL, webhook.Secret,
+		[]byte(original.RequestBody), original.Event)
+	return delivery, nil
+}
+
+func (s *webhookService) GetWebhookSecret(ctx context.Context, webhookID, userID uuid.UUID) (string, *dto.ServiceError) {
+	webhook, err := s.webhookRepo.GetByID(ctx, webhookID, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return "", dto.NewNotFoundError(constant.ErrCodeNotFound, "Webhook not found")
+		}
+		return "", dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+	return webhook.Secret, nil
+}
+
+func (s *webhookService) TestWebhook(ctx context.Context, webhookID, userID uuid.UUID) (*model.WebhookDelivery, *dto.ServiceError) {
+	webhook, err := s.webhookRepo.GetByID(ctx, webhookID, userID)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "Webhook not found")
+		}
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
+	}
+
+	payload := map[string]any{
+		"event":     "test",
+		"timestamp": time.Now().UTC().Format(time.RFC3339),
+		"data": map[string]any{
+			"message": "This is a test delivery from Shortlink.",
+		},
+	}
+	body, _ := json.Marshal(payload)
+
+	delivery := s.deliverAndLog(ctx, webhook.ID, userID, webhook.URL, webhook.Secret, body, "test")
+	return delivery, nil
+}
+
+// truncateString trims s to at most maxBytes (in bytes, not runes) preserving UTF-8 validity.
+func truncateString(s string, maxBytes int) string {
+	if len(s) <= maxBytes {
+		return s
+	}
+	for !utf8.ValidString(s[:maxBytes]) {
+		maxBytes--
+	}
+	return s[:maxBytes]
 }
 
 // signPayload computes HMAC-SHA256(secret, body) and returns a hex string.

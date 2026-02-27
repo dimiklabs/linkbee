@@ -31,6 +31,15 @@
       <!-- Nav items -->
       <nav class="sidebar-nav">
         <router-link
+          to="/dashboard/overview"
+          class="nav-item"
+          :class="{ active: $route.path === '/dashboard/overview' }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">🏠</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Overview</span>
+        </router-link>
+        <router-link
           to="/dashboard/links"
           class="nav-item"
           :class="{ active: $route.path.startsWith('/dashboard/links') }"
@@ -38,6 +47,33 @@
         >
           <span class="nav-icon">🔗</span>
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Links</span>
+        </router-link>
+        <router-link
+          to="/dashboard/analytics"
+          class="nav-item"
+          active-class="active"
+          exact-active-class="active"
+        >
+          <span class="nav-icon">📈</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Analytics</span>
+        </RouterLink>
+        <RouterLink
+          to="/dashboard/comparison"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/comparison') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">📊</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Compare Links</span>
+        </router-link>
+        <router-link
+          to="/dashboard/reports"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/reports') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">📧</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Reports</span>
         </router-link>
         <router-link
           to="/dashboard/api-keys"
@@ -247,8 +283,11 @@ const pageTitle = computed(() => {
   const name = route.name as string | undefined;
   if (!name) return 'Dashboard';
   const titles: Record<string, string> = {
+    overview: 'Overview',
     links: 'My Links',
     'link-analytics': 'Link Analytics',
+    'link-comparison': 'Compare Links',
+    reports: 'Scheduled Reports',
     'api-keys': 'API Keys',
     webhooks: 'Webhooks',
     domains: 'Custom Domains',

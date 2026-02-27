@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -17,6 +18,7 @@ type StatsResponse struct {
 	ActiveUsers   int64 `json:"active_users"`
 	InactiveUsers int64 `json:"inactive_users"`
 	TotalLinks    int64 `json:"total_links"`
+	TotalClicks   int64 `json:"total_clicks"`
 }
 
 type UsersListResponse struct {
@@ -39,19 +41,31 @@ type UserItem struct {
 	LastLogin     *string `json:"last_login,omitempty"`
 }
 
+type GrowthTimeSeriesResponse struct {
+	Users []TimeSeriesData `json:"users"`
+	Links []TimeSeriesData `json:"links"`
+}
+
+type TimeSeriesData struct {
+	Timestamp string `json:"timestamp"`
+	Count     int64  `json:"count"`
+}
+
 type AdminServiceI interface {
 	GetStats(ctx context.Context) (*StatsResponse, *dto.ServiceError)
 	ListUsers(ctx context.Context, search string, page, limit int) (*UsersListResponse, *dto.ServiceError)
 	UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) *dto.ServiceError
+	GetGrowthTimeSeries(ctx context.Context) (*GrowthTimeSeriesResponse, error)
 }
 
 type adminService struct {
-	userRepo repository.UserRepositoryI
-	linkRepo repository.LinkRepositoryI
+	userRepo       repository.UserRepositoryI
+	linkRepo       repository.LinkRepositoryI
+	clickEventRepo repository.ClickEventRepositoryI
 }
 
-func NewAdminService(userRepo repository.UserRepositoryI, linkRepo repository.LinkRepositoryI) AdminServiceI {
-	return &adminService{userRepo: userRepo, linkRepo: linkRepo}
+func NewAdminService(userRepo repository.UserRepositoryI, linkRepo repository.LinkRepositoryI, clickEventRepo repository.ClickEventRepositoryI) AdminServiceI {
+	return &adminService{userRepo: userRepo, linkRepo: linkRepo, clickEventRepo: clickEventRepo}
 }
 
 func (s *adminService) GetStats(ctx context.Context) (*StatsResponse, *dto.ServiceError) {
@@ -73,11 +87,17 @@ func (s *adminService) GetStats(ctx context.Context) (*StatsResponse, *dto.Servi
 		totalLinks = 0
 	}
 
+	totalClicks, err := s.clickEventRepo.GetTotalClicks(ctx)
+	if err != nil {
+		totalClicks = 0
+	}
+
 	return &StatsResponse{
 		TotalUsers:    total,
 		ActiveUsers:   active,
 		InactiveUsers: inactive,
 		TotalLinks:    totalLinks,
+		TotalClicks:   totalClicks,
 	}, nil
 }
 
@@ -140,4 +160,40 @@ func (s *adminService) UpdateUserStatus(ctx context.Context, userID uuid.UUID, s
 		return dto.NewInternalError(constant.ErrCodeInternalServer, "failed to update user status")
 	}
 	return nil
+}
+
+func (s *adminService) GetGrowthTimeSeries(ctx context.Context) (*GrowthTimeSeriesResponse, error) {
+	to := time.Now()
+	from := to.AddDate(0, 0, -30)
+
+	userPoints, err := s.userRepo.GetRegistrationTimeSeries(ctx, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	linkPoints, err := s.linkRepo.GetCreationTimeSeries(ctx, from, to)
+	if err != nil {
+		return nil, err
+	}
+
+	userSeries := make([]TimeSeriesData, len(userPoints))
+	for i, p := range userPoints {
+		userSeries[i] = TimeSeriesData{
+			Timestamp: p.Timestamp.UTC().Format("2006-01-02"),
+			Count:     p.Count,
+		}
+	}
+
+	linkSeries := make([]TimeSeriesData, len(linkPoints))
+	for i, p := range linkPoints {
+		linkSeries[i] = TimeSeriesData{
+			Timestamp: p.Timestamp.UTC().Format("2006-01-02"),
+			Count:     p.Count,
+		}
+	}
+
+	return &GrowthTimeSeriesResponse{
+		Users: userSeries,
+		Links: linkSeries,
+	}, nil
 }

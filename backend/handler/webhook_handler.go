@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -166,4 +167,80 @@ func (h *WebhookHandler) DeleteWebhook(c *gin.Context) {
 		return
 	}
 	transport.RespondWithSuccess(c, http.StatusOK, "Webhook deleted successfully", nil)
+}
+
+func (h *WebhookHandler) GetWebhookSecret(c *gin.Context) {
+	userID, ok := h.userID(c)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid webhook ID")
+		return
+	}
+	secret, svcErr := h.webhookService.GetWebhookSecret(c.Request.Context(), id, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Webhook secret retrieved", map[string]string{"secret": secret})
+}
+
+func (h *WebhookHandler) TestWebhook(c *gin.Context) {
+	userID, ok := h.userID(c)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid webhook ID")
+		return
+	}
+	delivery, svcErr := h.webhookService.TestWebhook(c.Request.Context(), id, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Test delivery sent", delivery)
+}
+
+func (h *WebhookHandler) GetDeliveries(c *gin.Context) {
+	userID, ok := h.userID(c)
+	if !ok {
+		return
+	}
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid webhook ID")
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	result, svcErr := h.webhookService.GetDeliveries(c.Request.Context(), id, userID, page, limit)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Deliveries retrieved", result)
+}
+
+func (h *WebhookHandler) ResendDelivery(c *gin.Context) {
+	userID, ok := h.userID(c)
+	if !ok {
+		return
+	}
+	deliveryID, err := uuid.Parse(c.Param("deliveryId"))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid delivery ID")
+		return
+	}
+	delivery, svcErr := h.webhookService.ResendDelivery(c.Request.Context(), deliveryID, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Delivery resent", delivery)
 }

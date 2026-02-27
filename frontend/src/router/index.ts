@@ -52,7 +52,12 @@ const router = createRouter({
       children: [
         {
           path: '',
-          redirect: '/dashboard/links',
+          redirect: '/dashboard/overview',
+        },
+        {
+          path: 'overview',
+          name: 'overview',
+          component: () => import('@/pages/dashboard/OverviewPage.vue'),
         },
         {
           path: 'links',
@@ -60,9 +65,24 @@ const router = createRouter({
           component: () => import('@/pages/dashboard/LinksPage.vue'),
         },
         {
+          path: 'analytics',
+          name: 'global-analytics',
+          component: () => import('@/pages/dashboard/GlobalAnalyticsPage.vue'),
+        },
+        {
           path: 'links/:id',
           name: 'link-analytics',
           component: () => import('@/pages/dashboard/LinkAnalyticsPage.vue'),
+        },
+        {
+          path: 'comparison',
+          name: 'link-comparison',
+          component: () => import('@/pages/dashboard/LinkComparisonPage.vue'),
+        },
+        {
+          path: 'reports',
+          name: 'reports',
+          component: () => import('@/pages/dashboard/ReportsPage.vue'),
         },
         {
           path: 'api-keys',
@@ -159,9 +179,9 @@ router.beforeEach(async (to, _from, next) => {
   if (requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } });
   } else if (isGuestRoute && authStore.isAuthenticated) {
-    next({ name: 'links' });
+    next({ name: 'overview' });
   } else if (requiresAdmin && authStore.profile?.role !== 'admin') {
-    next({ name: 'links' });
+    next({ name: 'overview' });
   } else {
     next();
   }

@@ -69,7 +69,7 @@ func (h *LinkHandler) ListLinks(c *gin.Context) {
 		}
 	}
 
-	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred, req.HealthStatus, req.Tags)
+	result, svcErr := h.linkService.ListLinks(ctx, userID, req.Page, req.Limit, req.Search, folderFilter, req.Starred, req.HealthStatus, req.Tags, req.ExpiringSoon)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
@@ -414,6 +414,106 @@ func (h *LinkHandler) ToggleStar(c *gin.Context) {
 	}
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Link star toggled successfully", result)
+}
+
+// BulkAction godoc
+//
+//	@Summary		Bulk link action
+//	@Description	Performs a bulk action (delete, activate, deactivate, move_folder, add_tags, remove_tags) on multiple links.
+//	@Tags			links
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			body	body		request.BulkLinkActionRequest	true	"Bulk action payload"
+//	@Success		200		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/bulk [post]
+func (h *LinkHandler) BulkAction(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	var req request.BulkLinkActionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		code, msg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, code, msg)
+		return
+	}
+
+	result, svcErr := h.linkService.BulkAction(ctx, userID, &req)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, fmt.Sprintf("Bulk %s completed: %d link(s) affected", req.Action, result.Affected), result)
+}
+
+// CloneLink godoc
+//
+//	@Summary		Clone a link
+//	@Description	Creates a copy of an existing link with a new slug, resetting click count and flags.
+//	@Tags			links
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			id		path		string						true	"Source link UUID"
+//	@Param			body	body		request.CloneLinkRequest	false	"Optional overrides for the clone"
+//	@Success		201		{object}	transport.StandardResponse
+//	@Failure		400		{object}	transport.ErrorResponse
+//	@Failure		401		{object}	transport.ErrorResponse
+//	@Failure		404		{object}	transport.ErrorResponse
+//	@Failure		409		{object}	transport.ErrorResponse
+//	@Router			/api/v1/links/{id}/clone [post]
+func (h *LinkHandler) CloneLink(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "Invalid link ID")
+		return
+	}
+
+	var req request.CloneLinkRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		code, msg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, code, msg)
+		return
+	}
+
+	if svcErr := h.planEnforcer.CheckLinkLimit(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	result, svcErr := h.linkService.CloneLink(ctx, id, userID, &req)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	h.webhookService.Trigger(userID, webhookSvc.EventLinkCreated, result)
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionLinkCreated,
+		ResourceType: model.AuditResourceLink, ResourceID: result.ID.String(), ResourceName: result.Slug,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
+
+	transport.RespondWithSuccess(c, http.StatusCreated, "Link cloned successfully", result)
 }
 
 // CheckDuplicate godoc

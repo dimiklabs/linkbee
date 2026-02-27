@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/csv"
 	"fmt"
 	"net/http"
 	"time"
@@ -99,6 +100,65 @@ func (h *AuditLogHandler) ListAuditLogs(c *gin.Context) {
 		"page":  page,
 		"limit": limit,
 	})
+}
+
+// ExportAuditLogs streams all matching audit logs as a CSV download.
+func (h *AuditLogHandler) ExportAuditLogs(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	rawID, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, ok := rawID.(uuid.UUID)
+	if !ok {
+		if s, ok2 := rawID.(string); ok2 {
+			parsed, err := uuid.Parse(s)
+			if err != nil {
+				transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "unauthorized")
+				return
+			}
+			userID = parsed
+		} else {
+			transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "unauthorized")
+			return
+		}
+	}
+
+	action := c.Query("action")
+
+	var from, to *time.Time
+	if v := c.Query("from"); v != "" {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			from = &t
+		}
+	}
+	if v := c.Query("to"); v != "" {
+		if t, err := time.Parse(time.RFC3339, v); err == nil {
+			t2 := t
+			to = &t2
+		}
+	}
+
+	logs, err := h.repo.ListAllByUserID(ctx, userID, action, from, to, 10000)
+	if err != nil {
+		transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, "failed to fetch audit logs")
+		return
+	}
+
+	c.Header("Content-Type", "text/csv")
+	c.Header("Content-Disposition", `attachment; filename="audit-logs.csv"`)
+
+	w := csv.NewWriter(c.Writer)
+	_ = w.Write([]string{"timestamp", "action", "resource_type", "resource_id", "ip_address", "user_agent"})
+	for _, l := range logs {
+		_ = w.Write([]string{
+			l.CreatedAt.UTC().Format(time.RFC3339),
+			l.Action,
+			l.ResourceType,
+			l.ResourceID,
+			l.IPAddress,
+			l.UserAgent,
+		})
+	}
+	w.Flush()
 }
 
 func parseInt(s string) (int, error) {

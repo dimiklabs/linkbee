@@ -48,6 +48,16 @@ func (h *AdminHandler) ListUsers(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "users retrieved", result)
 }
 
+// GetGrowthTimeSeries returns daily registration and link creation counts for the last 30 days.
+func (h *AdminHandler) GetGrowthTimeSeries(c *gin.Context) {
+	result, err := h.adminService.GetGrowthTimeSeries(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": result})
+}
+
 // UpdateUserStatus changes the status of a user (active / inactive / banned).
 func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 	ctx := c.Request.Context()

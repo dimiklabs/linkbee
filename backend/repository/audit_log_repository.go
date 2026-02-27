@@ -13,6 +13,7 @@ import (
 type AuditLogRepositoryI interface {
 	Create(ctx context.Context, log *model.AuditLog) error
 	ListByUserID(ctx context.Context, userID uuid.UUID, page, limit int, action, resourceType string, from, to *time.Time) ([]model.AuditLog, int64, error)
+	ListAllByUserID(ctx context.Context, userID uuid.UUID, action string, from, to *time.Time, limit int) ([]model.AuditLog, error)
 }
 
 type auditLogRepository struct {
@@ -64,4 +65,32 @@ func (r *auditLogRepository) ListByUserID(
 		return nil, 0, err
 	}
 	return logs, total, nil
+}
+
+func (r *auditLogRepository) ListAllByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+	action string,
+	from, to *time.Time,
+	limit int,
+) ([]model.AuditLog, error) {
+	q := r.replica.WithContext(ctx).
+		Model(&model.AuditLog{}).
+		Where("user_id = ?", userID)
+
+	if action != "" {
+		q = q.Where("action = ?", action)
+	}
+	if from != nil {
+		q = q.Where("created_at >= ?", *from)
+	}
+	if to != nil {
+		q = q.Where("created_at <= ?", *to)
+	}
+
+	var logs []model.AuditLog
+	if err := q.Order("created_at DESC").Limit(limit).Find(&logs).Error; err != nil {
+		return nil, err
+	}
+	return logs, nil
 }

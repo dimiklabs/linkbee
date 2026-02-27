@@ -13,7 +13,10 @@ import (
 	"github.com/shafikshaon/shortlink/logger"
 	"github.com/shafikshaon/shortlink/middlewares"
 	"github.com/shafikshaon/shortlink/repository"
-	analyticsSvc "github.com/shafikshaon/shortlink/service/analytics"
+	analyticsSvc   "github.com/shafikshaon/shortlink/service/analytics"
+	dashboardSvc   "github.com/shafikshaon/shortlink/service/dashboard"
+	expirySvc      "github.com/shafikshaon/shortlink/service/expiry"
+	reportingSvc   "github.com/shafikshaon/shortlink/service/reporting"
 	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
 	authSrv "github.com/shafikshaon/shortlink/service/auth"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
@@ -49,6 +52,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	s.setupMiddleware(router)
 
 	// ── Repositories ─────────────────────────────────────────────────────────
+	reportRepo            := repository.NewAnalyticsReportRepository(s.MasterDB, s.ReplicaDB)
 	subRepo               := repository.NewSubscriptionRepository(s.MasterDB, s.ReplicaDB)
 	bioRepo               := repository.NewBioRepository(s.MasterDB, s.ReplicaDB)
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
@@ -83,10 +87,10 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 	billingService     := billingSvc.NewBillingService(subRepo, s.Cfg.Billing)
 	planEnforcer       := billingSvc.NewPlanEnforcer(subRepo, linkRepo, apiKeyRepo, webhookRepo)
-	adminService       := adminSvc.NewAdminService(userRepo, linkRepo)
+	adminService       := adminSvc.NewAdminService(userRepo, linkRepo, clickEventRepo)
 	bioService         := bioSvc.NewBioService(bioRepo)
 	previewService     := previewSvc.NewPreviewService(s.Cache)
-	folderService      := folderSvc.NewFolderService(folderRepo)
+	folderService      := folderSvc.NewFolderService(folderRepo, clickEventRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
 	webhookService     := webhookSvc.NewWebhookService(webhookRepo, webhookDeliveryRepo)
 	pixelService       := pixelSvc.NewPixelService(pixelRepo, linkRepo)
@@ -98,9 +102,20 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	clickService       := clickSvc.NewClickService(s.Cache)
 	qrService          := qrSvc.NewQRService()
 	analyticsService   := analyticsSvc.NewAnalyticsService(linkRepo, clickEventRepo)
+	dashboardService   := dashboardSvc.NewDashboardService(linkRepo, clickEventRepo, s.Cfg.App)
+	reportingService   := reportingSvc.NewReportingService(reportRepo, userRepo, clickEventRepo, linkRepo, emailService, s.Cfg.App, s.Cfg.Email)
+	expiryService      := expirySvc.NewExpiryService(linkRepo, userRepo, emailService, s.Cfg.App, s.Cfg.Email)
 	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
 	domainService      := domainSvc.NewDomainService(customDomainRepo)
 	auditService       := auditSvc.NewAuditService(auditLogRepo)
+
+	// ── Report worker (background goroutine) ──────────────────────────────────
+	reportWorker := worker.NewReportWorker(reportingService)
+	go reportWorker.Start(ctx)
+
+	// ── Expiry notification worker (background goroutine) ─────────────────────
+	expiryWorker := worker.NewExpiryWorker(expiryService)
+	go expiryWorker.Start(ctx)
 
 	// ── Click worker (background goroutine) ───────────────────────────────────
 	clickWorker := worker.NewClickWorker(
@@ -136,6 +151,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo, customDomainRepo, s.Cfg.App.BaseDomain)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
+	reportHandler    := handler.NewReportHandler(reportingService)
 	demoHandler      := handler.NewDemoHandler(demoService)
 
 	// ── Swagger UI ───────────────────────────────────────────────────────────
@@ -192,6 +209,11 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 		v1Auth.Use(middlewares.AuthOrAPIKeyMiddleware(s.Cfg.App, tokenBlacklistRepo, apiKeyService))
 		v1Auth.Use(middlewares.SessionActivityMiddleware(sessionRepo, s.Cfg.Session))
 		{
+			// Dashboard
+			v1Auth.GET("/dashboard/overview", dashboardHandler.GetOverview)
+			v1Auth.GET("/dashboard/analytics", dashboardHandler.GetGlobalAnalytics)
+			v1Auth.GET("/dashboard/analytics/comparison", dashboardHandler.GetGlobalAnalyticsComparison)
+
 			// TOTP / 2FA
 			v1Auth.GET("/auth/totp/status", authHandler.GetTOTPStatus)
 			v1Auth.GET("/auth/totp/setup", authHandler.SetupTOTP)
@@ -220,12 +242,15 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.GET("/links/tags", linkHandler.GetUserTags)
 			v1Auth.GET("/links/export", exportHandler.ExportLinksCSV)
 			v1Auth.GET("/links/duplicate", linkHandler.CheckDuplicate)
+			v1Auth.GET("/links/comparison", analyticsHandler.GetMultiLinkComparison)
 			v1Auth.POST("/links", linkHandler.CreateLink)
+			v1Auth.POST("/links/bulk", linkHandler.BulkAction)
 			v1Auth.POST("/links/import", linkHandler.ImportLinks)
 			v1Auth.GET("/links/:id", linkHandler.GetLink)
 			v1Auth.PUT("/links/:id", linkHandler.UpdateLink)
 			v1Auth.DELETE("/links/:id", linkHandler.DeleteLink)
 			v1Auth.PATCH("/links/:id/star", linkHandler.ToggleStar)
+			v1Auth.POST("/links/:id/clone", linkHandler.CloneLink)
 			v1Auth.POST("/links/:id/health-check", linkHandler.CheckLinkHealth)
 
 			// A/B split testing
@@ -251,7 +276,17 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			// Link extras
 			v1Auth.GET("/links/:id/qr", qrHandler.GetQRCode)
 			v1Auth.GET("/links/:id/analytics", analyticsHandler.GetLinkAnalytics)
+			v1Auth.GET("/links/:id/analytics/comparison", analyticsHandler.GetPeriodComparison)
 			v1Auth.GET("/links/:id/preview", previewHandler.GetLinkPreview)
+
+			// Scheduled analytics reports
+			v1Auth.GET("/reports", reportHandler.ListReports)
+			v1Auth.POST("/reports", reportHandler.CreateReport)
+			v1Auth.GET("/reports/:id", reportHandler.GetReport)
+			v1Auth.PUT("/reports/:id", reportHandler.UpdateReport)
+			v1Auth.DELETE("/reports/:id", reportHandler.DeleteReport)
+			v1Auth.POST("/reports/:id/send", reportHandler.SendReportNow)
+			v1Auth.GET("/reports/:id/deliveries", reportHandler.GetReportDeliveries)
 
 			// API key management (JWT only — can't bootstrap with API key)
 			v1Auth.GET("/api-keys", apiKeyHandler.ListAPIKeys)
@@ -278,11 +313,13 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Admin.Use(middlewares.AdminMiddleware())
 			{
 				v1Admin.GET("/stats", adminHandler.GetStats)
+				v1Admin.GET("/growth", adminHandler.GetGrowthTimeSeries)
 				v1Admin.GET("/users", adminHandler.ListUsers)
 				v1Admin.PATCH("/users/:id/status", adminHandler.UpdateUserStatus)
 			}
 
 			// Audit logs
+			v1Auth.GET("/audit-logs/export", auditLogHandler.ExportAuditLogs)
 			v1Auth.GET("/audit-logs", auditLogHandler.ListAuditLogs)
 
 			// Custom Domains

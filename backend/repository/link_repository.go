@@ -20,7 +20,7 @@ type LinkRepositoryI interface {
 	// Read
 	GetByID(ctx context.Context, id uuid.UUID) (*model.Link, error)
 	GetBySlug(ctx context.Context, slug string) (*model.Link, error)
-	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) ([]model.Link, int64, error)
+	GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string, expiringSoon *bool) ([]model.Link, int64, error)
 	GetAllByUserID(ctx context.Context, userID uuid.UUID) ([]model.Link, error)
 	GetUserTags(ctx context.Context, userID uuid.UUID) ([]string, error)
 	SlugExists(ctx context.Context, slug string) (bool, error)
@@ -43,6 +43,22 @@ type LinkRepositoryI interface {
 	// Count
 	Count(ctx context.Context) (int64, error)
 	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
+	GetTopByClicks(ctx context.Context, userID uuid.UUID, limit int) ([]model.Link, error)
+	GetRecentByUserID(ctx context.Context, userID uuid.UUID, limit int) ([]model.Link, error)
+
+	// Expiry notifications
+	GetLinksNearExpiry(ctx context.Context, within time.Duration, limit int) ([]model.Link, error)
+	MarkExpiryNotified(ctx context.Context, id uuid.UUID) error
+
+	// Bulk operations
+	BulkDelete(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) (int64, error)
+	BulkSetActive(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, active bool) (int64, error)
+	BulkSetFolder(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, folderID *uuid.UUID) (int64, error)
+	BulkAddTags(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, tags []string) (int64, error)
+	BulkRemoveTags(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, tags []string) (int64, error)
+
+	// Time series
+	GetCreationTimeSeries(ctx context.Context, from, to time.Time) ([]TimeSeriesPoint, error)
 
 	// Delete
 	Delete(ctx context.Context, id uuid.UUID, userID uuid.UUID) error
@@ -130,7 +146,7 @@ func (r *LinkRepository) FindByDestinationURL(ctx context.Context, userID uuid.U
 	return &link, nil
 }
 
-func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string) ([]model.Link, int64, error) {
+func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page, limit int, search string, folderID *uuid.UUID, starred *bool, healthStatus string, tags []string, expiringSoon *bool) ([]model.Link, int64, error) {
 	logger.DebugCtx(ctx, "Fetching links for user",
 		zap.String("user_id", userID.String()),
 		zap.Int("page", page),
@@ -157,6 +173,10 @@ func (r *LinkRepository) GetByUserID(ctx context.Context, userID uuid.UUID, page
 	if len(tags) > 0 {
 		// Match links whose tags array overlaps (&&) the requested tags
 		query = query.Where("tags && ?", pq.Array(tags))
+	}
+
+	if expiringSoon != nil && *expiringSoon {
+		query = query.Where("expires_at IS NOT NULL AND expires_at > NOW() AND expires_at <= NOW() + INTERVAL '3 days'")
 	}
 
 	if search != "" {
@@ -375,6 +395,109 @@ func (r *LinkRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (i
 	return count, nil
 }
 
+func (r *LinkRepository) GetTopByClicks(ctx context.Context, userID uuid.UUID, limit int) ([]model.Link, error) {
+	var links []model.Link
+	if err := r.replicaDB.WithContext(ctx).
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Order("click_count DESC").
+		Limit(limit).
+		Find(&links).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get top links by clicks",
+			zap.String("user_id", userID.String()),
+			zap.Error(err))
+		return nil, err
+	}
+	return links, nil
+}
+
+func (r *LinkRepository) GetRecentByUserID(ctx context.Context, userID uuid.UUID, limit int) ([]model.Link, error) {
+	var links []model.Link
+	if err := r.replicaDB.WithContext(ctx).
+		Where("user_id = ? AND deleted_at IS NULL", userID).
+		Order("created_at DESC").
+		Limit(limit).
+		Find(&links).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get recent links for user",
+			zap.String("user_id", userID.String()),
+			zap.Error(err))
+		return nil, err
+	}
+	return links, nil
+}
+
+func (r *LinkRepository) GetLinksNearExpiry(ctx context.Context, within time.Duration, limit int) ([]model.Link, error) {
+	now := time.Now()
+	horizon := now.Add(within)
+	var links []model.Link
+	err := r.masterDB.WithContext(ctx).
+		Where("expires_at IS NOT NULL AND expires_at > ? AND expires_at <= ? AND expiry_notified_at IS NULL AND is_active = true AND deleted_at IS NULL", now, horizon).
+		Order("expires_at ASC").
+		Limit(limit).
+		Find(&links).Error
+	return links, err
+}
+
+func (r *LinkRepository) MarkExpiryNotified(ctx context.Context, id uuid.UUID) error {
+	now := time.Now()
+	return r.masterDB.WithContext(ctx).
+		Model(&model.Link{}).
+		Where("id = ?", id).
+		Update("expiry_notified_at", now).Error
+}
+
+func (r *LinkRepository) BulkDelete(ctx context.Context, ids []uuid.UUID, userID uuid.UUID) (int64, error) {
+	result := r.masterDB.WithContext(ctx).
+		Where("id IN ? AND user_id = ?", ids, userID).
+		Delete(&model.Link{})
+	return result.RowsAffected, result.Error
+}
+
+func (r *LinkRepository) BulkSetActive(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, active bool) (int64, error) {
+	result := r.masterDB.WithContext(ctx).
+		Model(&model.Link{}).
+		Where("id IN ? AND user_id = ?", ids, userID).
+		Updates(map[string]interface{}{"is_active": active, "updated_at": time.Now()})
+	return result.RowsAffected, result.Error
+}
+
+func (r *LinkRepository) BulkSetFolder(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, folderID *uuid.UUID) (int64, error) {
+	var folderVal interface{}
+	if folderID == nil {
+		folderVal = gorm.Expr("NULL")
+	} else {
+		folderVal = *folderID
+	}
+	result := r.masterDB.WithContext(ctx).
+		Model(&model.Link{}).
+		Where("id IN ? AND user_id = ?", ids, userID).
+		Updates(map[string]interface{}{"folder_id": folderVal, "updated_at": time.Now()})
+	return result.RowsAffected, result.Error
+}
+
+func (r *LinkRepository) BulkAddTags(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, tags []string) (int64, error) {
+	idStrs := make([]string, len(ids))
+	for i, id := range ids {
+		idStrs[i] = id.String()
+	}
+	result := r.masterDB.WithContext(ctx).Exec(
+		`UPDATE links SET tags = ARRAY(SELECT DISTINCT unnest(coalesce(tags, '{}'::text[]) || ?::text[])), updated_at = NOW() WHERE id = ANY(?::uuid[]) AND user_id = ? AND deleted_at IS NULL`,
+		pq.Array(tags), pq.Array(idStrs), userID,
+	)
+	return result.RowsAffected, result.Error
+}
+
+func (r *LinkRepository) BulkRemoveTags(ctx context.Context, ids []uuid.UUID, userID uuid.UUID, tags []string) (int64, error) {
+	idStrs := make([]string, len(ids))
+	for i, id := range ids {
+		idStrs[i] = id.String()
+	}
+	result := r.masterDB.WithContext(ctx).Exec(
+		`UPDATE links SET tags = ARRAY(SELECT unnest(coalesce(tags, '{}'::text[])) EXCEPT SELECT unnest(?::text[])), updated_at = NOW() WHERE id = ANY(?::uuid[]) AND user_id = ? AND deleted_at IS NULL`,
+		pq.Array(tags), pq.Array(idStrs), userID,
+	)
+	return result.RowsAffected, result.Error
+}
+
 func (r *LinkRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) error {
 	logger.DebugCtx(ctx, "Deleting all links for user",
 		zap.String("user_id", userID.String()))
@@ -394,4 +517,29 @@ func (r *LinkRepository) DeleteByUserID(ctx context.Context, userID uuid.UUID) e
 		zap.String("user_id", userID.String()),
 		zap.Int64("count", result.RowsAffected))
 	return nil
+}
+
+func (r *LinkRepository) GetCreationTimeSeries(ctx context.Context, from, to time.Time) ([]TimeSeriesPoint, error) {
+	type result struct {
+		Timestamp time.Time
+		Count     int64
+	}
+
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Raw(`SELECT date_trunc('day', created_at) AS timestamp, COUNT(*) AS count
+		     FROM links
+		     WHERE created_at BETWEEN ? AND ? AND deleted_at IS NULL
+		     GROUP BY 1
+		     ORDER BY 1`, from, to).
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get link creation time series", zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]TimeSeriesPoint, len(rows))
+	for i, row := range rows {
+		points[i] = TimeSeriesPoint{Timestamp: row.Timestamp, Count: row.Count}
+	}
+	return points, nil
 }

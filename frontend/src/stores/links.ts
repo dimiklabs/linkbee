@@ -12,11 +12,11 @@ export const useLinksStore = defineStore('links', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
 
-  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string, tags?: string[]) => {
+  const fetchLinks = async (p = 1, l = 20, search = '', folderID = '', starred?: boolean, healthStatus?: string, tags?: string[], expiringSoon?: boolean) => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await linksApi.list(p, l, search, folderID, starred, healthStatus, tags);
+      const response = await linksApi.list(p, l, search, folderID, starred, healthStatus, tags, expiringSoon);
       if (response.data) {
         const data = response.data as LinkListResponse;
         links.value = data.links;
