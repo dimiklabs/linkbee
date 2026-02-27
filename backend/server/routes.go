@@ -33,6 +33,7 @@ import (
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
 	adminSvc   "github.com/shafikshaon/shortlink/service/admin"
+	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	bioSvc     "github.com/shafikshaon/shortlink/service/bio"
 	pixelSvc   "github.com/shafikshaon/shortlink/service/pixel"
 	previewSvc "github.com/shafikshaon/shortlink/service/preview"
@@ -46,6 +47,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	s.setupMiddleware(router)
 
 	// ── Repositories ─────────────────────────────────────────────────────────
+	subRepo               := repository.NewSubscriptionRepository(s.MasterDB, s.ReplicaDB)
 	bioRepo               := repository.NewBioRepository(s.MasterDB, s.ReplicaDB)
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
@@ -73,6 +75,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 
+	billingService     := billingSvc.NewBillingService(subRepo, s.Cfg.Billing)
 	adminService       := adminSvc.NewAdminService(userRepo, linkRepo)
 	bioService         := bioSvc.NewBioService(bioRepo)
 	previewService     := previewSvc.NewPreviewService(s.Cache)
@@ -107,6 +110,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
+	billingHandler   := handler.NewBillingHandler(billingService)
 	adminHandler     := handler.NewAdminHandler(adminService)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)
 	bioHandler       := handler.NewBioHandler(bioService)
@@ -135,6 +139,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	// ── API v1 ────────────────────────────────────────────────────────────────
 	v1 := router.Group("/api/v1")
 	{
+		// Billing webhook (public — verified via HMAC signature)
+		v1.POST("/billing/webhook", billingHandler.LemonSqueezyWebhook)
+
 		// Public routes (no auth required)
 		v1Public := v1.Group("")
 		{
@@ -236,6 +243,10 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.POST("/webhooks", webhookHandler.CreateWebhook)
 			v1Auth.PUT("/webhooks/:id", webhookHandler.UpdateWebhook)
 			v1Auth.DELETE("/webhooks/:id", webhookHandler.DeleteWebhook)
+
+			// Billing (subscription + checkout)
+			v1Auth.GET("/billing/subscription", billingHandler.GetSubscription)
+			v1Auth.GET("/billing/checkout/:plan", billingHandler.GetCheckoutURL)
 
 			// Admin (role=admin only)
 			v1Admin := v1Auth.Group("/admin")

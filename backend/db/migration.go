@@ -26,6 +26,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.RetargetingPixel{},
 		&model.BioPage{},
 		&model.BioLink{},
+		&model.Subscription{},
 	)
 	if err != nil {
 		logger.Error("Auto migration failed", zap.Error(err))

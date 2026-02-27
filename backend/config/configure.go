@@ -26,6 +26,7 @@ type Config struct {
 	RateLimit *RateLimitConfig
 	Session   *SessionConfig
 	Link      *LinkConfig
+	Billing   *BillingConfig
 }
 
 func initViper() string {
@@ -68,6 +69,7 @@ func NewConfig(ctx context.Context) *Config {
 			RateLimit: LoadRateLimitConfig(ctx),
 			Session:   LoadSessionConfig(ctx),
 			Link:      LoadLinkConfig(ctx),
+			Billing:   LoadBillingConfig(),
 		}
 
 		logger.Info("All configurations loaded successfully")
