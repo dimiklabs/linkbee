@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -8,7 +9,9 @@ import (
 
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
+	"github.com/shafikshaon/shortlink/model"
 	"github.com/shafikshaon/shortlink/request"
+	auditSvc "github.com/shafikshaon/shortlink/service/audit"
 	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	linkSvc "github.com/shafikshaon/shortlink/service/link"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
@@ -20,10 +23,11 @@ type LinkHandler struct {
 	linkService    linkSvc.LinkServiceI
 	webhookService webhookSvc.WebhookServiceI
 	planEnforcer   billingSvc.PlanEnforcerI
+	auditService   auditSvc.AuditServiceI
 }
 
-func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.WebhookServiceI, planEnforcer billingSvc.PlanEnforcerI) *LinkHandler {
-	return &LinkHandler{linkService: linkService, webhookService: webhookService, planEnforcer: planEnforcer}
+func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.WebhookServiceI, planEnforcer billingSvc.PlanEnforcerI, auditService auditSvc.AuditServiceI) *LinkHandler {
+	return &LinkHandler{linkService: linkService, webhookService: webhookService, planEnforcer: planEnforcer, auditService: auditService}
 }
 
 // ListLinks godoc
@@ -117,6 +121,11 @@ func (h *LinkHandler) CreateLink(c *gin.Context) {
 	}
 
 	h.webhookService.Trigger(userID, webhookSvc.EventLinkCreated, result)
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionLinkCreated,
+		ResourceType: model.AuditResourceLink, ResourceID: result.ID.String(), ResourceName: result.Slug,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusCreated, "Link created successfully", result)
 }
@@ -204,6 +213,12 @@ func (h *LinkHandler) UpdateLink(c *gin.Context) {
 		return
 	}
 
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionLinkUpdated,
+		ResourceType: model.AuditResourceLink, ResourceID: result.ID.String(), ResourceName: result.Slug,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
+
 	transport.RespondWithSuccess(c, http.StatusOK, "Link updated successfully", result)
 }
 
@@ -242,6 +257,11 @@ func (h *LinkHandler) DeleteLink(c *gin.Context) {
 	}
 
 	h.webhookService.Trigger(userID, webhookSvc.EventLinkDeleted, map[string]string{"id": id.String()})
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionLinkDeleted,
+		ResourceType: model.AuditResourceLink, ResourceID: id.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Link deleted successfully", nil)
 }
@@ -319,6 +339,12 @@ func (h *LinkHandler) ImportLinks(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionLinksImported,
+		ResourceType: model.AuditResourceLink, ResourceName: fmt.Sprintf("%d created", result.Created),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Import complete", result)
 }

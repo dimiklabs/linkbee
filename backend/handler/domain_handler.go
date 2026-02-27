@@ -8,16 +8,19 @@ import (
 
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
+	"github.com/shafikshaon/shortlink/model"
+	auditSvc "github.com/shafikshaon/shortlink/service/audit"
 	domainSvc "github.com/shafikshaon/shortlink/service/domain"
 	"github.com/shafikshaon/shortlink/transport"
 )
 
 type DomainHandler struct {
 	domainService domainSvc.DomainServiceI
+	auditService  auditSvc.AuditServiceI
 }
 
-func NewDomainHandler(domainService domainSvc.DomainServiceI) *DomainHandler {
-	return &DomainHandler{domainService: domainService}
+func NewDomainHandler(domainService domainSvc.DomainServiceI, auditService auditSvc.AuditServiceI) *DomainHandler {
+	return &DomainHandler{domainService: domainService, auditService: auditService}
 }
 
 // ListDomains godoc
@@ -80,6 +83,11 @@ func (h *DomainHandler) AddDomain(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionDomainAdded,
+		ResourceType: model.AuditResourceDomain, ResourceID: result.ID, ResourceName: result.Domain,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 	transport.RespondWithSuccess(c, http.StatusCreated, "domain added", result)
 }
 
@@ -114,6 +122,11 @@ func (h *DomainHandler) VerifyDomain(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionDomainVerified,
+		ResourceType: model.AuditResourceDomain, ResourceID: result.ID, ResourceName: result.Domain,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 	transport.RespondWithSuccess(c, http.StatusOK, "domain verified", result)
 }
 
@@ -146,5 +159,10 @@ func (h *DomainHandler) DeleteDomain(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionDomainDeleted,
+		ResourceType: model.AuditResourceDomain, ResourceID: domainID.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 	transport.RespondWithSuccess(c, http.StatusOK, "domain deleted", nil)
 }

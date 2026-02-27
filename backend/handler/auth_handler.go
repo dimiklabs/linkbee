@@ -10,8 +10,10 @@ import (
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/logger"
 	"github.com/shafikshaon/shortlink/middlewares"
+	"github.com/shafikshaon/shortlink/model"
 	"github.com/shafikshaon/shortlink/request"
 	"github.com/shafikshaon/shortlink/response"
+	auditSvc "github.com/shafikshaon/shortlink/service/audit"
 	authSrv "github.com/shafikshaon/shortlink/service/auth"
 	rateLimitSrv "github.com/shafikshaon/shortlink/service/ratelimit"
 	"github.com/shafikshaon/shortlink/transport"
@@ -21,12 +23,14 @@ import (
 type AuthHandler struct {
 	authService      authSrv.AuthServiceI
 	rateLimitService rateLimitSrv.RateLimitServiceI
+	auditService     auditSvc.AuditServiceI
 }
 
-func NewAuthHandler(authService authSrv.AuthServiceI, rateLimitService rateLimitSrv.RateLimitServiceI) *AuthHandler {
+func NewAuthHandler(authService authSrv.AuthServiceI, rateLimitService rateLimitSrv.RateLimitServiceI, auditService auditSvc.AuditServiceI) *AuthHandler {
 	return &AuthHandler{
 		authService:      authService,
 		rateLimitService: rateLimitService,
+		auditService:     auditService,
 	}
 }
 
@@ -74,6 +78,12 @@ func (h *AuthHandler) Signup(c *gin.Context) {
 	logger.InfoCtx(ctx, "User signed up successfully",
 		zap.String("user_id", user.ID.String()),
 		zap.String("email", user.Email))
+
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: user.ID, Action: model.AuditActionUserSignup,
+		ResourceType: model.AuditResourceUser, ResourceID: user.ID.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusCreated, "User registered successfully", signupResp)
 }
@@ -154,6 +164,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	logger.InfoCtx(ctx, "User logged in successfully",
 		zap.String("user_id", loginResp.User.ID),
 		zap.String("email", loginResp.User.Email))
+
+	if uid, err := uuid.Parse(loginResp.User.ID); err == nil {
+		h.auditService.LogAsync(auditSvc.LogEntry{
+			UserID: uid, Action: model.AuditActionUserLogin,
+			ResourceType: model.AuditResourceUser, ResourceID: loginResp.User.ID,
+			IPAddress: ipAddress, UserAgent: userAgent,
+		})
+	}
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Login successful", loginResp)
 }
@@ -246,6 +264,12 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	logger.InfoCtx(ctx, "Password changed successfully",
 		zap.String("user_id", userID.String()))
+
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionPasswordChanged,
+		ResourceType: model.AuditResourceUser, ResourceID: userID.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Password changed successfully", nil)
 }
@@ -458,6 +482,16 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	logger.InfoCtx(ctx, "Logout successful")
 
+	if userIDStr, ok := c.Get(middlewares.ContextKeyUserID); ok {
+		if uid, err := uuid.Parse(userIDStr.(string)); err == nil {
+			h.auditService.LogAsync(auditSvc.LogEntry{
+				UserID: uid, Action: model.AuditActionUserLogout,
+				ResourceType: model.AuditResourceUser, ResourceID: uid.String(),
+				IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+			})
+		}
+	}
+
 	transport.RespondWithSuccess(c, http.StatusOK, "Logged out successfully", nil)
 }
 
@@ -489,6 +523,12 @@ func (h *AuthHandler) DeleteAccount(c *gin.Context) {
 
 	logger.InfoCtx(ctx, "Account deletion scheduled",
 		zap.String("user_id", userID.String()))
+
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionAccountDeleted,
+		ResourceType: model.AuditResourceUser, ResourceID: userID.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 
 	transport.RespondWithSuccess(c, http.StatusOK, "Account scheduled for deletion. You have 30 days to login and reactivate your account.", nil)
 }

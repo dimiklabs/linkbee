@@ -9,7 +9,9 @@ import (
 
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
+	"github.com/shafikshaon/shortlink/model"
 	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
+	auditSvc "github.com/shafikshaon/shortlink/service/audit"
 	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	"github.com/shafikshaon/shortlink/transport"
 )
@@ -17,10 +19,11 @@ import (
 type APIKeyHandler struct {
 	svc          apiKeySvc.APIKeyServiceI
 	planEnforcer billingSvc.PlanEnforcerI
+	auditService auditSvc.AuditServiceI
 }
 
-func NewAPIKeyHandler(svc apiKeySvc.APIKeyServiceI, planEnforcer billingSvc.PlanEnforcerI) *APIKeyHandler {
-	return &APIKeyHandler{svc: svc, planEnforcer: planEnforcer}
+func NewAPIKeyHandler(svc apiKeySvc.APIKeyServiceI, planEnforcer billingSvc.PlanEnforcerI, auditService auditSvc.AuditServiceI) *APIKeyHandler {
+	return &APIKeyHandler{svc: svc, planEnforcer: planEnforcer, auditService: auditService}
 }
 
 func (h *APIKeyHandler) userID(c *gin.Context) (uuid.UUID, bool) {
@@ -104,6 +107,11 @@ func (h *APIKeyHandler) CreateAPIKey(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionAPIKeyCreated,
+		ResourceType: model.AuditResourceAPIKey, ResourceName: req.Name,
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 	c.JSON(http.StatusCreated, gin.H{"data": resp})
 }
 
@@ -133,5 +141,10 @@ func (h *APIKeyHandler) RevokeAPIKey(c *gin.Context) {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
+	h.auditService.LogAsync(auditSvc.LogEntry{
+		UserID: userID, Action: model.AuditActionAPIKeyRevoked,
+		ResourceType: model.AuditResourceAPIKey, ResourceID: id.String(),
+		IPAddress: c.ClientIP(), UserAgent: c.GetHeader("User-Agent"),
+	})
 	c.Status(http.StatusNoContent)
 }

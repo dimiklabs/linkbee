@@ -33,6 +33,7 @@ import (
 	splitSvc "github.com/shafikshaon/shortlink/service/split"
 	userSrv "github.com/shafikshaon/shortlink/service/user"
 	adminSvc   "github.com/shafikshaon/shortlink/service/admin"
+	auditSvc   "github.com/shafikshaon/shortlink/service/audit"
 	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	bioSvc     "github.com/shafikshaon/shortlink/service/bio"
 	domainSvc  "github.com/shafikshaon/shortlink/service/domain"
@@ -66,6 +67,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	linkRepo              := repository.NewLinkRepository(s.MasterDB, s.ReplicaDB)
 	clickEventRepo        := repository.NewClickEventRepository(s.MasterDB, s.ReplicaDB)
 	customDomainRepo      := repository.NewCustomDomainRepository(s.MasterDB, s.ReplicaDB)
+	auditLogRepo          := repository.NewAuditLogRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
@@ -96,6 +98,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	analyticsService   := analyticsSvc.NewAnalyticsService(linkRepo, clickEventRepo)
 	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
 	domainService      := domainSvc.NewDomainService(customDomainRepo)
+	auditService       := auditSvc.NewAuditService(auditLogRepo)
 
 	// ── Click worker (background goroutine) ───────────────────────────────────
 	clickWorker := worker.NewClickWorker(
@@ -112,7 +115,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	healthHandler    := handler.NewHealthHandler(healthService)
-	authHandler      := handler.NewAuthHandler(authService, rateLimitService)
+	authHandler      := handler.NewAuthHandler(authService, rateLimitService, auditService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
 	adminHandler     := handler.NewAdminHandler(adminService)
@@ -120,13 +123,14 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	bioHandler       := handler.NewBioHandler(bioService)
 	previewHandler   := handler.NewPreviewHandler(previewService, linkService)
 	folderHandler    := handler.NewFolderHandler(folderService)
-	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService, planEnforcer)
+	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService, planEnforcer, auditService)
 	webhookHandler   := handler.NewWebhookHandler(webhookService, planEnforcer)
 	pixelHandler     := handler.NewPixelHandler(pixelService)
 	splitHandler     := handler.NewSplitHandler(splitService)
 	geoHandler       := handler.NewGeoHandler(geoRoutingService)
-	linkHandler      := handler.NewLinkHandler(linkService, webhookService, planEnforcer)
-	domainHandler    := handler.NewDomainHandler(domainService)
+	linkHandler      := handler.NewLinkHandler(linkService, webhookService, planEnforcer, auditService)
+	auditLogHandler  := handler.NewAuditLogHandler(auditLogRepo)
+	domainHandler    := handler.NewDomainHandler(domainService, auditService)
 	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo, customDomainRepo, s.Cfg.App.BaseDomain)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
@@ -263,6 +267,9 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 				v1Admin.GET("/users", adminHandler.ListUsers)
 				v1Admin.PATCH("/users/:id/status", adminHandler.UpdateUserStatus)
 			}
+
+			// Audit logs
+			v1Auth.GET("/audit-logs", auditLogHandler.ListAuditLogs)
 
 			// Custom Domains
 			v1Auth.GET("/domains", domainHandler.ListDomains)

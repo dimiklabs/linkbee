@@ -76,6 +76,15 @@
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Domains</span>
         </router-link>
         <router-link
+          to="/dashboard/audit-logs"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/audit-logs') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">📋</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Audit Logs</span>
+        </router-link>
+        <router-link
           to="/dashboard/billing"
           class="nav-item"
           :class="{ active: $route.path.startsWith('/dashboard/billing') }"
@@ -234,6 +243,7 @@ const pageTitle = computed(() => {
     'api-keys': 'API Keys',
     webhooks: 'Webhooks',
     domains: 'Custom Domains',
+    'audit-logs': 'Audit Logs',
     billing: 'Billing & Plan',
     settings: 'Settings',
     bio: 'Link-in-Bio',
