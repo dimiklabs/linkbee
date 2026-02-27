@@ -1,13 +1,44 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
-    <div slot="headline">Clone Link</div>
+  <md-dialog :open="isOpen" @closed="onDialogClosed" class="clone-dialog">
+    <div slot="headline" class="dialog-headline">
+      <span class="material-symbols-outlined dialog-headline-icon">content_copy</span>
+      Clone Link
+    </div>
 
-    <div slot="content" style="min-width:440px;max-width:100%;padding:0 4px">
-      <!-- Source summary -->
-      <div v-if="link" class="clone-source-card">
-        <div class="clone-source-label">Cloning</div>
-        <div class="clone-source-name">{{ link.title || link.slug }}</div>
-        <div class="clone-source-url">{{ link.short_url }}</div>
+    <div slot="content" class="dialog-content">
+
+      <!-- Source link card -->
+      <div v-if="link" class="source-card">
+        <div class="source-card-header">
+          <span class="material-symbols-outlined source-card-icon">link</span>
+          <span class="source-card-eyebrow">Cloning this link</span>
+        </div>
+
+        <div class="source-card-body">
+          <div class="source-title">{{ link.title || link.slug }}</div>
+
+          <div class="source-url-row">
+            <span class="source-url-badge">Short</span>
+            <span class="source-url-value source-url-value--short">{{ link.short_url }}</span>
+          </div>
+
+          <div class="source-url-row">
+            <span class="source-url-badge source-url-badge--dest">Dest</span>
+            <span class="source-url-value" :title="link.destination_url">{{ link.destination_url }}</span>
+          </div>
+        </div>
+
+        <div class="source-card-footer">
+          <span class="material-symbols-outlined" style="font-size:14px;color:var(--md-sys-color-on-surface-variant)">info</span>
+          <span>A new link will be created with the same destination URL and settings.</span>
+        </div>
+      </div>
+
+      <!-- Divider with label -->
+      <div class="section-divider">
+        <span class="section-divider-line"></span>
+        <span class="section-divider-label">Customise the clone</span>
+        <span class="section-divider-line"></span>
       </div>
 
       <!-- New Title -->
@@ -15,43 +46,53 @@
         <md-outlined-text-field
           :value="newTitle"
           @input="newTitle = ($event.target as HTMLInputElement).value"
-          label="New Title (optional)"
+          label="New Title"
           placeholder="Leave blank to keep original title"
           maxlength="500"
-          style="width:100%"
-        />
+          class="field-full"
+          supporting-text="Optionally give this clone a different title."
+        >
+          <span class="material-symbols-outlined" slot="leading-icon">title</span>
+        </md-outlined-text-field>
       </div>
 
       <!-- Custom Slug -->
       <div class="field-group">
-        <div class="slug-field">
-          <span class="slug-prefix">{{ baseSlug }}/</span>
+        <div class="slug-row">
+          <div class="slug-prefix-chip">
+            <span class="material-symbols-outlined" style="font-size:14px">link</span>
+            {{ baseSlug }}/
+          </div>
           <md-outlined-text-field
             :value="newSlug"
             @input="newSlug = ($event.target as HTMLInputElement).value; slugError = ''"
-            label="Custom Slug (optional)"
+            label="Custom Slug"
             placeholder="auto-generated if blank"
             maxlength="20"
-            style="flex:1"
+            class="slug-field-input"
             :error="!!slugError"
             :error-text="slugError"
-            supporting-text="3–20 alphanumeric characters."
-          />
+            supporting-text="3–20 alphanumeric characters, or leave blank."
+          >
+            <span class="material-symbols-outlined" slot="leading-icon">tag</span>
+          </md-outlined-text-field>
         </div>
       </div>
 
       <!-- Error message -->
-      <div v-if="errorMsg" class="clone-error-banner">
-        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
-        <span>{{ errorMsg }}</span>
+      <div v-if="errorMsg" class="alert-banner">
+        <span class="material-symbols-outlined alert-icon">error</span>
+        <span class="alert-text">{{ errorMsg }}</span>
       </div>
+
     </div>
 
-    <div slot="actions">
-      <md-text-button @click="hide">Cancel</md-text-button>
-      <md-filled-button :disabled="cloning" @click="doClone">
+    <div slot="actions" class="dialog-actions">
+      <md-text-button @click="hide" :disabled="cloning">Cancel</md-text-button>
+      <md-filled-button :disabled="cloning" @click="doClone" class="clone-btn">
         <md-circular-progress v-if="cloning" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
-        Clone Link
+        <span class="material-symbols-outlined" v-else slot="icon">content_copy</span>
+        {{ cloning ? 'Cloning…' : 'Clone Link' }}
       </md-filled-button>
     </div>
   </md-dialog>
@@ -153,63 +194,223 @@ async function doClone() {
 defineExpose({ show, hide });
 </script>
 
-<style scoped>
-.clone-source-card {
-  padding: 12px 16px;
-  background: var(--md-sys-color-surface-container-low);
-  border-radius: 12px;
-  margin-bottom: 20px;
+<style scoped lang="scss">
+.clone-dialog {
+  --md-dialog-container-shape: 20px;
+  --md-dialog-container-max-inline-size: 520px;
 }
 
-.clone-source-label {
-  font-size: 0.75rem;
-  color: var(--md-sys-color-on-surface-variant);
-  margin-bottom: 4px;
-}
-
-.clone-source-name {
+/* ── Headline ─────────────────────────────────────────── */
+.dialog-headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
   font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 2px;
   color: var(--md-sys-color-on-surface);
 }
 
-.clone-source-url {
+.dialog-headline-icon {
+  font-size: 22px;
+  color: var(--md-sys-color-primary);
+}
+
+/* ── Content ──────────────────────────────────────────── */
+.dialog-content {
+  min-width: 440px;
+  max-width: 100%;
+  padding: 0 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Source card ──────────────────────────────────────── */
+.source-card {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.source-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 8px;
+  background: color-mix(in srgb, var(--md-sys-color-primary, #635bff) 8%, transparent);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.source-card-icon {
+  font-size: 16px;
+  color: var(--md-sys-color-primary);
+}
+
+.source-card-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-sys-color-primary);
+}
+
+.source-card-body {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.source-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.source-url-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.source-url-badge {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--md-sys-color-primary, #635bff) 14%, transparent);
+  color: var(--md-sys-color-primary);
+
+  &--dest {
+    background: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.source-url-value {
   font-size: 0.82rem;
   color: var(--md-sys-color-on-surface-variant);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: monospace;
+
+  &--short {
+    color: var(--md-sys-color-primary);
+    font-weight: 500;
+  }
 }
 
+.source-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.4;
+}
+
+/* ── Section divider ──────────────────────────────────── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.section-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+}
+
+.section-divider-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+/* ── Fields ───────────────────────────────────────────── */
 .field-group {
   margin-bottom: 16px;
 }
 
-.slug-field {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.field-full {
+  width: 100%;
 }
 
-.slug-prefix {
-  font-size: 0.82rem;
+.slug-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.slug-prefix-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 12px;
+  margin-top: 8px;
+  background: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-family: monospace;
   color: var(--md-sys-color-on-surface-variant);
   white-space: nowrap;
   flex-shrink: 0;
-  padding-top: 4px;
 }
 
-.clone-error-banner {
+.slug-field-input {
+  flex: 1;
+}
+
+/* ── Alert banner ─────────────────────────────────────── */
+.alert-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: var(--md-sys-color-error-container, #FFDAD6);
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--md-sys-color-error-container, #ffdad6);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-error, #ba1a1a) 30%, transparent);
   color: var(--md-sys-color-on-error-container, #410002);
-  border-radius: 8px;
   font-size: 0.875rem;
+}
+
+.alert-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.alert-text {
+  flex: 1;
+}
+
+/* ── Actions ──────────────────────────────────────────── */
+.dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.clone-btn {
+  min-width: 130px;
 }
 </style>

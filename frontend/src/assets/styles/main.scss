@@ -1,7 +1,163 @@
-// Global styles handled by m3-theme.css (imported in main.ts)
-// This file kept for any component-specific SCSS overrides
+// Global SCSS — Shortlink
+// M3 design tokens are loaded from m3-theme.css (via main.ts)
 
-// Material Symbols icon font configuration
+// ─── Material Symbols — default icon style ─────────────────────────────────
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+  pointer-events: none;
+  font-size: 24px;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+
+  &.filled  { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  &.sm      { font-size: 18px; }
+  &.xs      { font-size: 16px; }
+  &.lg      { font-size: 32px; }
+  &.xl      { font-size: 48px; }
+}
+
+// ─── Generic reset overrides (beyond m3-theme.css) ─────────────────────────
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+  font-family: 'Roboto', sans-serif;
+}
+
+p { margin: 0; }
+ul, ol { list-style: none; padding: 0; }
+
+// ─── Icon button helper class ───────────────────────────────────────────────
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  position: relative;
+
+  &:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+  &:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
+  }
+
+  &--sm { width: 32px; height: 32px; }
+  &--lg { width: 48px; height: 48px; }
+}
+
+// ─── Page section wrapper ───────────────────────────────────────────────────
+.page-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+
+  @media (max-width: 575px) {
+    padding: 16px;
+    gap: 16px;
+  }
+}
+
+// ─── Dashboard page header ──────────────────────────────────────────────────
+.dash-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+
+  &__left { display: flex; flex-direction: column; gap: 4px; }
+  &__title { font-size: 24px; font-weight: 600; color: var(--md-sys-color-on-surface); }
+  &__subtitle { font-size: 14px; color: var(--md-sys-color-on-surface-variant); }
+  &__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+}
+
+// ─── Card body padding ──────────────────────────────────────────────────────
+.card-body  { padding: 20px; }
+.card-body--sm { padding: 16px; }
+
+// ─── Progress bar (for click limits) ───────────────────────────────────────
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+// ─── Link display helpers ───────────────────────────────────────────────────
+.link-slug-display {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.link-dest-display {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 240px;
+  margin-top: 2px;
+}
+
+// ─── Copy button feedback ───────────────────────────────────────────────────
+.copy-btn-success .material-symbols-outlined {
+  color: var(--md-sys-color-success, #15803D);
+}
+
+// ─── Code / monospace display ────────────────────────────────────────────────
+.code-text {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 13px;
+  background: var(--md-sys-color-surface-container);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.code-block {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 13px;
+  background: var(--md-sys-color-surface-container-high);
+  padding: 16px;
+  border-radius: 8px;
+  color: var(--md-sys-color-on-surface);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+// ─── Responsive show/hide helpers ──────────────────────────────────────────
+@media (max-width: 767px) {
+  .hide-mobile { display: none !important; }
+}
+@media (min-width: 768px) {
+  .hide-desktop { display: none !important; }
+}
+
+// ─── Focus ring ─────────────────────────────────────────────────────────────
+:focus-visible {
+  outline-offset: 2px;
+}
+
+// ─── Smooth page transitions ────────────────────────────────────────────────
+.router-view-fade-enter-active,
+.router-view-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+.router-view-fade-enter-from,
+.router-view-fade-leave-to {
+  opacity: 0;
 }

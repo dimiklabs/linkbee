@@ -67,8 +67,13 @@
     <div v-else-if="bioPage" class="two-column-layout">
 
       <!-- Left: Settings Form -->
-      <div class="m3-card m3-card--outlined settings-card">
-        <div class="card-section-header">Page Settings</div>
+      <div class="m3-card m3-card--elevated settings-card">
+        <div class="card-section-header">
+          <div class="card-section-header__left">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">settings</span>
+            <span class="md-label-large">Page Settings</span>
+          </div>
+        </div>
         <div class="card-body">
 
           <!-- Username -->
@@ -173,8 +178,13 @@
       <div>
 
         <!-- Add Link Form -->
-        <div class="m3-card m3-card--outlined" style="margin-bottom:16px;">
-          <div class="card-section-header">Add Link</div>
+        <div class="m3-card m3-card--elevated" style="margin-bottom:16px;">
+          <div class="card-section-header">
+            <div class="card-section-header__left">
+              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_link</span>
+              <span class="md-label-large">Add Link</span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="add-link-row">
               <md-outlined-text-field
@@ -211,14 +221,21 @@
         </div>
 
         <!-- Links List -->
-        <div class="m3-card m3-card--outlined">
-          <div class="card-section-header" style="display:flex;justify-content:space-between;align-items:center;">
-            <span>Links ({{ links.length }})</span>
-            <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">Drag to reorder</span>
+        <div class="m3-card m3-card--elevated">
+          <div class="card-section-header">
+            <div class="card-section-header__left">
+              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">list</span>
+              <span class="md-label-large">Links ({{ links.length }})</span>
+            </div>
+            <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Drag to reorder</span>
           </div>
 
-          <div v-if="links.length === 0" style="padding:32px;text-align:center;color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;">
-            No links yet. Add your first link above.
+          <div v-if="links.length === 0" class="m3-empty-state">
+            <div class="m3-empty-state__icon">
+              <span class="material-symbols-outlined">link_off</span>
+            </div>
+            <div class="md-title-small" style="margin-bottom:4px;">No links yet</div>
+            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;">Add your first link using the form above.</p>
           </div>
 
           <div v-else>
@@ -489,7 +506,7 @@ function onDragEnd() {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 900px;
@@ -553,14 +570,15 @@ function onDragEnd() {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
-}
+  margin-bottom: 0;
 
-.m3-card--elevated {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
-}
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
 
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
 /* Badges */
@@ -572,17 +590,17 @@ function onDragEnd() {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
-}
 
-.m3-badge--success {
-  background: #dcfce7;
-  color: #16a34a;
-}
+  &--success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
 
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-variant);
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
 /* Two column layout */
@@ -591,10 +609,8 @@ function onDragEnd() {
   grid-template-columns: 1fr 1.4fr;
   gap: 20px;
   align-items: start;
-}
 
-@media (max-width: 800px) {
-  .two-column-layout {
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
 }
@@ -604,11 +620,18 @@ function onDragEnd() {
 }
 
 .card-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 14px 20px;
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--md-sys-color-on-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .card-body {
@@ -624,11 +647,11 @@ function onDragEnd() {
   border-radius: 8px;
   background: var(--md-sys-color-surface-container-low);
   gap: 12px;
-}
 
-.published-toggle--active {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  &--active {
+    background: rgba(22, 163, 74, 0.06);
+    border: 1px solid rgba(22, 163, 74, 0.25);
+  }
 }
 
 /* Add link row */
@@ -637,6 +660,33 @@ function onDragEnd() {
   gap: 8px;
   flex-wrap: wrap;
   align-items: flex-end;
+}
+
+/* Empty state */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+
+    .material-symbols-outlined {
+      font-size: 1.75rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 /* Link items */
@@ -648,13 +698,14 @@ function onDragEnd() {
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   cursor: default;
   user-select: none;
-}
+  transition: background 0.12s;
 
-.link-item:last-child {
-  border-bottom: none;
-}
+  &:last-child {
+    border-bottom: none;
+  }
 
-.link-item:hover {
-  background: var(--md-sys-color-surface-container-low);
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 </style>

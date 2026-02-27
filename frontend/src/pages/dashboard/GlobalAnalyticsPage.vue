@@ -3,43 +3,52 @@
 
     <!-- Page Header + Filters -->
     <div class="page-header">
-      <div>
-        <h1 class="md-title-large">Analytics</h1>
-        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.25rem;">Account-wide click performance across all your links.</p>
+      <div class="page-header__title-block">
+        <h1 class="md-headline-small page-title">Analytics</h1>
+        <p class="md-body-medium page-subtitle">Account-wide click performance across all your links.</p>
       </div>
       <div class="page-header__filters">
-        <md-outlined-text-field
-          type="date"
-          label="From"
-          :value="filterFrom"
-          @input="filterFrom = ($event.target as HTMLInputElement).value"
-          style="min-width:150px;"
-        />
-        <md-outlined-text-field
-          type="date"
-          label="To"
-          :value="filterTo"
-          @input="filterTo = ($event.target as HTMLInputElement).value"
-          style="min-width:150px;"
-        />
-        <md-filled-button :disabled="loading" @click="load">
-          <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
-          Apply
-        </md-filled-button>
-        <md-chip-set>
-          <md-filter-chip
+        <!-- Period presets button group -->
+        <div class="preset-btn-group" role="group" aria-label="Period presets">
+          <button
             v-for="p in presets"
             :key="p.label"
-            :label="p.label"
-            :selected="activePreset === p.label"
+            class="preset-btn"
+            :class="{ 'preset-btn--active': activePreset === p.label }"
             @click="applyPreset(p)"
+          >
+            {{ p.label }}
+          </button>
+        </div>
+
+        <!-- Date range inputs -->
+        <div class="date-range-row">
+          <md-outlined-text-field
+            type="date"
+            label="From"
+            :value="filterFrom"
+            @input="filterFrom = ($event.target as HTMLInputElement).value"
+            style="min-width:148px;"
           />
-        </md-chip-set>
+          <span class="date-range-sep">–</span>
+          <md-outlined-text-field
+            type="date"
+            label="To"
+            :value="filterTo"
+            @input="filterTo = ($event.target as HTMLInputElement).value"
+            style="min-width:148px;"
+          />
+          <md-filled-button :disabled="loading" @click="load">
+            <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
+            <span v-else class="material-symbols-outlined" slot="icon">refresh</span>
+            Apply
+          </md-filled-button>
+        </div>
       </div>
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="error-banner" style="margin-bottom:1rem;">
+    <div v-if="error" class="error-banner">
       <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
       <span class="md-body-medium" style="flex:1;">{{ error }}</span>
     </div>
@@ -47,9 +56,12 @@
     <!-- Loading skeleton -->
     <template v-if="loading && !data">
       <div class="stat-grid" style="margin-bottom:1.5rem;">
-        <div v-for="i in 4" :key="i" class="m3-card m3-card--elevated" style="padding:1.25rem;">
-          <div class="skeleton" style="width:60%;height:1.8rem;border-radius:4px;margin-bottom:0.5rem;"></div>
-          <div class="skeleton" style="width:40%;height:0.85rem;border-radius:4px;"></div>
+        <div v-for="i in 4" :key="i" class="m3-card m3-card--elevated stat-skeleton-card">
+          <div class="skeleton-icon-box skeleton"></div>
+          <div style="flex:1">
+            <div class="skeleton" style="width:55%;height:1.6rem;border-radius:4px;margin-bottom:0.4rem;"></div>
+            <div class="skeleton" style="width:38%;height:0.8rem;border-radius:4px;"></div>
+          </div>
         </div>
       </div>
     </template>
@@ -58,40 +70,40 @@
 
       <!-- Stat Cards -->
       <div class="stat-grid" style="margin-bottom:1.5rem;">
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__icon" style="background:rgba(99,91,255,0.12);">
-            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);font-size:20px;">ads_click</span>
+        <div class="m3-card m3-card--elevated stat-card" aria-label="Total clicks" role="region">
+          <div class="stat-card__icon stat-card__icon--primary">
+            <span class="material-symbols-outlined">ads_click</span>
           </div>
           <div class="stat-card__body">
             <div class="md-headline-small stat-value">{{ data.total_clicks.toLocaleString() }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Total Clicks</div>
+            <div class="md-body-small stat-label">Total Clicks</div>
           </div>
         </div>
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__icon" style="background:rgba(20,184,166,0.12);">
-            <span class="material-symbols-outlined" style="color:#14b8a6;font-size:20px;">person</span>
+        <div class="m3-card m3-card--elevated stat-card" aria-label="Unique visitors" role="region">
+          <div class="stat-card__icon stat-card__icon--teal">
+            <span class="material-symbols-outlined">person</span>
           </div>
           <div class="stat-card__body">
             <div class="md-headline-small stat-value">{{ data.unique_clicks.toLocaleString() }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Unique Visitors</div>
+            <div class="md-body-small stat-label">Unique Visitors</div>
           </div>
         </div>
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__icon" style="background:rgba(245,158,11,0.12);">
-            <span class="material-symbols-outlined" style="color:#f59e0b;font-size:20px;">public</span>
+        <div class="m3-card m3-card--elevated stat-card" aria-label="Top country" role="region">
+          <div class="stat-card__icon stat-card__icon--amber">
+            <span class="material-symbols-outlined">public</span>
           </div>
           <div class="stat-card__body">
             <div class="md-title-medium stat-value">{{ topCountry }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Country</div>
+            <div class="md-body-small stat-label">Top Country</div>
           </div>
         </div>
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__icon" style="background:rgba(99,91,255,0.12);">
-            <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);font-size:20px;">smartphone</span>
+        <div class="m3-card m3-card--elevated stat-card" aria-label="Top device" role="region">
+          <div class="stat-card__icon stat-card__icon--secondary">
+            <span class="material-symbols-outlined">smartphone</span>
           </div>
           <div class="stat-card__body">
             <div class="md-title-medium stat-value" style="text-transform:capitalize;">{{ topDevice }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Device</div>
+            <div class="md-body-small stat-label">Top Device</div>
           </div>
         </div>
       </div>
@@ -167,17 +179,23 @@
       </div>
 
       <!-- Click Trend Chart -->
-      <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
+      <div class="m3-card m3-card--elevated chart-section" style="margin-bottom:1.5rem;">
         <div class="card-header-row">
-          <span class="md-title-medium">Click Trend</span>
-          <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ formatDate(data.from) }} – {{ formatDate(data.to) }}</span>
+          <div class="card-header-row__left">
+            <span class="material-symbols-outlined card-header-row__icon">show_chart</span>
+            <div>
+              <span class="md-title-medium">Click Trend</span>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:2px;">{{ formatDate(data.from) }} – {{ formatDate(data.to) }}</div>
+            </div>
+          </div>
         </div>
         <md-divider />
-        <div style="padding:0.75rem 1rem;">
-          <div v-if="!data.time_series.length" class="empty-state">
-            No click data for this period.
+        <div class="chart-body-pad">
+          <div v-if="!data.time_series.length" class="m3-empty-state m3-empty-state--compact">
+            <span class="material-symbols-outlined m3-empty-state__icon">show_chart</span>
+            <p class="md-body-medium m3-empty-state__text">No click data for this period.</p>
           </div>
-          <VChart v-else :option="trendOption" style="height:240px;" autoresize />
+          <VChart v-else :option="trendOption" style="height:280px;" autoresize />
         </div>
       </div>
 
@@ -410,9 +428,18 @@
     </template>
 
     <!-- Empty state -->
-    <div v-else-if="!loading && !error" class="empty-state" style="padding:4rem 2rem;">
-      <span class="material-symbols-outlined" style="font-size:3rem;display:block;margin-bottom:0.75rem;color:var(--md-sys-color-on-surface-variant);">bar_chart</span>
-      <p class="md-body-medium">No analytics data yet. Clicks will appear here as your links are visited.</p>
+    <div v-else-if="!loading && !error" class="m3-empty-state m3-empty-state--full">
+      <div class="m3-empty-state__icon-wrap">
+        <span class="material-symbols-outlined m3-empty-state__icon">bar_chart</span>
+      </div>
+      <h2 class="md-title-large m3-empty-state__title">No analytics data yet</h2>
+      <p class="md-body-medium m3-empty-state__text">Clicks will appear here as your links are visited.</p>
+      <router-link to="/dashboard/links">
+        <md-filled-button>
+          <span class="material-symbols-outlined" slot="icon">add</span>
+          Create a link
+        </md-filled-button>
+      </router-link>
     </div>
 
   </div>
@@ -682,9 +709,13 @@ const deviceOption = computed(() => {
   padding: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+
+  @media (max-width: 575px) {
+    padding: 1rem;
+  }
 }
 
-/* Page header */
+/* ── Page header ─────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
@@ -694,14 +725,87 @@ const deviceOption = computed(() => {
   margin-bottom: 1.5rem;
 }
 
+.page-header__title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .page-header__filters {
   display: flex;
+  flex-direction: column;
   align-items: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-/* Card header row */
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.date-range-sep {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+}
+
+/* ── Period preset button group ──────────────────────────────────────────── */
+.preset-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--md-sys-color-surface);
+}
+
+.preset-btn {
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background 0.15s, color 0.15s;
+  border-right: 1px solid var(--md-sys-color-outline-variant);
+  white-space: nowrap;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &--active {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    &:hover {
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
+    }
+  }
+}
+
+/* ── Card header row ─────────────────────────────────────────────────────── */
 .card-header-row {
   display: flex;
   align-items: center;
@@ -711,18 +815,31 @@ const deviceOption = computed(() => {
   flex-wrap: wrap;
 }
 
-/* Error banner */
+.card-header-row__left {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.card-header-row__icon {
+  font-size: 20px;
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
+/* ── Error banner ────────────────────────────────────────────────────────── */
 .error-banner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  background: rgba(176, 0, 32, 0.08);
+  background: var(--md-sys-color-error-container);
   border: 1px solid var(--md-sys-color-error);
+  margin-bottom: 1rem;
 }
 
-/* Stat grid */
+/* ── Stat grid ───────────────────────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -732,21 +849,66 @@ const deviceOption = computed(() => {
   @media (max-width: 575px) { grid-template-columns: 1fr; }
 }
 
-.stat-card {
+.stat-skeleton-card {
   display: flex;
   align-items: center;
   gap: 1rem;
   padding: 1.25rem 1.5rem;
 }
 
-.stat-card__icon {
+.skeleton-icon-box {
   width: 48px;
   height: 48px;
   border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.stat-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
+  .material-symbols-outlined {
+    font-size: 22px;
+  }
+
+  &--primary {
+    background: var(--md-sys-color-primary-container);
+    .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
+  }
+
+  &--secondary {
+    background: var(--md-sys-color-secondary-container);
+    .material-symbols-outlined { color: var(--md-sys-color-on-secondary-container); }
+  }
+
+  &--teal {
+    background: color-mix(in srgb, #14b8a6 16%, transparent);
+    .material-symbols-outlined { color: #0f766e; }
+  }
+
+  &--amber {
+    background: color-mix(in srgb, #f59e0b 16%, transparent);
+    .material-symbols-outlined { color: #b45309; }
+  }
 }
 
 .stat-card__body {
@@ -757,9 +919,23 @@ const deviceOption = computed(() => {
   color: var(--md-sys-color-on-surface);
   line-height: 1.2;
   margin-bottom: 0.15rem;
+  font-weight: 600;
 }
 
-/* Trend indicator */
+.stat-label {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Chart section ───────────────────────────────────────────────────────── */
+.chart-section {
+  border-radius: 16px;
+}
+
+.chart-body-pad {
+  padding: 0.75rem 1rem;
+}
+
+/* ── Trend indicator ─────────────────────────────────────────────────────── */
 .trend-indicator {
   display: inline-flex;
   align-items: center;
@@ -768,7 +944,7 @@ const deviceOption = computed(() => {
   font-weight: 600;
 }
 
-/* Comparison grid */
+/* ── Comparison grid ─────────────────────────────────────────────────────── */
 .comparison-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -787,17 +963,17 @@ const deviceOption = computed(() => {
   padding: 0.75rem 1rem;
 
   &--current {
-    background: rgba(99, 91, 255, 0.06);
-    border: 1px solid rgba(99, 91, 255, 0.2);
+    background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 25%, transparent);
   }
 
   &--previous {
-    background: rgba(107, 114, 128, 0.06);
-    border: 1px solid rgba(107, 114, 128, 0.15);
+    background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant);
   }
 }
 
-/* Two column */
+/* ── Two column ──────────────────────────────────────────────────────────── */
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -806,7 +982,7 @@ const deviceOption = computed(() => {
   @media (max-width: 767px) { grid-template-columns: 1fr; }
 }
 
-/* Breakdown list */
+/* ── Breakdown list ──────────────────────────────────────────────────────── */
 .breakdown-list {
   display: flex;
   flex-direction: column;
@@ -820,10 +996,11 @@ const deviceOption = computed(() => {
 }
 
 .rank-num {
-  min-width: 18px;
+  min-width: 20px;
   text-align: center;
   color: var(--md-sys-color-on-surface-variant);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.78rem;
   flex-shrink: 0;
 }
 
@@ -840,7 +1017,7 @@ const deviceOption = computed(() => {
   flex-shrink: 0;
 }
 
-/* UTM grid */
+/* ── UTM grid ────────────────────────────────────────────────────────────── */
 .utm-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -850,41 +1027,53 @@ const deviceOption = computed(() => {
   @media (max-width: 575px) { grid-template-columns: 1fr; }
 }
 
-/* M3 Cards */
+/* ── M3 Cards ────────────────────────────────────────────────────────────── */
 .m3-card {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
 
   &--elevated {
-    background: var(--md-sys-color-surface-container-low, #fff);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+    background: var(--md-sys-color-surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   &--outlined {
-    background: var(--md-sys-color-surface, #fff);
-    border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
   }
 }
 
-/* M3 Badges */
+/* ── M3 Badges ───────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.65rem;
   border-radius: 999px;
 
-  &--primary { background: rgba(99, 91, 255, 0.12); color: var(--md-sys-color-primary, #635bff); }
-  &--neutral { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+  &--primary {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
-/* Skeleton */
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
 .skeleton {
-  background: linear-gradient(90deg, var(--md-sys-color-outline-variant, #e3e8ee) 25%, #f0f2f5 50%, var(--md-sys-color-outline-variant, #e3e8ee) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--md-sys-color-surface-container) 25%,
+    var(--md-sys-color-surface-container-high) 50%,
+    var(--md-sys-color-surface-container) 75%
+  );
   background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-  border-radius: 4px;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
   display: block;
 }
 
@@ -893,11 +1082,50 @@ const deviceOption = computed(() => {
   100% { background-position: -200% 0; }
 }
 
-/* Empty state */
-.empty-state {
+/* ── M3 Empty State ──────────────────────────────────────────────────────── */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   text-align: center;
-  padding: 2rem;
+
+  &--compact {
+    padding: 2.5rem 1.5rem;
+  }
+
+  &--full {
+    padding: 5rem 2rem;
+  }
+}
+
+.m3-empty-state__icon-wrap {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.m3-empty-state__icon {
+  font-size: 40px;
+  color: var(--md-sys-color-primary);
+  opacity: 0.65;
+}
+
+.m3-empty-state__title {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.m3-empty-state__text {
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
+  margin: 0 0 1rem;
+  max-width: 340px;
 }
 </style>

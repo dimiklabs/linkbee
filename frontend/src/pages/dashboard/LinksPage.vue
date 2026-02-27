@@ -6,6 +6,7 @@
       <aside class="folder-sidebar">
         <div class="m3-card m3-card--elevated sidebar-card">
           <div class="sidebar-header">
+            <span class="material-symbols-outlined sidebar-header__icon">folder_open</span>
             <span class="sidebar-title">Folders</span>
           </div>
           <div class="sidebar-list">
@@ -15,8 +16,9 @@
               :class="{ 'sidebar-item--active': selectedFolderID === '' && !starredOnly && healthFilter === '' && !expiringSoonFilter }"
               @click="selectFolder('')"
             >
-              <span class="material-symbols-outlined" style="font-size:16px">bar_chart</span>
+              <span class="material-symbols-outlined sidebar-item__icon">bar_chart</span>
               <span class="sidebar-item-label">All Links</span>
+              <span v-if="selectedFolderID === '' && !starredOnly && healthFilter === '' && !expiringSoonFilter" class="sidebar-item__active-indicator"></span>
             </button>
 
             <!-- Starred -->
@@ -25,8 +27,9 @@
               :class="{ 'sidebar-item--active': starredOnly }"
               @click="selectStarred"
             >
-              <span class="material-symbols-outlined" style="font-size:16px">star</span>
+              <span class="material-symbols-outlined sidebar-item__icon" :style="{ fontVariationSettings: starredOnly ? '\'FILL\' 1' : '\'FILL\' 0', color: starredOnly ? '#F4A100' : 'inherit' }">star</span>
               <span class="sidebar-item-label">Starred</span>
+              <span v-if="starredOnly" class="sidebar-item__active-indicator"></span>
             </button>
 
             <!-- Unhealthy -->
@@ -35,8 +38,9 @@
               :class="{ 'sidebar-item--active': healthFilter === 'unhealthy' }"
               @click="selectHealthFilter('unhealthy')"
             >
-              <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-error)">error</span>
+              <span class="material-symbols-outlined sidebar-item__icon" style="color:var(--md-sys-color-error)">error</span>
               <span class="sidebar-item-label">Unhealthy</span>
+              <span v-if="healthFilter === 'unhealthy'" class="sidebar-item__active-indicator"></span>
             </button>
 
             <!-- Expiring Soon -->
@@ -45,8 +49,9 @@
               :class="{ 'sidebar-item--active': expiringSoonFilter }"
               @click="selectExpiringSoon"
             >
-              <span class="material-symbols-outlined" style="font-size:16px;color:#F4A100">schedule</span>
+              <span class="material-symbols-outlined sidebar-item__icon" :style="{ color: expiringSoonFilter ? 'var(--md-sys-color-primary)' : '#F4A100' }">schedule</span>
               <span class="sidebar-item-label">Expiring Soon</span>
+              <span v-if="expiringSoonFilter" class="sidebar-item__active-indicator"></span>
             </button>
 
             <!-- Folder rows -->
@@ -139,20 +144,30 @@
         <!-- Page Header -->
         <div class="page-header">
           <div class="page-header-left">
-            <h4 class="page-title">My Links</h4>
+            <h1 class="page-title">My Links</h1>
             <p class="page-subtitle">
-              {{ linksStore.total }} link{{ linksStore.total !== 1 ? 's' : '' }} total
+              Manage your <strong>{{ linksStore.total }}</strong> link{{ linksStore.total !== 1 ? 's' : '' }}
             </p>
           </div>
           <div class="page-header-actions">
-            <md-outlined-text-field
-              :value="searchQuery"
-              @input="searchQuery = ($event.target as HTMLInputElement).value"
-              label="Search links..."
-              style="min-width:240px;max-width:320px"
-            >
-              <span class="material-symbols-outlined" slot="leading-icon">search</span>
-            </md-outlined-text-field>
+            <div class="search-wrap">
+              <md-outlined-text-field
+                :value="searchQuery"
+                @input="searchQuery = ($event.target as HTMLInputElement).value"
+                label="Search links..."
+                style="min-width:220px;max-width:300px"
+              >
+                <span class="material-symbols-outlined" slot="leading-icon">search</span>
+              </md-outlined-text-field>
+              <button
+                v-if="searchQuery"
+                class="search-clear-btn"
+                title="Clear search"
+                @click="searchQuery = ''"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
 
             <md-outlined-button @click="exportCSV" :disabled="exporting">
               <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
@@ -167,7 +182,7 @@
 
             <md-filled-button @click="openCreateModal">
               <span class="material-symbols-outlined" slot="icon">add</span>
-              Create Link
+              New Link
             </md-filled-button>
           </div>
         </div>
@@ -193,33 +208,48 @@
           <span>{{ linksStore.error }}</span>
         </div>
 
-        <!-- Loading state -->
-        <div v-if="linksStore.loading" class="loading-state">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:48px" />
-          <p class="loading-text">Loading your links...</p>
+        <!-- Loading skeleton state -->
+        <div v-if="linksStore.loading" class="skeleton-list" aria-busy="true" aria-label="Loading links">
+          <div v-for="i in 5" :key="i" class="skeleton-row">
+            <div class="skeleton skeleton-checkbox"></div>
+            <div class="skeleton-row-body">
+              <div class="skeleton skeleton-title"></div>
+              <div class="skeleton skeleton-url"></div>
+            </div>
+            <div class="skeleton skeleton-badge"></div>
+            <div class="skeleton skeleton-badge"></div>
+            <div class="skeleton skeleton-date"></div>
+          </div>
         </div>
 
         <!-- Empty state -->
         <div
           v-else-if="!linksStore.loading && linksStore.links.length === 0"
-          class="empty-state"
+          class="m3-empty-state"
         >
-          <span class="material-symbols-outlined empty-state-icon">link_off</span>
-          <h5 class="empty-state-title">
+          <div class="m3-empty-state__icon-wrap">
+            <span class="material-symbols-outlined m3-empty-state__icon">
+              {{ searchQuery ? 'search_off' : selectedTags.length ? 'label_off' : 'add_link' }}
+            </span>
+          </div>
+          <h2 class="md-title-large m3-empty-state__title">
             {{ searchQuery ? 'No links match your search' : selectedTags.length ? 'No links with these tags' : 'No links yet' }}
-          </h5>
-          <p class="empty-state-subtitle">
-            {{ searchQuery ? 'Try a different search term.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Get started by creating your first shortened link.' }}
+          </h2>
+          <p class="md-body-medium m3-empty-state__subtitle">
+            {{ searchQuery ? 'Try a different search term or clear the search.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Shorten your first URL and start tracking clicks in seconds.' }}
           </p>
-          <md-filled-button v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
-            Create your first link
-          </md-filled-button>
-          <md-outlined-button v-else-if="selectedTags.length" @click="clearTagFilter">
-            Clear tag filter
-          </md-outlined-button>
-          <md-outlined-button v-else @click="searchQuery = ''">
-            Clear search
-          </md-outlined-button>
+          <div class="m3-empty-state__actions">
+            <md-filled-button v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
+              <span class="material-symbols-outlined" slot="icon">add</span>
+              Create your first link
+            </md-filled-button>
+            <md-outlined-button v-else-if="selectedTags.length" @click="clearTagFilter">
+              Clear tag filter
+            </md-outlined-button>
+            <md-outlined-button v-else @click="searchQuery = ''">
+              Clear search
+            </md-outlined-button>
+          </div>
         </div>
 
         <!-- Links table -->
@@ -1231,26 +1261,25 @@ const visiblePages = computed<(number | string)[]>(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* ── Layout ──────────────────────────────────────────────────────────────────── */
 .links-page {
   padding: 24px;
   min-height: 100%;
+
+  @media (max-width: 575px) {
+    padding: 16px;
+  }
 }
 
 .links-layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 228px 1fr;
   gap: 20px;
   align-items: start;
-}
 
-@media (max-width: 768px) {
-  .links-layout {
+  @media (max-width: 900px) {
     grid-template-columns: 1fr;
-  }
-  .folder-sidebar {
-    display: none;
   }
 }
 
@@ -1259,50 +1288,79 @@ const visiblePages = computed<(number | string)[]>(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  @media (max-width: 900px) {
+    /* On mobile: show sidebar stacked above links */
+    display: flex;
+  }
 }
 
 .sidebar-card {
   overflow: hidden;
+  border-radius: 14px;
 }
 
 .sidebar-header {
-  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.sidebar-header__icon {
+  font-size: 18px;
+  color: var(--md-sys-color-primary);
 }
 
 .sidebar-title {
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--md-sys-color-on-surface);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .sidebar-list {
-  padding: 4px 0;
+  padding: 6px 0;
 }
 
 .sidebar-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  padding: 8px 16px;
+  padding: 9px 16px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface-variant);
   text-align: left;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  border-radius: 0;
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &--active {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+    font-weight: 600;
+
+    &:hover {
+      background: var(--md-sys-color-primary-container);
+    }
+  }
 }
 
-.sidebar-item:hover {
-  background: var(--md-sys-color-surface-container-low);
-}
-
-.sidebar-item--active {
-  background: rgba(99, 91, 255, 0.08);
-  color: var(--md-sys-color-primary);
-  font-weight: 600;
+.sidebar-item__icon {
+  font-size: 18px;
+  flex-shrink: 0;
 }
 
 .sidebar-item-label {
@@ -1312,21 +1370,34 @@ const visiblePages = computed<(number | string)[]>(() => {
   white-space: nowrap;
 }
 
+.sidebar-item__active-indicator {
+  width: 4px;
+  height: 24px;
+  background: var(--md-sys-color-primary);
+  border-radius: 2px 0 0 2px;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .folder-row {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 2px 8px 2px 0;
   transition: background 0.15s;
-}
+  border-radius: 0;
 
-.folder-row:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
 
-.folder-row--active {
-  background: rgba(99, 91, 255, 0.08);
+  &--active {
+    background: var(--md-sys-color-primary-container);
+
+    .folder-row-btn { color: var(--md-sys-color-on-primary-container); }
+  }
 }
 
 .folder-row-btn {
@@ -1334,19 +1405,19 @@ const visiblePages = computed<(number | string)[]>(() => {
   align-items: center;
   gap: 8px;
   flex: 1;
-  padding: 6px 4px;
+  padding: 7px 8px 7px 16px;
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface-variant);
   min-width: 0;
   text-align: left;
-}
 
-.folder-row-btn--active {
-  color: var(--md-sys-color-primary);
-  font-weight: 600;
+  &--active {
+    color: var(--md-sys-color-on-primary-container);
+    font-weight: 600;
+  }
 }
 
 .folder-dot {
@@ -1355,6 +1426,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-block;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
 
 .folder-row-name {
@@ -1365,8 +1437,12 @@ const visiblePages = computed<(number | string)[]>(() => {
 }
 
 .folder-row-count {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container);
+  padding: 1px 6px;
+  border-radius: 999px;
   margin-left: auto;
 }
 
@@ -1402,6 +1478,7 @@ const visiblePages = computed<(number | string)[]>(() => {
 
 .sidebar-tags-card {
   overflow: hidden;
+  border-radius: 14px;
 }
 
 .sidebar-tags-header {
@@ -1410,6 +1487,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   justify-content: space-between;
   padding: 10px 16px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
 }
 
 .sidebar-tags-body {
@@ -1427,14 +1505,14 @@ const visiblePages = computed<(number | string)[]>(() => {
 }
 
 .page-title {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 700;
-  margin: 0 0 2px;
+  margin: 0 0 4px;
   color: var(--md-sys-color-on-surface);
 }
 
 .page-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface-variant);
   margin: 0;
 }
@@ -1444,6 +1522,40 @@ const visiblePages = computed<(number | string)[]>(() => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* ── Search with clear button ────────────────────────────────────────────────── */
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background 0.15s;
+  z-index: 1;
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
 }
 
 /* ── Banners ─────────────────────────────────────────────────────────────────── */
@@ -1462,53 +1574,127 @@ const visiblePages = computed<(number | string)[]>(() => {
   font-size: 0.875rem;
 }
 
-/* ── Loading / Empty ─────────────────────────────────────────────────────────── */
-.loading-state {
+/* ── Loading skeleton ────────────────────────────────────────────────────────── */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--md-sys-color-surface);
+  border-radius: 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.skeleton-row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--md-sys-color-surface-container) 25%,
+    var(--md-sys-color-surface-container-high) 50%,
+    var(--md-sys-color-surface-container) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  display: block;
+}
+
+.skeleton-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.skeleton-title {
+  width: 55%;
+  height: 0.9rem;
+}
+
+.skeleton-url {
+  width: 80%;
+  height: 0.75rem;
+}
+
+.skeleton-badge {
+  width: 60px;
+  height: 22px;
+  border-radius: 999px;
+}
+
+.skeleton-date {
+  width: 80px;
+  height: 0.85rem;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── M3 Empty State ──────────────────────────────────────────────────────────── */
+.m3-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 24px;
-  gap: 16px;
-}
-
-.loading-text {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.9rem;
-  margin: 0;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 64px 24px;
+  padding: 72px 24px;
   text-align: center;
 }
 
-.empty-state-icon {
-  font-size: 56px;
-  color: var(--md-sys-color-on-surface-variant);
-  opacity: 0.4;
-  margin-bottom: 16px;
+.m3-empty-state__icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
-.empty-state-title {
+.m3-empty-state__icon {
+  font-size: 40px;
+  color: var(--md-sys-color-primary);
+  opacity: 0.7;
+}
+
+.m3-empty-state__title {
   font-weight: 600;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--md-sys-color-on-surface);
   margin: 0 0 8px;
 }
 
-.empty-state-subtitle {
-  font-size: 0.875rem;
+.m3-empty-state__subtitle {
   color: var(--md-sys-color-on-surface-variant);
   margin: 0 0 24px;
-  max-width: 360px;
+  max-width: 380px;
+}
+
+.m3-empty-state__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* ── Table Card ──────────────────────────────────────────────────────────────── */
 .links-table-card {
   overflow: hidden;
+  border-radius: 14px;
 }
 
 /* ── Bulk bar ────────────────────────────────────────────────────────────────── */
@@ -1518,14 +1704,14 @@ const visiblePages = computed<(number | string)[]>(() => {
   flex-wrap: wrap;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(99, 91, 255, 0.05);
+  background: var(--md-sys-color-primary-container);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .bulk-bar-count {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary-container);
 }
 
 .bulk-bar-end {
@@ -1583,9 +1769,81 @@ const visiblePages = computed<(number | string)[]>(() => {
   overflow-x: auto;
 }
 
+/* ── M3 Table (no Bootstrap) ─────────────────────────────────────────────────── */
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    white-space: nowrap;
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
+    vertical-align: middle;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-lowest, var(--md-sys-color-surface-container-low));
+  }
+}
+
+/* ── M3 Badges ───────────────────────────────────────────────────────────────── */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.m3-badge--primary {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.m3-badge--success {
+  background: color-mix(in srgb, #1aa563 14%, transparent);
+  color: #0a7040;
+}
+
+.m3-badge--error {
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container, var(--md-sys-color-error));
+}
+
+.m3-badge--warning {
+  background: color-mix(in srgb, #f59e0b 16%, transparent);
+  color: #92400e;
+}
+
+.m3-badge--neutral {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 /* ── Row states ──────────────────────────────────────────────────────────────── */
 .row--selected {
-  background: rgba(99, 91, 255, 0.04);
+  background: var(--md-sys-color-primary-container) !important;
+
+  td { background: transparent !important; }
 }
 
 /* ── Link cell content ───────────────────────────────────────────────────────── */

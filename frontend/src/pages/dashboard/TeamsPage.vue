@@ -35,13 +35,18 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="teams.length === 0" class="empty-state">
-      <span class="material-symbols-outlined" style="font-size:56px;color:var(--md-sys-color-on-surface-variant);">group</span>
-      <div class="md-title-medium" style="margin-top:16px;">No teams yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:8px 0 24px;">
+    <div v-else-if="teams.length === 0" class="m3-card m3-card--elevated m3-empty-state">
+      <div class="m3-empty-state__icon">
+        <span class="material-symbols-outlined">group</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:8px;">No teams yet</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">
         Create a team to collaborate with your colleagues.
       </p>
-      <md-filled-button @click="openCreateModal">Create Your First Team</md-filled-button>
+      <md-filled-button @click="openCreateModal">
+        <span class="material-symbols-outlined" slot="icon">add</span>
+        Create Your First Team
+      </md-filled-button>
     </div>
 
     <!-- Teams grid -->
@@ -49,7 +54,7 @@
       <div
         v-for="team in teams"
         :key="team.id"
-        class="m3-card m3-card--outlined team-card"
+        class="m3-card m3-card--elevated team-card"
         :class="{ selected: selectedTeam?.id === team.id }"
         @click="selectTeam(team)"
       >
@@ -76,7 +81,7 @@
     </div>
 
     <!-- ── Team Detail Panel ──────────────────────────────────────────────── -->
-    <div v-if="selectedTeam" class="m3-card m3-card--outlined section-card" style="margin-top:20px;">
+    <div v-if="selectedTeam" class="m3-card m3-card--elevated section-card" style="margin-top:20px;">
       <div class="card-section-header">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="team-avatar-sm">{{ selectedTeam.name.charAt(0).toUpperCase() }}</div>
@@ -124,7 +129,7 @@
         </div>
 
         <!-- Members table -->
-        <div v-else style="overflow-x:auto;">
+        <div v-else class="m3-table-wrapper">
           <table class="m3-table members-table">
             <thead>
               <tr>
@@ -738,7 +743,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .teams-page {
   max-width: 1100px;
   padding: 24px 0;
@@ -756,12 +761,31 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 64px 24px;
+/* Empty state */
+.m3-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 .teams-grid {
@@ -769,22 +793,26 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .team-card {
   border-radius: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
+  transition: box-shadow 0.15s, outline 0.15s;
 
-.team-card:hover {
-  border-color: var(--md-sys-color-primary);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-}
+  &:hover {
+    box-shadow: 0 4px 16px rgba(99, 91, 255, 0.15);
+    outline: 1px solid var(--md-sys-color-primary);
+  }
 
-.team-card.selected {
-  border-color: var(--md-sys-color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+  &.selected {
+    outline: 2px solid var(--md-sys-color-primary);
+    box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.12);
+  }
 }
 
 .team-card-body {
@@ -795,7 +823,7 @@ onMounted(() => {
   width: 42px;
   height: 42px;
   background: var(--md-sys-color-primary);
-  color: #fff;
+  color: var(--md-sys-color-on-primary);
   font-weight: 700;
   font-size: 1.125rem;
   border-radius: 10px;
@@ -809,7 +837,7 @@ onMounted(() => {
   width: 34px;
   height: 34px;
   background: var(--md-sys-color-primary);
-  color: #fff;
+  color: var(--md-sys-color-on-primary);
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: 8px;
@@ -839,7 +867,7 @@ onMounted(() => {
 }
 
 .card-section-header {
-  padding: 16px 24px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   align-items: center;
@@ -848,14 +876,40 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.members-table {
-  width: 100%;
+.m3-table-wrapper {
+  overflow-x: auto;
 }
 
-.members-table th,
-.members-table td {
-  padding: 12px 16px;
-  vertical-align: middle;
+.members-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
 .feedback-error {
@@ -870,41 +924,72 @@ onMounted(() => {
 }
 
 /* M3 badge variants */
-.m3-badge--primary {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-  color: var(--md-sys-color-primary);
-}
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-transform: capitalize;
 
-.m3-badge--info {
-  background: color-mix(in srgb, #0288d1 12%, transparent);
-  color: #0277bd;
-}
+  &--primary {
+    background: rgba(99, 91, 255, 0.12);
+    color: var(--md-sys-color-primary);
+  }
 
-.m3-badge--success {
-  background: color-mix(in srgb, #1e7e34 12%, transparent);
-  color: #1e7e34;
-}
+  &--info {
+    background: rgba(2, 136, 209, 0.12);
+    color: #0277bd;
+  }
 
-.m3-badge--warning {
-  background: color-mix(in srgb, #f59e0b 15%, transparent);
-  color: #92400e;
-}
+  &--success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
 
-.m3-badge--error {
-  background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-error);
-}
+  &--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+  }
 
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
+  &--error {
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--md-sys-color-error);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
 /* Snackbar transition */
+.m3-snackbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #313033;
+  color: #fff;
+  border-radius: 4px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  max-width: 560px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.24);
+}
+
 .snack-enter-active,
 .snack-leave-active {
   transition: all 0.25s;
 }
+
 .snack-enter-from,
 .snack-leave-to {
   transform: translateY(80px);

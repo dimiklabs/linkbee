@@ -97,37 +97,46 @@
     <template v-if="!loading && analytics">
 
       <!-- Filters -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;padding:1rem 1.25rem;">
-        <div class="filter-row">
-          <md-outlined-text-field
-            type="date"
-            label="From"
-            :value="filterFrom"
-            @input="filterFrom = ($event.target as HTMLInputElement).value"
-            style="min-width:160px;"
-          />
-          <md-outlined-text-field
-            type="date"
-            label="To"
-            :value="filterTo"
-            @input="filterTo = ($event.target as HTMLInputElement).value"
-            style="min-width:160px;"
-          />
-          <md-outlined-select
-            label="Granularity"
-            :value="filterGranularity"
-            @change="filterGranularity = ($event.target as HTMLSelectElement).value as 'hour'|'day'|'week'|'month'"
-            style="min-width:140px;"
-          >
-            <md-select-option value="hour"><div slot="headline">Hour</div></md-select-option>
-            <md-select-option value="day"><div slot="headline">Day</div></md-select-option>
-            <md-select-option value="week"><div slot="headline">Week</div></md-select-option>
-            <md-select-option value="month"><div slot="headline">Month</div></md-select-option>
-          </md-outlined-select>
-          <md-filled-button :disabled="loading" @click="applyFilters">
-            <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
-            Apply
-          </md-filled-button>
+      <div class="m3-card m3-card--elevated filters-card" style="margin-bottom:1.5rem;">
+        <div class="m3-card-header">
+          <div class="m3-card-header__left">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">tune</span>
+            <span class="md-label-large">Date Range &amp; Granularity</span>
+          </div>
+        </div>
+        <md-divider />
+        <div style="padding:1rem 1.25rem;">
+          <div class="filter-row">
+            <md-outlined-text-field
+              type="date"
+              label="From"
+              :value="filterFrom"
+              @input="filterFrom = ($event.target as HTMLInputElement).value"
+              style="min-width:160px;"
+            />
+            <md-outlined-text-field
+              type="date"
+              label="To"
+              :value="filterTo"
+              @input="filterTo = ($event.target as HTMLInputElement).value"
+              style="min-width:160px;"
+            />
+            <md-outlined-select
+              label="Granularity"
+              :value="filterGranularity"
+              @change="filterGranularity = ($event.target as HTMLSelectElement).value as 'hour'|'day'|'week'|'month'"
+              style="min-width:140px;"
+            >
+              <md-select-option value="hour"><div slot="headline">Hour</div></md-select-option>
+              <md-select-option value="day"><div slot="headline">Day</div></md-select-option>
+              <md-select-option value="week"><div slot="headline">Week</div></md-select-option>
+              <md-select-option value="month"><div slot="headline">Month</div></md-select-option>
+            </md-outlined-select>
+            <md-filled-button :disabled="loading" @click="applyFilters">
+              <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
+              Apply
+            </md-filled-button>
+          </div>
         </div>
       </div>
 
@@ -337,10 +346,12 @@
           </div>
           <md-divider />
           <div style="padding:0.5rem 0;">
-            <div v-if="topReferrers.length === 0" class="empty-state">
-              No referrer data available.
+            <div v-if="topReferrers.length === 0" class="m3-empty-state">
+              <span class="material-symbols-outlined" style="font-size:2rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">link_off</span>
+              <p class="md-body-medium" style="margin:0.5rem 0 0;">No referrer data available yet.</p>
             </div>
-            <table v-else class="m3-table">
+            <div v-else class="m3-table-wrapper">
+            <table class="m3-table">
               <thead>
                 <tr>
                   <th>Referrer</th>
@@ -365,6 +376,7 @@
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
@@ -376,10 +388,12 @@
           </div>
           <md-divider />
           <div style="padding:0.5rem 0;">
-            <div v-if="analytics.devices.length === 0" class="empty-state">
-              No device data available.
+            <div v-if="analytics.devices.length === 0" class="m3-empty-state">
+              <span class="material-symbols-outlined" style="font-size:2rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">devices</span>
+              <p class="md-body-medium" style="margin:0.5rem 0 0;">No device data available yet.</p>
             </div>
-            <table v-else class="m3-table">
+            <div v-else class="m3-table-wrapper">
+            <table class="m3-table">
               <thead>
                 <tr>
                   <th>Device</th>
@@ -407,6 +421,7 @@
                 </tr>
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
@@ -2205,6 +2220,39 @@ const chartOption = computed(() => ({
   @media (max-width: 575px) { grid-template-columns: 1fr; }
 }
 
+/* M3 Card header */
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+/* Filters card */
+.filters-card {
+  border-left: 3px solid var(--md-sys-color-primary) !important;
+}
+
+/* M3 Table wrapper */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
 /* M3 Cards */
 .m3-card {
   border-radius: 12px;
@@ -2290,6 +2338,17 @@ const chartOption = computed(() => ({
   padding: 2rem;
   color: var(--md-sys-color-on-surface-variant);
   font-size: 0.875rem;
+}
+
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  gap: 0.25rem;
 }
 
 /* Live indicator */

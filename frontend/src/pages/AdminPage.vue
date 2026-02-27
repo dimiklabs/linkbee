@@ -97,11 +97,12 @@
         <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
       </div>
 
-      <div v-else-if="users.length === 0" style="text-align:center;padding:40px;color:var(--md-sys-color-on-surface-variant);">
-        No users found.
+      <div v-else-if="users.length === 0" class="users-empty-state">
+        <span class="material-symbols-outlined" style="font-size:2rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;margin-bottom:8px;">manage_accounts</span>
+        <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">No users found.</span>
       </div>
 
-      <div v-else class="table-container">
+      <div v-else class="m3-table-wrapper">
         <table class="m3-table">
           <thead>
             <tr>
@@ -452,7 +453,7 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 1100px;
@@ -486,6 +487,10 @@ onMounted(() => {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 16px;
   margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stat-card {
@@ -518,10 +523,10 @@ onMounted(() => {
   grid-template-columns: 2fr 1fr;
   gap: 16px;
   margin-bottom: 24px;
-}
 
-@media (max-width: 768px) {
-  .charts-row { grid-template-columns: 1fr; }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .chart-card {
@@ -529,11 +534,14 @@ onMounted(() => {
 }
 
 .chart-card-header {
-  padding: 16px 20px 12px;
+  padding: 14px 20px;
   font-weight: 600;
   font-size: 0.9375rem;
   color: var(--md-sys-color-on-surface);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .chart-body {
@@ -545,19 +553,31 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   flex-wrap: wrap;
   gap: 12px;
 }
 
 .section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
   font-size: 0.9375rem;
   color: var(--md-sys-color-on-surface);
 }
 
-.table-container {
+.users-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.m3-table-wrapper {
   overflow-x: auto;
 }
 
@@ -565,33 +585,34 @@ onMounted(() => {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-}
 
-.m3-table thead tr {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
+  thead tr {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
 
-.m3-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: var(--md-sys-color-on-surface-variant);
-  white-space: nowrap;
-}
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    white-space: nowrap;
+  }
 
-.m3-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface);
-}
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+  }
 
-.m3-table tbody tr:last-child td {
-  border-bottom: none;
-}
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 
-.m3-table tbody tr:hover td {
-  background: var(--md-sys-color-surface-container-low);
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
 /* M3 Cards */
@@ -599,11 +620,11 @@ onMounted(() => {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
-}
 
-.m3-card--elevated {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
-  margin-bottom: 24px;
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+    margin-bottom: 24px;
+  }
 }
 
 /* Badges */
@@ -615,32 +636,33 @@ onMounted(() => {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
-}
+  text-transform: capitalize;
 
-.m3-badge--primary {
-  background: var(--md-sys-color-primary-container, #e8def8);
-  color: var(--md-sys-color-on-primary-container, #21005d);
-}
+  &--primary {
+    background: rgba(99, 91, 255, 0.12);
+    color: var(--md-sys-color-primary);
+  }
 
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-variant);
-}
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 
-.m3-badge--success {
-  background: #dcfce7;
-  color: #16a34a;
-}
+  &--success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
 
-.m3-badge--warning {
-  background: #fef3c7;
-  color: #b45309;
-}
+  &--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+  }
 
-.m3-badge--error {
-  background: #fee2e2;
-  color: #dc2626;
+  &--error {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
 }
 
 /* Pagination */

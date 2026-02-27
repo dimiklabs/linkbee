@@ -15,7 +15,11 @@
     </div>
 
     <!-- Filters -->
-    <div class="m3-card m3-card--outlined filters-card">
+    <div class="m3-card m3-card--elevated filters-card">
+      <div class="filters-card__header">
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">filter_list</span>
+        <span class="md-label-large">Filter Events</span>
+      </div>
       <div class="filters-row">
         <md-outlined-select
           :value="filters.action"
@@ -70,16 +74,26 @@
     </div>
 
     <!-- Empty -->
-    <div v-else-if="logs.length === 0" class="m3-card m3-card--outlined empty-state">
-      <span class="material-symbols-outlined" style="font-size:3rem;color:var(--md-sys-color-on-surface-variant);">event_note</span>
-      <h5 style="margin:12px 0 4px;font-weight:600;">No audit logs found</h5>
-      <p style="color:var(--md-sys-color-on-surface-variant);margin:0;font-size:0.875rem;">Actions you take will be recorded here.</p>
+    <div v-else-if="logs.length === 0" class="m3-card m3-card--elevated m3-empty-state">
+      <div class="m3-empty-state__icon">
+        <span class="material-symbols-outlined">event_note</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:8px;">No audit logs found</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0;">Actions you take will be recorded here for security and compliance.</p>
     </div>
 
     <!-- Table -->
     <div v-else>
-      <div class="m3-card m3-card--outlined">
-        <div class="table-container">
+      <div class="m3-card m3-card--elevated">
+        <div class="audit-table-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">security</span>
+            <span class="md-title-medium">Audit Events</span>
+          </div>
+          <span class="m3-badge m3-badge--neutral">{{ total }} total</span>
+        </div>
+        <md-divider />
+        <div class="m3-table-wrapper">
           <table class="m3-table">
             <thead>
               <tr>
@@ -241,7 +255,7 @@ async function exportLogs() {
 onMounted(fetchLogs);
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 1100px;
@@ -273,15 +287,36 @@ onMounted(fetchLogs);
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
-}
-
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
   margin-bottom: 24px;
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
 }
 
 .filters-card {
-  padding: 16px 20px;
+  padding: 0;
+
+  .filters-card__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+.audit-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .filters-row {
@@ -289,10 +324,38 @@ onMounted(fetchLogs);
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
+  padding: 16px 20px;
 }
 
-.table-container {
+.m3-table-wrapper {
   overflow-x: auto;
+}
+
+/* M3 Empty state */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 .m3-table {
@@ -339,8 +402,8 @@ onMounted(fetchLogs);
 }
 
 .m3-badge--primary {
-  background: var(--md-sys-color-primary-container, #e8def8);
-  color: var(--md-sys-color-on-primary-container, #21005d);
+  background: rgba(99, 91, 255, 0.12);
+  color: var(--md-sys-color-primary);
 }
 
 .m3-badge--neutral {
@@ -350,18 +413,23 @@ onMounted(fetchLogs);
 }
 
 .m3-badge--success {
-  background: #dcfce7;
+  background: rgba(22, 163, 74, 0.12);
   color: #16a34a;
 }
 
 .m3-badge--warning {
-  background: #fef3c7;
+  background: rgba(245, 158, 11, 0.12);
   color: #b45309;
 }
 
 .m3-badge--error {
-  background: #fee2e2;
+  background: rgba(220, 38, 38, 0.12);
   color: #dc2626;
+}
+
+/* Audit table background for thead */
+.m3-table th {
+  background: var(--md-sys-color-surface-container-low);
 }
 
 .empty-state {

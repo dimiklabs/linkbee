@@ -69,41 +69,71 @@
         </div>
 
         <!-- Usage card -->
-        <div class="m3-card m3-card--outlined section-card">
+        <div class="m3-card m3-card--elevated section-card">
           <div class="card-section-header">
-            <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Usage this period</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">analytics</span>
+              <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Usage this period</span>
+            </div>
           </div>
           <div class="card-section-body">
 
             <!-- Links -->
-            <div style="margin-bottom:20px;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span class="md-label-large">Links</span>
-                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                  {{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }}
-                </span>
+            <div class="usage-item">
+              <div class="usage-item__header">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">link</span>
+                  <span class="md-label-large">Links</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }}
+                  </span>
+                  <span
+                    class="m3-badge"
+                    :class="pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
+                  >{{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%</span>
+                </div>
               </div>
               <md-linear-progress :value="pct(usage?.links ?? 0, plan?.max_links ?? 0) / 100" />
             </div>
 
             <!-- API Keys -->
-            <div style="margin-bottom:20px;">
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span class="md-label-large">API Keys</span>
-                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                  {{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }}
-                </span>
+            <div class="usage-item">
+              <div class="usage-item__header">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">key</span>
+                  <span class="md-label-large">API Keys</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }}
+                  </span>
+                  <span
+                    class="m3-badge"
+                    :class="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
+                  >{{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%</span>
+                </div>
               </div>
               <md-linear-progress :value="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) / 100" />
             </div>
 
             <!-- Webhooks -->
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                <span class="md-label-large">Webhooks</span>
-                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                  {{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }}
-                </span>
+            <div class="usage-item" style="margin-bottom:0;">
+              <div class="usage-item__header">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">notifications</span>
+                  <span class="md-label-large">Webhooks</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }}
+                  </span>
+                  <span
+                    class="m3-badge"
+                    :class="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
+                  >{{ pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) }}%</span>
+                </div>
               </div>
               <md-linear-progress :value="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) / 100" />
               <p v-if="!plan?.has_webhooks" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:6px 0 0;">
@@ -117,11 +147,14 @@
       </div>
 
       <!-- ── Plan Comparison table ─────────────────────────────────────── -->
-      <div class="m3-card m3-card--outlined section-card" style="margin-top:20px;">
+      <div class="m3-card m3-card--elevated section-card" style="margin-top:20px;">
         <div class="card-section-header">
-          <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Plan comparison</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">compare</span>
+            <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Plan comparison</span>
+          </div>
         </div>
-        <div class="card-section-body" style="padding:0;overflow-x:auto;">
+        <div class="m3-table-wrapper">
           <table class="m3-table compare-table">
             <thead>
               <tr>
@@ -274,7 +307,7 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .billing-page {
   max-width: 900px;
   padding: 24px 0;
@@ -296,10 +329,8 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-}
 
-@media (max-width: 767px) {
-  .billing-grid {
+  @media (max-width: 767px) {
     grid-template-columns: 1fr;
   }
 }
@@ -309,8 +340,22 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
+}
+
 .card-section-header {
-  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 24px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
@@ -324,25 +369,69 @@ onMounted(async () => {
   margin-top: 6px;
 }
 
+/* Usage items */
+.usage-item {
+  margin-bottom: 20px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.usage-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 /* Status badges */
-.m3-badge.badge-success {
-  background: color-mix(in srgb, #1e7e34 12%, transparent);
-  color: #1e7e34;
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.badge-success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
+
+  &.badge-danger {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-error);
+  }
+
+  &.badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #92400e;
+  }
+
+  &.badge-secondary {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
-.m3-badge.badge-danger {
-  background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-error);
+/* Usage percentage badges */
+.m3-usage-badge--danger {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
 }
 
-.m3-badge.badge-warning {
-  background: color-mix(in srgb, #f59e0b 15%, transparent);
-  color: #92400e;
+.m3-usage-badge--warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
 }
 
-.m3-badge.badge-secondary {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
+.m3-usage-badge--ok {
+  background: rgba(22, 163, 74, 0.12);
+  color: #16a34a;
 }
 
 .btn-link-inline {
@@ -358,35 +447,51 @@ onMounted(async () => {
 }
 
 /* Compare table */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
 .compare-table {
   width: 100%;
-}
 
-.compare-table th,
-.compare-table td {
-  padding: 10px 16px;
-}
+  th,
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
 
-.compare-table th {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--md-sys-color-on-surface-variant);
-  font-weight: 600;
-}
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 
-.compare-table .text-center {
-  text-align: center;
-}
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 600;
+    background: var(--md-sys-color-surface-container-low);
+  }
 
-.compare-table .current-col {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
-  font-weight: 600;
+  .text-center {
+    text-align: center;
+  }
+
+  .current-col {
+    background: rgba(99, 91, 255, 0.08);
+    font-weight: 600;
+  }
 }
 
 .check-icon {
   font-size: 18px;
-  color: #1e7e34;
+  color: #16a34a;
   vertical-align: middle;
 }
 </style>

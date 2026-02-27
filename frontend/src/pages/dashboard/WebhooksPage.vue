@@ -23,8 +23,15 @@
     </div>
 
     <!-- Create form -->
-    <div v-if="showCreate" class="m3-card m3-card--outlined create-form">
-      <h6 style="margin:0 0 16px;font-weight:600;">New Webhook</h6>
+    <div v-if="showCreate" class="m3-card m3-card--elevated create-form">
+      <div class="wh-table-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_circle</span>
+          <span class="md-title-medium">New Webhook Endpoint</span>
+        </div>
+      </div>
+      <md-divider />
+      <div style="padding:20px;">
       <div style="margin-bottom:16px;">
         <md-outlined-text-field
           :value="newURL"
@@ -66,6 +73,7 @@
       <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
         {{ createError }}
       </div>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -74,16 +82,29 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="webhooks.length === 0 && !showCreate" class="m3-card m3-card--outlined empty-state">
-      <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--md-sys-color-on-surface-variant);">notifications</span>
-      <h6 style="font-weight:600;margin:12px 0 4px;">No webhooks yet</h6>
-      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 16px;">Add a webhook endpoint to start receiving event notifications.</p>
-      <md-filled-button @click="showCreate = true">Add Webhook</md-filled-button>
+    <div v-else-if="webhooks.length === 0 && !showCreate" class="m3-card m3-card--elevated m3-empty-state">
+      <div class="m3-empty-state__icon">
+        <span class="material-symbols-outlined">notifications_active</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:8px;">No webhooks yet</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;max-width:380px;">Add a webhook endpoint to start receiving real-time event notifications for link activity.</p>
+      <md-filled-button @click="showCreate = true">
+        <span class="material-symbols-outlined" slot="icon">add</span>
+        Add Webhook
+      </md-filled-button>
     </div>
 
     <!-- Webhooks table -->
-    <div v-else-if="webhooks.length > 0" class="m3-card m3-card--outlined">
-      <div class="table-container">
+    <div v-else-if="webhooks.length > 0" class="m3-card m3-card--elevated">
+      <div class="wh-table-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">notifications</span>
+          <span class="md-title-medium">Webhook Endpoints</span>
+        </div>
+        <span class="m3-badge m3-badge--neutral">{{ webhooks.length }} endpoint{{ webhooks.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <md-divider />
+      <div class="m3-table-wrapper">
         <table class="m3-table">
           <thead>
             <tr>
@@ -139,7 +160,8 @@
                     <input type="checkbox" v-model="editIsActive" style="accent-color:var(--md-sys-color-primary);" />
                     <span style="font-size:0.875rem;">Active</span>
                   </div>
-                  <span v-else :class="['m3-badge', wh.is_active ? 'm3-badge--success' : 'm3-badge--neutral']">
+                  <span v-else :class="['m3-badge', wh.is_active ? 'm3-badge--success' : 'm3-badge--warning']">
+                    <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;">{{ wh.is_active ? 'circle' : 'pause_circle' }}</span>
                     {{ wh.is_active ? 'Active' : 'Paused' }}
                   </span>
                 </td>
@@ -545,7 +567,7 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 1100px;
@@ -577,11 +599,57 @@ onMounted(async () => {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
+  margin-bottom: 20px;
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
 }
 
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
-  margin-bottom: 20px;
+/* Webhook table header */
+.wh-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* M3 Table wrapper */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
+/* M3 Empty state */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 .warning-banner {
@@ -605,11 +673,7 @@ onMounted(async () => {
 }
 
 .create-form {
-  padding: 20px;
-}
-
-.table-container {
-  overflow-x: auto;
+  // header adds padding
 }
 
 .m3-table {
@@ -658,8 +722,8 @@ onMounted(async () => {
 }
 
 .m3-badge--primary {
-  background: var(--md-sys-color-primary-container, #e8def8);
-  color: var(--md-sys-color-on-primary-container, #21005d);
+  background: rgba(99, 91, 255, 0.12);
+  color: var(--md-sys-color-primary);
 }
 
 .m3-badge--neutral {
@@ -669,12 +733,17 @@ onMounted(async () => {
 }
 
 .m3-badge--success {
-  background: #dcfce7;
+  background: rgba(22, 163, 74, 0.12);
   color: #16a34a;
 }
 
+.m3-badge--warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
 .m3-badge--error {
-  background: #fee2e2;
+  background: rgba(220, 38, 38, 0.12);
   color: #dc2626;
 }
 
@@ -684,14 +753,7 @@ onMounted(async () => {
   padding: 16px 20px;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-}
+/* info card */
 
 .info-card {
   padding: 20px;

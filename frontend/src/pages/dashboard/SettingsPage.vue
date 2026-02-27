@@ -2,8 +2,8 @@
   <div class="settings-page">
     <!-- Page header -->
     <div class="page-header">
-      <h1 class="md-headline-small">Profile &amp; Settings</h1>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:4px 0 0;">
+      <h1 class="md-headline-small page-title">Profile &amp; Settings</h1>
+      <p class="md-body-medium page-subtitle">
         Manage your account information and security preferences.
       </p>
     </div>
@@ -11,23 +11,27 @@
     <!-- ── Profile ──────────────────────────────────────────────────────── -->
     <div class="m3-card m3-card--outlined section-card">
       <div class="card-section-header">
+        <span class="material-symbols-outlined card-section-header__icon">person</span>
         <span class="md-title-medium">Profile Information</span>
       </div>
       <div class="card-section-body">
         <!-- Avatar row -->
         <div class="avatar-row">
-          <div
-            class="avatar-circle"
-            :style="{
-              backgroundImage: avatarPreviewUrl ? `url(${avatarPreviewUrl})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundColor: avatarPreviewUrl ? 'transparent' : 'var(--md-sys-color-primary)',
-            }"
-          >
-            <span v-if="!avatarPreviewUrl" style="color:#fff;font-weight:700;font-size:1.75rem;">
-              {{ authStore.userInitials }}
-            </span>
+          <div class="avatar-wrapper">
+            <div
+              class="avatar-circle"
+              :style="{
+                backgroundImage: avatarPreviewUrl ? `url(${avatarPreviewUrl})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: avatarPreviewUrl ? 'transparent' : 'var(--md-sys-color-primary)',
+              }"
+            >
+              <span v-if="!avatarPreviewUrl" class="avatar-initials">
+                {{ authStore.userInitials }}
+              </span>
+            </div>
+            <div class="avatar-status-ring"></div>
           </div>
           <div class="avatar-controls">
             <div class="md-label-large" style="margin-bottom:8px;">Profile photo</div>
@@ -123,6 +127,7 @@
     <!-- ── Change Password ──────────────────────────────────────────────── -->
     <div class="m3-card m3-card--outlined section-card">
       <div class="card-section-header">
+        <span class="material-symbols-outlined card-section-header__icon">lock</span>
         <span class="md-title-medium">Change Password</span>
       </div>
       <div class="card-section-body">
@@ -174,6 +179,7 @@
     <!-- ── Notification Preferences ────────────────────────────────────── -->
     <div class="m3-card m3-card--outlined section-card">
       <div class="card-section-header">
+        <span class="material-symbols-outlined card-section-header__icon">notifications</span>
         <span class="md-title-medium">Notification Preferences</span>
       </div>
       <div class="card-section-body">
@@ -240,8 +246,11 @@
 
     <!-- ── Active Sessions ──────────────────────────────────────────────── -->
     <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header" style="display:flex;align-items:center;justify-content:space-between;">
-        <span class="md-title-medium">Active Sessions</span>
+      <div class="card-section-header card-section-header--row">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="material-symbols-outlined card-section-header__icon">devices</span>
+          <span class="md-title-medium">Active Sessions</span>
+        </div>
         <md-outlined-button
           :disabled="revokingAll"
           @click="logoutAllOther"
@@ -299,6 +308,7 @@
     <!-- ── Data Export ──────────────────────────────────────────────────── -->
     <div class="m3-card m3-card--outlined section-card">
       <div class="card-section-header">
+        <span class="material-symbols-outlined card-section-header__icon">download</span>
         <span class="md-title-medium">Data Export</span>
       </div>
       <div class="card-section-body">
@@ -326,8 +336,9 @@
     </div>
 
     <!-- ── Danger Zone ──────────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card" style="border:1px solid var(--md-sys-color-error);">
-      <div class="card-section-header" style="border-bottom:1px solid var(--md-sys-color-error);background:color-mix(in srgb, var(--md-sys-color-error) 8%, transparent);">
+    <div class="m3-card m3-card--outlined section-card danger-zone-card">
+      <div class="card-section-header danger-zone-header">
+        <span class="material-symbols-outlined card-section-header__icon" style="color:var(--md-sys-color-error);">warning</span>
         <span class="md-title-medium" style="color:var(--md-sys-color-error);">Danger Zone</span>
       </div>
       <div class="card-section-body">
@@ -678,52 +689,117 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .settings-page {
   max-width: 780px;
   padding: 24px 0;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+
+  @media (max-width: 575px) {
+    padding: 16px 0;
+    gap: 16px;
+  }
 }
 
+/* ── Page header ─────────────────────────────────────────────────────────── */
 .page-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
+.page-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  margin: 0;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Section card ────────────────────────────────────────────────────────── */
 .section-card {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
 }
 
+/* ── Card section header ─────────────────────────────────────────────────── */
 .card-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 16px 24px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+
+  &--row {
+    justify-content: space-between;
+  }
+}
+
+.card-section-header__icon {
+  font-size: 20px;
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
 }
 
 .card-section-body {
   padding: 24px;
 }
 
+/* ── Avatar ──────────────────────────────────────────────────────────────── */
 .avatar-row {
   display: flex;
   align-items: flex-start;
   gap: 24px;
   margin-bottom: 24px;
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+.avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .avatar-circle {
-  width: 80px;
-  height: 80px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  border: 3px solid var(--md-sys-color-surface);
+  box-shadow: 0 0 0 2px var(--md-sys-color-outline-variant);
+}
+
+.avatar-initials {
+  color: var(--md-sys-color-on-primary);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.avatar-status-ring {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1aa563;
+  border: 2px solid var(--md-sys-color-surface);
 }
 
 .avatar-controls {
   flex: 1;
+  min-width: 0;
 }
 
 .choose-photo-label {
@@ -736,60 +812,97 @@ onMounted(async () => {
   font-size: 0.875rem;
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s;
+  gap: 4px;
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+    border-color: var(--md-sys-color-outline);
+  }
 }
 
-.choose-photo-label:hover {
-  background: var(--md-sys-color-surface-container-low);
-}
-
+/* ── Form layout ─────────────────────────────────────────────────────────── */
 .form-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   margin-bottom: 16px;
-}
 
-@media (max-width: 540px) {
-  .form-row-2 {
+  @media (max-width: 540px) {
     grid-template-columns: 1fr;
   }
 }
 
+/* ── Switch rows ─────────────────────────────────────────────────────────── */
 .switch-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 0;
+  gap: 16px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-lowest, transparent);
+  }
 }
 
+/* ── Session rows ────────────────────────────────────────────────────────── */
 .session-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
   padding: 16px 24px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
+  transition: background 0.15s;
 
-.session-row:last-child {
-  border-bottom: none;
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
 .session-device-icon {
   color: var(--md-sys-color-on-surface-variant);
   margin-top: 2px;
   flex-shrink: 0;
+  font-size: 28px;
 }
 
+/* ── M3 Badges ───────────────────────────────────────────────────────────── */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.m3-badge--success {
+  background: color-mix(in srgb, #1aa563 14%, transparent);
+  color: #0a7040;
+}
+
+.m3-badge--neutral {
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Feedback ────────────────────────────────────────────────────────────── */
 .feedback-success {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-radius: 8px;
-  background: color-mix(in srgb, #1e7e34 10%, transparent);
-  color: #1e7e34;
+  border-radius: 10px;
+  background: color-mix(in srgb, #1aa563 12%, transparent);
+  border: 1px solid color-mix(in srgb, #1aa563 30%, transparent);
+  color: #0a6639;
   font-size: 0.875rem;
   margin-bottom: 16px;
 }
@@ -799,18 +912,41 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-error);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 30%, transparent);
+  color: var(--md-sys-color-on-error-container, var(--md-sys-color-error));
   font-size: 0.875rem;
   margin-bottom: 16px;
 }
 
+/* ── Danger zone ─────────────────────────────────────────────────────────── */
+.danger-zone-card {
+  border-left: 4px solid var(--md-sys-color-error) !important;
+  border-color: var(--md-sys-color-error) !important;
+}
+
+.danger-zone-header {
+  border-bottom-color: color-mix(in srgb, var(--md-sys-color-error) 30%, transparent) !important;
+  background: color-mix(in srgb, var(--md-sys-color-error) 6%, transparent) !important;
+}
+
 .delete-confirm-box {
   margin-top: 24px;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid var(--md-sys-color-error);
+  padding: 16px 20px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 40%, transparent);
   background: color-mix(in srgb, var(--md-sys-color-error) 5%, transparent);
+}
+
+/* ── M3 Cards ────────────────────────────────────────────────────────────── */
+.m3-card {
+  border-radius: 16px;
+  overflow: hidden;
+
+  &--outlined {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 </style>

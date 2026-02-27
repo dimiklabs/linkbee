@@ -39,16 +39,29 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="domains.length === 0" class="m3-card m3-card--outlined empty-state">
-      <span class="material-symbols-outlined" style="font-size:3rem;color:var(--md-sys-color-on-surface-variant);">language</span>
-      <h5 style="margin:12px 0 4px;font-weight:600;">No custom domains yet</h5>
-      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 16px;">Add your first domain to start using branded short links.</p>
-      <md-filled-button @click="showAddModal = true">Add Domain</md-filled-button>
+    <div v-else-if="domains.length === 0" class="m3-card m3-card--elevated m3-empty-state">
+      <div class="m3-empty-state__icon">
+        <span class="material-symbols-outlined">language</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:8px;">No custom domains yet</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Add your first domain to start using branded short links.</p>
+      <md-filled-button @click="showAddModal = true">
+        <span class="material-symbols-outlined" slot="icon">add</span>
+        Add Domain
+      </md-filled-button>
     </div>
 
     <!-- Domains table -->
-    <div v-else class="m3-card m3-card--outlined">
-      <div class="table-container">
+    <div v-else class="m3-card m3-card--elevated">
+      <div class="m3-card-header">
+        <div class="m3-card-header__left">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">language</span>
+          <span class="md-title-medium">Custom Domains</span>
+        </div>
+        <span class="m3-badge m3-badge--neutral">{{ domains.length }} domain{{ domains.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <md-divider />
+      <div class="m3-table-wrapper">
         <table class="m3-table">
           <thead>
             <tr>
@@ -272,7 +285,7 @@ function showAlert(msg: string, type: 'success' | 'error') {
 onMounted(fetchDomains);
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 1000px;
@@ -304,11 +317,30 @@ onMounted(fetchDomains);
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
+  margin-bottom: 20px;
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
-  margin-bottom: 20px;
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .info-card {
@@ -318,7 +350,7 @@ onMounted(fetchDomains);
   padding: 16px;
 }
 
-.table-container {
+.m3-table-wrapper {
   overflow-x: auto;
 }
 
@@ -326,35 +358,35 @@ onMounted(fetchDomains);
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-}
 
-.m3-table thead tr {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
+  thead tr {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
 
-.m3-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: var(--md-sys-color-on-surface-variant);
-  background: var(--md-sys-color-surface-container-low);
-  white-space: nowrap;
-}
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    white-space: nowrap;
+  }
 
-.m3-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface);
-  vertical-align: middle;
-}
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+    vertical-align: middle;
+  }
 
-.m3-table tbody tr:last-child td {
-  border-bottom: none;
-}
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
 
-.m3-table tbody tr:hover td {
-  background: var(--md-sys-color-surface-container-low);
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
 .m3-badge {
@@ -366,24 +398,42 @@ onMounted(fetchDomains);
   font-weight: 600;
   white-space: nowrap;
   text-transform: capitalize;
+
+  &--success { background: rgba(22, 163, 74, 0.12); color: #16a34a; }
+  &--warning { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+  &--error   { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
-.m3-badge--success { background: #dcfce7; color: #16a34a; }
-.m3-badge--warning { background: #fef3c7; color: #b45309; }
-.m3-badge--error   { background: #fee2e2; color: #dc2626; }
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.empty-state {
+/* Empty state */
+.m3-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 24px;
   text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 /* Snackbar */

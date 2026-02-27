@@ -1,174 +1,234 @@
 <template>
-  <div class="auth-wrapper">
-    <div class="auth-container">
+  <div class="auth-split-page">
 
-      <!-- Logo -->
-      <div class="auth-logo-wrap">
-        <div class="logo-icon">S</div>
-        <span class="logo-text">Shortlink</span>
+    <!-- LEFT PANEL -->
+    <div class="auth-left-panel">
+      <div class="left-panel-inner">
+        <!-- Brand logo -->
+        <div class="brand-logo">
+          <div class="brand-logo-icon">
+            <span class="material-symbols-outlined">link</span>
+          </div>
+          <span class="brand-logo-text">Shortlink</span>
+        </div>
+
+        <!-- Tagline -->
+        <p class="brand-tagline">Shorten links. Track clicks. Grow faster.</p>
+
+        <!-- Feature list -->
+        <ul class="feature-list">
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Create short links in seconds</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Track every click with analytics</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>QR codes for every link</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Password protection &amp; expiry</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Team collaboration tools</span>
+          </li>
+        </ul>
+
+        <div class="left-panel-footer">&copy; 2026 Shortlink</div>
       </div>
+    </div>
 
-      <!-- Success state -->
-      <div v-if="successState" class="m3-card m3-card--elevated auth-card text-center">
-        <span class="material-symbols-outlined success-icon">check_circle</span>
-        <h2 class="md-headline-small" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">Check your email!</h2>
-        <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 28px;">
-          We've sent a verification link to <strong>{{ registeredEmail }}</strong>.
-          Click the link in the email to verify your account and get started.
-        </p>
-        <router-link to="/auth/login" style="text-decoration: none;">
-          <md-filled-button>Go to Sign In</md-filled-button>
-        </router-link>
-      </div>
+    <!-- RIGHT PANEL -->
+    <div class="auth-right-panel auth-page-bg">
+      <div class="right-panel-inner">
 
-      <!-- Signup Card -->
-      <div v-else class="m3-card m3-card--elevated auth-card">
+        <!-- Mobile logo (shown only on mobile) -->
+        <div class="mobile-logo">
+          <div class="mobile-logo-icon">
+            <span class="material-symbols-outlined">link</span>
+          </div>
+          <span class="mobile-logo-text">Shortlink</span>
+        </div>
 
-        <h1 class="md-headline-small auth-heading">Create your account</h1>
-
-        <!-- Error Banner -->
-        <div v-if="errorMessage" class="error-banner">
-          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
-          <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
-          <md-icon-button @click="errorMessage = ''">
-            <span class="material-symbols-outlined">close</span>
-          </md-icon-button>
+        <!-- Success state -->
+        <div v-if="successState" class="success-state">
+          <div class="success-icon-wrap">
+            <span class="material-symbols-outlined success-icon">mark_email_read</span>
+          </div>
+          <h2 class="md-headline-small success-heading">Check your email!</h2>
+          <p class="md-body-medium success-text">
+            We've sent a verification link to <strong>{{ registeredEmail }}</strong>.
+            Click the link in the email to verify your account and get started.
+          </p>
+          <router-link to="/login" style="text-decoration: none;">
+            <md-filled-button>Go to Sign In</md-filled-button>
+          </router-link>
         </div>
 
         <!-- Signup Form -->
-        <form @submit.prevent="handleSignup" novalidate>
+        <template v-else>
+          <h1 class="form-heading md-headline-small">Create account</h1>
 
-          <!-- First Name + Last Name row -->
-          <div class="name-row">
-            <div class="field-wrap" style="flex: 1;">
+          <!-- Error Banner -->
+          <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
+            <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+            <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+            <md-icon-button @click="errorMessage = ''">
+              <span class="material-symbols-outlined">close</span>
+            </md-icon-button>
+          </div>
+
+          <form @submit.prevent="handleSignup" novalidate>
+
+            <!-- First Name + Last Name row -->
+            <div class="name-row">
+              <div class="field-wrap" style="flex: 1;">
+                <md-outlined-text-field
+                  :value="form.firstName"
+                  @input="form.firstName = ($event.target as HTMLInputElement).value"
+                  label="First Name"
+                  type="text"
+                  autocomplete="given-name"
+                  :error="!!errors.firstName"
+                  :error-text="errors.firstName"
+                  style="width: 100%;"
+                />
+              </div>
+              <div class="field-wrap" style="flex: 1;">
+                <md-outlined-text-field
+                  :value="form.lastName"
+                  @input="form.lastName = ($event.target as HTMLInputElement).value"
+                  label="Last Name"
+                  type="text"
+                  autocomplete="family-name"
+                  :error="!!errors.lastName"
+                  :error-text="errors.lastName"
+                  style="width: 100%;"
+                />
+              </div>
+            </div>
+
+            <div class="field-wrap">
               <md-outlined-text-field
-                :value="form.firstName"
-                @input="form.firstName = ($event.target as HTMLInputElement).value"
-                label="First Name"
-                type="text"
-                autocomplete="given-name"
-                :error="!!errors.firstName"
-                :error-text="errors.firstName"
+                :value="form.email"
+                @input="form.email = ($event.target as HTMLInputElement).value"
+                label="Email address"
+                type="email"
+                autocomplete="email"
+                :error="!!errors.email"
+                :error-text="errors.email"
                 style="width: 100%;"
               />
             </div>
-            <div class="field-wrap" style="flex: 1;">
+
+            <div class="field-wrap">
               <md-outlined-text-field
-                :value="form.lastName"
-                @input="form.lastName = ($event.target as HTMLInputElement).value"
-                label="Last Name"
-                type="text"
-                autocomplete="family-name"
-                :error="!!errors.lastName"
-                :error-text="errors.lastName"
+                :value="form.password"
+                @input="onPasswordInput($event)"
+                label="Password"
+                :type="showPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                :error="!!errors.password"
+                :error-text="errors.password"
+                supporting-text="Must be at least 8 characters long."
                 style="width: 100%;"
-              />
+              >
+                <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                  <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
+                </md-icon-button>
+              </md-outlined-text-field>
+              <!-- Password strength bar -->
+              <div v-if="form.password" class="strength-bar-wrap">
+                <div class="strength-bar">
+                  <div
+                    v-for="i in 4"
+                    :key="i"
+                    class="strength-segment"
+                    :class="{ 'strength-segment--filled': i <= passwordStrength, [`strength-segment--level${passwordStrength}`]: i <= passwordStrength }"
+                  />
+                </div>
+                <span class="strength-label md-body-small">{{ strengthLabel }}</span>
+              </div>
             </div>
+
+            <div class="field-wrap">
+              <md-outlined-text-field
+                :value="form.confirmPassword"
+                @input="form.confirmPassword = ($event.target as HTMLInputElement).value"
+                label="Confirm Password"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                autocomplete="new-password"
+                :error="!!errors.confirmPassword"
+                :error-text="errors.confirmPassword"
+                style="width: 100%;"
+              >
+                <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
+                  <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
+                </md-icon-button>
+              </md-outlined-text-field>
+            </div>
+
+            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-top: 8px;">
+              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+              Create Account
+            </md-filled-button>
+          </form>
+
+          <!-- Divider -->
+          <div class="auth-divider">
+            <md-divider />
+            <span class="divider-label md-body-small">Or sign up with</span>
+            <md-divider />
           </div>
 
-          <div class="field-wrap">
-            <md-outlined-text-field
-              :value="form.email"
-              @input="form.email = ($event.target as HTMLInputElement).value"
-              label="Email address"
-              type="email"
-              autocomplete="email"
-              :error="!!errors.email"
-              :error-text="errors.email"
-              style="width: 100%;"
-            />
-          </div>
-
-          <div class="field-wrap">
-            <md-outlined-text-field
-              :value="form.password"
-              @input="form.password = ($event.target as HTMLInputElement).value"
-              label="Password"
-              :type="showPassword ? 'text' : 'password'"
-              autocomplete="new-password"
-              :error="!!errors.password"
-              :error-text="errors.password"
-              supporting-text="Must be at least 8 characters long."
-              style="width: 100%;"
+          <!-- OAuth Buttons -->
+          <div class="oauth-row">
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('google')"
+              class="oauth-btn"
             >
-              <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
-                <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-              </md-icon-button>
-            </md-outlined-text-field>
-          </div>
-
-          <div class="field-wrap">
-            <md-outlined-text-field
-              :value="form.confirmPassword"
-              @input="form.confirmPassword = ($event.target as HTMLInputElement).value"
-              label="Confirm Password"
-              :type="showConfirmPassword ? 'text' : 'password'"
-              autocomplete="new-password"
-              :error="!!errors.confirmPassword"
-              :error-text="errors.confirmPassword"
-              style="width: 100%;"
+              <span class="oauth-letter oauth-letter--google">G</span>
+              <span class="oauth-label">Google</span>
+            </md-outlined-button>
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('github')"
+              class="oauth-btn"
             >
-              <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
-                <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
-              </md-icon-button>
-            </md-outlined-text-field>
+              <span class="oauth-letter oauth-letter--github">GH</span>
+              <span class="oauth-label">GitHub</span>
+            </md-outlined-button>
+            <md-outlined-button
+              :disabled="oauthLoading"
+              @click="handleOAuth('facebook')"
+              class="oauth-btn"
+            >
+              <span class="oauth-letter oauth-letter--facebook">FB</span>
+              <span class="oauth-label">Facebook</span>
+            </md-outlined-button>
           </div>
 
-          <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-top: 8px;">
-            <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
-            Create Account
-          </md-filled-button>
-        </form>
-
-        <!-- Divider -->
-        <div class="auth-divider">
-          <md-divider />
-          <span class="divider-label md-body-small">Or sign up with</span>
-          <md-divider />
-        </div>
-
-        <!-- OAuth Buttons -->
-        <div class="oauth-row">
-          <md-outlined-button
-            :disabled="oauthLoading"
-            @click="handleOAuth('google')"
-            style="flex: 1;"
-          >
-            <span class="oauth-icon">G</span>
-            <span class="oauth-label">Google</span>
-          </md-outlined-button>
-          <md-outlined-button
-            :disabled="oauthLoading"
-            @click="handleOAuth('github')"
-            style="flex: 1;"
-          >
-            <span class="oauth-icon">GH</span>
-            <span class="oauth-label">GitHub</span>
-          </md-outlined-button>
-          <md-outlined-button
-            :disabled="oauthLoading"
-            @click="handleOAuth('facebook')"
-            style="flex: 1;"
-          >
-            <span class="oauth-icon">FB</span>
-            <span class="oauth-label">Facebook</span>
-          </md-outlined-button>
-        </div>
+          <!-- Sign in link -->
+          <p class="auth-footer-text md-body-medium">
+            Already have an account?
+            <router-link to="/login" class="auth-link">Sign in</router-link>
+          </p>
+        </template>
 
       </div>
-
-      <!-- Sign in link -->
-      <p class="auth-footer-text md-body-medium">
-        Already have an account?
-        <router-link to="/auth/login" class="auth-link">Sign in</router-link>
-      </p>
-
     </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { oauthApi } from '@/api/auth';
@@ -199,6 +259,27 @@ const errors = reactive({
   password: '',
   confirmPassword: '',
 });
+
+/* ── Password strength ─────────────────────────────────────────── */
+const passwordStrength = computed((): number => {
+  const p = form.password;
+  if (!p) return 0;
+  let score = 0;
+  if (p.length >= 8) score++;
+  if (p.length >= 12) score++;
+  if (/[A-Z]/.test(p) && /[a-z]/.test(p)) score++;
+  if (/[0-9]/.test(p) && /[^A-Za-z0-9]/.test(p)) score++;
+  return Math.max(1, Math.min(4, score));
+});
+
+const strengthLabel = computed((): string => {
+  const labels: Record<number, string> = { 1: 'Weak', 2: 'Fair', 3: 'Good', 4: 'Strong' };
+  return labels[passwordStrength.value] ?? '';
+});
+
+function onPasswordInput(event: Event) {
+  form.password = (event.target as HTMLInputElement).value;
+}
 
 function validateForm(): boolean {
   errors.firstName = '';
@@ -282,70 +363,212 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
 </script>
 
 <style scoped lang="scss">
-.auth-wrapper {
+/* ── Split-page shell ─────────────────────────────────────────── */
+.auth-split-page {
+  display: flex;
   min-height: 100vh;
+}
+
+/* ── Left panel ───────────────────────────────────────────────── */
+.auth-left-panel {
+  width: 45%;
+  background: linear-gradient(135deg, #635BFF 0%, #8B5CF6 60%, #14B8A6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--md-sys-color-background);
-  padding: 32px 16px;
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    top: -80px;
+    right: -80px;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    bottom: -60px;
+    left: -60px;
+  }
 }
 
-.auth-container {
+.left-panel-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 340px;
 }
 
-.auth-logo-wrap {
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.brand-logo-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+
+  .material-symbols-outlined {
+    color: #fff;
+    font-size: 24px;
+  }
 }
 
-.logo-icon {
+.brand-logo-text {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.brand-tagline {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.4;
+  margin-bottom: 40px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 48px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.feature-check {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.left-panel-footer {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+/* ── Right panel ──────────────────────────────────────────────── */
+.auth-right-panel {
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  background: var(--md-sys-color-background);
+  overflow-y: auto;
+}
+
+.right-panel-inner {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Mobile logo ──────────────────────────────────────────────── */
+.mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.mobile-logo-icon {
   width: 36px;
   height: 36px;
   background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-weight: 700;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+
+  .material-symbols-outlined {
+    color: var(--md-sys-color-on-primary);
+    font-size: 20px;
+  }
 }
 
-.logo-text {
+.mobile-logo-text {
   font-weight: 700;
   font-size: 1.25rem;
   color: var(--md-sys-color-on-surface);
 }
 
-.auth-card {
-  padding: 32px;
-  border-radius: 12px;
-  background: var(--md-sys-color-surface-container-low);
+/* ── Success state ────────────────────────────────────────────── */
+.success-state {
+  text-align: center;
+  padding: 24px 0;
 }
 
-.auth-heading {
+.success-icon-wrap {
+  margin-bottom: 16px;
+}
+
+.success-icon {
+  font-size: 64px;
+  color: var(--md-sys-color-primary);
+}
+
+.success-heading {
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 12px;
+}
+
+.success-text {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 28px;
+}
+
+/* ── Form elements ────────────────────────────────────────────── */
+.form-heading {
   color: var(--md-sys-color-on-surface);
   margin-bottom: 24px;
 }
 
-.text-center {
-  text-align: center;
+.error-banner-anim {
+  animation: slideDown 0.2s ease-out;
 }
 
-.success-icon {
-  font-size: 56px;
-  color: var(--md-sys-color-primary);
-  display: block;
-  margin-bottom: 16px;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.error-banner {
+.m3-error-banner {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -365,6 +588,44 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
   margin-bottom: 16px;
 }
 
+/* ── Password strength bar ────────────────────────────────────── */
+.strength-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.strength-segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--md-sys-color-outline-variant);
+  transition: background 0.25s ease;
+
+  &--filled {
+    &.strength-segment--level1 { background: #EF4444; }
+    &.strength-segment--level2 { background: #F97316; }
+    &.strength-segment--level3 { background: #EAB308; }
+    &.strength-segment--level4 { background: #22C55E; }
+  }
+}
+
+.strength-label {
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+  font-size: 0.75rem;
+  min-width: 40px;
+}
+
+/* ── Divider + OAuth ──────────────────────────────────────────── */
 .auth-divider {
   display: flex;
   align-items: center;
@@ -384,30 +645,69 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
 .oauth-row {
   display: flex;
   gap: 8px;
+  margin-bottom: 4px;
 }
 
-.oauth-icon {
-  font-weight: 700;
-  font-size: 0.75rem;
+.oauth-btn {
+  flex: 1;
+  border-radius: 999px;
 }
+
+.oauth-letter {
+  font-weight: 800;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.oauth-letter--google { color: #4285F4; }
+.oauth-letter--github { color: #24292e; }
+.oauth-letter--facebook { color: #1877F2; }
 
 .oauth-label {
   margin-left: 4px;
+  font-size: 0.85rem;
 }
 
 .auth-footer-text {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 24px;
   color: var(--md-sys-color-on-surface-variant);
 }
 
 .auth-link {
   color: var(--md-sys-color-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+/* ── Responsive: mobile ───────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .auth-split-page {
+    flex-direction: column;
+  }
+
+  .auth-left-panel {
+    display: none;
+  }
+
+  .auth-right-panel {
+    width: 100%;
+    min-height: 100vh;
+    padding: 32px 20px;
+    align-items: flex-start;
+    padding-top: 48px;
+  }
+
+  .right-panel-inner {
+    margin: 0 auto;
+  }
+
+  .mobile-logo {
+    display: flex;
   }
 }
 </style>

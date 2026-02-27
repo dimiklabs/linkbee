@@ -1,39 +1,86 @@
 <template>
-  <div class="auth-wrapper">
-    <div class="auth-container">
+  <div class="auth-split-page">
 
-      <!-- Logo -->
-      <div class="auth-logo-wrap">
-        <div class="logo-icon">S</div>
-        <span class="logo-text">Shortlink</span>
+    <!-- LEFT PANEL -->
+    <div class="auth-left-panel">
+      <div class="left-panel-inner">
+        <!-- Brand logo -->
+        <div class="brand-logo">
+          <div class="brand-logo-icon">
+            <span class="material-symbols-outlined">link</span>
+          </div>
+          <span class="brand-logo-text">Shortlink</span>
+        </div>
+
+        <!-- Tagline -->
+        <p class="brand-tagline">Shorten links. Track clicks. Grow faster.</p>
+
+        <!-- Feature list -->
+        <ul class="feature-list">
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Create short links in seconds</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Track every click with analytics</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>QR codes for every link</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Password protection &amp; expiry</span>
+          </li>
+          <li class="feature-item">
+            <span class="feature-check material-symbols-outlined">check_circle</span>
+            <span>Team collaboration tools</span>
+          </li>
+        </ul>
+
+        <div class="left-panel-footer">&copy; 2026 Shortlink</div>
       </div>
+    </div>
 
-      <div class="m3-card m3-card--elevated auth-card">
+    <!-- RIGHT PANEL -->
+    <div class="auth-right-panel auth-page-bg">
+      <div class="right-panel-inner">
+
+        <!-- Mobile logo (shown only on mobile) -->
+        <div class="mobile-logo">
+          <div class="mobile-logo-icon">
+            <span class="material-symbols-outlined">link</span>
+          </div>
+          <span class="mobile-logo-text">Shortlink</span>
+        </div>
 
         <!-- Loading state -->
         <div v-if="verifying" class="state-block">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:56px; margin-bottom:24px;" />
-          <h2 class="md-headline-small" style="color: var(--md-sys-color-on-surface); margin-bottom: 8px;">Verifying your email...</h2>
-          <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant);">Please wait a moment.</p>
+          <div class="verifying-spinner">
+            <md-circular-progress indeterminate style="--md-circular-progress-size:56px;" />
+          </div>
+          <h2 class="md-headline-small state-heading">Verifying your email...</h2>
+          <p class="md-body-medium state-text">Please wait a moment.</p>
         </div>
 
         <!-- Success state -->
         <div v-else-if="verified" class="state-block">
           <span class="material-symbols-outlined state-icon state-icon--success">check_circle</span>
-          <h2 class="md-headline-small" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">Email Verified!</h2>
-          <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 28px;">
+          <h2 class="md-headline-small state-heading">Email Verified!</h2>
+          <p class="md-body-medium state-text" style="margin-bottom: 28px;">
             Your email has been successfully verified. You can now sign in to your Shortlink account.
           </p>
-          <router-link to="/auth/login" style="text-decoration: none;">
+          <router-link to="/login" style="text-decoration: none;">
             <md-filled-button>Sign In to Shortlink</md-filled-button>
           </router-link>
         </div>
 
         <!-- Error state -->
-        <div v-else class="error-state">
+        <div v-else class="error-content">
           <span class="material-symbols-outlined state-icon state-icon--error">cancel</span>
-          <h2 class="md-headline-small" style="color: var(--md-sys-color-on-surface); margin-bottom: 12px;">Verification Failed</h2>
-          <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 24px;">
+          <h2 class="md-headline-small state-heading">Verification Failed</h2>
+          <p class="md-body-medium state-text" style="margin-bottom: 24px;">
             {{ errorMessage }}
           </p>
 
@@ -45,7 +92,7 @@
               <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">check_circle</span>
               <span class="md-body-medium">{{ resendSuccess }}</span>
             </div>
-            <div v-if="resendError" class="error-banner">
+            <div v-if="resendError" class="m3-error-banner">
               <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
               <span class="md-body-medium">{{ resendError }}</span>
             </div>
@@ -69,17 +116,17 @@
             </div>
           </div>
 
-          <div style="text-align: center; margin-top: 20px;">
-            <router-link to="/auth/login" class="back-link md-label-large">
-              <span class="material-symbols-outlined" style="font-size:18px; vertical-align: middle; margin-right:4px;">arrow_back</span>
+          <div class="back-row">
+            <router-link to="/login" class="back-link md-label-large">
+              <span class="material-symbols-outlined back-icon">arrow_back</span>
               Back to Sign In
             </router-link>
           </div>
         </div>
 
       </div>
-
     </div>
+
   </div>
 </template>
 
@@ -144,59 +191,179 @@ async function handleResend() {
 </script>
 
 <style scoped lang="scss">
-.auth-wrapper {
+/* ── Split-page shell ─────────────────────────────────────────── */
+.auth-split-page {
+  display: flex;
   min-height: 100vh;
+}
+
+/* ── Left panel ───────────────────────────────────────────────── */
+.auth-left-panel {
+  width: 45%;
+  background: linear-gradient(135deg, #635BFF 0%, #8B5CF6 60%, #14B8A6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--md-sys-color-background);
-  padding: 32px 16px;
+  padding: 48px 40px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 340px;
+    height: 340px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    top: -80px;
+    right: -80px;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    bottom: -60px;
+    left: -60px;
+  }
 }
 
-.auth-container {
+.left-panel-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 340px;
 }
 
-.auth-logo-wrap {
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.brand-logo-icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  margin-bottom: 24px;
+  backdrop-filter: blur(8px);
+
+  .material-symbols-outlined {
+    color: #fff;
+    font-size: 24px;
+  }
 }
 
-.logo-icon {
+.brand-logo-text {
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.brand-tagline {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.4;
+  margin-bottom: 40px;
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 48px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.feature-check {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.left-panel-footer {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+}
+
+/* ── Right panel ──────────────────────────────────────────────── */
+.auth-right-panel {
+  width: 55%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  background: var(--md-sys-color-background);
+  overflow-y: auto;
+}
+
+.right-panel-inner {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* ── Mobile logo ──────────────────────────────────────────────── */
+.mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.mobile-logo-icon {
   width: 36px;
   height: 36px;
   background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-  font-weight: 700;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+
+  .material-symbols-outlined {
+    color: var(--md-sys-color-on-primary);
+    font-size: 20px;
+  }
 }
 
-.logo-text {
+.mobile-logo-text {
   font-weight: 700;
   font-size: 1.25rem;
   color: var(--md-sys-color-on-surface);
 }
 
-.auth-card {
-  padding: 32px;
-  border-radius: 12px;
-  background: var(--md-sys-color-surface-container-low);
-}
-
+/* ── State blocks ─────────────────────────────────────────────── */
 .state-block {
   text-align: center;
+  padding: 24px 0;
+}
+
+.verifying-spinner {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
 }
 
 .state-icon {
-  font-size: 56px;
+  font-size: 64px;
   display: block;
   margin-bottom: 16px;
 
@@ -209,10 +376,20 @@ async function handleResend() {
   }
 }
 
-.error-state {
-  // no special centering needed for error state — has left-aligned resend section
+.state-heading {
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 12px;
 }
 
+.state-text {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.error-content {
+  // left-aligned for error + resend block
+}
+
+/* ── Resend section ───────────────────────────────────────────── */
 .resend-section {
   background: var(--md-sys-color-surface-container);
   border-radius: 12px;
@@ -243,7 +420,7 @@ async function handleResend() {
   margin-bottom: 12px;
 }
 
-.error-banner {
+.m3-error-banner {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -254,12 +431,55 @@ async function handleResend() {
   margin-bottom: 12px;
 }
 
+/* ── Back link ────────────────────────────────────────────────── */
+.back-row {
+  text-align: center;
+  margin-top: 20px;
+}
+
 .back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--md-sys-color-primary);
   text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
 
   &:hover {
     text-decoration: underline;
+  }
+}
+
+.back-icon {
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+/* ── Responsive: mobile ───────────────────────────────────────── */
+@media (max-width: 1023px) {
+  .auth-split-page {
+    flex-direction: column;
+  }
+
+  .auth-left-panel {
+    display: none;
+  }
+
+  .auth-right-panel {
+    width: 100%;
+    min-height: 100vh;
+    padding: 32px 20px;
+    align-items: flex-start;
+    padding-top: 48px;
+  }
+
+  .right-panel-inner {
+    margin: 0 auto;
+  }
+
+  .mobile-logo {
+    display: flex;
   }
 }
 </style>

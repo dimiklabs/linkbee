@@ -1,13 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Shortlink — Create short, memorable links in seconds. Track every click with powerful analytics. QR codes, password protection, custom slugs and more." />
+    <meta name="theme-color" content="#635BFF" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Shortlink — Smarter URL Shortening" />
+    <meta property="og:description" content="Create short links, track clicks, generate QR codes. Built for teams and creators." />
+    <meta property="og:type" content="website" />
+
     <title>Shortlink — Smarter URL Shortening</title>
+
+    <!-- Inline critical theme to prevent FOUC -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('darkMode') === 'true' ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Google Fonts: Roboto + Material Symbols Outlined -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app"></div>

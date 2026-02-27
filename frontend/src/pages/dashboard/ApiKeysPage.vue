@@ -44,8 +44,15 @@
     </div>
 
     <!-- Create form (inline) -->
-    <div v-if="showCreate" class="m3-card m3-card--outlined create-form">
-      <h6 style="margin:0 0 16px;font-weight:600;">Create new API key</h6>
+    <div v-if="showCreate" class="m3-card m3-card--elevated create-form">
+      <div class="m3-card-header">
+        <div class="m3-card-header__left">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_circle</span>
+          <span class="md-title-medium">Create New API Key</span>
+        </div>
+      </div>
+      <md-divider />
+      <div style="padding:1.25rem;">
       <div class="create-form-fields">
         <md-outlined-text-field
           :value="form.name"
@@ -74,27 +81,42 @@
         </div>
       </div>
       <div v-if="createError" style="color:var(--md-sys-color-error);font-size:0.875rem;margin-top:8px;">{{ createError }}</div>
+      </div>
     </div>
 
     <!-- Keys table -->
-    <div class="m3-card m3-card--outlined">
+    <div class="m3-card m3-card--elevated">
+      <div class="m3-card-header">
+        <div class="m3-card-header__left">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">key</span>
+          <span class="md-title-medium">Your API Keys</span>
+        </div>
+        <span class="m3-badge m3-badge--neutral">{{ keys.length }} key{{ keys.length !== 1 ? 's' : '' }}</span>
+      </div>
+      <md-divider />
 
       <div v-if="loading" style="display:flex;justify-content:center;padding:40px;">
         <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
       </div>
 
-      <div v-else-if="keys.length === 0 && !loading" class="empty-state">
-        <span class="material-symbols-outlined" style="font-size:2.5rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">key</span>
-        <div style="color:var(--md-sys-color-on-surface-variant);margin-top:8px;">No API keys yet.</div>
-        <md-outlined-button style="margin-top:12px;" @click="showCreate = true">Create your first key</md-outlined-button>
+      <div v-else-if="keys.length === 0 && !loading" class="m3-empty-state">
+        <div class="m3-empty-state__icon">
+          <span class="material-symbols-outlined">key</span>
+        </div>
+        <div class="md-title-medium" style="margin-bottom:0.5rem;">No API keys yet</div>
+        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 1rem;">Create an API key to authenticate programmatic requests.</p>
+        <md-filled-button @click="showCreate = true">
+          <span class="material-symbols-outlined" slot="icon">add</span>
+          Create your first key
+        </md-filled-button>
       </div>
 
-      <div v-else class="table-container">
+      <div v-else class="m3-table-wrapper">
         <table class="m3-table">
           <thead>
             <tr>
               <th>Name</th>
-              <th>Prefix</th>
+              <th>Key Prefix</th>
               <th>Last used</th>
               <th>Expires</th>
               <th>Created</th>
@@ -103,31 +125,38 @@
           </thead>
           <tbody>
             <tr v-for="key in keys" :key="key.id">
-              <td style="font-weight:600;">{{ key.name }}</td>
               <td>
-                <code class="prefix-code">{{ key.key_prefix }}…</code>
+                <div class="key-name">{{ key.name }}</div>
+              </td>
+              <td>
+                <div class="key-prefix-cell">
+                  <code class="prefix-code">{{ key.key_prefix }}••••••••</code>
+                </div>
               </td>
               <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">
                 <span v-if="key.last_used_at">{{ formatDate(key.last_used_at) }}</span>
-                <span v-else>Never</span>
+                <span v-else class="m3-badge m3-badge--neutral" style="font-size:0.7rem;">Never used</span>
               </td>
               <td style="font-size:0.8rem;">
-                <span v-if="key.expires_at" :style="isExpired(key.expires_at) ? 'color:var(--md-sys-color-error)' : 'color:var(--md-sys-color-on-surface-variant)'">
-                  {{ isExpired(key.expires_at) ? 'Expired ' : '' }}{{ formatDate(key.expires_at) }}
+                <span v-if="key.expires_at">
+                  <span v-if="isExpired(key.expires_at)" class="m3-badge m3-badge--error">Expired {{ formatDate(key.expires_at) }}</span>
+                  <span v-else style="color:var(--md-sys-color-on-surface-variant);">{{ formatDate(key.expires_at) }}</span>
                 </span>
-                <span v-else style="color:var(--md-sys-color-on-surface-variant);">No expiry</span>
+                <span v-else class="m3-badge m3-badge--neutral" style="font-size:0.7rem;">No expiry</span>
               </td>
               <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ formatDate(key.created_at) }}</td>
               <td style="text-align:right;">
-                <md-icon-button
-                  title="Revoke"
-                  :disabled="revokingId === key.id"
-                  @click="revokeKey(key)"
-                  style="--md-icon-button-icon-color:var(--md-sys-color-error);"
-                >
-                  <md-circular-progress v-if="revokingId === key.id" indeterminate style="--md-circular-progress-size:20px" />
-                  <span v-else class="material-symbols-outlined">delete</span>
-                </md-icon-button>
+                <div class="key-actions">
+                  <md-icon-button
+                    title="Revoke key"
+                    :disabled="revokingId === key.id"
+                    @click="revokeKey(key)"
+                    class="danger-btn"
+                  >
+                    <md-circular-progress v-if="revokingId === key.id" indeterminate style="--md-circular-progress-size:20px" />
+                    <span v-else class="material-symbols-outlined">delete</span>
+                  </md-icon-button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -136,12 +165,23 @@
     </div>
 
     <!-- Usage docs -->
-    <div class="m3-card m3-card--outlined usage-card">
-      <h6 style="font-weight:600;margin:0 0 12px;">How to use</h6>
-      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 8px;">Include the key in the <code>X-API-Key</code> header of every request:</p>
-      <pre class="code-block">curl https://your-domain.com/api/v1/links \
+    <div class="m3-card m3-card--elevated">
+      <div class="m3-card-header">
+        <div class="m3-card-header__left">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">code</span>
+          <span class="md-title-medium">How to use</span>
+        </div>
+      </div>
+      <md-divider />
+      <div class="usage-card">
+        <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0 0 12px;">Include the key in the <code style="background:var(--md-sys-color-surface-container-low);padding:2px 6px;border-radius:4px;">X-API-Key</code> header of every request:</p>
+        <pre class="code-block">curl https://your-domain.com/api/v1/links \
   -H "X-API-Key: sl_your_api_key_here"</pre>
-      <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:8px 0 0;">API keys have the same access as your account. Revoke keys you no longer need.</p>
+        <div class="usage-note">
+          <span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0;">info</span>
+          <p style="margin:0;font-size:0.875rem;">API keys have the same access level as your account. Revoke keys you no longer need to keep your account secure.</p>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -288,10 +328,10 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
-  max-width: 860px;
+  max-width: 900px;
 }
 
 .page-header {
@@ -320,11 +360,112 @@ onMounted(async () => {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
+  margin-bottom: 20px;
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
 }
 
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
-  margin-bottom: 20px;
+/* M3 Card header */
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+/* M3 Table wrapper */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
+/* M3 Badges */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  &--error {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+}
+
+/* M3 Empty state */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
+}
+
+/* Key name */
+.key-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* Key prefix cell */
+.key-prefix-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Key actions */
+.key-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Danger button */
+.danger-btn {
+  --md-icon-button-icon-color: var(--md-sys-color-error);
 }
 
 /* Warning banner */
@@ -374,7 +515,7 @@ onMounted(async () => {
 
 /* Create form */
 .create-form {
-  padding: 20px;
+  // card header adds its own padding
 }
 
 .create-form-fields {
@@ -385,10 +526,6 @@ onMounted(async () => {
 }
 
 /* Table */
-.table-container {
-  overflow-x: auto;
-}
-
 .m3-table {
   width: 100%;
   border-collapse: collapse;
@@ -432,18 +569,27 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  text-align: center;
-}
-
 /* Usage docs */
 .usage-card {
   padding: 20px;
+}
+
+/* Usage note */
+.usage-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 8px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+
+  .material-symbols-outlined {
+    color: var(--md-sys-color-primary);
+    margin-top: 1px;
+  }
 }
 
 .code-block {

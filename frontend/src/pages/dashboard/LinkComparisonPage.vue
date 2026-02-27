@@ -10,7 +10,15 @@
     </div>
 
     <!-- Filters Card -->
-    <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;padding:1.25rem;">
+    <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
+      <div class="m3-card-header">
+        <div class="m3-card-header__left">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">compare_arrows</span>
+          <span class="md-title-medium">Configure Comparison</span>
+        </div>
+      </div>
+      <md-divider />
+      <div style="padding:1.25rem;">
       <div class="filter-grid">
         <!-- Link selector -->
         <div class="link-selector-wrapper">
@@ -119,6 +127,7 @@
           />
         </md-chip-set>
       </div>
+      </div>
     </div>
 
     <!-- Error state -->
@@ -152,12 +161,15 @@
       </div>
 
       <!-- Comparison table -->
-      <div class="m3-card m3-card--outlined">
+      <div class="m3-card m3-card--elevated">
         <div class="card-header-row">
-          <span class="md-title-medium">Detailed Breakdown</span>
+          <div>
+            <span class="md-title-medium">Detailed Breakdown</span>
+            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">Per-link metrics for the selected period</div>
+          </div>
         </div>
         <md-divider />
-        <div style="overflow-x:auto;">
+        <div class="m3-table-wrapper">
           <table class="m3-table">
             <thead>
               <tr>
@@ -211,9 +223,12 @@
     </template>
 
     <!-- Empty state -->
-    <div v-if="!loading && !result && !error" class="empty-state" style="padding:4rem 2rem;">
-      <span class="material-symbols-outlined" style="font-size:3rem;display:block;margin-bottom:0.75rem;color:var(--md-sys-color-on-surface-variant);">bar_chart</span>
-      <p class="md-body-medium">Select 2–5 links above and click <strong>Compare</strong> to see their performance side by side.</p>
+    <div v-if="!loading && !result && !error" class="m3-empty-state-card">
+      <div class="m3-empty-state-icon">
+        <span class="material-symbols-outlined">bar_chart</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:0.5rem;">No comparison yet</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);max-width:400px;margin:0;">Select 2–5 links above and click <strong>Compare</strong> to see their performance side by side.</p>
     </div>
 
   </div>
@@ -389,6 +404,22 @@ onUnmounted(() => {
   margin-bottom: 1.5rem;
 }
 
+/* M3 Card header */
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
 /* Card header row */
 .card-header-row {
   display: flex;
@@ -397,6 +428,12 @@ onUnmounted(() => {
   padding: 0.875rem 1.25rem;
   gap: 1rem;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Table wrapper */
+.m3-table-wrapper {
+  overflow-x: auto;
 }
 
 /* Error banner */
@@ -408,6 +445,33 @@ onUnmounted(() => {
   border-radius: 12px;
   background: rgba(176, 0, 32, 0.08);
   border: 1px solid var(--md-sys-color-error);
+}
+
+/* Empty state card */
+.m3-empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.m3-empty-state-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
 }
 
 /* Filter grid */

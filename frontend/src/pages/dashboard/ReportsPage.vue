@@ -25,15 +25,21 @@
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="!loading && reports.length === 0 && !error" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;color:var(--md-sys-color-on-surface-variant);">
-      <span class="material-symbols-outlined" style="font-size:3rem;margin-bottom:12px;">email</span>
-      <p style="margin:0 0 16px;font-size:0.9375rem;">No scheduled reports yet.</p>
-      <md-filled-button @click="openCreate">Create your first report</md-filled-button>
+    <div v-else-if="!loading && reports.length === 0 && !error" class="m3-card m3-card--elevated m3-empty-state">
+      <div class="m3-empty-state__icon">
+        <span class="material-symbols-outlined">email</span>
+      </div>
+      <div class="md-title-medium" style="margin-bottom:8px;">No scheduled reports yet</div>
+      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Set up automated email summaries to track your link performance.</p>
+      <md-filled-button @click="openCreate">
+        <span class="material-symbols-outlined" slot="icon">add</span>
+        Create your first report
+      </md-filled-button>
     </div>
 
     <!-- Reports list -->
-    <div v-else style="display:flex;flex-direction:column;gap:12px;">
-      <div v-for="report in reports" :key="report.id" class="m3-card m3-card--outlined report-card">
+    <div v-else class="reports-list">
+      <div v-for="report in reports" :key="report.id" class="m3-card m3-card--elevated report-card">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;">
           <!-- Status dot -->
           <span
@@ -573,7 +579,7 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page-wrapper {
   padding: 24px;
   max-width: 900px;
@@ -606,10 +612,14 @@ onUnmounted(() => {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
-}
 
-.m3-card--outlined {
-  border: 1px solid var(--md-sys-color-outline-variant);
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
 /* Badges */
@@ -621,32 +631,66 @@ onUnmounted(() => {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
 }
 
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-variant);
+/* Reports list */
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* Report card */
 .report-card {
   transition: box-shadow 0.15s;
-}
 
-.report-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  }
 }
 
 /* Frequency badge */
 .freq-badge {
   display: inline-block;
-  background: #eef0ff;
+  background: rgba(99, 91, 255, 0.10);
   color: var(--md-sys-color-primary, #635bff);
   border-radius: 999px;
   padding: 0.1em 0.55em;
   font-size: 0.72rem;
   font-weight: 600;
+}
+
+/* Empty state */
+.m3-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-low);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+
+    .material-symbols-outlined {
+      font-size: 2rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
 }
 
 /* Link selector */
@@ -666,10 +710,11 @@ onUnmounted(() => {
   font-size: 0.9375rem;
   background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
-}
+  transition: background 0.12s;
 
-.selector-trigger:hover {
-  background: var(--md-sys-color-surface-container-low);
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
 .selector-dropdown {
@@ -695,15 +740,15 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 0.8125rem;
   transition: background 0.12s;
-}
 
-.selector-option:hover {
-  background: var(--md-sys-color-surface-container-low);
-}
+  &:hover {
+    background: var(--md-sys-color-surface-container-low);
+  }
 
-.selector-option.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 /* Preview stats */
@@ -712,6 +757,10 @@ onUnmounted(() => {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .preview-stat-card {
