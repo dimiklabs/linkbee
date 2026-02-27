@@ -91,6 +91,21 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		logger.ErrorCtx(ctx, "Failed to get heatmap data", zap.Error(err))
 	}
 
+	utmSources, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_source", 10)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM source breakdown", zap.Error(err))
+	}
+
+	utmMediums, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_medium", 10)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM medium breakdown", zap.Error(err))
+	}
+
+	utmCampaigns, err := s.clickEventRepo.GetUTMBreakdown(ctx, linkID, "utm_campaign", 10)
+	if err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM campaign breakdown", zap.Error(err))
+	}
+
 	tsData := make([]response.TimeSeriesData, len(timeSeries))
 	for i, ts := range timeSeries {
 		tsData[i] = response.TimeSeriesData{Timestamp: ts.Timestamp, Count: ts.Count}
@@ -126,6 +141,21 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		heatmapData[i] = response.HeatmapData{DayOfWeek: h.DayOfWeek, Hour: h.Hour, Count: h.Count}
 	}
 
+	utmSourceData := make([]response.UTMData, len(utmSources))
+	for i, u := range utmSources {
+		utmSourceData[i] = response.UTMData{Value: u.Value, Count: u.Count}
+	}
+
+	utmMediumData := make([]response.UTMData, len(utmMediums))
+	for i, u := range utmMediums {
+		utmMediumData[i] = response.UTMData{Value: u.Value, Count: u.Count}
+	}
+
+	utmCampaignData := make([]response.UTMData, len(utmCampaigns))
+	for i, u := range utmCampaigns {
+		utmCampaignData[i] = response.UTMData{Value: u.Value, Count: u.Count}
+	}
+
 	return &response.AnalyticsResponse{
 		LinkID:       linkID,
 		TotalClicks:  totalClicks,
@@ -137,5 +167,8 @@ func (s *analyticsService) GetLinkAnalytics(ctx context.Context, linkID uuid.UUI
 		Browsers:     browserData,
 		OSBreakdown:  osData,
 		Heatmap:      heatmapData,
+		UTMSources:   utmSourceData,
+		UTMMediums:   utmMediumData,
+		UTMCampaigns: utmCampaignData,
 	}, nil
 }

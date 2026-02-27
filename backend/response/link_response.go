@@ -74,6 +74,15 @@ type AnalyticsResponse struct {
 	Browsers     []BrowserData    `json:"browsers"`
 	OSBreakdown  []OSData         `json:"os_breakdown"`
 	Heatmap      []HeatmapData    `json:"heatmap"`
+	UTMSources   []UTMData        `json:"utm_sources"`
+	UTMMediums   []UTMData        `json:"utm_mediums"`
+	UTMCampaigns []UTMData        `json:"utm_campaigns"`
+}
+
+// UTMData holds click count for a single UTM parameter value.
+type UTMData struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
 }
 
 type TimeSeriesData struct {

@@ -100,6 +100,11 @@ export interface HeatmapPoint {
   count: number;
 }
 
+export interface UTMPoint {
+  value: string;
+  count: number;
+}
+
 export interface AnalyticsResponse {
   link_id: string;
   total_clicks: number;
@@ -111,6 +116,9 @@ export interface AnalyticsResponse {
   browsers: BrowserPoint[];
   os_breakdown: OSPoint[];
   heatmap: HeatmapPoint[];
+  utm_sources: UTMPoint[];
+  utm_mediums: UTMPoint[];
+  utm_campaigns: UTMPoint[];
 }
 
 export interface DemoShortenRequest {

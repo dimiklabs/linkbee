@@ -468,6 +468,90 @@
           </div>
         </div>
       </div>
+      <!-- UTM Campaign Tracking -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between">
+          <div>
+            <h6 class="mb-0 fw-semibold">UTM Campaign Tracking</h6>
+            <p class="text-muted mb-0" style="font-size: 0.72rem;">Clicks from links with UTM parameters appended (e.g., <code>?utm_source=email</code>)</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div
+            v-if="!analytics.utm_sources?.length && !analytics.utm_mediums?.length && !analytics.utm_campaigns?.length"
+            class="text-center py-4 text-muted small"
+          >
+            No UTM data yet. Append <code>?utm_source=email&amp;utm_medium=newsletter&amp;utm_campaign=launch</code> to your short link when sharing.
+          </div>
+          <div v-else class="row g-4">
+            <!-- UTM Sources -->
+            <div class="col-lg-4">
+              <h6 class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing: 0.05em;">Source</h6>
+              <div v-if="!analytics.utm_sources?.length" class="text-muted small py-1">No data</div>
+              <div v-else class="d-flex flex-column gap-1">
+                <div v-for="u in analytics.utm_sources" :key="u.value" class="d-flex align-items-center gap-2">
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between small mb-1">
+                      <span class="text-truncate fw-medium" style="max-width: 140px;" :title="u.value">{{ u.value }}</span>
+                      <span class="text-muted">{{ u.count.toLocaleString() }}</span>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                      <div
+                        class="progress-bar"
+                        :style="{ width: utmPercent(u.count, analytics.utm_sources) + '%', backgroundColor: '#635bff' }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- UTM Mediums -->
+            <div class="col-lg-4">
+              <h6 class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing: 0.05em;">Medium</h6>
+              <div v-if="!analytics.utm_mediums?.length" class="text-muted small py-1">No data</div>
+              <div v-else class="d-flex flex-column gap-1">
+                <div v-for="u in analytics.utm_mediums" :key="u.value" class="d-flex align-items-center gap-2">
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between small mb-1">
+                      <span class="text-truncate fw-medium" style="max-width: 140px;" :title="u.value">{{ u.value }}</span>
+                      <span class="text-muted">{{ u.count.toLocaleString() }}</span>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                      <div
+                        class="progress-bar"
+                        :style="{ width: utmPercent(u.count, analytics.utm_mediums) + '%', backgroundColor: '#14b8a6' }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- UTM Campaigns -->
+            <div class="col-lg-4">
+              <h6 class="small fw-semibold text-muted text-uppercase mb-2" style="letter-spacing: 0.05em;">Campaign</h6>
+              <div v-if="!analytics.utm_campaigns?.length" class="text-muted small py-1">No data</div>
+              <div v-else class="d-flex flex-column gap-1">
+                <div v-for="u in analytics.utm_campaigns" :key="u.value" class="d-flex align-items-center gap-2">
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between small mb-1">
+                      <span class="text-truncate fw-medium" style="max-width: 140px;" :title="u.value">{{ u.value }}</span>
+                      <span class="text-muted">{{ u.count.toLocaleString() }}</span>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                      <div
+                        class="progress-bar"
+                        :style="{ width: utmPercent(u.count, analytics.utm_campaigns) + '%', backgroundColor: '#f59e0b' }"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -482,7 +566,7 @@ import { GridComponent, TooltipComponent, LegendComponent, TitleComponent, Visua
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import linksApi from '@/api/links';
-import type { AnalyticsResponse } from '@/types/links';
+import type { AnalyticsResponse, UTMPoint } from '@/types/links';
 
 use([LineChart, PieChart, BarChart, HeatmapChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent, VisualMapComponent, CanvasRenderer]);
 
@@ -635,6 +719,22 @@ function exportToCSV() {
     const hour = `${String(h.hour).padStart(2, '0')}:00`;
     rows.push(`${dayNames[h.day_of_week]},${hour},${h.count}`);
   });
+  rows.push('');
+
+  // ── UTM campaign tracking ────────────────────────────────────────────────────
+  if (a.utm_sources?.length || a.utm_mediums?.length || a.utm_campaigns?.length) {
+    rows.push('UTM SOURCES');
+    rows.push('Source,Clicks');
+    (a.utm_sources ?? []).forEach((u) => rows.push(`${esc(u.value)},${u.count}`));
+    rows.push('');
+    rows.push('UTM MEDIUMS');
+    rows.push('Medium,Clicks');
+    (a.utm_mediums ?? []).forEach((u) => rows.push(`${esc(u.value)},${u.count}`));
+    rows.push('');
+    rows.push('UTM CAMPAIGNS');
+    rows.push('Campaign,Clicks');
+    (a.utm_campaigns ?? []).forEach((u) => rows.push(`${esc(u.value)},${u.count}`));
+  }
 
   // ── Trigger download ────────────────────────────────────────────────────────
   const csv = rows.join('\r\n');
@@ -783,6 +883,13 @@ const totalOSClicks = computed(() =>
 function osPercent(count: number): number {
   if (totalOSClicks.value === 0) return 0;
   return Math.round((count / totalOSClicks.value) * 100);
+}
+
+function utmPercent(count: number, series: UTMPoint[] | undefined): number {
+  if (!series || series.length === 0) return 0;
+  const total = series.reduce((sum, u) => sum + u.count, 0);
+  if (total === 0) return 0;
+  return Math.round((count / total) * 100);
 }
 
 const browserChartOption = computed(() => ({

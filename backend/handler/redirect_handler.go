@@ -152,13 +152,22 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 		source = "qr"
 	}
 
+	// Extract UTM parameters from query string
+	utm := clickSvc.UTMParams{
+		Source:   c.Query("utm_source"),
+		Medium:   c.Query("utm_medium"),
+		Campaign: c.Query("utm_campaign"),
+		Content:  c.Query("utm_content"),
+		Term:     c.Query("utm_term"),
+	}
+
 	// Enqueue click asynchronously using background context so it outlives the request
 	linkID := link.ID
 	userID := link.UserID
 	ip := c.ClientIP()
 	userAgent := c.GetHeader("User-Agent")
 	referrer := c.GetHeader("Referer")
-	go h.clickService.EnqueueClick(context.Background(), linkID, ip, userAgent, referrer, source)
+	go h.clickService.EnqueueClick(context.Background(), linkID, ip, userAgent, referrer, source, utm)
 	h.webhookService.Trigger(userID, webhookSvc.EventLinkClicked, map[string]string{
 		"link_id": linkID.String(),
 		"ip":      ip,

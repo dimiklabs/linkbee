@@ -56,6 +56,12 @@ type HeatmapPoint struct {
 	Count     int64 `json:"count"`
 }
 
+// UTMPoint holds click count for a single UTM parameter value.
+type UTMPoint struct {
+	Value string `json:"value"`
+	Count int64  `json:"count"`
+}
+
 type ClickEventRepositoryI interface {
 	// Write
 	BulkCreate(ctx context.Context, events []*model.ClickEvent) error
@@ -70,6 +76,7 @@ type ClickEventRepositoryI interface {
 	GetBrowserBreakdown(ctx context.Context, linkID uuid.UUID) ([]BrowserPoint, error)
 	GetOSBreakdown(ctx context.Context, linkID uuid.UUID) ([]OSPoint, error)
 	GetHeatmapData(ctx context.Context, linkID uuid.UUID, from, to time.Time) ([]HeatmapPoint, error)
+	GetUTMBreakdown(ctx context.Context, linkID uuid.UUID, field string, limit int) ([]UTMPoint, error)
 
 	// Delete
 	DeleteByLinkID(ctx context.Context, linkID uuid.UUID) error
@@ -335,6 +342,45 @@ func (r *ClickEventRepository) GetHeatmapData(ctx context.Context, linkID uuid.U
 	points := make([]HeatmapPoint, len(rows))
 	for i, r := range rows {
 		points[i] = HeatmapPoint{DayOfWeek: r.DayOfWeek, Hour: r.Hour, Count: r.Count}
+	}
+	return points, nil
+}
+
+func (r *ClickEventRepository) GetUTMBreakdown(ctx context.Context, linkID uuid.UUID, field string, limit int) ([]UTMPoint, error) {
+	// Validate field against allowed UTM columns to prevent SQL injection
+	allowed := map[string]bool{
+		"utm_source": true, "utm_medium": true,
+		"utm_campaign": true, "utm_content": true, "utm_term": true,
+	}
+	if !allowed[field] {
+		return nil, nil
+	}
+
+	type result struct {
+		Value string
+		Count int64
+	}
+
+	expr := fmt.Sprintf("NULLIF(%s, '')", field)
+	var rows []result
+	if err := r.replicaDB.WithContext(ctx).
+		Model(&model.ClickEvent{}).
+		Select(expr+" AS value, COUNT(*) AS count").
+		Where("link_id = ? AND "+field+" != ''", linkID).
+		Group(expr).
+		Order("count DESC").
+		Limit(limit).
+		Scan(&rows).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to get UTM breakdown",
+			zap.String("link_id", linkID.String()),
+			zap.String("field", field),
+			zap.Error(err))
+		return nil, err
+	}
+
+	points := make([]UTMPoint, len(rows))
+	for i, r := range rows {
+		points[i] = UTMPoint{Value: r.Value, Count: r.Count}
 	}
 	return points, nil
 }
