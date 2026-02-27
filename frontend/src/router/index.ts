@@ -100,6 +100,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresAdmin: true },
     },
 
+    // Password-protected link unlock page
+    {
+      path: '/unlock/:slug',
+      name: 'unlock',
+      component: () => import('@/pages/UnlockPage.vue'),
+    },
+
     // Public bio page
     {
       path: '/bio/:username',

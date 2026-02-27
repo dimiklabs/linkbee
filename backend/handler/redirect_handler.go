@@ -88,9 +88,10 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 
 	// Password-protected link
 	if link.PasswordHash != "" {
+		unlockURL := "/unlock/" + slug
 		pwd := c.Query("pwd")
 		if pwd == "" {
-			transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "This link is password protected")
+			c.Redirect(http.StatusFound, unlockURL)
 			return
 		}
 
@@ -106,7 +107,7 @@ func (h *RedirectHandler) Redirect(c *gin.Context) {
 		}
 
 		if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(pwd)); err != nil {
-			transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "Invalid link password")
+			c.Redirect(http.StatusFound, unlockURL+"?error=invalid")
 			return
 		}
 	}
