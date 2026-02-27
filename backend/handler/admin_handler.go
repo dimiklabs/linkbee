@@ -8,17 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/shafikshaon/shortlink/config"
 	"github.com/shafikshaon/shortlink/constant"
+	"github.com/shafikshaon/shortlink/middlewares"
 	adminSvc "github.com/shafikshaon/shortlink/service/admin"
 	"github.com/shafikshaon/shortlink/transport"
 )
 
 type AdminHandler struct {
 	adminService adminSvc.AdminServiceI
+	cfg          *config.AppConfig
 }
 
-func NewAdminHandler(adminService adminSvc.AdminServiceI) *AdminHandler {
-	return &AdminHandler{adminService: adminService}
+func NewAdminHandler(adminService adminSvc.AdminServiceI, cfg *config.AppConfig) *AdminHandler {
+	return &AdminHandler{adminService: adminService, cfg: cfg}
 }
 
 // GetStats returns platform-wide statistics.
@@ -82,4 +85,53 @@ func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
 		return
 	}
 	transport.RespondWithSuccess(c, http.StatusOK, "user status updated", nil)
+}
+
+// UpdateUserRole changes the role of a user (admin / user).
+func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
+	ctx := c.Request.Context()
+	adminIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	adminID, _ := uuid.Parse(adminIDStr.(string))
+
+	targetIDStr := c.Param("id")
+	targetID, err := uuid.Parse(targetIDStr)
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "invalid user id")
+		return
+	}
+
+	var body struct {
+		Role string `json:"role" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "role is required")
+		return
+	}
+
+	if svcErr := h.adminService.UpdateUserRole(ctx, adminID, targetID, body.Role); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "user role updated", nil)
+}
+
+// ImpersonateUser generates a short-lived access token for the target user.
+func (h *AdminHandler) ImpersonateUser(c *gin.Context) {
+	ctx := c.Request.Context()
+	adminIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	adminID, _ := uuid.Parse(adminIDStr.(string))
+
+	targetIDStr := c.Param("id")
+	targetID, err := uuid.Parse(targetIDStr)
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "invalid user id")
+		return
+	}
+
+	result, svcErr := h.adminService.ImpersonateUser(ctx, adminID, targetID, h.cfg)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "impersonation token generated", result)
 }

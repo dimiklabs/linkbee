@@ -76,6 +76,15 @@
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Reports</span>
         </router-link>
         <router-link
+          to="/dashboard/teams"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/teams') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">👥</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Teams</span>
+        </router-link>
+        <router-link
           to="/dashboard/api-keys"
           class="nav-item"
           :class="{ active: $route.path.startsWith('/dashboard/api-keys') }"
@@ -296,6 +305,7 @@ const pageTitle = computed(() => {
     security: 'Security',
     settings: 'Settings',
     bio: 'Link-in-Bio',
+    teams: 'Teams',
     admin: 'Admin',
   };
   return titles[name] || 'Dashboard';

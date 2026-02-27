@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { AdminStats, AdminUsersResponse, GrowthTimeSeriesResponse } from '@/types/admin';
+import type { AdminStats, AdminUsersResponse, GrowthTimeSeriesResponse, ImpersonationResponse } from '@/types/admin';
 import type { ApiResponse } from '@/types/auth';
 
 export default {
@@ -17,5 +17,13 @@ export default {
 
   updateUserStatus(id: string, status: string): Promise<{ data: ApiResponse<null> }> {
     return apiClient.patch(`/admin/users/${id}/status`, { status });
+  },
+
+  updateUserRole(id: string, role: string): Promise<{ data: ApiResponse<null> }> {
+    return apiClient.patch(`/admin/users/${id}/role`, { role });
+  },
+
+  impersonateUser(id: string): Promise<{ data: ApiResponse<ImpersonationResponse> }> {
+    return apiClient.post(`/admin/users/${id}/impersonate`);
   },
 };

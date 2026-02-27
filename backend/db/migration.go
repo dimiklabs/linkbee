@@ -33,6 +33,8 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.WebhookDelivery{},
 		&model.AnalyticsReport{},
 		&model.ReportDelivery{},
+		&model.Team{},
+		&model.TeamMember{},
 	)
 	if err != nil {
 		logger.Error("Auto migration failed", zap.Error(err))

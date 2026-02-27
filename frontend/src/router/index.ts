@@ -124,6 +124,11 @@ const router = createRouter({
           name: 'security',
           component: () => import('@/pages/dashboard/SecurityPage.vue'),
         },
+        {
+          path: 'teams',
+          name: 'teams',
+          component: () => import('@/pages/dashboard/TeamsPage.vue'),
+        },
       ],
     },
 

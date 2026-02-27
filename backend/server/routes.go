@@ -42,6 +42,7 @@ import (
 	domainSvc  "github.com/shafikshaon/shortlink/service/domain"
 	pixelSvc   "github.com/shafikshaon/shortlink/service/pixel"
 	previewSvc "github.com/shafikshaon/shortlink/service/preview"
+	teamSvc    "github.com/shafikshaon/shortlink/service/team"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/worker"
 )
@@ -74,6 +75,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	auditLogRepo          := repository.NewAuditLogRepository(s.MasterDB, s.ReplicaDB)
 	totpBackupCodeRepo    := repository.NewTotpBackupCodeRepository(s.MasterDB, s.ReplicaDB)
 	webhookDeliveryRepo   := repository.NewWebhookDeliveryRepository(s.MasterDB, s.ReplicaDB)
+	teamRepo              := repository.NewTeamRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
@@ -108,6 +110,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
 	domainService      := domainSvc.NewDomainService(customDomainRepo)
 	auditService       := auditSvc.NewAuditService(auditLogRepo)
+	teamService        := teamSvc.NewTeamService(teamRepo, userRepo)
 
 	// ── Report worker (background goroutine) ──────────────────────────────────
 	reportWorker := worker.NewReportWorker(reportingService)
@@ -135,7 +138,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService, auditService)
 	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
 	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
-	adminHandler     := handler.NewAdminHandler(adminService)
+	adminHandler     := handler.NewAdminHandler(adminService, s.Cfg.App)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)
 	bioHandler       := handler.NewBioHandler(bioService)
 	previewHandler   := handler.NewPreviewHandler(previewService, linkService)
@@ -154,6 +157,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	reportHandler    := handler.NewReportHandler(reportingService)
 	demoHandler      := handler.NewDemoHandler(demoService)
+	teamHandler      := handler.NewTeamHandler(teamService)
 
 	// ── Swagger UI ───────────────────────────────────────────────────────────
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -316,6 +320,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 				v1Admin.GET("/growth", adminHandler.GetGrowthTimeSeries)
 				v1Admin.GET("/users", adminHandler.ListUsers)
 				v1Admin.PATCH("/users/:id/status", adminHandler.UpdateUserStatus)
+				v1Admin.PATCH("/users/:id/role", adminHandler.UpdateUserRole)
+				v1Admin.POST("/users/:id/impersonate", adminHandler.ImpersonateUser)
 			}
 
 			// Audit logs
@@ -336,6 +342,19 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Auth.PATCH("/bio/links/reorder", bioHandler.ReorderBioLinks)
 			v1Auth.PUT("/bio/links/:id", bioHandler.UpdateBioLink)
 			v1Auth.DELETE("/bio/links/:id", bioHandler.DeleteBioLink)
+
+			// Teams (static routes must come before parameterized ones)
+			v1Auth.POST("/teams/invite/accept", teamHandler.AcceptInvite)
+			v1Auth.GET("/teams", teamHandler.ListMyTeams)
+			v1Auth.POST("/teams", teamHandler.CreateTeam)
+			v1Auth.GET("/teams/:id", teamHandler.GetTeam)
+			v1Auth.PUT("/teams/:id", teamHandler.UpdateTeam)
+			v1Auth.DELETE("/teams/:id", teamHandler.DeleteTeam)
+			v1Auth.POST("/teams/:id/members", teamHandler.InviteMember)
+			v1Auth.GET("/teams/:id/members", teamHandler.ListMembers)
+			v1Auth.PATCH("/teams/:id/members/:userID/role", teamHandler.UpdateMemberRole)
+			v1Auth.DELETE("/teams/:id/members/:userID", teamHandler.RemoveMember)
+			v1Auth.POST("/teams/:id/leave", teamHandler.LeaveTeam)
 		}
 	}
 

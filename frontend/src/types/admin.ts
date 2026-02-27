@@ -35,3 +35,10 @@ export interface GrowthTimeSeriesResponse {
   users: GrowthTimeSeriesPoint[];
   links: GrowthTimeSeriesPoint[];
 }
+
+export interface ImpersonationResponse {
+  access_token: string;
+  expires_in: number;
+  target_user_id: string;
+  target_email: string;
+}

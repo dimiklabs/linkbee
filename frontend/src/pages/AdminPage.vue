@@ -1,5 +1,12 @@
 <template>
   <div class="container-fluid py-4" style="max-width: 1100px;">
+    <!-- Impersonation Banner -->
+    <div v-if="isImpersonating" class="alert alert-warning d-flex align-items-center gap-3 mb-4">
+      <i class="bi bi-person-fill-gear fs-5"></i>
+      <span class="flex-grow-1">You are currently impersonating a user.</span>
+      <button class="btn btn-sm btn-warning" @click="stopImpersonation">Stop Impersonation</button>
+    </div>
+
     <div class="mb-4">
       <h4 class="mb-1 fw-bold">Admin Dashboard</h4>
       <p class="text-muted small mb-0">Platform overview and user management.</p>
@@ -161,7 +168,28 @@
               <td class="py-3 small text-muted">{{ formatDate(u.created_at) }}</td>
               <td class="py-3 small text-muted">{{ u.last_login ? formatDate(u.last_login) : '—' }}</td>
               <td class="py-3 px-4 text-end">
-                <div class="d-flex gap-2 justify-content-end">
+                <div class="d-flex gap-2 justify-content-end align-items-center">
+                  <!-- Role change -->
+                  <select
+                    class="form-select form-select-sm"
+                    style="width: auto; min-width: 90px;"
+                    :value="u.role"
+                    :disabled="changingRole === u.id || u.id === authStore.profile?.id"
+                    @change="setRole(u, ($event.target as HTMLSelectElement).value)"
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <!-- Impersonate -->
+                  <button
+                    class="btn btn-sm btn-outline-secondary"
+                    :disabled="impersonating === u.id || u.id === authStore.profile?.id"
+                    @click="startImpersonation(u)"
+                    title="Impersonate user"
+                  >
+                    <span v-if="impersonating === u.id" class="spinner-border spinner-border-sm"></span>
+                    <i v-else class="bi bi-person-fill-exclamation"></i>
+                  </button>
                   <button
                     v-if="u.status !== 'active'"
                     class="btn btn-sm btn-outline-success"
@@ -211,6 +239,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { use } from 'echarts/core';
 import { BarChart, PieChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -218,10 +247,15 @@ import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
 import adminApi from '@/api/admin';
 import type { AdminStats, AdminUser, GrowthTimeSeriesPoint } from '@/types/admin';
+import { useAuthStore } from '@/stores/auth';
 
 use([BarChart, PieChart, LineChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 const LIMIT = 20;
+const ORIGINAL_TOKEN_KEY = 'impersonation_original_token';
+
+const authStore = useAuthStore();
+const router = useRouter();
 
 const stats = ref<AdminStats | null>(null);
 const users = ref<AdminUser[]>([]);
@@ -233,6 +267,8 @@ const updatingId = ref<string | null>(null);
 const growthLoading = ref(true);
 const growthUsers = ref<GrowthTimeSeriesPoint[]>([]);
 const growthLinks = ref<GrowthTimeSeriesPoint[]>([]);
+const impersonating = ref<string | null>(null);
+const changingRole = ref<string | null>(null);
 
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -406,6 +442,45 @@ function statusBadge(status: string) {
     case 'inactive': return 'text-bg-warning';
     case 'banned':   return 'text-bg-danger';
     default:         return 'bg-light text-secondary border';
+  }
+}
+
+async function setRole(user: AdminUser, role: string) {
+  changingRole.value = user.id;
+  try {
+    await adminApi.updateUserRole(user.id, role);
+    user.role = role;
+  } catch {
+    // silently fail — user will see no change
+  } finally {
+    changingRole.value = null;
+  }
+}
+
+async function startImpersonation(user: AdminUser) {
+  impersonating.value = user.id;
+  try {
+    const res = await adminApi.impersonateUser(user.id);
+    const impersonationToken = res.data.data.access_token;
+    const currentToken = localStorage.getItem('access_token');
+    if (currentToken) {
+      localStorage.setItem(ORIGINAL_TOKEN_KEY, currentToken);
+    }
+    localStorage.setItem('access_token', impersonationToken);
+    window.location.href = '/dashboard/overview';
+  } catch {
+    impersonating.value = null;
+  }
+}
+
+const isImpersonating = computed(() => !!localStorage.getItem(ORIGINAL_TOKEN_KEY));
+
+function stopImpersonation() {
+  const originalToken = localStorage.getItem(ORIGINAL_TOKEN_KEY);
+  if (originalToken) {
+    localStorage.setItem('access_token', originalToken);
+    localStorage.removeItem(ORIGINAL_TOKEN_KEY);
+    window.location.href = '/admin';
   }
 }
 

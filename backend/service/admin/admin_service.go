@@ -7,10 +7,12 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/shafikshaon/shortlink/config"
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/dto"
 	"github.com/shafikshaon/shortlink/model"
 	"github.com/shafikshaon/shortlink/repository"
+	util "github.com/shafikshaon/shortlink/util"
 )
 
 type StatsResponse struct {
@@ -51,11 +53,20 @@ type TimeSeriesData struct {
 	Count     int64  `json:"count"`
 }
 
+type ImpersonationResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TargetUserID string `json:"target_user_id"`
+	TargetEmail  string `json:"target_email"`
+}
+
 type AdminServiceI interface {
 	GetStats(ctx context.Context) (*StatsResponse, *dto.ServiceError)
 	ListUsers(ctx context.Context, search string, page, limit int) (*UsersListResponse, *dto.ServiceError)
 	UpdateUserStatus(ctx context.Context, userID uuid.UUID, status string) *dto.ServiceError
 	GetGrowthTimeSeries(ctx context.Context) (*GrowthTimeSeriesResponse, error)
+	UpdateUserRole(ctx context.Context, adminID uuid.UUID, targetUserID uuid.UUID, role string) *dto.ServiceError
+	ImpersonateUser(ctx context.Context, adminID uuid.UUID, targetUserID uuid.UUID, cfg *config.AppConfig) (*ImpersonationResponse, *dto.ServiceError)
 }
 
 type adminService struct {
@@ -160,6 +171,45 @@ func (s *adminService) UpdateUserStatus(ctx context.Context, userID uuid.UUID, s
 		return dto.NewInternalError(constant.ErrCodeInternalServer, "failed to update user status")
 	}
 	return nil
+}
+
+func (s *adminService) UpdateUserRole(ctx context.Context, adminID uuid.UUID, targetUserID uuid.UUID, role string) *dto.ServiceError {
+	if role != "admin" && role != "user" {
+		return dto.NewBadRequestError(constant.ErrCodeBadRequest, "role must be admin or user")
+	}
+	if adminID == targetUserID {
+		return dto.NewBadRequestError(constant.ErrCodeBadRequest, "cannot change your own role")
+	}
+	if err := s.userRepo.UpdateRole(ctx, targetUserID, role); err != nil {
+		return dto.NewInternalError(constant.ErrCodeInternalServer, "failed to update user role")
+	}
+	return nil
+}
+
+func (s *adminService) ImpersonateUser(ctx context.Context, adminID uuid.UUID, targetUserID uuid.UUID, cfg *config.AppConfig) (*ImpersonationResponse, *dto.ServiceError) {
+	if adminID == targetUserID {
+		return nil, dto.NewBadRequestError(constant.ErrCodeBadRequest, "cannot impersonate yourself")
+	}
+	targetUser, err := s.userRepo.GetByID(ctx, targetUserID)
+	if err != nil {
+		return nil, dto.NewNotFoundError(constant.ErrCodeNotFound, "user not found")
+	}
+	jwtCfg := util.JWTConfig{
+		Secret:              cfg.JWTSecret,
+		Issuer:              cfg.JWTIssuer,
+		AccessExpiryMinutes: cfg.JWTAccessExpiry,
+		RefreshExpiryDays:   cfg.JWTRefreshExpiry,
+	}
+	tokens, genErr := util.GenerateTokenPair(&jwtCfg, targetUser.ID.String(), targetUser.Email, targetUser.Role)
+	if genErr != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to generate impersonation token")
+	}
+	return &ImpersonationResponse{
+		AccessToken:  tokens.AccessToken,
+		ExpiresIn:    tokens.ExpiresIn,
+		TargetUserID: targetUser.ID.String(),
+		TargetEmail:  targetUser.Email,
+	}, nil
 }
 
 func (s *adminService) GetGrowthTimeSeries(ctx context.Context) (*GrowthTimeSeriesResponse, error) {
