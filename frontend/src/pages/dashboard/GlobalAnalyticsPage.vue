@@ -38,11 +38,11 @@
             @input="filterTo = ($event.target as HTMLInputElement).value"
             style="min-width:148px;"
           />
-          <md-filled-button :disabled="loading" @click="load">
-            <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
-            <span v-else class="material-symbols-outlined" slot="icon">refresh</span>
+          <button class="btn-filled" :disabled="loading" @click="load">
+            <span v-if="loading"><md-circular-progress indeterminate /></span>
+            <span v-else class="material-symbols-outlined">refresh</span>
             Apply
-          </md-filled-button>
+          </button>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ countryName(c.country) }}</span>
-                <md-linear-progress :value="countryPct(c.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="countryPct(c.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -261,7 +261,7 @@
               <div v-for="(o, idx) in data.os_breakdown" :key="o.os" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ o.os || 'Unknown' }}</span>
-                <md-linear-progress :value="osPct(o.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="osPct(o.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ o.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -282,7 +282,7 @@
                 <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.city }}</span>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ countryName(c.country) }}</span>
-                <md-linear-progress :value="cityPct(c.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="cityPct(c.count) / 100" style="width:80px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -304,7 +304,7 @@
               <div v-for="(b, idx) in data.top_browsers" :key="b.browser" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.browser || 'Unknown' }}</span>
-                <md-linear-progress :value="browserPct(b.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="browserPct(b.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ b.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -323,7 +323,7 @@
               <div v-for="(r, idx) in data.top_referrers" :key="r.referrer" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;" :title="r.referrer">{{ r.referrer }}</span>
-                <md-linear-progress :value="referrerPct(r.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="referrerPct(r.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ r.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -346,7 +346,7 @@
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-small">{{ sourceIcon(s.source) }}</span>
                 <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ s.source }}</span>
-                <md-linear-progress :value="sourcePct(s.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="sourcePct(s.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ s.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -366,7 +366,7 @@
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-small">{{ channelIcon(rc.category) }}</span>
                 <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ rc.category }}</span>
-                <md-linear-progress :value="refCatPct(rc.count) / 100" style="width:100px;flex-shrink:0;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                <md-linear-progress :value="refCatPct(rc.count) / 100" style="width:100px;flex-shrink:0;" />
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ rc.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -390,7 +390,7 @@
                 <div v-for="(u, idx) in data.utm_sources" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmSrcPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <md-linear-progress :value="utmSrcPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
@@ -403,7 +403,7 @@
                 <div v-for="(u, idx) in data.utm_mediums" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmMedPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <md-linear-progress :value="utmMedPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
@@ -416,7 +416,7 @@
                 <div v-for="(u, idx) in data.utm_campaigns" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmCamPct(u.count) / 100" style="width:80px;flex-shrink:0;--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                  <md-linear-progress :value="utmCamPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
@@ -435,10 +435,10 @@
       <h2 class="md-title-large m3-empty-state__title">No analytics data yet</h2>
       <p class="md-body-medium m3-empty-state__text">Clicks will appear here as your links are visited.</p>
       <router-link to="/dashboard/links">
-        <md-filled-button>
-          <span class="material-symbols-outlined" slot="icon">add</span>
+        <button class="btn-filled">
+          <span class="material-symbols-outlined">add</span>
           Create a link
-        </md-filled-button>
+        </button>
       </router-link>
     </div>
 

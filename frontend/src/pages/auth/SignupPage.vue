@@ -66,7 +66,7 @@
             Click the link in the email to verify your account and get started.
           </p>
           <router-link to="/login" class="success-login-link">
-            <md-filled-button>Go to Sign In</md-filled-button>
+            <button class="btn-filled">Go to Sign In</button>
           </router-link>
         </div>
 
@@ -78,9 +78,9 @@
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
             <span class="material-symbols-outlined err-icon">error</span>
             <span class="md-body-medium err-text">{{ errorMessage }}</span>
-            <md-icon-button @click="errorMessage = ''">
+            <button class="btn-icon" @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
-            </md-icon-button>
+            </button>
           </div>
 
           <form @submit.prevent="handleSignup" novalidate>
@@ -138,9 +138,9 @@
                 supporting-text="Must be at least 8 characters long."
                 class="field-full"
               >
-                <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                <button class="btn-icon" slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-                </md-icon-button>
+                </button>
               </md-outlined-text-field>
               <!-- Password strength bar -->
               <div v-if="form.password" class="strength-bar-wrap">
@@ -167,16 +167,16 @@
                 :error-text="errors.confirmPassword"
                 class="field-full"
               >
-                <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
+                <button class="btn-icon" slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
-                </md-icon-button>
+                </button>
               </md-outlined-text-field>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mt">
+            <button class="btn-filled btn-full btn-mt" type="submit" :disabled="loading" >
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Create Account
-            </md-filled-button>
+            </button>
           </form>
 
           <!-- Divider -->
@@ -188,30 +188,30 @@
 
           <!-- OAuth Buttons -->
           <div class="oauth-row">
-            <md-outlined-button
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('google')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--google">G</span>
               <span class="oauth-label">Google</span>
-            </md-outlined-button>
-            <md-outlined-button
+            </button>
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('github')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--github">GH</span>
               <span class="oauth-label">GitHub</span>
-            </md-outlined-button>
-            <md-outlined-button
+            </button>
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('facebook')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--facebook">FB</span>
               <span class="oauth-label">Facebook</span>
-            </md-outlined-button>
+            </button>
           </div>
 
           <!-- Sign in link -->
@@ -618,8 +618,7 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
 }
 
 .btn-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 /* ── Password strength bar ────────────────────────────────────── */

@@ -7,10 +7,10 @@
         <h1 class="page-title">Custom Domains</h1>
         <p class="page-subtitle">Use your own domain to serve short links.</p>
       </div>
-      <md-filled-button @click="showAddModal = true">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+      <button class="btn-filled" @click="showAddModal = true">
+        <span class="material-symbols-outlined">add</span>
         Add Domain
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Snackbar / Alert -->
@@ -18,7 +18,7 @@
       <div v-if="alertMsg" class="m3-snackbar">
         <span class="material-symbols-outlined" style="font-size:20px;">{{ alertType === 'error' ? 'error' : 'check_circle' }}</span>
         <span style="flex:1">{{ alertMsg }}</span>
-        <md-text-button @click="alertMsg = ''" style="--md-text-button-label-text-color:#CFBCFF">Dismiss</md-text-button>
+        <button class="btn-text" @click="alertMsg = ''">Dismiss</button>
       </div>
     </Transition>
 
@@ -35,7 +35,7 @@
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+      <md-circular-progress indeterminate />
     </div>
 
     <!-- Empty state -->
@@ -45,10 +45,10 @@
       </div>
       <div class="md-title-medium" style="margin-bottom:8px;">No custom domains yet</div>
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Add your first domain to start using branded short links.</p>
-      <md-filled-button @click="showAddModal = true">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+      <button class="btn-filled" @click="showAddModal = true">
+        <span class="material-symbols-outlined">add</span>
         Add Domain
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Domains table -->
@@ -81,36 +81,35 @@
               <td>
                 <div class="copy-field">
                   <code class="copy-field__value">{{ d.verify_token }}</code>
-                  <md-icon-button
+                  <button class="btn-icon"
                     title="Copy verification token"
                     @click="copyToken(d.verify_token)"
-                    style="--md-icon-button-state-layer-size:28px;flex-shrink:0;"
+                    style="flex-shrink:0;"
                   >
                     <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
-                  </md-icon-button>
+                  </button>
                 </div>
               </td>
               <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ formatDate(d.created_at) }}</td>
               <td style="text-align:right;">
                 <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;">
-                  <md-outlined-button
+                  <button class="btn-outlined"
                     v-if="d.status !== 'verified'"
                     :disabled="verifying === d.id"
                     @click="verify(d)"
                   >
-                    <md-circular-progress v-if="verifying === d.id" indeterminate style="--md-circular-progress-size:16px;margin-right:6px;" />
-                    <span v-else class="material-symbols-outlined" slot="icon">verified</span>
+                    <md-circular-progress v-if="verifying === d.id" indeterminate style="margin-right:6px;" />
+                    <span v-else class="material-symbols-outlined">verified</span>
                     Verify
-                  </md-outlined-button>
-                  <md-outlined-button
+                  </button>
+                  <button class="btn-outlined btn-danger"
                     :disabled="deleting === d.id"
                     @click="confirmDelete(d)"
-                    style="--md-outlined-button-label-text-color:var(--md-sys-color-error);--md-outlined-button-outline-color:var(--md-sys-color-error);"
                   >
-                    <md-circular-progress v-if="deleting === d.id" indeterminate style="--md-circular-progress-size:16px;margin-right:6px;" />
-                    <span v-else class="material-symbols-outlined" slot="icon">delete</span>
+                    <md-circular-progress v-if="deleting === d.id" indeterminate style="margin-right:6px;" />
+                    <span v-else class="material-symbols-outlined">delete</span>
                     Remove
-                  </md-outlined-button>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -143,11 +142,11 @@
       </div>
 
       <template #actions>
-        <md-text-button @click="closeAddModal">Cancel</md-text-button>
-        <md-filled-button :disabled="adding" @click="addDomain">
-          <md-circular-progress v-if="adding" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+        <button class="btn-text" @click="closeAddModal">Cancel</button>
+        <button class="btn-filled" :disabled="adding" @click="addDomain">
+          <md-circular-progress v-if="adding" indeterminate style="margin-right:6px;" />
           Add Domain
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -162,11 +161,11 @@
       </div>
 
       <template #actions>
-        <md-text-button @click="showDeleteModal = false; deleteTarget = null">Cancel</md-text-button>
-        <md-filled-button :disabled="!!deleting" @click="deleteDomain" style="--md-filled-button-container-color:var(--md-sys-color-error);--md-filled-button-label-text-color:var(--md-sys-color-on-error);">
-          <md-circular-progress v-if="deleting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+        <button class="btn-text" @click="showDeleteModal = false; deleteTarget = null">Cancel</button>
+        <button class="btn-filled btn-danger" :disabled="!!deleting" @click="deleteDomain">
+          <md-circular-progress v-if="deleting" indeterminate style="margin-right:6px;" />
           Remove
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 

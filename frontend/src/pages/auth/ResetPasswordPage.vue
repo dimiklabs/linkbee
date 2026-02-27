@@ -63,7 +63,7 @@
             The link you followed is invalid or has expired.
           </p>
           <router-link to="/forgot-password" class="state-action-link">
-            <md-filled-button>Request a new reset link</md-filled-button>
+            <button class="btn-filled">Request a new reset link</button>
           </router-link>
         </div>
 
@@ -78,7 +78,7 @@
             Redirecting to sign in in <strong>{{ countdown }}</strong> second{{ countdown !== 1 ? 's' : '' }}...
           </p>
           <router-link to="/login" class="state-action-link">
-            <md-filled-button>Sign In Now</md-filled-button>
+            <button class="btn-filled">Sign In Now</button>
           </router-link>
         </div>
 
@@ -91,9 +91,9 @@
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
             <span class="material-symbols-outlined err-icon">error</span>
             <span class="md-body-medium err-text">{{ errorMessage }}</span>
-            <md-icon-button @click="errorMessage = ''">
+            <button class="btn-icon" @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
-            </md-icon-button>
+            </button>
           </div>
 
           <form @submit.prevent="handleSubmit" novalidate>
@@ -109,9 +109,9 @@
                 supporting-text="Must be at least 8 characters long."
                 class="field-full"
               >
-                <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                <button class="btn-icon" slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-                </md-icon-button>
+                </button>
               </md-outlined-text-field>
             </div>
 
@@ -126,16 +126,16 @@
                 :error-text="errors.confirmPassword"
                 class="field-full"
               >
-                <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
+                <button class="btn-icon" slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
-                </md-icon-button>
+                </button>
               </md-outlined-text-field>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+            <button class="btn-filled btn-full btn-mb" type="submit" :disabled="loading" >
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Update Password
-            </md-filled-button>
+            </button>
           </form>
 
           <div class="back-row">
@@ -496,8 +496,7 @@ async function handleSubmit() {
 }
 
 .btn-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .back-row {

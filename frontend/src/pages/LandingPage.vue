@@ -21,10 +21,10 @@
         <!-- Nav actions (desktop) -->
         <div class="nav-actions">
           <router-link to="/login" class="nav-action-link">
-            <md-outlined-button class="nav-btn">Login</md-outlined-button>
+            <button class="btn-outlined nav-btn">Login</button>
           </router-link>
           <router-link to="/signup" class="nav-action-link">
-            <md-filled-button class="nav-btn">Sign Up</md-filled-button>
+            <button class="btn-filled nav-btn">Sign Up</button>
           </router-link>
           <!-- Hamburger (mobile) -->
           <button
@@ -47,10 +47,10 @@
           <a href="#pricing" class="mobile-nav-link" @click="handleMobileNav('pricing')">Pricing</a>
           <div class="mobile-nav-divider"></div>
           <router-link to="/login" class="mobile-action-link" @click="mobileMenuOpen = false">
-            <md-outlined-button class="mobile-action-btn">Login</md-outlined-button>
+            <button class="btn-outlined mobile-action-btn">Login</button>
           </router-link>
           <router-link to="/signup" class="mobile-action-link" @click="mobileMenuOpen = false">
-            <md-filled-button class="mobile-action-btn">Sign Up</md-filled-button>
+            <button class="btn-filled mobile-action-btn">Sign Up</button>
           </router-link>
         </div>
       </div>
@@ -79,15 +79,15 @@
         <!-- CTA buttons -->
         <div class="hero-cta-row">
           <router-link to="/signup" class="hero-cta-link">
-            <md-filled-button class="hero-cta-btn hero-cta-btn--primary">
+            <button class="btn-filled hero-cta-btn hero-cta-btn--primary">
               Get started for free
-            </md-filled-button>
+            </button>
           </router-link>
           <a href="#features" class="hero-cta-link" @click.prevent="scrollTo('features')">
-            <md-outlined-button class="hero-cta-btn">
+            <button class="btn-outlined hero-cta-btn">
               <span class="material-symbols-outlined hero-play-icon">play_circle</span>
               See how it works
-            </md-outlined-button>
+            </button>
           </a>
         </div>
 
@@ -109,7 +109,7 @@
                   class="demo-text-field"
                   @keyup.enter="handleDemoShorten"
                 />
-                <md-filled-button
+                <button class="btn-filled"
                   :disabled="demoLoading || !demoUrl"
                   @click="handleDemoShorten"
                   class="demo-shorten-btn"
@@ -121,7 +121,7 @@
                   />
                   <span v-if="!demoLoading">Shorten</span>
                   <span v-else>Working...</span>
-                </md-filled-button>
+                </button>
               </div>
               <div v-if="demoError" class="demo-error">{{ demoError }}</div>
             </template>
@@ -141,18 +141,18 @@
                 >
                   {{ demoResult }}
                 </a>
-                <md-filled-tonal-button @click="copyDemoResult" class="demo-copy-btn">
+                <button class="btn-tonal demo-copy-btn" @click="copyDemoResult" >
                   <span class="material-symbols-outlined demo-copy-icon">
                     {{ demoCopied ? 'check_circle' : 'content_copy' }}
                   </span>
                   {{ demoCopied ? 'Copied!' : 'Copy' }}
-                </md-filled-tonal-button>
+                </button>
               </div>
               <div class="demo-reset-row">
-                <md-text-button @click="resetDemo">
+                <button class="btn-text" @click="resetDemo">
                   <span class="material-symbols-outlined demo-back-icon">arrow_back</span>
                   Shorten another URL
-                </md-text-button>
+                </button>
               </div>
             </div>
           </div>
@@ -237,8 +237,8 @@
                 </li>
               </ul>
               <router-link to="/signup" class="pricing-cta-link">
-                <md-filled-button v-if="plan.popular" class="pricing-cta-btn">Get started</md-filled-button>
-                <md-outlined-button v-else class="pricing-cta-btn">Get started</md-outlined-button>
+                <button class="btn-filled pricing-cta-btn" v-if="plan.popular" >Get started</button>
+                <button class="btn-outlined pricing-cta-btn" v-else >Get started</button>
               </router-link>
             </div>
           </div>
@@ -255,9 +255,9 @@
           Start in seconds — no credit card required.
         </p>
         <router-link to="/signup" class="cta-action-link">
-          <md-filled-button class="cta-btn">
+          <button class="btn-filled cta-btn">
             Get started for free
-          </md-filled-button>
+          </button>
         </router-link>
       </div>
     </section>
@@ -734,8 +734,7 @@ const pricingPlans = [
   white-space: nowrap;
 
   &--primary {
-    --md-filled-button-container-height: 48px;
-  }
+      }
 }
 
 .hero-play-icon {
@@ -795,8 +794,7 @@ const pricingPlans = [
 }
 
 .demo-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .demo-error {
@@ -1199,10 +1197,7 @@ const pricingPlans = [
 }
 
 .cta-btn {
-  --md-filled-button-container-color: #fff;
-  --md-filled-button-label-text-color: var(--md-sys-color-primary);
-  --md-filled-button-hover-state-layer-color: var(--md-sys-color-primary);
-  height: 52px;
+        height: 52px;
   font-size: 1rem;
   padding: 0 36px;
   font-weight: 600;

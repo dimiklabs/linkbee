@@ -32,9 +32,9 @@
       <div v-if="error" class="alert-banner">
         <span class="material-symbols-outlined alert-icon">error</span>
         <span class="alert-text">{{ error }}</span>
-        <md-icon-button class="alert-close" @click="error = ''">
+        <button class="btn-icon alert-close" @click="error = ''">
           <span class="material-symbols-outlined">close</span>
-        </md-icon-button>
+        </button>
       </div>
 
       <!-- File picker -->
@@ -87,7 +87,7 @@
 
         <!-- Import progress -->
         <div v-if="importing" class="import-progress">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:20px;flex-shrink:0" />
+          <md-circular-progress indeterminate style="flex-shrink:0" />
           <div class="import-progress-text">
             <span class="import-progress-label">Importing your links…</span>
             <span class="import-progress-sub">This may take a moment for large files.</span>
@@ -164,23 +164,23 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide" :disabled="importing">
+      <button class="btn-text" @click="hide" :disabled="importing">
         {{ result ? 'Close' : 'Cancel' }}
-      </md-text-button>
-      <md-filled-tonal-button v-if="result" @click="reset" class="action-btn">
-        <span class="material-symbols-outlined" slot="icon">upload_file</span>
+      </button>
+      <button class="btn-tonal action-btn" v-if="result" @click="reset" >
+        <span class="material-symbols-outlined">upload_file</span>
         Import Another
-      </md-filled-tonal-button>
-      <md-filled-button
+      </button>
+      <button class="btn-filled"
         v-else
         :disabled="!selectedFile || importing"
         @click="handleImport"
         class="action-btn"
       >
-        <md-circular-progress v-if="importing" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
-        <span class="material-symbols-outlined" v-else slot="icon">rocket_launch</span>
+        <md-circular-progress v-if="importing" indeterminate />
+        <span class="material-symbols-outlined" v-else>rocket_launch</span>
         {{ importing ? 'Importing…' : 'Import Links' }}
-      </md-filled-button>
+      </button>
     </template>
   </BaseModal>
 </template>

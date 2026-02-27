@@ -5,7 +5,7 @@
   >
     <!-- Loading -->
     <div v-if="loading" class="bio-loading">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:48px;" />
+      <md-circular-progress indeterminate />
     </div>
 
     <!-- Not found -->
@@ -16,10 +16,10 @@
       <h3 class="md-headline-small not-found-title">Page not found</h3>
       <p class="md-body-medium not-found-desc">This bio page doesn't exist or has been unpublished.</p>
       <a href="/">
-        <md-filled-button>
-          <span class="material-symbols-outlined" slot="icon">home</span>
+        <button class="btn-filled">
+          <span class="material-symbols-outlined">home</span>
           Go home
-        </md-filled-button>
+        </button>
       </a>
     </div>
 

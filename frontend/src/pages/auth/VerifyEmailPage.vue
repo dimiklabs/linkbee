@@ -72,7 +72,7 @@
             Your email has been successfully verified. You can now sign in to your Shortlink account.
           </p>
           <router-link to="/login" class="state-action-link">
-            <md-filled-button>Sign In to Shortlink</md-filled-button>
+            <button class="btn-filled">Sign In to Shortlink</button>
           </router-link>
         </div>
 
@@ -105,14 +105,14 @@
                 type="email"
                 class="resend-field"
               />
-              <md-filled-button
+              <button class="btn-filled"
                 :disabled="resending || !resendEmail"
                 @click="handleResend"
                 class="resend-btn"
               >
                 <md-circular-progress v-if="resending" indeterminate class="btn-spinner" />
                 Resend
-              </md-filled-button>
+              </button>
             </div>
           </div>
 
@@ -363,8 +363,7 @@ async function handleResend() {
 }
 
 .verify-progress {
-  --md-circular-progress-size: 56px;
-}
+  }
 
 .state-icon {
   font-size: 64px;
@@ -439,8 +438,7 @@ async function handleResend() {
 }
 
 .btn-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .success-banner {

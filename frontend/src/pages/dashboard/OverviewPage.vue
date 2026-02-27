@@ -111,10 +111,10 @@
               Clicks will appear here as your links are visited.
             </p>
             <router-link to="/dashboard/links">
-              <md-filled-button>
+              <button class="btn-filled">
                 <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
                 Create a link
-              </md-filled-button>
+              </button>
             </router-link>
           </div>
           <VChart v-else :option="trendChartOption" style="height: 280px;" autoresize />
@@ -206,7 +206,7 @@
                     <div class="progress-row">
                       <md-linear-progress
                         :value="Math.min(1, link.click_count / link.max_clicks!)"
-                        style="flex: 1; --md-linear-progress-active-indicator-color: var(--md-sys-color-error)"
+                        style="flex: 1; "
                       />
                       <span class="md-body-small progress-pct">
                         {{ Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) }}%
@@ -239,7 +239,7 @@
             </div>
             <p class="md-body-medium m3-empty-state__subtitle">No clicks recorded yet.</p>
             <router-link to="/dashboard/links">
-              <md-outlined-button>Create a link</md-outlined-button>
+              <button class="btn-outlined">Create a link</button>
             </router-link>
           </div>
           <div v-else class="m3-table-wrapper">
@@ -283,10 +283,10 @@
             </div>
             <p class="md-body-medium m3-empty-state__subtitle">No links created yet.</p>
             <router-link to="/dashboard/links">
-              <md-filled-button>
+              <button class="btn-filled">
                 <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
                 Create your first link
-              </md-filled-button>
+              </button>
             </router-link>
           </div>
           <div v-else class="m3-table-wrapper">

@@ -66,10 +66,10 @@
             The link expires in 1 hour.
           </p>
           <router-link to="/login" class="back-link-wrap">
-            <md-outlined-button>
+            <button class="btn-outlined">
               <span class="material-symbols-outlined back-icon-sm">arrow_back</span>
               Back to Sign In
-            </md-outlined-button>
+            </button>
           </router-link>
         </div>
 
@@ -84,9 +84,9 @@
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
             <span class="material-symbols-outlined err-icon">error</span>
             <span class="md-body-medium err-text">{{ errorMessage }}</span>
-            <md-icon-button @click="errorMessage = ''">
+            <button class="btn-icon" @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
-            </md-icon-button>
+            </button>
           </div>
 
           <form @submit.prevent="handleSubmit" novalidate>
@@ -103,10 +103,10 @@
               />
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+            <button class="btn-filled btn-full btn-mb" type="submit" :disabled="loading" >
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Send Reset Link
-            </md-filled-button>
+            </button>
           </form>
 
           <div class="back-row">
@@ -415,8 +415,7 @@ async function handleSubmit() {
 }
 
 .btn-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .back-icon-sm {

@@ -11,10 +11,10 @@
         </p>
       </div>
       <div class="dash-page-header__actions">
-        <md-filled-button @click="showCreate = true">
+        <button class="btn-filled" @click="showCreate = true">
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
           New API Key
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
@@ -23,7 +23,7 @@
       <span class="material-symbols-outlined">{{ usageWarning.level === 'danger' ? 'block' : 'warning' }}</span>
       <span style="flex:1;font-size:0.875rem;">{{ usageWarning.msg }}</span>
       <RouterLink to="/dashboard/billing">
-        <md-filled-tonal-button>Upgrade</md-filled-tonal-button>
+        <button class="btn-tonal">Upgrade</button>
       </RouterLink>
     </div>
 
@@ -40,9 +40,9 @@
           </button>
         </div>
       </div>
-      <md-icon-button @click="newKey = null">
+      <button class="btn-icon" @click="newKey = null">
         <span class="material-symbols-outlined">close</span>
-      </md-icon-button>
+      </button>
     </div>
 
     <!-- Create form (inline) -->
@@ -75,11 +75,11 @@
             style="flex:1;min-width:160px;"
           />
           <div style="display:flex;gap:8px;align-items:center;">
-            <md-filled-button @click="createKey" :disabled="!form.name.trim() || creating">
-              <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+            <button class="btn-filled" @click="createKey" :disabled="!form.name.trim() || creating">
+              <md-circular-progress v-if="creating" indeterminate style="margin-right:6px;" />
               Create
-            </md-filled-button>
-            <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+            </button>
+            <button class="btn-outlined" @click="cancelCreate">Cancel</button>
           </div>
         </div>
         <div v-if="createError" style="color:var(--md-sys-color-error);font-size:0.875rem;margin-top:8px;">{{ createError }}</div>
@@ -98,7 +98,7 @@
       <md-divider />
 
       <div v-if="loading" style="display:flex;justify-content:center;padding:40px;">
-        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+        <md-circular-progress indeterminate />
       </div>
 
       <div v-else-if="keys.length === 0 && !loading" class="m3-empty-state">
@@ -107,10 +107,10 @@
         </div>
         <div class="md-title-medium" style="margin-bottom:0.5rem;">No API keys yet</div>
         <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 1rem;">Create an API key to authenticate programmatic requests.</p>
-        <md-filled-button @click="showCreate = true">
+        <button class="btn-filled" @click="showCreate = true">
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
           Create your first key
-        </md-filled-button>
+        </button>
       </div>
 
       <div v-else class="m3-table-wrapper">
@@ -149,15 +149,14 @@
               <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ formatDate(key.created_at) }}</td>
               <td style="text-align:right;">
                 <div class="key-actions">
-                  <md-icon-button
+                  <button class="btn-icon btn-sm btn-danger"
                     title="Revoke key"
                     :disabled="revokingId === key.id"
                     @click="promptRevoke(key)"
-                    class="danger-btn"
                   >
-                    <md-circular-progress v-if="revokingId === key.id" indeterminate style="--md-circular-progress-size:20px" />
+                    <md-circular-progress v-if="revokingId === key.id" indeterminate />
                     <span v-else class="material-symbols-outlined">delete</span>
-                  </md-icon-button>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -196,15 +195,14 @@
         Revoke <strong>{{ keyToRevoke?.name }}</strong>? Any integrations using it will stop working immediately. This cannot be undone.
       </p>
       <template #actions>
-        <md-text-button @click="showRevokeConfirm = false">Cancel</md-text-button>
-        <md-filled-button
-          style="--md-filled-button-container-color:var(--md-sys-color-error)"
+        <button class="btn-text" @click="showRevokeConfirm = false">Cancel</button>
+        <button class="btn-filled btn-danger"
           :disabled="revokingId !== null"
           @click="confirmRevoke"
         >
-          <md-circular-progress v-if="revokingId !== null" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          <md-circular-progress v-if="revokingId !== null" indeterminate style="margin-right:6px;" />
           Revoke Key
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -558,10 +556,6 @@ onMounted(async () => {
   gap: 4px;
 }
 
-/* ── Danger button ────────────────────────────────────────────────────────── */
-.danger-btn {
-  --md-icon-button-icon-color: var(--md-sys-color-error);
-}
 
 /* ── Warning banner ───────────────────────────────────────────────────────── */
 .warning-banner {

@@ -15,14 +15,14 @@
       </p>
 
       <div class="not-found-actions">
-        <md-filled-button @click="router.push('/')">
-          <span class="material-symbols-outlined" slot="icon">home</span>
+        <button class="btn-filled" @click="router.push('/')">
+          <span class="material-symbols-outlined">home</span>
           Go back home
-        </md-filled-button>
-        <md-outlined-button @click="router.back()">
-          <span class="material-symbols-outlined" slot="icon">arrow_back</span>
+        </button>
+        <button class="btn-outlined" @click="router.back()">
+          <span class="material-symbols-outlined">arrow_back</span>
           Go back
-        </md-outlined-button>
+        </button>
       </div>
     </div>
   </div>

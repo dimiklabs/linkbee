@@ -5,36 +5,36 @@
     <div class="page-header">
       <div class="page-header__left">
         <RouterLink to="/dashboard/links">
-          <md-icon-button>
+          <button class="btn-icon">
             <span class="material-symbols-outlined">arrow_back</span>
-          </md-icon-button>
+          </button>
         </RouterLink>
         <div class="page-header__title-group">
           <h1 class="md-title-large">Link Analytics</h1>
           <template v-if="link">
             <div class="page-header__subtitle">
               <span class="short-url-monospace">{{ link.short_url }}</span>
-              <md-icon-button
+              <button class="btn-icon"
                 :class="copied ? 'copy-btn--success' : ''"
                 @click="copyShortUrl"
                 title="Copy short URL"
               >
                 <span class="material-symbols-outlined" style="font-size:18px">{{ copied ? 'check' : 'content_copy' }}</span>
-              </md-icon-button>
+              </button>
               <a :href="link.short_url" target="_blank" rel="noopener noreferrer">
-                <md-icon-button title="Open short URL">
+                <button class="btn-icon" title="Open short URL">
                   <span class="material-symbols-outlined" style="font-size:18px">open_in_new</span>
-                </md-icon-button>
+                </button>
               </a>
             </div>
           </template>
         </div>
       </div>
       <div v-if="analytics" class="page-header__actions">
-        <md-outlined-button @click="exportToCSV">
-          <span class="material-symbols-outlined" slot="icon">download</span>
+        <button class="btn-outlined" @click="exportToCSV">
+          <span class="material-symbols-outlined">download</span>
           Export CSV
-        </md-outlined-button>
+        </button>
       </div>
     </div>
 
@@ -85,12 +85,12 @@
     <div v-if="error" class="error-banner" style="margin-bottom:1rem;">
       <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
       <span class="md-body-medium" style="flex:1;">{{ error }}</span>
-      <md-text-button @click="loadAnalytics">Retry</md-text-button>
+      <button class="btn-text" @click="loadAnalytics">Retry</button>
     </div>
 
     <!-- Loading state -->
     <div v-if="loading && !error" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 0;gap:1rem;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:48px" />
+      <md-circular-progress indeterminate />
       <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">Loading analytics data...</span>
     </div>
 
@@ -132,10 +132,10 @@
               <option value="week">Week</option>
               <option value="month">Month</option>
             </AppSelect>
-            <md-filled-button :disabled="loading" @click="applyFilters">
-              <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
+            <button class="btn-filled" :disabled="loading" @click="applyFilters">
+              <span v-if="loading"><md-circular-progress indeterminate /></span>
               Apply
-            </md-filled-button>
+            </button>
           </div>
         </div>
       </div>
@@ -327,7 +327,7 @@
                       <span class="md-body-medium">{{ channelLabel(ch.category) }}</span>
                       <span class="md-label-large">{{ ch.count.toLocaleString() }} ({{ channelPercent(ch.count) }}%)</span>
                     </div>
-                    <md-linear-progress :value="channelPercent(ch.count) / 100" style="--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                    <md-linear-progress :value="channelPercent(ch.count) / 100" />
                   </div>
                 </div>
               </div>
@@ -369,7 +369,7 @@
                   <td style="text-align:right;font-weight:600;">{{ ref.count.toLocaleString() }}</td>
                   <td>
                     <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <md-linear-progress :value="referrerPercent(ref.count) / 100" style="flex:1;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                      <md-linear-progress :value="referrerPercent(ref.count) / 100" style="flex:1;" />
                       <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ referrerPercent(ref.count) }}%</span>
                     </div>
                   </td>
@@ -414,7 +414,7 @@
                   <td style="text-align:right;font-weight:600;">{{ device.count.toLocaleString() }}</td>
                   <td>
                     <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <md-linear-progress :value="devicePercent(device.count) / 100" style="flex:1;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                      <md-linear-progress :value="devicePercent(device.count) / 100" style="flex:1;" />
                       <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ devicePercent(device.count) }}%</span>
                     </div>
                   </td>
@@ -674,7 +674,7 @@
                 </div>
                 <md-linear-progress
                   :value="clickLimitPercent(link.click_count, link.max_clicks) / 100"
-                  style="--md-linear-progress-track-height:8px;--md-linear-progress-active-indicator-height:8px;"
+                 
                 />
               </div>
               <div v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Unlimited</div>
@@ -721,7 +721,7 @@
         <md-divider />
         <div style="padding:1rem;">
           <div v-if="worldMapLoading" style="display:flex;flex-direction:column;align-items:center;padding:3rem 0;gap:0.75rem;">
-            <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+            <md-circular-progress indeterminate />
             <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Loading world map…</span>
           </div>
           <div v-else-if="!mapLoaded || !analytics?.countries?.length" class="empty-state">
@@ -771,7 +771,7 @@
                     <td style="text-align:right;font-weight:600;">{{ c.count.toLocaleString() }}</td>
                     <td>
                       <div style="display:flex;align-items:center;gap:0.4rem;">
-                        <md-linear-progress :value="countryPercent(c.count) / 100" style="flex:1;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                        <md-linear-progress :value="countryPercent(c.count) / 100" style="flex:1;" />
                         <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ countryPercent(c.count) }}%</span>
                       </div>
                     </td>
@@ -817,7 +817,7 @@
                 <td style="text-align:right;font-weight:600;">{{ c.count.toLocaleString() }}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:0.4rem;">
-                    <md-linear-progress :value="cityPercent(c.count) / 100" style="flex:1;--md-linear-progress-track-height:6px;--md-linear-progress-active-indicator-height:6px" />
+                    <md-linear-progress :value="cityPercent(c.count) / 100" style="flex:1;" />
                     <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ cityPercent(c.count) }}%</span>
                   </div>
                 </td>
@@ -855,7 +855,7 @@
                       <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
                       <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_sources) / 100" style="--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_sources) / 100" />
                   </div>
                 </div>
               </div>
@@ -868,7 +868,7 @@
                       <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
                       <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_mediums) / 100" style="--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_mediums) / 100" />
                   </div>
                 </div>
               </div>
@@ -881,7 +881,7 @@
                       <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
                       <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_campaigns) / 100" style="--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_campaigns) / 100" />
                   </div>
                 </div>
               </div>
@@ -900,7 +900,7 @@
                         <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" :title="u.value">{{ u.value }}</span>
                         <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
                       </div>
-                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_contents) / 100" style="--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_contents) / 100" />
                     </div>
                   </div>
                 </div>
@@ -913,7 +913,7 @@
                         <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" :title="u.value">{{ u.value }}</span>
                         <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
                       </div>
-                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_terms) / 100" style="--md-linear-progress-track-height:5px;--md-linear-progress-active-indicator-height:5px" />
+                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_terms) / 100" />
                     </div>
                   </div>
                 </div>

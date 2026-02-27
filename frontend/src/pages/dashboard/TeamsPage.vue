@@ -11,7 +11,7 @@
           {{ toasts[0].type === 'error' ? 'error' : 'check_circle' }}
         </span>
         <span style="flex:1;">{{ toasts[0].message }}</span>
-        <md-text-button @click="removeToast(toasts[0].id)" style="--md-text-button-label-text-color:#CFBCFF;">Dismiss</md-text-button>
+        <button class="btn-text" @click="removeToast(toasts[0].id)">Dismiss</button>
       </div>
     </Transition>
 
@@ -22,10 +22,10 @@
         <p class="dash-page-header__subtitle">Manage your teams and collaborate with others.</p>
       </div>
       <div class="dash-page-header__actions">
-        <md-filled-button @click="openCreateModal">
+        <button class="btn-filled" @click="openCreateModal">
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
           Create Team
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
@@ -43,10 +43,10 @@
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">
         Create a team to collaborate with your colleagues.
       </p>
-      <md-filled-button @click="openCreateModal">
+      <button class="btn-filled" @click="openCreateModal">
         <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
         Create Your First Team
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Teams grid -->
@@ -91,34 +91,32 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <md-filled-button
+          <button class="btn-filled"
             v-if="canManageMembers(selectedTeam)"
             @click="openInviteModal"
           >
             <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">person_add</span>
             Invite Member
-          </md-filled-button>
-          <md-outlined-button
+          </button>
+          <button class="btn-outlined"
             v-if="isTeamOwner(selectedTeam)"
             @click="openEditModal"
           >
             <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">edit</span>
             Edit
-          </md-outlined-button>
-          <md-outlined-button
+          </button>
+          <button class="btn-outlined btn-danger"
             v-if="!isTeamOwner(selectedTeam)"
             @click="confirmLeave(selectedTeam)"
-            style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
           >
             Leave Team
-          </md-outlined-button>
-          <md-outlined-button
+          </button>
+          <button class="btn-outlined btn-danger"
             v-if="isTeamOwner(selectedTeam)"
             @click="confirmDelete(selectedTeam)"
-            style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
           >
             Delete Team
-          </md-outlined-button>
+          </button>
         </div>
       </div>
       <md-divider />
@@ -177,14 +175,13 @@
                     <option value="admin">Admin</option>
                     <option value="member">Member</option>
                   </AppSelect>
-                  <md-icon-button
+                  <button class="btn-icon btn-sm btn-danger"
                     v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
                     @click="confirmRemoveMember(member)"
                     title="Remove member"
-                    style="--md-icon-button-icon-color:var(--md-sys-color-error);"
                   >
                     <span class="material-symbols-outlined">person_remove</span>
-                  </md-icon-button>
+                  </button>
                   <span v-if="member.role === 'owner'" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Owner</span>
                 </div>
               </td>
@@ -239,11 +236,11 @@
         </form>
       </div>
       <template #actions>
-        <md-text-button @click="closeCreateModal">Cancel</md-text-button>
-        <md-filled-button :disabled="createLoading" @click="submitCreateTeam">
-          <md-circular-progress v-if="createLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+        <button class="btn-text" @click="closeCreateModal">Cancel</button>
+        <button class="btn-filled" :disabled="createLoading" @click="submitCreateTeam">
+          <md-circular-progress v-if="createLoading" indeterminate style="margin-right:8px;" />
           Create Team
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -274,11 +271,11 @@
         </div>
       </div>
       <template #actions>
-        <md-text-button @click="showEditModal = false">Cancel</md-text-button>
-        <md-filled-button :disabled="editLoading" @click="submitEditTeam">
-          <md-circular-progress v-if="editLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+        <button class="btn-text" @click="showEditModal = false">Cancel</button>
+        <button class="btn-filled" :disabled="editLoading" @click="submitEditTeam">
+          <md-circular-progress v-if="editLoading" indeterminate style="margin-right:8px;" />
           Save Changes
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -312,11 +309,11 @@
         </div>
       </div>
       <template #actions>
-        <md-text-button @click="closeInviteModal">Cancel</md-text-button>
-        <md-filled-button :disabled="inviteLoading" @click="submitInvite">
-          <md-circular-progress v-if="inviteLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+        <button class="btn-text" @click="closeInviteModal">Cancel</button>
+        <button class="btn-filled" :disabled="inviteLoading" @click="submitInvite">
+          <md-circular-progress v-if="inviteLoading" indeterminate style="margin-right:8px;" />
           Send Invitation
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -330,15 +327,14 @@
         Are you sure you want to delete <strong>{{ teamToDelete?.name }}</strong>? This action cannot be undone.
       </p>
       <template #actions>
-        <md-text-button @click="showDeleteConfirm = false">Cancel</md-text-button>
-        <md-filled-button
+        <button class="btn-text" @click="showDeleteConfirm = false">Cancel</button>
+        <button class="btn-filled btn-danger"
           :disabled="deleteLoading"
           @click="deleteTeam"
-          style="--md-filled-button-container-color:var(--md-sys-color-error);"
         >
-          <md-circular-progress v-if="deleteLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          <md-circular-progress v-if="deleteLoading" indeterminate style="margin-right:8px;" />
           Delete Team
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -352,14 +348,14 @@
         Are you sure you want to leave <strong>{{ teamToLeave?.name }}</strong>?
       </p>
       <template #actions>
-        <md-text-button @click="showLeaveConfirm = false">Cancel</md-text-button>
-        <md-filled-button
+        <button class="btn-text" @click="showLeaveConfirm = false">Cancel</button>
+        <button class="btn-filled btn-danger"
           :disabled="leaveLoading"
           @click="leaveTeam"
         >
-          <md-circular-progress v-if="leaveLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          <md-circular-progress v-if="leaveLoading" indeterminate style="margin-right:8px;" />
           Leave Team
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -373,15 +369,14 @@
         Remove <strong>{{ memberToRemove?.email }}</strong> from the team? This cannot be undone.
       </p>
       <template #actions>
-        <md-text-button @click="showRemoveConfirm = false">Cancel</md-text-button>
-        <md-filled-button
+        <button class="btn-text" @click="showRemoveConfirm = false">Cancel</button>
+        <button class="btn-filled btn-danger"
           :disabled="removeLoading"
           @click="removeMember"
-          style="--md-filled-button-container-color:var(--md-sys-color-error);"
         >
-          <md-circular-progress v-if="removeLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          <md-circular-progress v-if="removeLoading" indeterminate style="margin-right:8px;" />
           Remove
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 

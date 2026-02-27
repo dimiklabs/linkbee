@@ -15,9 +15,9 @@
       <div v-if="error" class="alert-banner alert-banner--error">
         <span class="material-symbols-outlined alert-icon">error</span>
         <span class="alert-text">{{ error }}</span>
-        <md-icon-button class="alert-close" @click="error = ''">
+        <button class="btn-icon alert-close" @click="error = ''">
           <span class="material-symbols-outlined">close</span>
-        </md-icon-button>
+        </button>
       </div>
 
       <!-- Section: Destination -->
@@ -43,7 +43,7 @@
 
           <!-- Duplicate check feedback -->
           <div v-if="!isEditMode && checkingDuplicate" class="feedback-row feedback-row--muted">
-            <md-circular-progress indeterminate style="--md-circular-progress-size:14px;flex-shrink:0" />
+            <md-circular-progress indeterminate style="flex-shrink:0" />
             <span>Checking for duplicate URLs…</span>
           </div>
           <div v-else-if="!isEditMode && duplicateLink && !ignoreDuplicate" class="dup-warning">
@@ -56,7 +56,7 @@
               </a>
               <span class="dup-slug">(slug: <code>{{ duplicateLink.slug }}</code>)</span>.
             </div>
-            <md-text-button @click="ignoreDuplicate = true" class="dup-ignore-btn">Create anyway</md-text-button>
+            <button class="btn-text dup-ignore-btn" @click="ignoreDuplicate = true" >Create anyway</button>
           </div>
         </div>
 
@@ -255,12 +255,12 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide" :disabled="saving">Cancel</md-text-button>
-      <md-filled-button @click="handleSave" :disabled="saving" class="save-btn">
-        <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+      <button class="btn-text" @click="hide" :disabled="saving">Cancel</button>
+      <button class="btn-filled save-btn" @click="handleSave" :disabled="saving" >
+        <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
         <span class="material-symbols-outlined" v-else style="margin-right:6px;font-size:18px;">{{ isEditMode ? 'save' : 'add_link' }}</span>
         {{ saving ? 'Saving…' : (isEditMode ? 'Save Changes' : 'Create Link') }}
-      </md-filled-button>
+      </button>
     </template>
   </BaseModal>
 </template>

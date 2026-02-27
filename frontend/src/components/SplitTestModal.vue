@@ -10,9 +10,9 @@
       <div v-if="error" class="split-error-banner">
         <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
         <span style="flex:1;font-size:0.875rem">{{ error }}</span>
-        <md-icon-button @click="error = ''" style="width:32px;height:32px">
+        <button class="btn-icon" @click="error = ''" style="width:32px;height:32px">
           <span class="material-symbols-outlined" style="font-size:18px">close</span>
-        </md-icon-button>
+        </button>
       </div>
 
       <!-- Enable toggle -->
@@ -55,7 +55,7 @@
 
       <!-- Variants list loading -->
       <div v-if="loading" class="split-loading">
-        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+        <md-circular-progress indeterminate />
       </div>
 
       <div v-else>
@@ -85,12 +85,12 @@
               type="number"
               style="width:80px"
             />
-            <md-icon-button @click="submitEdit(v)" :disabled="saving" style="--md-icon-button-icon-color:#1AA563;width:36px;height:36px">
+            <button class="btn-icon" @click="submitEdit(v)" :disabled="saving" style="width:36px;height:36px">
               <span class="material-symbols-outlined">check</span>
-            </md-icon-button>
-            <md-icon-button @click="cancelEdit" style="width:36px;height:36px">
+            </button>
+            <button class="btn-icon" @click="cancelEdit" style="width:36px;height:36px">
               <span class="material-symbols-outlined">close</span>
-            </md-icon-button>
+            </button>
           </div>
 
           <!-- View mode -->
@@ -105,12 +105,12 @@
               <div class="variant-url" :title="v.destination_url">{{ v.destination_url }}</div>
             </div>
             <div class="variant-actions">
-              <md-icon-button @click="startEdit(v)" title="Edit" style="width:32px;height:32px">
+              <button class="btn-icon" @click="startEdit(v)" title="Edit" style="width:32px;height:32px">
                 <span class="material-symbols-outlined" style="font-size:15px">edit</span>
-              </md-icon-button>
-              <md-icon-button @click="deleteVariant(v)" title="Delete" style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)">
+              </button>
+              <button class="btn-icon btn-sm btn-danger" @click="deleteVariant(v)" title="Delete" style="width:32px;height:32px;">
                 <span class="material-symbols-outlined" style="font-size:15px">delete</span>
-              </md-icon-button>
+              </button>
             </div>
           </div>
         </div>
@@ -140,31 +140,31 @@
               type="number"
               style="width:80px"
             />
-            <md-icon-button @click="submitAdd" :disabled="saving" style="--md-icon-button-icon-color:#1AA563;width:36px;height:36px">
+            <button class="btn-icon" @click="submitAdd" :disabled="saving" style="width:36px;height:36px">
               <span class="material-symbols-outlined">check</span>
-            </md-icon-button>
-            <md-icon-button @click="showAddForm = false" style="width:36px;height:36px">
+            </button>
+            <button class="btn-icon" @click="showAddForm = false" style="width:36px;height:36px">
               <span class="material-symbols-outlined">close</span>
-            </md-icon-button>
+            </button>
           </div>
           <div class="add-variant-hint">
             Weight is relative (e.g., 50 + 50 = 50/50 split; 70 + 30 = 70/30 split).
           </div>
         </div>
 
-        <md-text-button
+        <button class="btn-text"
           v-if="!showAddForm && editingId === ''"
           @click="openAddForm"
           style="margin-top:12px"
         >
-          <span class="material-symbols-outlined" slot="icon">add</span>
+          <span class="material-symbols-outlined">add</span>
           Add Variant
-        </md-text-button>
+        </button>
       </div>
     </div>
 
     <template #actions>
-      <md-text-button @click="hide">Close</md-text-button>
+      <button class="btn-text" @click="hide">Close</button>
     </template>
   </BaseModal>
 </template>

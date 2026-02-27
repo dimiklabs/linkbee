@@ -11,7 +11,7 @@
 
     <!-- Loading -->
     <div v-if="loadingStatus" class="loading-center">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:48px" />
+      <md-circular-progress indeterminate />
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:12px 0 0;">Loading security settings…</p>
     </div>
 
@@ -37,18 +37,17 @@
               </p>
             </div>
             <div class="twofa-status-action">
-              <md-filled-button v-if="!totpEnabled" @click="startSetup">
-                <span class="material-symbols-outlined" slot="icon">lock</span>
+              <button class="btn-filled" v-if="!totpEnabled" @click="startSetup">
+                <span class="material-symbols-outlined">lock</span>
                 Enable 2FA
-              </md-filled-button>
-              <md-outlined-button
+              </button>
+              <button class="btn-outlined btn-danger"
                 v-else
                 @click="showDisableModal = true"
-                style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
               >
-                <span class="material-symbols-outlined" slot="icon">lock_open</span>
+                <span class="material-symbols-outlined">lock_open</span>
                 Disable 2FA
-              </md-outlined-button>
+              </button>
             </div>
           </div>
         </div>
@@ -122,20 +121,20 @@
                   readonly
                   style="flex:1;font-family:monospace;"
                 />
-                <md-outlined-button @click="copySecret">
-                  <span class="material-symbols-outlined" slot="icon">
+                <button class="btn-outlined" @click="copySecret">
+                  <span class="material-symbols-outlined">
                     {{ copied ? 'check' : 'content_copy' }}
                   </span>
                   {{ copied ? 'Copied' : 'Copy' }}
-                </md-outlined-button>
+                </button>
               </div>
             </div>
 
             <div class="wizard-actions">
-              <md-filled-button @click="setupStep = 'confirm'">
+              <button class="btn-filled" @click="setupStep = 'confirm'">
                 I've scanned it
-                <span class="material-symbols-outlined" slot="icon">arrow_forward</span>
-              </md-filled-button>
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
             </div>
           </div>
 
@@ -166,15 +165,15 @@
             </div>
 
             <div class="wizard-actions">
-              <md-outlined-button @click="setupStep = 'scan'">
-                <span class="material-symbols-outlined" slot="icon">arrow_back</span>
+              <button class="btn-outlined" @click="setupStep = 'scan'">
+                <span class="material-symbols-outlined">arrow_back</span>
                 Back
-              </md-outlined-button>
-              <md-filled-button :disabled="confirmLoading" @click="confirmSetup">
-                <md-circular-progress v-if="confirmLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
-                <span class="material-symbols-outlined" v-else slot="icon">verified</span>
+              </button>
+              <button class="btn-filled" :disabled="confirmLoading" @click="confirmSetup">
+                <md-circular-progress v-if="confirmLoading" indeterminate style="margin-right:8px;" />
+                <span class="material-symbols-outlined" v-else>verified</span>
                 Confirm &amp; Enable
-              </md-filled-button>
+              </button>
             </div>
           </div>
 
@@ -205,16 +204,16 @@
             </div>
 
             <div class="wizard-actions">
-              <md-outlined-button @click="copyBackupCodes">
-                <span class="material-symbols-outlined" slot="icon">
+              <button class="btn-outlined" @click="copyBackupCodes">
+                <span class="material-symbols-outlined">
                   {{ copiedBackup ? 'check' : 'content_copy' }}
                 </span>
                 {{ copiedBackup ? 'Copied all!' : 'Copy all codes' }}
-              </md-outlined-button>
-              <md-filled-button @click="finishSetup">
-                <span class="material-symbols-outlined" slot="icon">done</span>
+              </button>
+              <button class="btn-filled" @click="finishSetup">
+                <span class="material-symbols-outlined">done</span>
                 Done
-              </md-filled-button>
+              </button>
             </div>
           </div>
 
@@ -244,15 +243,14 @@
         />
       </div>
       <template #actions>
-        <md-text-button @click="closeDisableModal">Cancel</md-text-button>
-        <md-filled-button
+        <button class="btn-text" @click="closeDisableModal">Cancel</button>
+        <button class="btn-filled btn-danger"
           :disabled="disableLoading"
           @click="disableTOTP"
-          style="--md-filled-button-container-color:var(--md-sys-color-error);"
         >
-          <md-circular-progress v-if="disableLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          <md-circular-progress v-if="disableLoading" indeterminate style="margin-right:8px;" />
           Disable 2FA
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 

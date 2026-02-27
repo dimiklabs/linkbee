@@ -17,7 +17,7 @@
           <div class="qr-frame-outer">
             <div class="qr-frame-inner" :style="{ background: options.bg }">
               <div v-if="previewLoading" class="qr-loading">
-                <md-circular-progress indeterminate style="--md-circular-progress-size:44px" />
+                <md-circular-progress indeterminate />
                 <span class="qr-loading-text">Generating…</span>
               </div>
 
@@ -161,26 +161,26 @@
           </div>
 
           <!-- Reset -->
-          <md-outlined-button @click="resetOptions" class="reset-btn">
+          <button class="btn-outlined reset-btn" @click="resetOptions" >
             <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">restart_alt</span>
             Reset to defaults
-          </md-outlined-button>
+          </button>
 
         </div>
       </div>
     </div>
 
     <template #actions>
-      <md-text-button @click="hide">Close</md-text-button>
+      <button class="btn-text" @click="hide">Close</button>
       <div class="download-btns">
-        <md-outlined-button :disabled="previewLoading || previewError" @click="downloadSVG" class="dl-btn">
+        <button class="btn-outlined dl-btn" :disabled="previewLoading || previewError" @click="downloadSVG" >
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">download</span>
           SVG
-        </md-outlined-button>
-        <md-filled-tonal-button :disabled="previewLoading || previewError" @click="downloadPNG" class="dl-btn">
+        </button>
+        <button class="btn-tonal dl-btn" :disabled="previewLoading || previewError" @click="downloadPNG" >
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">image</span>
           PNG
-        </md-filled-tonal-button>
+        </button>
       </div>
     </template>
   </BaseModal>

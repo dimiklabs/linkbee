@@ -59,9 +59,9 @@
         <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
           <span class="material-symbols-outlined err-icon">error</span>
           <span class="md-body-medium err-text">{{ errorMessage }}</span>
-          <md-icon-button @click="errorMessage = ''">
+          <button class="btn-icon" @click="errorMessage = ''">
             <span class="material-symbols-outlined">close</span>
-          </md-icon-button>
+          </button>
         </div>
 
         <!-- TOTP Step -->
@@ -84,14 +84,14 @@
                 class="field-full totp-field"
               />
             </div>
-            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+            <button class="btn-filled btn-full btn-mb" type="submit" :disabled="loading" >
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Verify &amp; Sign In
-            </md-filled-button>
-            <md-text-button type="button" @click="pendingTOTPSession = ''" class="btn-full">
+            </button>
+            <button class="btn-text btn-full" type="button" @click="pendingTOTPSession = ''" >
               <span class="material-symbols-outlined back-icon-sm">arrow_back</span>
               Back to login
-            </md-text-button>
+            </button>
           </form>
         </div>
 
@@ -131,9 +131,9 @@
                   :error-text="errors.password"
                   class="field-full"
                 >
-                  <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+                  <button class="btn-icon" slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                     <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-                  </md-icon-button>
+                  </button>
                 </md-outlined-text-field>
               </div>
             </div>
@@ -148,10 +148,10 @@
               </label>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" class="btn-full">
+            <button class="btn-filled btn-full" type="submit" :disabled="loading" >
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Sign In
-            </md-filled-button>
+            </button>
           </form>
 
           <!-- Divider -->
@@ -163,30 +163,30 @@
 
           <!-- OAuth Buttons -->
           <div class="oauth-row">
-            <md-outlined-button
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('google')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--google">G</span>
               <span class="oauth-label">Google</span>
-            </md-outlined-button>
-            <md-outlined-button
+            </button>
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('github')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--github">GH</span>
               <span class="oauth-label">GitHub</span>
-            </md-outlined-button>
-            <md-outlined-button
+            </button>
+            <button class="btn-outlined"
               :disabled="oauthLoading"
               @click="handleOAuth('facebook')"
               class="oauth-btn"
             >
               <span class="oauth-letter oauth-letter--facebook">FB</span>
               <span class="oauth-label">Facebook</span>
-            </md-outlined-button>
+            </button>
           </div>
 
           <!-- Sign up link -->
@@ -236,11 +236,11 @@
       </div>
 
       <template #actions>
-        <md-text-button @click="showReactivationModal = false">Cancel</md-text-button>
-        <md-filled-button :disabled="reactivationLoading" @click="handleReactivation">
+        <button class="btn-text" @click="showReactivationModal = false">Cancel</button>
+        <button class="btn-filled" :disabled="reactivationLoading" @click="handleReactivation">
           <md-circular-progress v-if="reactivationLoading" indeterminate class="btn-spinner" />
           Reactivate Account
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -674,8 +674,7 @@ async function handleReactivation() {
 }
 
 .btn-spinner {
-  --md-circular-progress-size: 20px;
-  margin-right: 8px;
+    margin-right: 8px;
 }
 
 .back-icon-sm {

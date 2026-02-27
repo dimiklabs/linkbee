@@ -90,21 +90,21 @@
 
         <!-- Actions -->
         <div style="display:flex;gap:0.5rem;align-items:flex-end;padding-bottom:0.125rem;">
-          <md-filled-button
+          <button class="btn-filled"
             style="flex:1;"
             :disabled="loading || selectedIds.length < 2"
             @click="runComparison"
           >
-            <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
+            <span v-if="loading"><md-circular-progress indeterminate /></span>
             Compare
-          </md-filled-button>
-          <md-icon-button
+          </button>
+          <button class="btn-icon"
             v-if="result"
             title="Export to CSV"
             @click="exportCSV"
           >
             <span class="material-symbols-outlined">download</span>
-          </md-icon-button>
+          </button>
         </div>
       </div>
 
@@ -138,7 +138,7 @@
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 0;gap:1rem;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:48px" />
+      <md-circular-progress indeterminate />
       <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">Fetching comparison data…</span>
     </div>
 

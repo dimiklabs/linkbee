@@ -8,11 +8,11 @@
         <p class="dash-page-header__subtitle">A record of all security-relevant actions in your account.</p>
       </div>
       <div class="dash-page-header__actions">
-        <md-outlined-button :disabled="exporting" @click="exportLogs">
+        <button class="btn-outlined" :disabled="exporting" @click="exportLogs">
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">download</span>
-          <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          <md-circular-progress v-if="exporting" indeterminate style="margin-right:6px;" />
           Export CSV
-        </md-outlined-button>
+        </button>
       </div>
     </div>
 
@@ -61,18 +61,18 @@
         />
 
         <div style="display:flex;gap:8px;align-items:center;">
-          <md-filled-button @click="applyFilters">
+          <button class="btn-filled" @click="applyFilters">
             <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">search</span>
             Apply
-          </md-filled-button>
-          <md-outlined-button @click="resetFilters">Reset</md-outlined-button>
+          </button>
+          <button class="btn-outlined" @click="resetFilters">Reset</button>
         </div>
       </div>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+      <md-circular-progress indeterminate />
     </div>
 
     <!-- Empty -->
@@ -135,15 +135,15 @@
           Showing {{ (page - 1) * limit + 1 }}–{{ Math.min(page * limit, total) }} of {{ total }} events
         </p>
         <div class="m3-pagination__controls">
-          <md-outlined-button :disabled="page <= 1" @click="changePage(page - 1)">
+          <button class="btn-outlined" :disabled="page <= 1" @click="changePage(page - 1)">
             <span class="material-symbols-outlined" style="font-size:18px;margin-right:4px;">chevron_left</span>
             Prev
-          </md-outlined-button>
+          </button>
           <span class="m3-pagination__page-label">Page {{ page }}</span>
-          <md-outlined-button :disabled="page * limit >= total" @click="changePage(page + 1)">
+          <button class="btn-outlined" :disabled="page * limit >= total" @click="changePage(page + 1)">
             Next
             <span class="material-symbols-outlined" style="font-size:18px;margin-left:4px;">chevron_right</span>
-          </md-outlined-button>
+          </button>
         </div>
       </div>
     </div>

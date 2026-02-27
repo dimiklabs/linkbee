@@ -8,10 +8,10 @@
         <p class="dash-page-header__subtitle">Receive real-time HTTP notifications when events happen.</p>
       </div>
       <div class="dash-page-header__actions">
-        <md-filled-button @click="showCreate = !showCreate">
+        <button class="btn-filled" @click="showCreate = !showCreate">
           <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
           Add Webhook
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
@@ -20,7 +20,7 @@
       <span class="material-symbols-outlined">{{ usageWarning.level === 'danger' ? 'block' : 'warning' }}</span>
       <span style="flex:1;font-size:0.875rem;">{{ usageWarning.msg }}</span>
       <RouterLink to="/dashboard/billing">
-        <md-filled-tonal-button>Upgrade</md-filled-tonal-button>
+        <button class="btn-tonal">Upgrade</button>
       </RouterLink>
     </div>
 
@@ -66,11 +66,11 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <md-filled-button :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
-            <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          <button class="btn-filled" :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
+            <md-circular-progress v-if="creating" indeterminate style="margin-right:6px;" />
             Create
-          </md-filled-button>
-          <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+          </button>
+          <button class="btn-outlined" @click="cancelCreate">Cancel</button>
         </div>
         <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
           {{ createError }}
@@ -80,7 +80,7 @@
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+      <md-circular-progress indeterminate />
     </div>
 
     <!-- Empty state -->
@@ -90,10 +90,10 @@
       </div>
       <div class="md-title-medium" style="margin-bottom:8px;">No webhooks yet</div>
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;max-width:380px;">Add a webhook endpoint to start receiving real-time event notifications for link activity.</p>
-      <md-filled-button @click="showCreate = true">
+      <button class="btn-filled" @click="showCreate = true">
         <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
         Add Webhook
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Webhooks table -->
@@ -174,26 +174,26 @@
                 <!-- Actions -->
                 <td>
                   <div v-if="editingId === wh.id" style="display:flex;justify-content:flex-end;gap:8px;">
-                    <md-filled-button :disabled="saving" @click="saveEdit(wh.id)">
-                      <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+                    <button class="btn-filled" :disabled="saving" @click="saveEdit(wh.id)">
+                      <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
                       Save
-                    </md-filled-button>
-                    <md-outlined-button @click="cancelEdit">Cancel</md-outlined-button>
+                    </button>
+                    <button class="btn-outlined" @click="cancelEdit">Cancel</button>
                   </div>
                   <div v-else style="display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap;">
-                    <md-icon-button @click="sendTest(wh.id)" :disabled="testingId === wh.id" title="Send test event">
-                      <md-circular-progress v-if="testingId === wh.id" indeterminate style="--md-circular-progress-size:20px" />
+                    <button class="btn-icon" @click="sendTest(wh.id)" :disabled="testingId === wh.id" title="Send test event">
+                      <md-circular-progress v-if="testingId === wh.id" indeterminate />
                       <span v-else class="material-symbols-outlined">send</span>
-                    </md-icon-button>
-                    <md-icon-button @click="toggleDeliveries(wh.id)" title="Delivery logs">
+                    </button>
+                    <button class="btn-icon" @click="toggleDeliveries(wh.id)" title="Delivery logs">
                       <span class="material-symbols-outlined">history</span>
-                    </md-icon-button>
-                    <md-icon-button @click="startEdit(wh)" title="Edit">
+                    </button>
+                    <button class="btn-icon" @click="startEdit(wh)" title="Edit">
                       <span class="material-symbols-outlined">edit</span>
-                    </md-icon-button>
-                    <md-icon-button @click="promptDelete(wh.id)" title="Delete" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+                    </button>
+                    <button class="btn-icon btn-sm btn-danger" @click="promptDelete(wh.id)" title="Delete">
                       <span class="material-symbols-outlined">delete</span>
-                    </md-icon-button>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -234,7 +234,7 @@
                     <!-- Deliveries table -->
                     <div style="font-size:0.875rem;font-weight:600;margin-bottom:8px;">Recent Deliveries</div>
                     <div v-if="deliveriesLoading[wh.id]" style="display:flex;justify-content:center;padding:16px;">
-                      <md-circular-progress indeterminate style="--md-circular-progress-size:24px" />
+                      <md-circular-progress indeterminate />
                     </div>
                     <div v-else-if="!deliveries[wh.id] || deliveries[wh.id].length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;padding:8px 0;">
                       No deliveries recorded yet. Send a test event to get started.
@@ -259,14 +259,14 @@
                             </td>
                             <td style="color:var(--md-sys-color-on-surface-variant);">{{ d.duration_ms }}ms</td>
                             <td style="text-align:right;">
-                              <md-text-button
+                              <button class="btn-text"
                                 @click="resendDelivery(wh.id, d.id)"
                                 :disabled="resendingId === d.id"
                                 style="font-size:0.75rem;"
                               >
-                                <md-circular-progress v-if="resendingId === d.id" indeterminate style="--md-circular-progress-size:16px" />
+                                <md-circular-progress v-if="resendingId === d.id" indeterminate />
                                 <span v-else>Resend</span>
-                              </md-text-button>
+                              </button>
                             </td>
                           </tr>
                         </tbody>
@@ -276,12 +276,12 @@
                       <div v-if="deliveryTotals[wh.id] > 20" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
                         <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ deliveryTotals[wh.id] }} total</span>
                         <div style="display:flex;gap:4px;">
-                          <md-icon-button :disabled="deliveryPages[wh.id] <= 1" @click="loadDeliveries(wh.id, deliveryPages[wh.id] - 1)">
+                          <button class="btn-icon" :disabled="deliveryPages[wh.id] <= 1" @click="loadDeliveries(wh.id, deliveryPages[wh.id] - 1)">
                             <span class="material-symbols-outlined">chevron_left</span>
-                          </md-icon-button>
-                          <md-icon-button :disabled="deliveryPages[wh.id] * 20 >= deliveryTotals[wh.id]" @click="loadDeliveries(wh.id, deliveryPages[wh.id] + 1)">
+                          </button>
+                          <button class="btn-icon" :disabled="deliveryPages[wh.id] * 20 >= deliveryTotals[wh.id]" @click="loadDeliveries(wh.id, deliveryPages[wh.id] + 1)">
                             <span class="material-symbols-outlined">chevron_right</span>
-                          </md-icon-button>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -334,13 +334,12 @@ def verify(secret: str, body: bytes, header: str) -> bool:
       </template>
       <p style="color:var(--md-sys-color-on-surface-variant);">Delete this webhook endpoint? This cannot be undone and any subscribed integrations will stop receiving events.</p>
       <template #actions>
-        <md-text-button @click="showDeleteConfirm = false">Cancel</md-text-button>
-        <md-filled-button
-          style="--md-filled-button-container-color:var(--md-sys-color-error)"
+        <button class="btn-text" @click="showDeleteConfirm = false">Cancel</button>
+        <button class="btn-filled btn-danger"
           @click="confirmDelete"
         >
           Delete
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 

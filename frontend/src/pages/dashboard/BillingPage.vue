@@ -43,24 +43,24 @@
 
             <!-- Upgrade CTAs -->
             <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;">
-              <md-filled-button
+              <button class="btn-filled"
                 v-if="currentPlanID === 'free'"
                 :disabled="checkoutLoading === 'pro'"
                 @click="goCheckout('pro')"
               >
-                <md-circular-progress v-if="checkoutLoading === 'pro'" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+                <md-circular-progress v-if="checkoutLoading === 'pro'" indeterminate style="margin-right:8px;" />
                 <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">arrow_upward</span>
                 Upgrade to Pro
-              </md-filled-button>
-              <md-filled-button
+              </button>
+              <button class="btn-filled"
                 v-if="currentPlanID !== 'business'"
                 :disabled="checkoutLoading === 'business'"
                 @click="goCheckout('business')"
               >
-                <md-circular-progress v-if="checkoutLoading === 'business'" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+                <md-circular-progress v-if="checkoutLoading === 'business'" indeterminate style="margin-right:8px;" />
                 <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">rocket_launch</span>
                 Upgrade to Business
-              </md-filled-button>
+              </button>
               <span v-if="currentPlanID === 'business'" class="plan-top-badge">
                 <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">check_circle</span>
                 You're on the highest plan

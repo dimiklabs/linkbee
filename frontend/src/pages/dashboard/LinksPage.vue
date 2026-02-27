@@ -62,14 +62,14 @@
                   :value="renameValue"
                   @input="renameValue = ($event.target as HTMLInputElement).value"
                   label="Folder name"
-                  style="flex:1;--md-outlined-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:0.82rem"
+                  style="flex:1;"
                   @keydown.enter="submitRename(folder)"
                   @keydown.esc="cancelRename"
                   ref="renameInputRef"
                 />
-                <md-icon-button @click="submitRename(folder)">
+                <button class="btn-icon" @click="submitRename(folder)">
                   <span class="material-symbols-outlined">check</span>
-                </md-icon-button>
+                </button>
               </div>
 
               <!-- Normal mode -->
@@ -84,12 +84,12 @@
                   <span class="folder-row-count">{{ folder.click_count?.toLocaleString() }}</span>
                 </button>
                 <div class="folder-actions">
-                  <md-icon-button @click.stop="startRename(folder)" title="Rename">
+                  <button class="btn-icon" @click.stop="startRename(folder)" title="Rename">
                     <span class="material-symbols-outlined" style="font-size:14px">edit</span>
-                  </md-icon-button>
-                  <md-icon-button @click.stop="deleteFolder(folder)" title="Delete folder" style="--md-icon-button-icon-color:var(--md-sys-color-error)">
+                  </button>
+                  <button class="btn-icon btn-sm btn-danger" @click.stop="deleteFolder(folder)" title="Delete folder">
                     <span class="material-symbols-outlined" style="font-size:14px">delete</span>
-                  </md-icon-button>
+                  </button>
                 </div>
               </div>
             </template>
@@ -102,19 +102,19 @@
                 :value="newFolderName"
                 @input="newFolderName = ($event.target as HTMLInputElement).value"
                 label="Folder name"
-                style="flex:1;--md-outlined-text-field-container-shape:8px;--md-outlined-text-field-input-text-size:0.82rem"
+                style="flex:1;"
                 ref="newFolderInputRef"
                 @keydown.enter="createFolder"
                 @keydown.esc="showNewFolderInput = false; newFolderName = ''"
               />
-              <md-icon-button @click="createFolder" :disabled="!newFolderName.trim()">
+              <button class="btn-icon" @click="createFolder" :disabled="!newFolderName.trim()">
                 <span class="material-symbols-outlined">check</span>
-              </md-icon-button>
+              </button>
             </div>
-            <md-text-button v-else @click="openNewFolderInput" style="width:100%">
+            <button class="btn-text" v-else @click="openNewFolderInput" style="width:100%">
               <span class="material-symbols-outlined" style="font-size:18px;margin-right:4px">create_new_folder</span>
               New Folder
-            </md-text-button>
+            </button>
           </div>
         </div>
 
@@ -122,7 +122,7 @@
         <div v-if="allTags.length > 0" class="m3-card m3-card--elevated sidebar-tags-card">
           <div class="sidebar-tags-header">
             <span class="sidebar-title">Tags</span>
-            <md-text-button v-if="selectedTags.length > 0" @click="clearTagFilter" style="--md-text-button-label-text-size:0.75rem">Clear</md-text-button>
+            <button class="btn-text" v-if="selectedTags.length > 0" @click="clearTagFilter">Clear</button>
           </div>
           <div class="sidebar-tags-body">
             <md-chip-set>
@@ -169,18 +169,18 @@
               </button>
             </div>
 
-            <button class="hdr-btn hdr-btn--outlined" @click="exportCSV" :disabled="exporting">
-              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:16px" />
+            <button class="btn-outlined" @click="exportCSV" :disabled="exporting">
+              <md-circular-progress v-if="exporting" indeterminate />
               <span v-else class="material-symbols-outlined">download</span>
               Export CSV
             </button>
 
-            <button class="hdr-btn hdr-btn--outlined" @click="openImportModal">
+            <button class="btn-outlined" @click="openImportModal">
               <span class="material-symbols-outlined">upload_file</span>
               Import CSV
             </button>
 
-            <button class="hdr-btn hdr-btn--filled" @click="openCreateModal">
+            <button class="btn-filled" @click="openCreateModal">
               <span class="material-symbols-outlined">add</span>
               New Link
             </button>
@@ -198,7 +198,7 @@
           </span>
           <span class="usage-banner-msg">{{ usageWarning.msg }}</span>
           <router-link to="/dashboard/billing">
-            <md-filled-tonal-button style="--md-filled-tonal-button-container-color:var(--md-sys-color-error-container)">Upgrade</md-filled-tonal-button>
+            <button class="btn-tonal">Upgrade</button>
           </router-link>
         </div>
 
@@ -239,16 +239,16 @@
             {{ searchQuery ? 'Try a different search term or clear the search.' : selectedTags.length ? 'Try selecting different tags or clear the tag filter.' : 'Shorten your first URL and start tracking clicks in seconds.' }}
           </p>
           <div class="m3-empty-state__actions">
-            <md-filled-button v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
+            <button class="btn-filled" v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
               <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add</span>
               Create your first link
-            </md-filled-button>
-            <md-outlined-button v-else-if="selectedTags.length" @click="clearTagFilter">
+            </button>
+            <button class="btn-outlined" v-else-if="selectedTags.length" @click="clearTagFilter">
               Clear tag filter
-            </md-outlined-button>
-            <md-outlined-button v-else @click="searchQuery = ''">
+            </button>
+            <button class="btn-outlined" v-else @click="searchQuery = ''">
               Clear search
-            </md-outlined-button>
+            </button>
           </div>
         </div>
 
@@ -260,14 +260,14 @@
             <span class="bulk-bar-count">{{ selectedIDs.size }} selected</span>
             <md-divider vertical style="height:24px;margin:0 4px" />
 
-            <md-outlined-button :disabled="bulkLoading" @click="bulkActivate">Activate</md-outlined-button>
-            <md-outlined-button :disabled="bulkLoading" @click="bulkDeactivate">Deactivate</md-outlined-button>
+            <button class="btn-outlined" :disabled="bulkLoading" @click="bulkActivate">Activate</button>
+            <button class="btn-outlined" :disabled="bulkLoading" @click="bulkDeactivate">Deactivate</button>
 
             <!-- Move to folder -->
             <div class="bulk-popover-wrap">
-              <md-outlined-button :disabled="bulkLoading" @click="showBulkFolderBar = !showBulkFolderBar; showBulkTagsBar = false">
+              <button class="btn-outlined" :disabled="bulkLoading" @click="showBulkFolderBar = !showBulkFolderBar; showBulkTagsBar = false">
                 Move to Folder
-              </md-outlined-button>
+              </button>
               <div v-if="showBulkFolderBar" class="bulk-popover">
                 <button class="bulk-popover-item" @click="bulkMoveFolder(null)">— Remove from folder</button>
                 <button
@@ -281,8 +281,8 @@
 
             <!-- Tags -->
             <div class="bulk-popover-wrap">
-              <md-outlined-button :disabled="bulkLoading" @click="bulkTagsMode = 'add_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">+ Tags</md-outlined-button>
-              <md-outlined-button :disabled="bulkLoading" @click="bulkTagsMode = 'remove_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">− Tags</md-outlined-button>
+              <button class="btn-outlined" :disabled="bulkLoading" @click="bulkTagsMode = 'add_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">+ Tags</button>
+              <button class="btn-outlined" :disabled="bulkLoading" @click="bulkTagsMode = 'remove_tags'; showBulkTagsBar = !showBulkTagsBar; showBulkFolderBar = false">− Tags</button>
               <div v-if="showBulkTagsBar" class="bulk-popover bulk-tags-popover">
                 <md-outlined-text-field
                   :value="bulkTagsInput"
@@ -291,24 +291,24 @@
                   style="flex:1"
                   @keydown.enter="bulkApplyTags"
                 />
-                <md-filled-button @click="bulkApplyTags">
+                <button class="btn-filled" @click="bulkApplyTags">
                   {{ bulkTagsMode === 'add_tags' ? 'Add' : 'Remove' }}
-                </md-filled-button>
+                </button>
               </div>
             </div>
 
-            <md-outlined-button :disabled="qrDownloading" @click="downloadBulkQR">
-              <md-circular-progress v-if="qrDownloading" indeterminate style="--md-circular-progress-size:16px;margin-right:6px" />
+            <button class="btn-outlined" :disabled="qrDownloading" @click="downloadBulkQR">
+              <md-circular-progress v-if="qrDownloading" indeterminate style="margin-right:6px" />
               <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px">qr_code_2</span>
               QR Codes
-            </md-outlined-button>
+            </button>
 
             <div class="bulk-bar-end">
-              <md-outlined-button :disabled="bulkLoading" @click="bulkDelete" style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error)">
-                <md-circular-progress v-if="bulkLoading" indeterminate style="--md-circular-progress-size:16px;margin-right:6px" />
+              <button class="btn-outlined btn-danger" :disabled="bulkLoading" @click="bulkDelete">
+                <md-circular-progress v-if="bulkLoading" indeterminate style="margin-right:6px" />
                 Delete
-              </md-outlined-button>
-              <md-text-button @click="clearSelection">Clear</md-text-button>
+              </button>
+              <button class="btn-text" @click="clearSelection">Clear</button>
             </div>
           </div>
 
@@ -395,15 +395,15 @@
                       <span v-if="clickLimitBadgeClass(link)" :class="['m3-badge', clickLimitBadgeClass(link) === 'text-bg-danger' ? 'm3-badge--error' : 'm3-badge--warning']" style="font-size:0.65rem">
                         {{ clickLimitBadgeLabel(link) }}
                       </span>
-                      <md-icon-button
+                      <button class="btn-icon"
                         :title="copiedId === link.id ? 'Copied!' : 'Copy to clipboard'"
                         @click="copyShortUrl(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
+                        style="width:32px;height:32px"
                       >
                         <span class="material-symbols-outlined" :style="{ color: copiedId === link.id ? '#1AA563' : 'inherit' }">
                           {{ copiedId === link.id ? 'check_circle' : 'content_copy' }}
                         </span>
-                      </md-icon-button>
+                      </button>
                     </div>
                   </td>
 
@@ -456,7 +456,7 @@
                         :disabled="deletingId === link.id"
                         @click="confirmDelete(link)"
                       >
-                        <md-circular-progress v-if="deletingId === link.id" indeterminate style="--md-circular-progress-size:14px" />
+                        <md-circular-progress v-if="deletingId === link.id" indeterminate />
                         <span v-else class="material-symbols-outlined">delete</span>
                       </button>
 
@@ -472,7 +472,7 @@
                             {{ link.is_starred ? 'Unstar' : 'Star' }}
                           </button>
                           <button class="row-menu-item" :disabled="checkingHealthId === link.id" @click="runHealthCheck(link); closeAllRowMenus()">
-                            <md-circular-progress v-if="checkingHealthId === link.id" indeterminate style="--md-circular-progress-size:14px;margin-right:2px" />
+                            <md-circular-progress v-if="checkingHealthId === link.id" indeterminate style="margin-right:2px" />
                             <span v-else class="material-symbols-outlined row-menu-item__icon">health_and_safety</span>
                             Check Health
                           </button>
@@ -613,7 +613,7 @@
           <div v-if="copiedId" class="m3-snackbar">
             <span class="material-symbols-outlined" style="font-size:20px">check_circle</span>
             <span style="flex:1">Copied to clipboard!</span>
-            <md-text-button @click="copiedId = null" style="--md-text-button-label-text-color:#CFBCFF">Dismiss</md-text-button>
+            <button class="btn-text" @click="copiedId = null">Dismiss</button>
           </div>
         </Transition>
 
@@ -1537,48 +1537,6 @@ const visiblePages = computed<(number | string)[]>(() => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-}
-
-/* ── Header buttons ──────────────────────────────────────────────────────────── */
-.hdr-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 20px;
-  font-family: 'Roboto', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.1px;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: background 0.15s, box-shadow 0.15s, opacity 0.15s;
-
-  .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
-
-  &:disabled { opacity: 0.38; cursor: not-allowed; }
-
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline);
-    background: transparent;
-    color: var(--md-sys-color-primary);
-
-    &:hover:not(:disabled) {
-      background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
-    }
-  }
-
-  &--filled {
-    border: none;
-    background: var(--md-sys-color-primary);
-    color: var(--md-sys-color-on-primary);
-
-    &:hover:not(:disabled) {
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    }
-  }
 }
 
 /* ── Search field ────────────────────────────────────────────────────────────── */

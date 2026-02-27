@@ -7,10 +7,10 @@
         <h1 class="page-title">Email Reports</h1>
         <p class="page-subtitle">Automatically receive analytics summaries by email on a set cadence.</p>
       </div>
-      <md-filled-button @click="openCreate">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+      <button class="btn-filled" @click="openCreate">
+        <span class="material-symbols-outlined">add</span>
         New Report
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Error -->
@@ -21,7 +21,7 @@
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+      <md-circular-progress indeterminate />
     </div>
 
     <!-- Empty state -->
@@ -31,10 +31,10 @@
       </div>
       <div class="md-title-medium" style="margin-bottom:8px;">No scheduled reports yet</div>
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Set up automated email summaries to track your link performance.</p>
-      <md-filled-button @click="openCreate">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+      <button class="btn-filled" @click="openCreate">
+        <span class="material-symbols-outlined">add</span>
         Create your first report
-      </md-filled-button>
+      </button>
     </div>
 
     <!-- Reports list -->
@@ -60,33 +60,33 @@
 
           <!-- Actions -->
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;">
-            <md-outlined-button
+            <button class="btn-outlined"
               :title="report.is_active ? 'Pause report' : 'Resume report'"
               :disabled="actionLoading === report.id"
               @click="toggleActive(report)"
             >
               {{ report.is_active ? 'Pause' : 'Resume' }}
-            </md-outlined-button>
-            <md-outlined-button
+            </button>
+            <button class="btn-outlined"
               title="Send report immediately"
               :disabled="actionLoading === report.id"
               @click="sendNow(report.id)"
             >
-              <md-circular-progress v-if="actionLoading === report.id" indeterminate style="--md-circular-progress-size:16px;margin-right:4px;" />
+              <md-circular-progress v-if="actionLoading === report.id" indeterminate style="margin-right:4px;" />
               Send now
-            </md-outlined-button>
-            <md-icon-button title="Preview report" @click="openPreview(report)">
+            </button>
+            <button class="btn-icon" title="Preview report" @click="openPreview(report)">
               <span class="material-symbols-outlined">visibility</span>
-            </md-icon-button>
-            <md-icon-button title="View delivery history" @click="openDeliveries(report)">
+            </button>
+            <button class="btn-icon" title="View delivery history" @click="openDeliveries(report)">
               <span class="material-symbols-outlined">history</span>
-            </md-icon-button>
-            <md-icon-button title="Edit report" @click="openEdit(report)">
+            </button>
+            <button class="btn-icon" title="Edit report" @click="openEdit(report)">
               <span class="material-symbols-outlined">edit</span>
-            </md-icon-button>
-            <md-icon-button title="Delete report" @click="deleteReport(report.id)" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+            </button>
+            <button class="btn-icon btn-sm btn-danger" title="Delete report" @click="deleteReport(report.id)">
               <span class="material-symbols-outlined">delete</span>
-            </md-icon-button>
+            </button>
           </div>
         </div>
       </div>
@@ -162,15 +162,14 @@
         <div>
           <div style="font-size:0.875rem;font-weight:500;margin-bottom:8px;color:var(--md-sys-color-on-surface);">Frequency *</div>
           <div style="display:flex;gap:8px;">
-            <md-outlined-button
+            <button :class="['btn-outlined', form.frequency === freq.value ? 'btn-active' : '']"
               v-for="freq in frequencies"
               :key="freq.value"
               @click="form.frequency = freq.value"
-              :style="form.frequency === freq.value ? 'background:var(--md-sys-color-primary-container);--md-outlined-button-label-text-color:var(--md-sys-color-on-primary-container);--md-outlined-button-outline-color:var(--md-sys-color-primary);' : ''"
               style="flex:1;"
             >
               {{ freq.label }}
-            </md-outlined-button>
+            </button>
           </div>
         </div>
 
@@ -180,14 +179,14 @@
         </div>
       </div>
       <template #actions>
-        <md-text-button @click="closeForm">Cancel</md-text-button>
-        <md-filled-button
+        <button class="btn-text" @click="closeForm">Cancel</button>
+        <button class="btn-filled"
           :disabled="formLoading || !form.name.trim() || form.link_ids.length === 0"
           @click="submitForm"
         >
-          <md-circular-progress v-if="formLoading" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          <md-circular-progress v-if="formLoading" indeterminate style="margin-right:6px;" />
           {{ editingReport ? 'Save Changes' : 'Create Report' }}
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 
@@ -199,7 +198,7 @@
 
       <div style="min-width:480px;max-width:100%;min-height:200px;">
         <div v-if="deliveriesLoading" style="display:flex;justify-content:center;padding:24px;">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+          <md-circular-progress indeterminate />
         </div>
         <div v-else-if="deliveries.length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;text-align:center;padding:24px;">No deliveries yet.</div>
         <div v-else style="max-height:360px;overflow-y:auto;">
@@ -223,7 +222,7 @@
       </div>
 
       <template #actions>
-        <md-text-button @click="showDeliveriesModal = false">Close</md-text-button>
+        <button class="btn-text" @click="showDeliveriesModal = false">Close</button>
       </template>
     </BaseModal>
 
@@ -327,11 +326,11 @@
       </div>
 
       <template #actions>
-        <md-text-button @click="showPreviewModal = false">Close</md-text-button>
-        <md-filled-button :disabled="sendingPreview" @click="sendNowFromPreview">
-          <md-circular-progress v-if="sendingPreview" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+        <button class="btn-text" @click="showPreviewModal = false">Close</button>
+        <button class="btn-filled" :disabled="sendingPreview" @click="sendNowFromPreview">
+          <md-circular-progress v-if="sendingPreview" indeterminate style="margin-right:6px;" />
           Send now
-        </md-filled-button>
+        </button>
       </template>
     </BaseModal>
 

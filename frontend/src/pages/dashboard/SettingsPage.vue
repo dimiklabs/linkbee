@@ -52,9 +52,9 @@
               </span>
             </div>
             <div style="margin-top:8px;">
-              <md-text-button @click="showUrlInput = !showUrlInput" style="--md-text-button-label-text-color:var(--md-sys-color-on-surface-variant);">
+              <button class="btn-text" @click="showUrlInput = !showUrlInput">
                 {{ showUrlInput ? 'Hide URL input' : 'Or enter image URL manually' }}
-              </md-text-button>
+              </button>
               <div v-if="showUrlInput" style="margin-top:8px;">
                 <md-outlined-text-field
                   :value="profileForm.profile_picture"
@@ -117,10 +117,10 @@
           {{ profileError }}
         </div>
 
-        <md-filled-button :disabled="savingProfile" @click="saveProfile">
-          <md-circular-progress v-if="savingProfile" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+        <button class="btn-filled" :disabled="savingProfile" @click="saveProfile">
+          <md-circular-progress v-if="savingProfile" indeterminate style="margin-right:8px;" />
           Save profile
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
@@ -169,10 +169,10 @@
           {{ passwordError }}
         </div>
 
-        <md-filled-button :disabled="savingPassword || !canChangePassword" @click="changePassword">
-          <md-circular-progress v-if="savingPassword" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+        <button class="btn-filled" :disabled="savingPassword || !canChangePassword" @click="changePassword">
+          <md-circular-progress v-if="savingPassword" indeterminate style="margin-right:8px;" />
           Update password
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
@@ -240,7 +240,7 @@
           Preferences saved.
         </div>
 
-        <md-filled-button @click="saveNotifPrefs">Save preferences</md-filled-button>
+        <button class="btn-filled" @click="saveNotifPrefs">Save preferences</button>
       </div>
     </div>
 
@@ -251,14 +251,13 @@
           <span class="material-symbols-outlined card-section-header__icon">devices</span>
           <span class="md-title-medium">Active Sessions</span>
         </div>
-        <md-outlined-button
+        <button class="btn-outlined btn-danger"
           :disabled="revokingAll"
           @click="logoutAllOther"
-          style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
         >
-          <md-circular-progress v-if="revokingAll" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          <md-circular-progress v-if="revokingAll" indeterminate style="margin-right:6px;" />
           Logout all other devices
-        </md-outlined-button>
+        </button>
       </div>
       <div>
         <div v-if="sessionsLoading" style="text-align:center;padding:32px 24px;">
@@ -291,15 +290,15 @@
                 Signed in {{ formatDate(session.created_at) }}
               </div>
             </div>
-            <md-text-button
+            <button class="btn-text"
               v-if="!session.is_current"
               :disabled="revokingId === session.id"
               @click="revokeSession(session)"
-              style="--md-text-button-label-text-color:var(--md-sys-color-error);"
+             
             >
-              <md-circular-progress v-if="revokingId === session.id" indeterminate style="--md-circular-progress-size:18px;" />
+              <md-circular-progress v-if="revokingId === session.id" indeterminate />
               <span v-else>Revoke</span>
-            </md-text-button>
+            </button>
           </div>
         </div>
       </div>
@@ -320,13 +319,13 @@
               Your data will be ready to download immediately.
             </p>
           </div>
-          <md-filled-tonal-button :disabled="exportingData" @click="downloadExport">
-            <md-circular-progress v-if="exportingData" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+          <button class="btn-tonal" :disabled="exportingData" @click="downloadExport">
+            <md-circular-progress v-if="exportingData" indeterminate style="margin-right:8px;" />
             <span v-else>
               <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">download</span>
             </span>
             Download my data
-          </md-filled-tonal-button>
+          </button>
         </div>
         <div v-if="exportError" class="feedback-error" style="margin-top:16px;">
           <span class="material-symbols-outlined" style="font-size:18px;">error</span>
@@ -350,12 +349,11 @@
               This action <strong>cannot be undone</strong>.
             </p>
           </div>
-          <md-outlined-button
+          <button class="btn-outlined btn-danger"
             @click="showDeleteConfirm = true"
-            style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error);"
           >
             Delete account
-          </md-outlined-button>
+          </button>
         </div>
 
         <!-- Delete confirmation -->
@@ -370,15 +368,14 @@
               label="Type DELETE"
               style="max-width:200px;"
             />
-            <md-filled-button
+            <button class="btn-filled btn-danger"
               :disabled="deleteConfirmText !== 'DELETE' || deletingAccount"
               @click="deleteAccount"
-              style="--md-filled-button-container-color:var(--md-sys-color-error);"
             >
-              <md-circular-progress v-if="deletingAccount" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+              <md-circular-progress v-if="deletingAccount" indeterminate style="margin-right:8px;" />
               Confirm delete
-            </md-filled-button>
-            <md-outlined-button @click="showDeleteConfirm = false; deleteConfirmText = ''">Cancel</md-outlined-button>
+            </button>
+            <button class="btn-outlined" @click="showDeleteConfirm = false; deleteConfirmText = ''">Cancel</button>
           </div>
           <div v-if="deleteError" class="feedback-error" style="margin-top:12px;">
             <span class="material-symbols-outlined" style="font-size:18px;">error</span>

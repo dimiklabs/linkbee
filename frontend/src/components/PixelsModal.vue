@@ -31,7 +31,7 @@
 
       <!-- Existing pixels loading -->
       <div v-if="loading" class="pixels-loading">
-        <md-circular-progress indeterminate style="--md-circular-progress-size:28px" />
+        <md-circular-progress indeterminate />
       </div>
 
       <!-- Existing pixels list -->
@@ -46,13 +46,13 @@
                 {{ px.pixel_type === 'custom' ? 'Custom script' : px.pixel_id }}
               </div>
             </div>
-            <md-icon-button
+            <button class="btn-icon"
               @click="deletePixel(px.id)"
               title="Remove pixel"
-              style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)"
+              style="width:32px;height:32px;"
             >
               <span class="material-symbols-outlined" style="font-size:18px">delete</span>
-            </md-icon-button>
+            </button>
           </div>
         </div>
       </div>
@@ -111,11 +111,11 @@
           {{ addError }}
         </div>
 
-        <md-filled-button :disabled="adding || !canAdd" @click="addPixel">
-          <md-circular-progress v-if="adding" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
-          <span v-else class="material-symbols-outlined" slot="icon">add</span>
+        <button class="btn-filled" :disabled="adding || !canAdd" @click="addPixel">
+          <md-circular-progress v-if="adding" indeterminate />
+          <span v-else class="material-symbols-outlined">add</span>
           Add pixel
-        </md-filled-button>
+        </button>
       </div>
 
       <!-- Info box -->
@@ -127,7 +127,7 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide">Close</md-text-button>
+      <button class="btn-text" @click="hide">Close</button>
     </template>
   </BaseModal>
 </template>

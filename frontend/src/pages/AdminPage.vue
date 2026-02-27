@@ -5,13 +5,13 @@
     <div v-if="isImpersonating" class="impersonation-banner">
       <span class="material-symbols-outlined" style="font-size:20px;color:#92400e;flex-shrink:0;">manage_accounts</span>
       <span class="md-body-medium" style="flex:1;color:#78350f;">You are currently impersonating a user. Actions taken will affect the impersonated account.</span>
-      <md-outlined-button
+      <button class="btn-outlined"
         @click="stopImpersonation"
-        style="--md-outlined-button-label-text-color:#92400e;--md-outlined-button-outline-color:#d97706;"
+        style="color:#92400e;border-color:#d97706"
       >
-        <span class="material-symbols-outlined" slot="icon">close</span>
+        <span class="material-symbols-outlined">close</span>
         Stop impersonating
-      </md-outlined-button>
+      </button>
     </div>
 
     <!-- Page Header -->
@@ -103,7 +103,7 @@
       <div class="chart-card-header">Platform Growth (Last 30 Days)</div>
       <div class="chart-body">
         <div v-if="growthLoading" style="display:flex;justify-content:center;padding:24px;">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+          <md-circular-progress indeterminate />
         </div>
         <VChart v-else :option="growthLineOption" style="height: 240px;" autoresize />
       </div>
@@ -127,7 +127,7 @@
       </div>
 
       <div v-if="usersLoading" style="display:flex;justify-content:center;padding:40px;">
-        <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
+        <md-circular-progress indeterminate />
       </div>
 
       <div v-else-if="users.length === 0" class="users-empty-state">
@@ -181,34 +181,33 @@
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                   </AppSelect>
-                  <md-icon-button
+                  <button class="btn-icon"
                     :disabled="impersonating === u.id || u.id === authStore.profile?.id"
                     @click="startImpersonation(u)"
                     title="Impersonate user"
                   >
                     <span v-if="impersonating === u.id">
-                      <md-circular-progress indeterminate style="--md-circular-progress-size:20px" />
+                      <md-circular-progress indeterminate />
                     </span>
                     <span v-else class="material-symbols-outlined">manage_accounts</span>
-                  </md-icon-button>
-                  <md-outlined-button
+                  </button>
+                  <button class="btn-outlined"
                     v-if="u.status !== 'active'"
                     :disabled="updatingId === u.id"
                     @click="setStatus(u, 'active')"
-                    style="--md-outlined-button-label-text-color:#16a34a;--md-outlined-button-outline-color:#16a34a;"
+                    style="color:#16a34a;border-color:#16a34a"
                   >
-                    <md-circular-progress v-if="updatingId === u.id" indeterminate style="--md-circular-progress-size:16px" />
+                    <md-circular-progress v-if="updatingId === u.id" indeterminate />
                     <span v-else>Activate</span>
-                  </md-outlined-button>
-                  <md-outlined-button
+                  </button>
+                  <button class="btn-outlined btn-danger"
                     v-if="u.status !== 'banned'"
                     :disabled="updatingId === u.id"
                     @click="setStatus(u, 'banned')"
-                    style="--md-outlined-button-label-text-color:var(--md-sys-color-error);--md-outlined-button-outline-color:var(--md-sys-color-error);"
                   >
-                    <md-circular-progress v-if="updatingId === u.id" indeterminate style="--md-circular-progress-size:16px" />
+                    <md-circular-progress v-if="updatingId === u.id" indeterminate />
                     <span v-else>Ban</span>
-                  </md-outlined-button>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -222,14 +221,14 @@
           Page {{ currentPage }} of {{ totalPages }} &mdash; {{ totalUsers }} users
         </span>
         <div style="display:flex;gap:8px;">
-          <md-outlined-button :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">
-            <span class="material-symbols-outlined" slot="icon">chevron_left</span>
+          <button class="btn-outlined" :disabled="currentPage <= 1" @click="goToPage(currentPage - 1)">
+            <span class="material-symbols-outlined">chevron_left</span>
             Previous
-          </md-outlined-button>
-          <md-outlined-button :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">
+          </button>
+          <button class="btn-outlined" :disabled="currentPage >= totalPages" @click="goToPage(currentPage + 1)">
             Next
             <span class="material-symbols-outlined" slot="trailing-icon">chevron_right</span>
-          </md-outlined-button>
+          </button>
         </div>
       </div>
     </div>

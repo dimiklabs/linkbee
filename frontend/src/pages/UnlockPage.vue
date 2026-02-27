@@ -37,20 +37,20 @@
               :error="invalidPassword && password === ''"
               style="width: 100%;"
             >
-              <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
+              <button class="btn-icon" slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                 <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
-              </md-icon-button>
+              </button>
             </md-outlined-text-field>
           </div>
 
-          <md-filled-button
+          <button class="btn-filled"
             type="submit"
             :disabled="!password.trim()"
             style="width: 100%;"
           >
             <span class="material-symbols-outlined" style="font-size:18px; margin-right:6px;">lock_open</span>
             Unlock &amp; Visit Link
-          </md-filled-button>
+          </button>
         </form>
 
       </div>

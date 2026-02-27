@@ -88,12 +88,12 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide" :disabled="cloning">Cancel</md-text-button>
-      <md-filled-button :disabled="cloning" @click="doClone" class="clone-btn">
-        <md-circular-progress v-if="cloning" indeterminate style="--md-circular-progress-size:18px;margin-right:6px" />
+      <button class="btn-text" @click="hide" :disabled="cloning">Cancel</button>
+      <button class="btn-filled clone-btn" :disabled="cloning" @click="doClone" >
+        <md-circular-progress v-if="cloning" indeterminate style="margin-right:6px" />
         <span class="material-symbols-outlined" v-else style="font-size:18px;margin-right:6px">content_copy</span>
         {{ cloning ? 'Cloning…' : 'Clone Link' }}
-      </md-filled-button>
+      </button>
     </template>
   </BaseModal>
 </template>

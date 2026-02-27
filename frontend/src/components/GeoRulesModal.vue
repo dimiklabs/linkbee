@@ -41,7 +41,7 @@
         </div>
 
         <div v-if="loadingRules" class="geo-loading">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:24px" />
+          <md-circular-progress indeterminate />
           <span>Loading rules…</span>
         </div>
 
@@ -65,12 +65,12 @@
                 {{ rule.destination_url }}
               </span>
               <div class="geo-rule-actions">
-                <md-icon-button @click="startEdit(rule)" title="Edit" style="width:32px;height:32px">
+                <button class="btn-icon" @click="startEdit(rule)" title="Edit" style="width:32px;height:32px">
                   <span class="material-symbols-outlined" style="font-size:16px">edit</span>
-                </md-icon-button>
-                <md-icon-button @click="deleteRule(rule.id)" title="Delete" style="width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)">
+                </button>
+                <button class="btn-icon btn-sm btn-danger" @click="deleteRule(rule.id)" title="Delete" style="width:32px;height:32px;">
                   <span class="material-symbols-outlined" style="font-size:16px">delete</span>
-                </md-icon-button>
+                </button>
               </div>
             </div>
 
@@ -97,12 +97,12 @@
                 style="width:90px"
               />
               <div class="geo-rule-edit-actions">
-                <md-icon-button @click="saveEdit(rule.id)" :disabled="saving" style="width:32px;height:32px;--md-icon-button-icon-color:#1AA563">
+                <button class="btn-icon" @click="saveEdit(rule.id)" :disabled="saving" style="width:32px;height:32px;">
                   <span class="material-symbols-outlined" style="font-size:18px">check</span>
-                </md-icon-button>
-                <md-icon-button @click="cancelEdit" style="width:32px;height:32px">
+                </button>
+                <button class="btn-icon" @click="cancelEdit" style="width:32px;height:32px">
                   <span class="material-symbols-outlined" style="font-size:18px">close</span>
-                </md-icon-button>
+                </button>
               </div>
             </div>
           </div>
@@ -139,13 +139,13 @@
             type="number"
             style="width:100px"
           />
-          <md-filled-button
+          <button class="btn-filled"
             @click="addRule"
             :disabled="!newForm.country_code || !newForm.destination_url || saving"
           >
-            <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+            <md-circular-progress v-if="saving" indeterminate />
             Add
-          </md-filled-button>
+          </button>
         </div>
         <div v-if="formError" class="geo-form-error">
           <span class="material-symbols-outlined" style="font-size:16px">error</span>
@@ -156,7 +156,7 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide">Close</md-text-button>
+      <button class="btn-text" @click="hide">Close</button>
     </template>
   </BaseModal>
 </template>

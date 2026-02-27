@@ -17,24 +17,24 @@
           target="_blank"
           rel="noopener noreferrer"
         >
-          <md-outlined-button>
-            <span class="material-symbols-outlined" slot="icon">open_in_new</span>
+          <button class="btn-outlined">
+            <span class="material-symbols-outlined">open_in_new</span>
             View page
-          </md-outlined-button>
+          </button>
         </a>
-        <md-filled-button :disabled="saving" @click="saveSettings">
-          <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+        <button class="btn-filled" :disabled="saving" @click="saveSettings">
+          <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
           Save settings
-        </md-filled-button>
+        </button>
       </div>
     </div>
 
     <!-- Copy Public URL -->
     <div v-if="bioPage && bioPage.is_published && bioPage.username" style="margin-bottom:16px;">
-      <md-text-button @click="copyBioUrl">
-        <span class="material-symbols-outlined" slot="icon">{{ bioCopied ? 'check' : 'content_copy' }}</span>
+      <button class="btn-text" @click="copyBioUrl">
+        <span class="material-symbols-outlined">{{ bioCopied ? 'check' : 'content_copy' }}</span>
         {{ bioCopied ? 'Copied!' : 'Copy public URL' }}
-      </md-text-button>
+      </button>
     </div>
 
     <!-- Stats Row -->
@@ -61,7 +61,7 @@
 
     <!-- Loading -->
     <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+      <md-circular-progress indeterminate />
     </div>
 
     <div v-else-if="bioPage" class="two-column-layout">
@@ -133,22 +133,20 @@
           <div style="margin-bottom:16px;">
             <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Theme</div>
             <div style="display:flex;gap:8px;">
-              <md-outlined-button
+              <button :class="['btn-outlined', form.theme === 'light' ? 'btn-active' : '']"
                 @click="form.theme = 'light'"
-                :style="form.theme === 'light' ? 'background:var(--md-sys-color-primary-container);--md-outlined-button-label-text-color:var(--md-sys-color-on-primary-container);--md-outlined-button-outline-color:var(--md-sys-color-primary);' : ''"
                 style="flex:1;"
               >
-                <span class="material-symbols-outlined" slot="icon">light_mode</span>
+                <span class="material-symbols-outlined">light_mode</span>
                 Light
-              </md-outlined-button>
-              <md-outlined-button
+              </button>
+              <button :class="['btn-outlined', form.theme === 'dark' ? 'btn-active' : '']"
                 @click="form.theme = 'dark'"
-                :style="form.theme === 'dark' ? 'background:var(--md-sys-color-primary-container);--md-outlined-button-label-text-color:var(--md-sys-color-on-primary-container);--md-outlined-button-outline-color:var(--md-sys-color-primary);' : ''"
                 style="flex:1;"
               >
-                <span class="material-symbols-outlined" slot="icon">dark_mode</span>
+                <span class="material-symbols-outlined">dark_mode</span>
                 Dark
-              </md-outlined-button>
+              </button>
             </div>
           </div>
 
@@ -204,15 +202,15 @@
                 style="flex:1;min-width:160px;"
                 @keydown.enter="addLink"
               />
-              <md-filled-button
+              <button class="btn-filled"
                 :disabled="addingLink || !newTitle.trim() || !newUrl.trim()"
                 @click="addLink"
                 style="flex-shrink:0;"
               >
-                <md-circular-progress v-if="addingLink" indeterminate style="--md-circular-progress-size:18px;margin-right:4px;" />
-                <span v-else class="material-symbols-outlined" slot="icon">add</span>
+                <md-circular-progress v-if="addingLink" indeterminate style="margin-right:4px;" />
+                <span v-else class="material-symbols-outlined">add</span>
                 Add
-              </md-filled-button>
+              </button>
             </div>
             <div v-if="addError" style="margin-top:8px;padding:8px 12px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.8rem;">
               {{ addError }}
@@ -274,12 +272,12 @@
                   style="cursor:pointer;accent-color:var(--md-sys-color-primary);flex-shrink:0;"
                   @change="toggleActive(link)"
                 />
-                <md-icon-button title="Edit" @click="startEdit(link)">
+                <button class="btn-icon" title="Edit" @click="startEdit(link)">
                   <span class="material-symbols-outlined">edit</span>
-                </md-icon-button>
-                <md-icon-button title="Delete" @click="deleteLink(link)" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+                </button>
+                <button class="btn-icon btn-sm btn-danger" title="Delete" @click="deleteLink(link)">
                   <span class="material-symbols-outlined">delete</span>
-                </md-icon-button>
+                </button>
               </div>
 
               <!-- Edit mode -->
@@ -299,13 +297,13 @@
                   style="flex:1;min-width:160px;"
                 />
                 <div style="display:flex;gap:4px;flex-shrink:0;">
-                  <md-icon-button :disabled="savingEdit" @click="saveEdit(link)">
-                    <md-circular-progress v-if="savingEdit" indeterminate style="--md-circular-progress-size:20px" />
+                  <button class="btn-icon" :disabled="savingEdit" @click="saveEdit(link)">
+                    <md-circular-progress v-if="savingEdit" indeterminate />
                     <span v-else class="material-symbols-outlined">check</span>
-                  </md-icon-button>
-                  <md-icon-button @click="cancelEdit">
+                  </button>
+                  <button class="btn-icon" @click="cancelEdit">
                     <span class="material-symbols-outlined">close</span>
-                  </md-icon-button>
+                  </button>
                 </div>
               </div>
             </div>

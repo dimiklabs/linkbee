@@ -13,7 +13,7 @@
       <!-- Loading state -->
       <div v-if="loading" class="state-loading">
         <div class="state-loading-spinner">
-          <md-circular-progress indeterminate style="--md-circular-progress-size:40px" />
+          <md-circular-progress indeterminate />
         </div>
         <div class="state-loading-text">
           <span class="state-loading-label">Fetching preview</span>
@@ -149,11 +149,11 @@
     </div>
 
     <template #actions>
-      <md-text-button @click="hide">Close</md-text-button>
-      <md-outlined-button v-if="link?.short_url" :href="link.short_url" target="_blank" rel="noopener noreferrer">
-        <span class="material-symbols-outlined" slot="icon">open_in_new</span>
+      <button class="btn-text" @click="hide">Close</button>
+      <button class="btn-outlined" v-if="link?.short_url" :href="link.short_url" target="_blank" rel="noopener noreferrer">
+        <span class="material-symbols-outlined">open_in_new</span>
         Open Short Link
-      </md-outlined-button>
+      </button>
     </template>
   </BaseModal>
 </template>
