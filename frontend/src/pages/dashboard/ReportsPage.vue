@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-section" style="max-width: 900px;">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -93,9 +93,12 @@
     </div>
 
     <!-- ── Create / Edit Dialog ──────────────────────────────────────────── -->
-    <md-dialog :open="showFormModal" @closed="closeForm">
-      <div slot="headline">{{ editingReport ? 'Edit Report' : 'New Scheduled Report' }}</div>
-      <div slot="content" style="min-width:480px;max-width:100%;display:flex;flex-direction:column;gap:16px;">
+    <BaseModal v-model="showFormModal" size="md" @closed="closeForm">
+      <template #headline>
+        {{ editingReport ? 'Edit Report' : 'New Scheduled Report' }}
+      </template>
+
+      <div style="min-width:480px;max-width:100%;display:flex;flex-direction:column;gap:16px;">
 
         <!-- Name -->
         <md-outlined-text-field
@@ -176,7 +179,7 @@
           {{ formError }}
         </div>
       </div>
-      <div slot="actions">
+      <template #actions>
         <md-text-button @click="closeForm">Cancel</md-text-button>
         <md-filled-button
           :disabled="formLoading || !form.name.trim() || form.link_ids.length === 0"
@@ -185,13 +188,16 @@
           <md-circular-progress v-if="formLoading" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           {{ editingReport ? 'Save Changes' : 'Create Report' }}
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Delivery History Dialog ─────────────────────────────────────── -->
-    <md-dialog :open="showDeliveriesModal" @closed="showDeliveriesModal = false">
-      <div slot="headline">Delivery History — {{ deliveriesReport?.name }}</div>
-      <div slot="content" style="min-width:480px;max-width:100%;min-height:200px;">
+    <BaseModal v-model="showDeliveriesModal" size="md">
+      <template #headline>
+        Delivery History — {{ deliveriesReport?.name }}
+      </template>
+
+      <div style="min-width:480px;max-width:100%;min-height:200px;">
         <div v-if="deliveriesLoading" style="display:flex;justify-content:center;padding:24px;">
           <md-circular-progress indeterminate style="--md-circular-progress-size:32px" />
         </div>
@@ -215,15 +221,19 @@
           </div>
         </div>
       </div>
-      <div slot="actions">
+
+      <template #actions>
         <md-text-button @click="showDeliveriesModal = false">Close</md-text-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Preview Dialog ─────────────────────────────────────────────── -->
-    <md-dialog :open="showPreviewModal" @closed="showPreviewModal = false">
-      <div slot="headline">Report Preview</div>
-      <div slot="content" style="min-width:540px;max-width:100%;max-height:70vh;overflow-y:auto;">
+    <BaseModal v-model="showPreviewModal" size="lg">
+      <template #headline>
+        Report Preview
+      </template>
+
+      <div style="min-width:540px;max-width:100%;">
         <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin-bottom:16px;">{{ previewReport?.name }}</div>
 
         <!-- Loading skeleton -->
@@ -315,20 +325,22 @@
 
         <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:16px;">Preview shows current account analytics data.</div>
       </div>
-      <div slot="actions">
+
+      <template #actions>
         <md-text-button @click="showPreviewModal = false">Close</md-text-button>
         <md-filled-button :disabled="sendingPreview" @click="sendNowFromPreview">
           <md-circular-progress v-if="sendingPreview" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           Send now
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
+import BaseModal from '@/components/BaseModal.vue';
 import { reportsApi } from '@/api/reports';
 import { linksApi } from '@/api/links';
 import { dashboardApi } from '@/api/dashboard';
@@ -580,10 +592,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
-  max-width: 900px;
-}
+/* page-section (global) handles padding; max-width set via style attribute on root */
 
 .page-header {
   display: flex;

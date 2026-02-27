@@ -1,11 +1,15 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" class="create-link-dialog">
-    <div slot="headline" class="dialog-headline">
+  <BaseModal
+    v-model="isOpen"
+    size="lg"
+    @closed="onDialogClosed"
+  >
+    <template #headline>
       <span class="material-symbols-outlined dialog-headline-icon">{{ isEditMode ? 'edit_square' : 'add_link' }}</span>
       <span>{{ isEditMode ? 'Edit Link' : 'Create New Link' }}</span>
-    </div>
+    </template>
 
-    <div slot="content" class="dialog-content">
+    <div class="dialog-content">
 
       <!-- Error banner -->
       <div v-if="error" class="alert-banner alert-banner--error">
@@ -133,27 +137,24 @@
         </div>
 
         <div class="field-row">
-          <md-outlined-select
-            :value="String(form.redirect_type)"
-            @change="form.redirect_type = Number(($event.target as HTMLSelectElement).value) as 301 | 302"
+          <AppSelect
+            :model-value="String(form.redirect_type)"
+            @update:model-value="form.redirect_type = Number($event) as 301 | 302"
             label="Redirect Type"
             class="field-flex"
           >
-            <md-select-option value="302"><div slot="headline">302 — Temporary Redirect</div></md-select-option>
-            <md-select-option value="301"><div slot="headline">301 — Permanent Redirect</div></md-select-option>
-          </md-outlined-select>
+            <option value="302">302 — Temporary Redirect</option>
+            <option value="301">301 — Permanent Redirect</option>
+          </AppSelect>
 
-          <md-outlined-select
-            :value="form.folder_id"
-            @change="form.folder_id = ($event.target as HTMLSelectElement).value"
+          <AppSelect
+            v-model="form.folder_id"
             label="Folder"
             class="field-flex"
           >
-            <md-select-option value=""><div slot="headline">— No folder —</div></md-select-option>
-            <md-select-option v-for="f in props.folders" :key="f.id" :value="f.id">
-              <div slot="headline">{{ f.name }}</div>
-            </md-select-option>
-          </md-outlined-select>
+            <option value="">— No folder —</option>
+            <option v-for="f in props.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+          </AppSelect>
         </div>
       </div>
 
@@ -253,15 +254,15 @@
 
     </div>
 
-    <div slot="actions" class="dialog-actions">
+    <template #actions>
       <md-text-button @click="hide" :disabled="saving">Cancel</md-text-button>
       <md-filled-button @click="handleSave" :disabled="saving" class="save-btn">
-        <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
-        <span class="material-symbols-outlined" v-else slot="icon">{{ isEditMode ? 'save' : 'add_link' }}</span>
+        <md-circular-progress v-if="saving" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+        <span class="material-symbols-outlined" v-else style="margin-right:6px;font-size:18px;">{{ isEditMode ? 'save' : 'add_link' }}</span>
         {{ saving ? 'Saving…' : (isEditMode ? 'Save Changes' : 'Create Link') }}
       </md-filled-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -270,6 +271,8 @@ import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types
 import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
 import linksApi from '@/api/links';
+import BaseModal from '@/components/BaseModal.vue';
+import AppSelect from '@/components/AppSelect.vue';
 
 interface Props {
   link?: LinkResponse;
@@ -512,21 +515,7 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped lang="scss">
-.create-link-dialog {
-  --md-dialog-container-shape: 20px;
-  --md-dialog-container-max-inline-size: 620px;
-}
-
-/* ── Headline ─────────────────────────────────────────── */
-.dialog-headline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--md-sys-color-on-surface);
-}
-
+/* ── Headline icon ────────────────────────────────────── */
 .dialog-headline-icon {
   font-size: 22px;
   color: var(--md-sys-color-primary);
@@ -534,9 +523,6 @@ defineExpose({ show, hide });
 
 /* ── Content wrapper ──────────────────────────────────── */
 .dialog-content {
-  min-width: 540px;
-  max-width: 100%;
-  padding: 0 2px;
   display: flex;
   flex-direction: column;
   gap: 0;

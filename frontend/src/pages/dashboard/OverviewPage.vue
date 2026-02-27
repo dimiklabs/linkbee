@@ -103,13 +103,18 @@
             v-if="!data.time_series_30d || data.time_series_30d.length === 0"
             class="m3-empty-state"
           >
-            <span class="material-symbols-outlined m3-empty-state__icon">show_chart</span>
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">show_chart</span>
+            </div>
             <p class="md-title-small m3-empty-state__title">No click data yet</p>
             <p class="md-body-medium m3-empty-state__subtitle">
               Clicks will appear here as your links are visited.
             </p>
             <router-link to="/dashboard/links">
-              <md-filled-button>Create a link</md-filled-button>
+              <md-filled-button>
+                <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
+                Create a link
+              </md-filled-button>
             </router-link>
           </div>
           <VChart v-else :option="trendChartOption" style="height: 280px;" autoresize />
@@ -229,7 +234,9 @@
           </div>
           <md-divider />
           <div v-if="data.top_links.length === 0" class="m3-empty-state m3-empty-state--compact">
-            <span class="material-symbols-outlined m3-empty-state__icon">link_off</span>
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">link_off</span>
+            </div>
             <p class="md-body-medium m3-empty-state__subtitle">No clicks recorded yet.</p>
             <router-link to="/dashboard/links">
               <md-outlined-button>Create a link</md-outlined-button>
@@ -271,10 +278,15 @@
           </div>
           <md-divider />
           <div v-if="data.recent_links.length === 0" class="m3-empty-state m3-empty-state--compact">
-            <span class="material-symbols-outlined m3-empty-state__icon">add_link</span>
+            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
+              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">add_link</span>
+            </div>
             <p class="md-body-medium m3-empty-state__subtitle">No links created yet.</p>
             <router-link to="/dashboard/links">
-              <md-filled-button>Create your first link</md-filled-button>
+              <md-filled-button>
+                <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
+                Create your first link
+              </md-filled-button>
             </router-link>
           </div>
           <div v-else class="m3-table-wrapper">
@@ -327,10 +339,18 @@ import linksApi from '@/api/links';
 import type { DashboardOverviewResponse } from '@/types/dashboard';
 import type { LinkResponse } from '@/types/links';
 import { useAuthStore } from '@/stores/auth';
+import { useUiStore } from '@/stores/ui';
 
 use([LineChart, GridComponent, TooltipComponent, CanvasRenderer]);
 
 const authStore = useAuthStore();
+const uiStore = useUiStore();
+
+// Dark-mode-aware chart color helpers
+const surfaceColor = computed(() => uiStore.darkMode ? '#1A1F36' : '#ffffff');
+const onSurface = computed(() => uiStore.darkMode ? '#E2E0EA' : '#1a1f36');
+const muted = computed(() => uiStore.darkMode ? '#CAC4D0' : '#697386');
+const gridLine = computed(() => uiStore.darkMode ? '#2C283F' : '#f0f2f5');
 
 const loading = ref(true);
 const data = ref<DashboardOverviewResponse | null>(null);
@@ -394,29 +414,38 @@ const trendChartOption = computed(() => {
   const dates = series.map((p) => new Date(p.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
   const counts = series.map((p) => Number(p.count));
 
+  // Resolve dynamic colors based on dark mode
+  const bg = surfaceColor.value;
+  const textColor = onSurface.value;
+  const mutedColor = muted.value;
+  const gridColor = gridLine.value;
+  const primaryColor = uiStore.darkMode ? '#C5C1FF' : '#635BFF';
+
   return {
+    backgroundColor: bg,
+    textStyle: { color: textColor },
     tooltip: {
       trigger: 'axis',
       formatter: (params: { name: string; value: number }[]) => {
         const p = params[0];
         return `${p.name}<br/><strong>${p.value.toLocaleString()} clicks</strong>`;
       },
-      backgroundColor: 'var(--md-sys-color-surface-container-high)',
-      borderColor: 'var(--md-sys-color-outline-variant)',
-      textStyle: { color: 'var(--md-sys-color-on-surface)', fontSize: 12 },
+      backgroundColor: uiStore.darkMode ? '#2C283F' : '#ffffff',
+      borderColor: uiStore.darkMode ? '#49454F' : '#CAC4D0',
+      textStyle: { color: textColor, fontSize: 12 },
     },
     grid: { top: 16, right: 16, bottom: 36, left: 52 },
     xAxis: {
       type: 'category',
       data: dates,
-      axisLine: { lineStyle: { color: 'var(--md-sys-color-outline-variant)' } },
+      axisLine: { lineStyle: { color: gridColor } },
       axisTick: { show: false },
-      axisLabel: { color: 'var(--md-sys-color-on-surface-variant)', fontSize: 11, interval: Math.max(0, Math.floor(dates.length / 6) - 1) },
+      axisLabel: { color: mutedColor, fontSize: 11, interval: Math.max(0, Math.floor(dates.length / 6) - 1) },
     },
     yAxis: {
       type: 'value',
-      splitLine: { lineStyle: { color: 'var(--md-sys-color-outline-variant)', type: 'dashed' } },
-      axisLabel: { color: 'var(--md-sys-color-on-surface-variant)', fontSize: 11 },
+      splitLine: { lineStyle: { color: gridColor, type: 'dashed' } },
+      axisLabel: { color: mutedColor, fontSize: 11 },
       minInterval: 1,
     },
     series: [
@@ -426,15 +455,15 @@ const trendChartOption = computed(() => {
         smooth: true,
         symbol: 'circle',
         symbolSize: 4,
-        lineStyle: { color: 'var(--md-sys-color-primary)', width: 2.5 },
-        itemStyle: { color: 'var(--md-sys-color-primary)' },
+        lineStyle: { color: primaryColor, width: 2.5 },
+        itemStyle: { color: primaryColor },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent)' },
-              { offset: 1, color: 'color-mix(in srgb, var(--md-sys-color-primary) 2%, transparent)' },
+              { offset: 0, color: uiStore.darkMode ? 'rgba(197,193,255,0.20)' : 'rgba(99,91,255,0.20)' },
+              { offset: 1, color: uiStore.darkMode ? 'rgba(197,193,255,0.02)' : 'rgba(99,91,255,0.02)' },
             ],
           },
         },
@@ -862,20 +891,13 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   padding: 48px 24px;
   text-align: center;
 
   &--compact {
     padding: 32px 16px;
   }
-}
-
-.m3-empty-state__icon {
-  font-size: 48px;
-  color: var(--md-sys-color-on-surface-variant);
-  opacity: 0.5;
-  margin-bottom: 4px;
 }
 
 .m3-empty-state__title {
@@ -886,7 +908,7 @@ onMounted(async () => {
 
 .m3-empty-state__subtitle {
   color: var(--md-sys-color-on-surface-variant);
-  margin: 0 0 8px;
+  margin: 0;
   max-width: 320px;
 }
 </style>

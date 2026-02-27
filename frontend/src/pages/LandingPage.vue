@@ -47,10 +47,10 @@
           <a href="#pricing" class="mobile-nav-link" @click="handleMobileNav('pricing')">Pricing</a>
           <div class="mobile-nav-divider"></div>
           <router-link to="/login" class="mobile-action-link" @click="mobileMenuOpen = false">
-            <md-outlined-button style="width: 100%;">Login</md-outlined-button>
+            <md-outlined-button class="mobile-action-btn">Login</md-outlined-button>
           </router-link>
           <router-link to="/signup" class="mobile-action-link" @click="mobileMenuOpen = false">
-            <md-filled-button style="width: 100%;">Sign Up</md-filled-button>
+            <md-filled-button class="mobile-action-btn">Sign Up</md-filled-button>
           </router-link>
         </div>
       </div>
@@ -237,8 +237,8 @@
                 </li>
               </ul>
               <router-link to="/signup" class="pricing-cta-link">
-                <md-filled-button v-if="plan.popular" style="width: 100%;">Get started</md-filled-button>
-                <md-outlined-button v-else style="width: 100%;">Get started</md-outlined-button>
+                <md-filled-button v-if="plan.popular" class="pricing-cta-btn">Get started</md-filled-button>
+                <md-outlined-button v-else class="pricing-cta-btn">Get started</md-outlined-button>
               </router-link>
             </div>
           </div>
@@ -642,6 +642,10 @@ const pricingPlans = [
 .mobile-action-link {
   text-decoration: none;
   display: block;
+}
+
+.mobile-action-btn {
+  width: 100%;
 }
 
 // ─── Hero ──────────────────────────────────────────────────────────────────────
@@ -1155,6 +1159,10 @@ const pricingPlans = [
   margin-top: auto;
 }
 
+.pricing-cta-btn {
+  width: 100%;
+}
+
 // ─── CTA ───────────────────────────────────────────────────────────────────────
 .cta-section {
   padding: 96px 24px;
@@ -1202,7 +1210,7 @@ const pricingPlans = [
 
 // ─── Footer ────────────────────────────────────────────────────────────────────
 .landing-footer {
-  padding: 24px;
+  padding: 32px 24px;
   background: var(--md-sys-color-surface);
   border-top: 1px solid var(--md-sys-color-outline-variant);
 }
@@ -1210,16 +1218,16 @@ const pricingPlans = [
 .footer-inner {
   max-width: 1200px;
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
 
   @media (max-width: 640px) {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     text-align: center;
-    gap: 12px;
+    gap: 14px;
+    justify-items: center;
   }
 }
 
@@ -1259,6 +1267,11 @@ const pricingPlans = [
 .footer-links {
   display: flex;
   gap: 24px;
+  justify-content: flex-end;
+
+  @media (max-width: 640px) {
+    justify-content: center;
+  }
 }
 
 .footer-link {

@@ -1,14 +1,14 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" class="qr-dialog">
-    <div slot="headline" class="dialog-headline">
+  <BaseModal v-model="isOpen" size="lg" @closed="onDialogClosed">
+    <template #headline>
       <span class="material-symbols-outlined dialog-headline-icon">qr_code_2</span>
       <div class="dialog-headline-text">
         <span>QR Code</span>
         <span class="dialog-headline-sub">/{{ slug }}</span>
       </div>
-    </div>
+    </template>
 
-    <div slot="content" class="dialog-content">
+    <div class="dialog-content">
       <div class="qr-layout">
 
         <!-- Left: QR preview -->
@@ -162,7 +162,7 @@
 
           <!-- Reset -->
           <md-outlined-button @click="resetOptions" class="reset-btn">
-            <span class="material-symbols-outlined" slot="icon">restart_alt</span>
+            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">restart_alt</span>
             Reset to defaults
           </md-outlined-button>
 
@@ -170,25 +170,26 @@
       </div>
     </div>
 
-    <div slot="actions" class="dialog-actions">
+    <template #actions>
       <md-text-button @click="hide">Close</md-text-button>
       <div class="download-btns">
         <md-outlined-button :disabled="previewLoading || previewError" @click="downloadSVG" class="dl-btn">
-          <span class="material-symbols-outlined" slot="icon">download</span>
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">download</span>
           SVG
         </md-outlined-button>
         <md-filled-tonal-button :disabled="previewLoading || previewError" @click="downloadPNG" class="dl-btn">
-          <span class="material-symbols-outlined" slot="icon">image</span>
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">image</span>
           PNG
         </md-filled-tonal-button>
       </div>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
 import linksApi from '@/api/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 interface Props {
   linkId: string;
@@ -324,18 +325,7 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped lang="scss">
-.qr-dialog {
-  --md-dialog-container-shape: 20px;
-  --md-dialog-container-max-inline-size: 680px;
-}
-
 /* ── Headline ─────────────────────────────────────────── */
-.dialog-headline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .dialog-headline-icon {
   font-size: 24px;
   color: var(--md-sys-color-primary);
@@ -715,13 +705,6 @@ defineExpose({ show, hide });
 }
 
 /* ── Actions ──────────────────────────────────────────── */
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
 .download-btns {
   display: flex;
   gap: 8px;

@@ -1,13 +1,13 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
-    <div slot="headline">
+  <BaseModal v-model="isOpen" size="md" @closed="onDialogClosed">
+    <template #headline>
       Retargeting Pixels
       <span style="font-size:0.82rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);display:block;margin-top:2px">
         <code>{{ link?.slug }}</code>
       </span>
-    </div>
+    </template>
 
-    <div slot="content" style="min-width:520px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+    <div style="min-width:520px;max-width:100%;padding:0 4px;">
       <!-- Enable/disable toggle -->
       <div class="pixels-toggle-row" :class="isEnabled ? 'pixels-toggle-row--active' : ''">
         <div>
@@ -126,10 +126,10 @@
       </div>
     </div>
 
-    <div slot="actions">
+    <template #actions>
       <md-text-button @click="hide">Close</md-text-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -138,6 +138,7 @@ import pixelsApi from '@/api/pixels';
 import { PIXEL_TYPES } from '@/types/pixels';
 import type { RetargetingPixel, PixelType } from '@/types/pixels';
 import type { LinkResponse } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 const props = defineProps<{
   modalId: string;

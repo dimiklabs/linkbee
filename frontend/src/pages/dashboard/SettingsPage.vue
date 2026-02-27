@@ -833,8 +833,9 @@ onMounted(async () => {
   }
 }
 
-/* ── Switch rows ─────────────────────────────────────────────────────────── */
-.switch-row {
+/* ── Toggle / Switch rows ────────────────────────────────────────────────── */
+.switch-row,
+.toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;

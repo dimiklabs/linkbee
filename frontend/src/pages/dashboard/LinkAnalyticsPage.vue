@@ -121,17 +121,17 @@
               @input="filterTo = ($event.target as HTMLInputElement).value"
               style="min-width:160px;"
             />
-            <md-outlined-select
+            <AppSelect
               label="Granularity"
-              :value="filterGranularity"
-              @change="filterGranularity = ($event.target as HTMLSelectElement).value as 'hour'|'day'|'week'|'month'"
+              :model-value="filterGranularity"
+              @update:model-value="filterGranularity = $event as 'hour'|'day'|'week'|'month'"
               style="min-width:140px;"
             >
-              <md-select-option value="hour"><div slot="headline">Hour</div></md-select-option>
-              <md-select-option value="day"><div slot="headline">Day</div></md-select-option>
-              <md-select-option value="week"><div slot="headline">Week</div></md-select-option>
-              <md-select-option value="month"><div slot="headline">Month</div></md-select-option>
-            </md-outlined-select>
+              <option value="hour">Hour</option>
+              <option value="day">Day</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
+            </AppSelect>
             <md-filled-button :disabled="loading" @click="applyFilters">
               <span v-if="loading" slot="icon"><md-circular-progress indeterminate style="--md-circular-progress-size:18px" /></span>
               Apply
@@ -931,6 +931,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { RouterLink } from 'vue-router';
+import AppSelect from '@/components/AppSelect.vue';
 import { use, registerMap } from 'echarts/core';
 import { LineChart, PieChart, BarChart, HeatmapChart, MapChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent, TitleComponent, VisualMapComponent, GeoComponent } from 'echarts/components';

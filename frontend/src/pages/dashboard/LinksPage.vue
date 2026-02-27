@@ -112,7 +112,7 @@
               </md-icon-button>
             </div>
             <md-text-button v-else @click="openNewFolderInput" style="width:100%">
-              <span class="material-symbols-outlined" slot="icon">create_new_folder</span>
+              <span class="material-symbols-outlined" style="font-size:18px;margin-right:4px">create_new_folder</span>
               New Folder
             </md-text-button>
           </div>
@@ -151,14 +151,14 @@
           </div>
           <div class="page-header-actions">
             <div class="search-wrap">
-              <md-outlined-text-field
-                :value="searchQuery"
-                @input="searchQuery = ($event.target as HTMLInputElement).value"
-                label="Search links..."
-                style="min-width:220px;max-width:300px"
-              >
-                <span class="material-symbols-outlined" slot="leading-icon">search</span>
-              </md-outlined-text-field>
+              <span class="search-icon material-symbols-outlined">search</span>
+              <input
+                v-model="searchQuery"
+                type="text"
+                class="search-input"
+                placeholder="Search links…"
+                autocomplete="off"
+              />
               <button
                 v-if="searchQuery"
                 class="search-clear-btn"
@@ -170,18 +170,18 @@
             </div>
 
             <md-outlined-button @click="exportCSV" :disabled="exporting">
-              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
-              <span v-else class="material-symbols-outlined" slot="icon">download</span>
+              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px" />
+              <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px">download</span>
               Export CSV
             </md-outlined-button>
 
             <md-outlined-button @click="openImportModal">
-              <span class="material-symbols-outlined" slot="icon">upload_file</span>
+              <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">upload_file</span>
               Import CSV
             </md-outlined-button>
 
             <md-filled-button @click="openCreateModal">
-              <span class="material-symbols-outlined" slot="icon">add</span>
+              <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add</span>
               New Link
             </md-filled-button>
           </div>
@@ -240,7 +240,7 @@
           </p>
           <div class="m3-empty-state__actions">
             <md-filled-button v-if="!searchQuery && !selectedTags.length" @click="openCreateModal">
-              <span class="material-symbols-outlined" slot="icon">add</span>
+              <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add</span>
               Create your first link
             </md-filled-button>
             <md-outlined-button v-else-if="selectedTags.length" @click="clearTagFilter">
@@ -298,14 +298,14 @@
             </div>
 
             <md-outlined-button :disabled="qrDownloading" @click="downloadBulkQR">
-              <md-circular-progress v-if="qrDownloading" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
-              <span v-else class="material-symbols-outlined" slot="icon">qr_code_2</span>
+              <md-circular-progress v-if="qrDownloading" indeterminate style="--md-circular-progress-size:16px;margin-right:6px" />
+              <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px">qr_code_2</span>
               QR Codes
             </md-outlined-button>
 
             <div class="bulk-bar-end">
               <md-outlined-button :disabled="bulkLoading" @click="bulkDelete" style="--md-outlined-button-outline-color:var(--md-sys-color-error);--md-outlined-button-label-text-color:var(--md-sys-color-error)">
-                <md-circular-progress v-if="bulkLoading" indeterminate style="--md-circular-progress-size:16px" slot="icon" />
+                <md-circular-progress v-if="bulkLoading" indeterminate style="--md-circular-progress-size:16px;margin-right:6px" />
                 Delete
               </md-outlined-button>
               <md-text-button @click="clearSelection">Clear</md-text-button>
@@ -435,95 +435,78 @@
                   </td>
 
                   <!-- Actions -->
-                  <td style="text-align:right">
+                  <td class="actions-td">
                     <div class="actions-cell">
-                      <!-- Star -->
-                      <md-icon-button
-                        :title="link.is_starred ? 'Unstar' : 'Star'"
-                        @click="toggleStar(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
-                      >
-                        <span class="material-symbols-outlined" :style="{ color: link.is_starred ? '#F4A100' : 'inherit', fontVariationSettings: link.is_starred ? '\'FILL\' 1' : '\'FILL\' 0' }">star</span>
-                      </md-icon-button>
-
-                      <!-- Health check -->
-                      <md-icon-button
-                        :title="checkingHealthId === link.id ? 'Checking...' : 'Check link health'"
-                        :disabled="checkingHealthId === link.id"
-                        @click="runHealthCheck(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
-                      >
-                        <md-circular-progress v-if="checkingHealthId === link.id" indeterminate style="--md-circular-progress-size:16px" />
-                        <span v-else class="material-symbols-outlined">health_and_safety</span>
-                      </md-icon-button>
-
-                      <!-- Analytics -->
+                      <!-- Analytics (primary) -->
                       <RouterLink :to="`/dashboard/links/${link.id}`">
-                        <md-icon-button title="View Analytics" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                        <button class="action-btn" title="Analytics">
                           <span class="material-symbols-outlined">bar_chart</span>
-                        </md-icon-button>
+                        </button>
                       </RouterLink>
 
-                      <!-- Preview -->
-                      <md-icon-button title="Link Preview" @click="openPreviewModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
-                        <span class="material-symbols-outlined">visibility</span>
-                      </md-icon-button>
-
-                      <!-- QR Code -->
-                      <md-icon-button title="View QR Code" @click="openQRModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
-                        <span class="material-symbols-outlined">qr_code_2</span>
-                      </md-icon-button>
-
-                      <!-- A/B Split Test -->
-                      <md-icon-button
-                        title="A/B Split Test"
-                        @click="openSplitModal(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
-                        :style="link.is_split_test ? { '--md-icon-button-icon-color': 'var(--md-sys-color-primary)' } : {}"
-                      >
-                        <span class="material-symbols-outlined">join</span>
-                      </md-icon-button>
-
-                      <!-- Geo Routing -->
-                      <md-icon-button
-                        title="Geo Routing"
-                        @click="openGeoModal(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
-                        :style="link.is_geo_routing ? { '--md-icon-button-icon-color': '#1AA563' } : {}"
-                      >
-                        <span class="material-symbols-outlined">public</span>
-                      </md-icon-button>
-
-                      <!-- Retargeting Pixels -->
-                      <md-icon-button
-                        title="Retargeting Pixels"
-                        @click="openPixelModal(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px"
-                        :style="link.is_pixel_tracking ? { '--md-icon-button-icon-color': 'var(--md-sys-color-error)' } : {}"
-                      >
-                        <span class="material-symbols-outlined">track_changes</span>
-                      </md-icon-button>
-
-                      <!-- Edit -->
-                      <md-icon-button title="Edit Link" @click="openEditModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
+                      <!-- Edit (primary) -->
+                      <button class="action-btn" title="Edit" @click="openEditModal(link)">
                         <span class="material-symbols-outlined">edit</span>
-                      </md-icon-button>
+                      </button>
 
-                      <!-- Clone -->
-                      <md-icon-button title="Clone Link" @click="openCloneModal(link)" style="--md-icon-button-icon-size:18px;width:32px;height:32px">
-                        <span class="material-symbols-outlined">file_copy</span>
-                      </md-icon-button>
-
-                      <!-- Delete -->
-                      <md-icon-button
-                        title="Delete Link"
+                      <!-- Delete (primary, danger) -->
+                      <button
+                        class="action-btn action-btn--danger"
+                        title="Delete"
                         :disabled="deletingId === link.id"
                         @click="confirmDelete(link)"
-                        style="--md-icon-button-icon-size:18px;width:32px;height:32px;--md-icon-button-icon-color:var(--md-sys-color-error)"
                       >
-                        <md-circular-progress v-if="deletingId === link.id" indeterminate style="--md-circular-progress-size:16px" />
+                        <md-circular-progress v-if="deletingId === link.id" indeterminate style="--md-circular-progress-size:14px" />
                         <span v-else class="material-symbols-outlined">delete</span>
-                      </md-icon-button>
+                      </button>
+
+                      <!-- More actions dropdown -->
+                      <div class="row-menu-wrap">
+                        <button class="action-btn" title="More actions" @click.stop="toggleRowMenu($event, link.id)">
+                          <span class="material-symbols-outlined">more_vert</span>
+                        </button>
+                        <Teleport to="body">
+                        <div v-if="openMenuId === link.id" class="row-menu" :style="{ top: menuPos.top + 'px', right: menuPos.right + 'px' }" @click.stop>
+                          <button class="row-menu-item" @click="toggleStar(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon" :style="{ color: link.is_starred ? '#F4A100' : undefined, fontVariationSettings: link.is_starred ? '\'FILL\' 1' : '\'FILL\' 0' }">star</span>
+                            {{ link.is_starred ? 'Unstar' : 'Star' }}
+                          </button>
+                          <button class="row-menu-item" :disabled="checkingHealthId === link.id" @click="runHealthCheck(link); closeAllRowMenus()">
+                            <md-circular-progress v-if="checkingHealthId === link.id" indeterminate style="--md-circular-progress-size:14px;margin-right:2px" />
+                            <span v-else class="material-symbols-outlined row-menu-item__icon">health_and_safety</span>
+                            Check Health
+                          </button>
+                          <button class="row-menu-item" @click="openPreviewModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">visibility</span>
+                            Preview
+                          </button>
+                          <button class="row-menu-item" @click="openQRModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">qr_code_2</span>
+                            QR Code
+                          </button>
+                          <button class="row-menu-item" @click="openCloneModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">file_copy</span>
+                            Clone
+                          </button>
+                          <div class="row-menu-divider" />
+                          <button class="row-menu-item" :class="{ 'row-menu-item--active': link.is_split_test }" @click="openSplitModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">join</span>
+                            A/B Split Test
+                            <span v-if="link.is_split_test" class="row-menu-item__badge">On</span>
+                          </button>
+                          <button class="row-menu-item" :class="{ 'row-menu-item--active': link.is_geo_routing }" @click="openGeoModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">public</span>
+                            Geo Routing
+                            <span v-if="link.is_geo_routing" class="row-menu-item__badge">On</span>
+                          </button>
+                          <button class="row-menu-item" :class="{ 'row-menu-item--active': link.is_pixel_tracking }" @click="openPixelModal(link); closeAllRowMenus()">
+                            <span class="material-symbols-outlined row-menu-item__icon">track_changes</span>
+                            Retargeting Pixels
+                            <span v-if="link.is_pixel_tracking" class="row-menu-item__badge">On</span>
+                          </button>
+                        </div>
+                        </Teleport>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -532,24 +515,27 @@
           </div>
 
           <!-- Pagination -->
-          <div v-if="linksStore.totalPages > 1" class="pagination-bar">
-            <p class="pagination-info">
-              Page {{ linksStore.page }} of {{ linksStore.totalPages }} &mdash; {{ linksStore.total }} total
-            </p>
-            <div class="pagination-controls">
-              <md-outlined-button @click="goToPage(linksStore.page - 1)" :disabled="linksStore.page <= 1">
-                Previous
-              </md-outlined-button>
-
+          <div v-if="linksStore.totalPages > 1" class="m3-pagination">
+            <span class="m3-pagination__info">
+              Showing page {{ linksStore.page }} of {{ linksStore.totalPages }} &mdash; {{ linksStore.total }} total
+            </span>
+            <div class="m3-pagination__controls">
+              <button class="icon-btn" :disabled="linksStore.page <= 1" @click="goToPage(linksStore.page - 1)">
+                <span class="material-symbols-outlined">chevron_left</span>
+              </button>
               <template v-for="(p, idx) in visiblePages" :key="idx">
-                <md-filled-button v-if="p === linksStore.page" style="min-width:40px">{{ p }}</md-filled-button>
-                <md-outlined-button v-else-if="p !== '...'" @click="goToPage(Number(p))" style="min-width:40px">{{ p }}</md-outlined-button>
-                <span v-else class="pagination-ellipsis">...</span>
+                <button
+                  v-if="p !== '...'"
+                  class="icon-btn"
+                  :class="{ 'icon-btn--active': p === linksStore.page }"
+                  @click="goToPage(Number(p))"
+                  :style="p === linksStore.page ? 'background:var(--md-sys-color-primary);color:#fff;border-radius:50%;width:32px;height:32px;font-size:13px;font-weight:700' : 'font-size:13px;padding:0 6px'"
+                >{{ p }}</button>
+                <span v-else class="pagination-ellipsis">…</span>
               </template>
-
-              <md-outlined-button @click="goToPage(linksStore.page + 1)" :disabled="linksStore.page >= linksStore.totalPages">
-                Next
-              </md-outlined-button>
+              <button class="icon-btn" :disabled="linksStore.page >= linksStore.totalPages" @click="goToPage(linksStore.page + 1)">
+                <span class="material-symbols-outlined">chevron_right</span>
+              </button>
             </div>
           </div>
         </div>
@@ -637,7 +623,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useLinksStore } from '@/stores/links';
 import type { LinkResponse } from '@/types/links';
@@ -730,6 +716,8 @@ const cloneModalRef = ref<InstanceType<typeof CloneLinkModal> | null>(null);
 const cloneLink = ref<LinkResponse | null>(null);
 const toastEl = ref<HTMLElement | null>(null);
 let toastInstance: any = null;
+const openMenuId = ref<string | null>(null);
+const menuPos = ref({ top: 0, right: 0 });
 
 // ── Bulk selection ────────────────────────────────────────────────────────────
 const selectedIDs = ref<Set<string>>(new Set());
@@ -994,10 +982,29 @@ watch(searchQuery, (val) => {
   }, 400);
 });
 
+function toggleRowMenu(event: MouseEvent, id: string) {
+  if (openMenuId.value === id) {
+    openMenuId.value = null;
+    return;
+  }
+  const btn = event.currentTarget as HTMLElement;
+  const rect = btn.getBoundingClientRect();
+  menuPos.value = {
+    top: rect.bottom + 4,
+    right: window.innerWidth - rect.right,
+  };
+  openMenuId.value = id;
+}
+
+function closeAllRowMenus() {
+  openMenuId.value = null;
+}
+
 onMounted(async () => {
   linksStore.fetchLinks(1, 20, '');
   loadFolders();
   loadTags();
+  document.addEventListener('click', closeAllRowMenus);
   // Bootstrap Toast removed — will use Vuetify snackbar in page rewrite
   try {
     const res = await billingApi.getUsage();
@@ -1007,6 +1014,10 @@ onMounted(async () => {
     const res = await billingApi.getSubscription();
     plan.value = res.data.data.plan;
   } catch {}
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeAllRowMenus);
 });
 
 function formatDate(dateStr: string): string {
@@ -1264,12 +1275,8 @@ const visiblePages = computed<(number | string)[]>(() => {
 <style scoped lang="scss">
 /* ── Layout ──────────────────────────────────────────────────────────────────── */
 .links-page {
-  padding: 24px;
+  padding: 0;
   min-height: 100%;
-
-  @media (max-width: 575px) {
-    padding: 16px;
-  }
 }
 
 .links-layout {
@@ -1281,6 +1288,14 @@ const visiblePages = computed<(number | string)[]>(() => {
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Main column ─────────────────────────────────────────────────────────────── */
+.links-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────────── */
@@ -1524,20 +1539,54 @@ const visiblePages = computed<(number | string)[]>(() => {
   flex-wrap: wrap;
 }
 
-/* ── Search with clear button ────────────────────────────────────────────────── */
+/* ── Search field ────────────────────────────────────────────────────────────── */
 .search-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  width: 240px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 18px;
+  color: var(--md-sys-color-on-surface-variant);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 32px 0 36px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface);
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    border-width: 2px;
+    background: var(--md-sys-color-surface);
+  }
 }
 
 .search-clear-btn {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -1547,15 +1596,12 @@ const visiblePages = computed<(number | string)[]>(() => {
   border-radius: 50%;
   color: var(--md-sys-color-on-surface-variant);
   transition: background 0.15s;
-  z-index: 1;
 
   &:hover {
-    background: var(--md-sys-color-surface-container-low);
+    background: var(--md-sys-color-surface-container-highest);
   }
 
-  .material-symbols-outlined {
-    font-size: 18px;
-  }
+  .material-symbols-outlined { font-size: 16px; }
 }
 
 /* ── Banners ─────────────────────────────────────────────────────────────────── */
@@ -1651,36 +1697,35 @@ const visiblePages = computed<(number | string)[]>(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
   padding: 72px 24px;
   text-align: center;
 }
 
 .m3-empty-state__icon-wrap {
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--md-sys-color-surface-container-low);
+  background: var(--md-sys-color-surface-container);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
 }
 
 .m3-empty-state__icon {
-  font-size: 40px;
-  color: var(--md-sys-color-primary);
-  opacity: 0.7;
+  font-size: 32px;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .m3-empty-state__title {
   font-weight: 600;
   color: var(--md-sys-color-on-surface);
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .m3-empty-state__subtitle {
   color: var(--md-sys-color-on-surface-variant);
-  margin: 0 0 24px;
+  margin: 0;
   max-width: 380px;
 }
 
@@ -1689,6 +1734,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   gap: 12px;
   flex-wrap: wrap;
   justify-content: center;
+  margin-top: 8px;
 }
 
 /* ── Table Card ──────────────────────────────────────────────────────────────── */
@@ -1917,39 +1963,191 @@ const visiblePages = computed<(number | string)[]>(() => {
   white-space: nowrap;
 }
 
+.actions-td {
+  white-space: nowrap;
+}
+
 .actions-cell {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0;
+  gap: 2px;
+}
+
+/* ── Per-row action buttons ──────────────────────────────────────────────────── */
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  &:hover {
+    background: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--danger {
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);
+      color: var(--md-sys-color-error);
+    }
+  }
+}
+
+/* ── Row actions dropdown menu ───────────────────────────────────────────────── */
+.row-menu-wrap {
+  position: relative;
+}
+
+.row-menu {
+  position: fixed;
+  min-width: 196px;
+  background: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  box-shadow:
+    0 4px 8px 3px rgba(0, 0, 0, 0.12),
+    0 1px 3px rgba(0, 0, 0, 0.16);
+  z-index: 150;
+  padding: 6px 0;
+  animation: menu-pop 0.12s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes menu-pop {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.1s;
+  white-space: nowrap;
+
+  &:hover {
+    background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &--active {
+    color: var(--md-sys-color-primary);
+
+    .row-menu-item__icon {
+      color: var(--md-sys-color-primary);
+    }
+  }
+}
+
+.row-menu-item__icon {
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+  transition: color 0.1s;
+}
+
+.row-menu-item__badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.row-menu-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 4px 0;
 }
 
 /* ── Pagination ──────────────────────────────────────────────────────────────── */
-.pagination-bar {
+.m3-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.pagination-info {
-  font-size: 0.85rem;
+.m3-pagination__info {
+  font-size: 13px;
   color: var(--md-sys-color-on-surface-variant);
-  margin: 0;
 }
 
-.pagination-controls {
+.m3-pagination__controls {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: background 0.15s;
+
+  &:hover:not(:disabled) {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
 }
 
 .pagination-ellipsis {
-  padding: 0 6px;
+  padding: 0 4px;
   color: var(--md-sys-color-on-surface-variant);
+  font-size: 13px;
 }
 
 /* ── Snackbar ────────────────────────────────────────────────────────────────── */

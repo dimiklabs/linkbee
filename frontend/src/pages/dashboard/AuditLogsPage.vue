@@ -1,49 +1,48 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-section" style="max-width: 1100px;">
 
     <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Audit Logs</h1>
-        <p class="page-subtitle">A record of all security-relevant actions in your account.</p>
+    <div class="dash-page-header">
+      <div class="dash-page-header__left">
+        <h1 class="dash-page-header__title">Audit Logs</h1>
+        <p class="dash-page-header__subtitle">A record of all security-relevant actions in your account.</p>
       </div>
-      <md-outlined-button :disabled="exporting" @click="exportLogs">
-        <span class="material-symbols-outlined" slot="icon">download</span>
-        <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
-        Export CSV
-      </md-outlined-button>
+      <div class="dash-page-header__actions">
+        <md-outlined-button :disabled="exporting" @click="exportLogs">
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">download</span>
+          <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          Export CSV
+        </md-outlined-button>
+      </div>
     </div>
 
     <!-- Filters -->
     <div class="m3-card m3-card--elevated filters-card">
-      <div class="filters-card__header">
-        <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">filter_list</span>
-        <span class="md-label-large">Filter Events</span>
+      <div class="m3-card-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">filter_list</span>
+          <span style="font-size:16px;font-weight:600;">Filter Events</span>
+        </div>
       </div>
+      <md-divider />
       <div class="filters-row">
-        <md-outlined-select
-          :value="filters.action"
-          @change="filters.action=($event.target as HTMLSelectElement).value"
+        <AppSelect
+          v-model="filters.action"
           label="Action"
           style="min-width:160px;"
         >
-          <md-select-option value=""><div slot="headline">All actions</div></md-select-option>
-          <md-select-option v-for="(label, key) in ACTION_LABELS" :key="key" :value="key">
-            <div slot="headline">{{ label }}</div>
-          </md-select-option>
-        </md-outlined-select>
+          <option value="">All actions</option>
+          <option v-for="(label, key) in ACTION_LABELS" :key="key" :value="key">{{ label }}</option>
+        </AppSelect>
 
-        <md-outlined-select
-          :value="filters.resource_type"
-          @change="filters.resource_type=($event.target as HTMLSelectElement).value"
+        <AppSelect
+          v-model="filters.resource_type"
           label="Resource"
           style="min-width:140px;"
         >
-          <md-select-option value=""><div slot="headline">All resources</div></md-select-option>
-          <md-select-option v-for="(label, key) in RESOURCE_LABELS" :key="key" :value="key">
-            <div slot="headline">{{ label }}</div>
-          </md-select-option>
-        </md-outlined-select>
+          <option value="">All resources</option>
+          <option v-for="(label, key) in RESOURCE_LABELS" :key="key" :value="key">{{ label }}</option>
+        </AppSelect>
 
         <md-outlined-text-field
           :value="filters.from"
@@ -62,7 +61,10 @@
         />
 
         <div style="display:flex;gap:8px;align-items:center;">
-          <md-filled-button @click="applyFilters">Apply</md-filled-button>
+          <md-filled-button @click="applyFilters">
+            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">search</span>
+            Apply
+          </md-filled-button>
           <md-outlined-button @click="resetFilters">Reset</md-outlined-button>
         </div>
       </div>
@@ -85,10 +87,10 @@
     <!-- Table -->
     <div v-else>
       <div class="m3-card m3-card--elevated">
-        <div class="audit-table-header">
+        <div class="m3-card-header">
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">security</span>
-            <span class="md-title-medium">Audit Events</span>
+            <span style="font-size:16px;font-weight:600;">Audit Events</span>
           </div>
           <span class="m3-badge m3-badge--neutral">{{ total }} total</span>
         </div>
@@ -128,18 +130,19 @@
       </div>
 
       <!-- Pagination -->
-      <div class="pagination-bar">
-        <p style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin:0;">
+      <div class="m3-pagination">
+        <p class="m3-pagination__info">
           Showing {{ (page - 1) * limit + 1 }}–{{ Math.min(page * limit, total) }} of {{ total }} events
         </p>
-        <div style="display:flex;gap:8px;">
+        <div class="m3-pagination__controls">
           <md-outlined-button :disabled="page <= 1" @click="changePage(page - 1)">
-            <span class="material-symbols-outlined" slot="icon">chevron_left</span>
+            <span class="material-symbols-outlined" style="font-size:18px;margin-right:4px;">chevron_left</span>
             Prev
           </md-outlined-button>
+          <span class="m3-pagination__page-label">Page {{ page }}</span>
           <md-outlined-button :disabled="page * limit >= total" @click="changePage(page + 1)">
             Next
-            <span class="material-symbols-outlined" slot="trailing-icon">chevron_right</span>
+            <span class="material-symbols-outlined" style="font-size:18px;margin-left:4px;">chevron_right</span>
           </md-outlined-button>
         </div>
       </div>
@@ -150,6 +153,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
+import AppSelect from '@/components/AppSelect.vue';
 import auditApi from '@/api/audit';
 import type { AuditLog } from '@/types/audit';
 import { ACTION_LABELS, RESOURCE_LABELS, ACTION_BADGE } from '@/types/audit';
@@ -256,33 +260,45 @@ onMounted(fetchLogs);
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
-  max-width: 1100px;
-}
+/* page-section (global) handles padding; max-width set via style attribute on root */
 
-.page-header {
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.dash-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 }
 
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 4px;
-  color: var(--md-sys-color-on-surface);
-}
-
-.page-subtitle {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
+/* ── Cards ────────────────────────────────────────────────────────────────── */
 .m3-card {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
@@ -298,25 +314,19 @@ onMounted(fetchLogs);
   }
 }
 
-.filters-card {
-  padding: 0;
-
-  .filters-card__header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
-}
-
-.audit-table-header {
+/* ── M3 Card header ───────────────────────────────────────────────────────── */
+.m3-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  flex-wrap: wrap;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Filters card ─────────────────────────────────────────────────────────── */
+.filters-card {
+  overflow: visible;
 }
 
 .filters-row {
@@ -327,11 +337,12 @@ onMounted(fetchLogs);
   padding: 16px 20px;
 }
 
+/* ── M3 Table wrapper ─────────────────────────────────────────────────────── */
 .m3-table-wrapper {
   overflow-x: auto;
 }
 
-/* M3 Empty state */
+/* ── M3 Empty state ───────────────────────────────────────────────────────── */
 .m3-empty-state {
   display: flex;
   flex-direction: column;
@@ -358,6 +369,7 @@ onMounted(fetchLogs);
   }
 }
 
+/* ── Table ────────────────────────────────────────────────────────────────── */
 .m3-table {
   width: 100%;
   border-collapse: collapse;
@@ -374,6 +386,7 @@ onMounted(fetchLogs);
   font-weight: 600;
   font-size: 0.8rem;
   color: var(--md-sys-color-on-surface-variant);
+  background: var(--md-sys-color-surface-container-low);
   white-space: nowrap;
 }
 
@@ -391,6 +404,7 @@ onMounted(fetchLogs);
   background: var(--md-sys-color-surface-container-low);
 }
 
+/* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -427,26 +441,33 @@ onMounted(fetchLogs);
   color: #dc2626;
 }
 
-/* Audit table background for thead */
-.m3-table th {
-  background: var(--md-sys-color-surface-container-low);
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-}
-
-.pagination-bar {
+/* ── Pagination ───────────────────────────────────────────────────────────── */
+.m3-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 16px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
   gap: 8px;
+
+  &__info {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__page-label {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    min-width: 56px;
+    text-align: center;
+  }
 }
 </style>

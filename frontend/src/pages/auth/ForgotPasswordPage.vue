@@ -65,9 +65,9 @@
             We've sent a password reset link to <strong>{{ submittedEmail }}</strong>.
             The link expires in 1 hour.
           </p>
-          <router-link to="/login" style="text-decoration: none;">
+          <router-link to="/login" class="back-link-wrap">
             <md-outlined-button>
-              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">arrow_back</span>
+              <span class="material-symbols-outlined back-icon-sm">arrow_back</span>
               Back to Sign In
             </md-outlined-button>
           </router-link>
@@ -82,8 +82,8 @@
 
           <!-- Error Banner -->
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
-            <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
-            <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+            <span class="material-symbols-outlined err-icon">error</span>
+            <span class="md-body-medium err-text">{{ errorMessage }}</span>
             <md-icon-button @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
             </md-icon-button>
@@ -99,12 +99,12 @@
                 autocomplete="email"
                 :error="!!emailError"
                 :error-text="emailError"
-                style="width: 100%;"
+                class="field-full"
               />
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-bottom: 16px;">
-              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+              <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Send Reset Link
             </md-filled-button>
           </form>
@@ -348,6 +348,10 @@ async function handleSubmit() {
   margin-bottom: 28px;
 }
 
+.back-link-wrap {
+  text-decoration: none;
+}
+
 /* ── Form elements ────────────────────────────────────────────── */
 .form-heading {
   color: var(--md-sys-color-on-surface);
@@ -385,8 +389,39 @@ async function handleSubmit() {
   margin-bottom: 20px;
 }
 
+.err-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.err-text {
+  flex: 1;
+}
+
 .field-wrap {
   margin-bottom: 16px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-mb {
+  margin-bottom: 16px;
+}
+
+.btn-spinner {
+  --md-circular-progress-size: 20px;
+  margin-right: 8px;
+}
+
+.back-icon-sm {
+  font-size: 18px;
+  margin-right: 4px;
 }
 
 .back-row {
@@ -425,9 +460,8 @@ async function handleSubmit() {
   .auth-right-panel {
     width: 100%;
     min-height: 100vh;
-    padding: 32px 20px;
+    padding: 48px 20px 32px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .right-panel-inner {

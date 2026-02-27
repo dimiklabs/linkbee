@@ -1,5 +1,5 @@
 <template>
-  <div class="teams-page">
+  <div class="page-section" style="max-width: 1100px;">
 
     <!-- Toast notifications -->
     <Transition name="snack">
@@ -15,18 +15,18 @@
       </div>
     </Transition>
 
-    <!-- Page header -->
-    <div class="page-header-row">
-      <div>
-        <h1 class="md-headline-small">Teams</h1>
-        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:4px 0 0;">
-          Manage your teams and collaborate with others.
-        </p>
+    <!-- Page Header -->
+    <div class="dash-page-header">
+      <div class="dash-page-header__left">
+        <h1 class="dash-page-header__title">Teams</h1>
+        <p class="dash-page-header__subtitle">Manage your teams and collaborate with others.</p>
       </div>
-      <md-filled-button @click="openCreateModal">
-        <span class="material-symbols-outlined" slot="icon">add</span>
-        Create Team
-      </md-filled-button>
+      <div class="dash-page-header__actions">
+        <md-filled-button @click="openCreateModal">
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+          Create Team
+        </md-filled-button>
+      </div>
     </div>
 
     <!-- Loading state -->
@@ -44,7 +44,7 @@
         Create a team to collaborate with your colleagues.
       </p>
       <md-filled-button @click="openCreateModal">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+        <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
         Create Your First Team
       </md-filled-button>
     </div>
@@ -81,28 +81,28 @@
     </div>
 
     <!-- ── Team Detail Panel ──────────────────────────────────────────────── -->
-    <div v-if="selectedTeam" class="m3-card m3-card--elevated section-card" style="margin-top:20px;">
-      <div class="card-section-header">
+    <div v-if="selectedTeam" class="m3-card m3-card--elevated team-detail-card">
+      <div class="m3-card-header">
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="team-avatar-sm">{{ selectedTeam.name.charAt(0).toUpperCase() }}</div>
           <div>
-            <div class="md-title-medium">{{ selectedTeam.name }}</div>
+            <div style="font-size:1rem;font-weight:600;color:var(--md-sys-color-on-surface);">{{ selectedTeam.name }}</div>
             <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">@{{ selectedTeam.slug }}</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
           <md-filled-button
             v-if="canManageMembers(selectedTeam)"
             @click="openInviteModal"
           >
-            <span class="material-symbols-outlined" slot="icon">person_add</span>
+            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">person_add</span>
             Invite Member
           </md-filled-button>
           <md-outlined-button
             v-if="isTeamOwner(selectedTeam)"
             @click="openEditModal"
           >
-            <span class="material-symbols-outlined" slot="icon">edit</span>
+            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">edit</span>
             Edit
           </md-outlined-button>
           <md-outlined-button
@@ -121,83 +121,86 @@
           </md-outlined-button>
         </div>
       </div>
+      <md-divider />
 
-      <div>
-        <!-- Members loading -->
-        <div v-if="membersLoading" style="text-align:center;padding:32px;">
-          <md-circular-progress indeterminate />
-        </div>
+      <!-- Members loading -->
+      <div v-if="membersLoading" style="text-align:center;padding:32px;">
+        <md-circular-progress indeterminate />
+      </div>
 
-        <!-- Members table -->
-        <div v-else class="m3-table-wrapper">
-          <table class="m3-table members-table">
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th v-if="canManageMembers(selectedTeam)" style="text-align:right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-if="members.length === 0">
-                <td :colspan="canManageMembers(selectedTeam) ? 5 : 4" style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:32px;">
-                  No members yet.
-                </td>
-              </tr>
-              <tr v-for="member in members" :key="member.id">
-                <td>
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="member-avatar">{{ getMemberInitial(member) }}</div>
-                    <div>
-                      <div class="md-label-large">{{ getMemberName(member) }}</div>
-                      <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ member.email }}</div>
-                    </div>
+      <!-- Members table -->
+      <div v-else class="m3-table-wrapper">
+        <table class="m3-table members-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th v-if="canManageMembers(selectedTeam)" style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="members.length === 0">
+              <td :colspan="canManageMembers(selectedTeam) ? 5 : 4" style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:32px;">
+                No members yet.
+              </td>
+            </tr>
+            <tr v-for="member in members" :key="member.id">
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div class="member-avatar">{{ getMemberInitial(member) }}</div>
+                  <div>
+                    <div style="font-weight:600;font-size:0.875rem;color:var(--md-sys-color-on-surface);">{{ getMemberName(member) }}</div>
+                    <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ member.email }}</div>
                   </div>
-                </td>
-                <td>
-                  <span class="m3-badge" :class="getRoleBadgeM3Class(member.role)">{{ member.role }}</span>
-                </td>
-                <td>
-                  <span class="m3-badge" :class="getStatusBadgeM3Class(member.status)">{{ member.status }}</span>
-                </td>
-                <td class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                  {{ member.joined_at ? formatDate(member.joined_at) : '—' }}
-                </td>
-                <td v-if="canManageMembers(selectedTeam)" style="text-align:right;">
-                  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
-                    <md-outlined-select
-                      v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
-                      :value="member.role"
-                      @change="changeMemberRole(member, ($event.target as HTMLSelectElement).value)"
-                      label="Role"
-                      style="min-width:110px;"
-                    >
-                      <md-select-option value="admin"><div slot="headline">Admin</div></md-select-option>
-                      <md-select-option value="member"><div slot="headline">Member</div></md-select-option>
-                    </md-outlined-select>
-                    <md-icon-button
-                      v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
-                      @click="confirmRemoveMember(member)"
-                      title="Remove member"
-                    >
-                      <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">person_remove</span>
-                    </md-icon-button>
-                    <span v-if="member.role === 'owner'" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Owner</span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                </div>
+              </td>
+              <td>
+                <span class="m3-badge" :class="getRoleBadgeM3Class(member.role)">{{ member.role }}</span>
+              </td>
+              <td>
+                <span class="m3-badge" :class="getStatusBadgeM3Class(member.status)">{{ member.status }}</span>
+              </td>
+              <td class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+                {{ member.joined_at ? formatDate(member.joined_at) : '—' }}
+              </td>
+              <td v-if="canManageMembers(selectedTeam)" style="text-align:right;">
+                <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+                  <AppSelect
+                    v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
+                    :model-value="member.role"
+                    @update:model-value="changeMemberRole(member, $event)"
+                    label="Role"
+                    style="min-width:110px;"
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="member">Member</option>
+                  </AppSelect>
+                  <md-icon-button
+                    v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
+                    @click="confirmRemoveMember(member)"
+                    title="Remove member"
+                    style="--md-icon-button-icon-color:var(--md-sys-color-error);"
+                  >
+                    <span class="material-symbols-outlined">person_remove</span>
+                  </md-icon-button>
+                  <span v-if="member.role === 'owner'" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Owner</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <!-- ── Create Team Dialog ─────────────────────────────────────────────── -->
-    <md-dialog :open="showCreateModal" @closed="closeCreateModal">
-      <div slot="headline">Create Team</div>
-      <div slot="content" style="min-width:480px;max-width:100%;">
+    <BaseModal v-model="showCreateModal" size="md" @closed="closeCreateModal">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">group_add</span>
+        Create Team
+      </template>
+      <div style="min-width:480px;max-width:100%;">
         <form @submit.prevent="submitCreateTeam">
           <md-outlined-text-field
             :value="createForm.name"
@@ -235,19 +238,22 @@
           </div>
         </form>
       </div>
-      <div slot="actions">
+      <template #actions>
         <md-text-button @click="closeCreateModal">Cancel</md-text-button>
         <md-filled-button :disabled="createLoading" @click="submitCreateTeam">
           <md-circular-progress v-if="createLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Create Team
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Edit Team Dialog ───────────────────────────────────────────────── -->
-    <md-dialog :open="showEditModal && !!selectedTeam" @closed="showEditModal = false">
-      <div slot="headline">Edit Team</div>
-      <div slot="content" style="min-width:480px;max-width:100%;">
+    <BaseModal v-model="showEditModal" size="md" @closed="showEditModal = false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">edit</span>
+        Edit Team
+      </template>
+      <div style="min-width:480px;max-width:100%;">
         <md-outlined-text-field
           :value="editForm.name"
           @input="editForm.name = ($event.target as HTMLInputElement).value"
@@ -267,19 +273,22 @@
           {{ editError }}
         </div>
       </div>
-      <div slot="actions">
+      <template #actions>
         <md-text-button @click="showEditModal = false">Cancel</md-text-button>
         <md-filled-button :disabled="editLoading" @click="submitEditTeam">
           <md-circular-progress v-if="editLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Save Changes
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Invite Member Dialog ───────────────────────────────────────────── -->
-    <md-dialog :open="showInviteModal" @closed="closeInviteModal">
-      <div slot="headline">Invite Member</div>
-      <div slot="content" style="min-width:480px;max-width:100%;">
+    <BaseModal v-model="showInviteModal" size="md" @closed="closeInviteModal">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">person_add</span>
+        Invite Member
+      </template>
+      <div style="min-width:480px;max-width:100%;">
         <md-outlined-text-field
           :value="inviteForm.email"
           @input="inviteForm.email = ($event.target as HTMLInputElement).value"
@@ -288,40 +297,39 @@
           required
           style="width:100%;margin-bottom:16px;"
         />
-        <md-outlined-select
-          :value="inviteForm.role"
-          @change="inviteForm.role = ($event.target as HTMLSelectElement).value as 'admin' | 'member'"
+        <AppSelect
+          :model-value="inviteForm.role"
+          @update:model-value="inviteForm.role = $event as 'admin' | 'member'"
           label="Role"
           style="width:100%;"
         >
-          <md-select-option value="member"><div slot="headline">Member</div></md-select-option>
-          <md-select-option value="admin"><div slot="headline">Admin</div></md-select-option>
-        </md-outlined-select>
+          <option value="member">Member</option>
+          <option value="admin">Admin</option>
+        </AppSelect>
         <div v-if="inviteError" class="feedback-error" style="margin-top:16px;">
           <span class="material-symbols-outlined" style="font-size:18px;">error</span>
           {{ inviteError }}
         </div>
       </div>
-      <div slot="actions">
+      <template #actions>
         <md-text-button @click="closeInviteModal">Cancel</md-text-button>
         <md-filled-button :disabled="inviteLoading" @click="submitInvite">
           <md-circular-progress v-if="inviteLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Send Invitation
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Confirm Delete Dialog ──────────────────────────────────────────── -->
-    <md-dialog :open="showDeleteConfirm" @closed="showDeleteConfirm = false">
-      <div slot="headline">Delete Team</div>
-      <div slot="content" style="min-width:360px;max-width:100%;text-align:center;">
-        <span class="material-symbols-outlined" style="font-size:48px;color:var(--md-sys-color-error);">warning</span>
-        <p class="md-body-medium" style="margin:16px 0 0;color:var(--md-sys-color-on-surface-variant);">
-          Are you sure you want to delete <strong>{{ teamToDelete?.name }}</strong>?
-          This action cannot be undone.
-        </p>
-      </div>
-      <div slot="actions">
+    <BaseModal v-model="showDeleteConfirm" size="sm" :persistent="false" @closed="showDeleteConfirm = false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">delete</span>
+        Delete Team
+      </template>
+      <p style="color:var(--md-sys-color-on-surface-variant);">
+        Are you sure you want to delete <strong>{{ teamToDelete?.name }}</strong>? This action cannot be undone.
+      </p>
+      <template #actions>
         <md-text-button @click="showDeleteConfirm = false">Cancel</md-text-button>
         <md-filled-button
           :disabled="deleteLoading"
@@ -331,19 +339,19 @@
           <md-circular-progress v-if="deleteLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Delete Team
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Confirm Leave Dialog ───────────────────────────────────────────── -->
-    <md-dialog :open="showLeaveConfirm" @closed="showLeaveConfirm = false">
-      <div slot="headline">Leave Team</div>
-      <div slot="content" style="min-width:360px;max-width:100%;text-align:center;">
-        <span class="material-symbols-outlined" style="font-size:48px;color:var(--md-sys-color-on-surface-variant);">logout</span>
-        <p class="md-body-medium" style="margin:16px 0 0;color:var(--md-sys-color-on-surface-variant);">
-          Are you sure you want to leave <strong>{{ teamToLeave?.name }}</strong>?
-        </p>
-      </div>
-      <div slot="actions">
+    <BaseModal v-model="showLeaveConfirm" size="sm" :persistent="false" @closed="showLeaveConfirm = false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface-variant)">logout</span>
+        Leave Team
+      </template>
+      <p style="color:var(--md-sys-color-on-surface-variant);">
+        Are you sure you want to leave <strong>{{ teamToLeave?.name }}</strong>?
+      </p>
+      <template #actions>
         <md-text-button @click="showLeaveConfirm = false">Cancel</md-text-button>
         <md-filled-button
           :disabled="leaveLoading"
@@ -352,18 +360,19 @@
           <md-circular-progress v-if="leaveLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Leave Team
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- ── Confirm Remove Member Dialog ──────────────────────────────────── -->
-    <md-dialog :open="showRemoveConfirm" @closed="showRemoveConfirm = false">
-      <div slot="headline">Remove Member</div>
-      <div slot="content" style="min-width:360px;max-width:100%;">
-        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0;">
-          Remove <strong>{{ memberToRemove?.email }}</strong> from the team?
-        </p>
-      </div>
-      <div slot="actions">
+    <BaseModal v-model="showRemoveConfirm" size="sm" :persistent="false" @closed="showRemoveConfirm = false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">person_remove</span>
+        Remove Member
+      </template>
+      <p style="color:var(--md-sys-color-on-surface-variant);margin:0;">
+        Remove <strong>{{ memberToRemove?.email }}</strong> from the team? This cannot be undone.
+      </p>
+      <template #actions>
         <md-text-button @click="showRemoveConfirm = false">Cancel</md-text-button>
         <md-filled-button
           :disabled="removeLoading"
@@ -373,14 +382,16 @@
           <md-circular-progress v-if="removeLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Remove
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import BaseModal from '@/components/BaseModal.vue';
+import AppSelect from '@/components/AppSelect.vue';
 import { useAuthStore } from '@/stores/auth';
 import teamsApi from '@/api/teams';
 import type { Team, TeamMember } from '@/types/teams';
@@ -744,24 +755,43 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.teams-page {
-  max-width: 1100px;
-  padding: 24px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.page-header-row {
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.dash-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
   margin-bottom: 24px;
   flex-wrap: wrap;
+  gap: 12px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 }
 
-/* Empty state */
+/* ── Empty state ──────────────────────────────────────────────────────────── */
 .m3-empty-state {
   display: flex;
   flex-direction: column;
@@ -788,6 +818,29 @@ onMounted(() => {
   }
 }
 
+/* ── Cards ────────────────────────────────────────────────────────────────── */
+.m3-card {
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+  margin-bottom: 20px;
+
+  &--elevated {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+  }
+}
+
+/* ── M3 Card header ───────────────────────────────────────────────────────── */
+.m3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Teams grid ───────────────────────────────────────────────────────────── */
 .teams-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -800,7 +853,6 @@ onMounted(() => {
 }
 
 .team-card {
-  border-radius: 12px;
   cursor: pointer;
   transition: box-shadow 0.15s, outline 0.15s;
 
@@ -819,6 +871,7 @@ onMounted(() => {
   padding: 20px;
 }
 
+/* ── Avatars ──────────────────────────────────────────────────────────────── */
 .team-avatar {
   width: 42px;
   height: 42px;
@@ -861,21 +914,12 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.section-card {
-  border-radius: 12px;
-  overflow: hidden;
+/* ── Team detail card ─────────────────────────────────────────────────────── */
+.team-detail-card {
+  margin-top: 4px;
 }
 
-.card-section-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
+/* ── Table ────────────────────────────────────────────────────────────────── */
 .m3-table-wrapper {
   overflow-x: auto;
 }
@@ -912,18 +956,7 @@ onMounted(() => {
   }
 }
 
-.feedback-error {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-error);
-  font-size: 0.875rem;
-}
-
-/* M3 badge variants */
+/* ── M3 badge variants ────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -966,7 +999,19 @@ onMounted(() => {
   }
 }
 
-/* Snackbar transition */
+/* ── Feedback error ───────────────────────────────────────────────────────── */
+.feedback-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-error);
+  font-size: 0.875rem;
+}
+
+/* ── Snackbar ─────────────────────────────────────────────────────────────── */
 .m3-snackbar {
   position: fixed;
   bottom: 24px;

@@ -224,9 +224,9 @@
     </template>
 
     <!-- ── Disable 2FA Dialog ────────────────────────────────────────────── -->
-    <md-dialog :open="showDisableModal" @closed="closeDisableModal">
-      <div slot="headline">Disable Two-Factor Authentication</div>
-      <div slot="content" style="min-width:360px;max-width:100%;">
+    <BaseModal v-model="showDisableModal" size="sm" @closed="closeDisableModal">
+      <template #headline>Disable Two-Factor Authentication</template>
+      <div style="min-width:360px;max-width:100%;">
         <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">
           Enter your account password to confirm you want to disable 2FA.
         </p>
@@ -243,7 +243,7 @@
           style="width:100%;"
         />
       </div>
-      <div slot="actions">
+      <template #actions>
         <md-text-button @click="closeDisableModal">Cancel</md-text-button>
         <md-filled-button
           :disabled="disableLoading"
@@ -253,14 +253,15 @@
           <md-circular-progress v-if="disableLoading" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
           Disable 2FA
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import BaseModal from '@/components/BaseModal.vue';
 import authApi from '@/api/auth';
 
 const loadingStatus = ref(true);

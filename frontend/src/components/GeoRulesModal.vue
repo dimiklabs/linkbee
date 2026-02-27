@@ -1,12 +1,12 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
-    <div slot="headline">
+  <BaseModal v-model="isOpen" size="lg" @closed="onDialogClosed">
+    <template #headline>
       <span class="material-symbols-outlined" style="font-size:20px;vertical-align:middle;margin-right:6px;color:var(--md-sys-color-primary)">public</span>
       Geo Routing
       <span style="font-size:0.85rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);margin-left:8px">{{ slug }}</span>
-    </div>
+    </template>
 
-    <div slot="content" style="min-width:560px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+    <div style="min-width:560px;max-width:100%;padding:0 4px;">
 
       <!-- Enable / Disable toggle -->
       <div class="geo-toggle-row">
@@ -76,16 +76,13 @@
 
             <!-- Edit mode -->
             <div v-else class="geo-rule-edit">
-              <md-outlined-select
-                :value="editForm.country_code"
-                @change="editForm.country_code = ($event.target as HTMLSelectElement).value"
+              <AppSelect
+                v-model="editForm.country_code"
                 label="Country"
                 style="min-width:160px"
               >
-                <md-select-option v-for="c in countries" :key="c.code" :value="c.code">
-                  <div slot="headline">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</div>
-                </md-select-option>
-              </md-outlined-select>
+                <option v-for="c in countries" :key="c.code" :value="c.code">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</option>
+              </AppSelect>
               <md-outlined-text-field
                 :value="editForm.destination_url"
                 @input="editForm.destination_url = ($event.target as HTMLInputElement).value"
@@ -119,17 +116,14 @@
           Add Rule
         </div>
         <div class="geo-add-form">
-          <md-outlined-select
-            :value="newForm.country_code"
-            @change="newForm.country_code = ($event.target as HTMLSelectElement).value"
+          <AppSelect
+            v-model="newForm.country_code"
             label="Select country…"
             style="min-width:180px"
           >
-            <md-select-option value="" disabled><div slot="headline">Select country…</div></md-select-option>
-            <md-select-option v-for="c in countries" :key="c.code" :value="c.code">
-              <div slot="headline">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</div>
-            </md-select-option>
-          </md-outlined-select>
+            <option value="" disabled>Select country…</option>
+            <option v-for="c in countries" :key="c.code" :value="c.code">{{ countryFlag(c.code) }} {{ c.name }} ({{ c.code }})</option>
+          </AppSelect>
           <md-outlined-text-field
             :value="newForm.destination_url"
             @input="newForm.destination_url = ($event.target as HTMLInputElement).value"
@@ -161,16 +155,18 @@
 
     </div>
 
-    <div slot="actions">
+    <template #actions>
       <md-text-button @click="hide">Close</md-text-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import geoApi from '@/api/geo';
 import type { LinkGeoRule } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
+import AppSelect from '@/components/AppSelect.vue';
 
 const props = defineProps<{
   linkId: string;

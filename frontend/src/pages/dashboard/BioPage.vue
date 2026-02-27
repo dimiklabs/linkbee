@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-section" style="max-width: 900px;">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -507,10 +507,7 @@ function onDragEnd() {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
-  max-width: 900px;
-}
+/* page-section (global) handles padding; max-width set via style attribute on root */
 
 .page-header {
   display: flex;

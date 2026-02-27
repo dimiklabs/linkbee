@@ -1,11 +1,11 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" class="import-dialog">
-    <div slot="headline" class="dialog-headline">
+  <BaseModal v-model="isOpen" size="lg" @closed="onDialogClosed">
+    <template #headline>
       <span class="material-symbols-outlined dialog-headline-icon">upload_file</span>
       Bulk Import Links
-    </div>
+    </template>
 
-    <div slot="content" class="dialog-content">
+    <div class="dialog-content">
 
       <!-- Instructions banner -->
       <div class="info-banner">
@@ -163,7 +163,7 @@
 
     </div>
 
-    <div slot="actions" class="dialog-actions">
+    <template #actions>
       <md-text-button @click="hide" :disabled="importing">
         {{ result ? 'Close' : 'Cancel' }}
       </md-text-button>
@@ -181,14 +181,15 @@
         <span class="material-symbols-outlined" v-else slot="icon">rocket_launch</span>
         {{ importing ? 'Importing…' : 'Import Links' }}
       </md-filled-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import linksApi from '@/api/links';
 import type { ImportLinksResponse } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 const emit = defineEmits<{
   imported: [result: ImportLinksResponse];
@@ -288,21 +289,7 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped lang="scss">
-.import-dialog {
-  --md-dialog-container-shape: 20px;
-  --md-dialog-container-max-inline-size: 600px;
-}
-
 /* ── Headline ─────────────────────────────────────────── */
-.dialog-headline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--md-sys-color-on-surface);
-}
-
 .dialog-headline-icon {
   font-size: 22px;
   color: var(--md-sys-color-primary);
@@ -778,13 +765,6 @@ defineExpose({ show, hide });
 }
 
 /* ── Actions ──────────────────────────────────────────── */
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .action-btn {
   min-width: 140px;
 }

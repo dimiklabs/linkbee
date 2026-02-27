@@ -1,14 +1,14 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" class="preview-dialog">
-    <div slot="headline" class="dialog-headline">
+  <BaseModal v-model="isOpen" size="md" @closed="onDialogClosed">
+    <template #headline>
       <span class="material-symbols-outlined dialog-headline-icon">visibility</span>
       <div class="dialog-headline-text">
         <span>Link Preview</span>
         <code class="dialog-headline-slug">{{ link?.slug }}</code>
       </div>
-    </div>
+    </template>
 
-    <div slot="content" class="dialog-content">
+    <div class="dialog-content">
 
       <!-- Loading state -->
       <div v-if="loading" class="state-loading">
@@ -148,14 +148,14 @@
 
     </div>
 
-    <div slot="actions" class="dialog-actions">
+    <template #actions>
       <md-text-button @click="hide">Close</md-text-button>
       <md-outlined-button v-if="link?.short_url" :href="link.short_url" target="_blank" rel="noopener noreferrer">
         <span class="material-symbols-outlined" slot="icon">open_in_new</span>
         Open Short Link
       </md-outlined-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
@@ -163,6 +163,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import previewApi from '@/api/preview';
 import type { LinkPreviewData } from '@/types/preview';
 import type { LinkResponse } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 const props = defineProps<{
   modalId: string;
@@ -232,18 +233,7 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped lang="scss">
-.preview-dialog {
-  --md-dialog-container-shape: 20px;
-  --md-dialog-container-max-inline-size: 520px;
-}
-
 /* ── Headline ─────────────────────────────────────────── */
-.dialog-headline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .dialog-headline-icon {
   font-size: 22px;
   color: var(--md-sys-color-primary);
@@ -588,13 +578,5 @@ defineExpose({ show, hide });
   color: var(--md-sys-color-on-surface-variant);
   max-width: 280px;
   line-height: 1.4;
-}
-
-/* ── Actions ──────────────────────────────────────────── */
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
 }
 </style>

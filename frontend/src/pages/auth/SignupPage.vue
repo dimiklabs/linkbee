@@ -65,19 +65,19 @@
             We've sent a verification link to <strong>{{ registeredEmail }}</strong>.
             Click the link in the email to verify your account and get started.
           </p>
-          <router-link to="/login" style="text-decoration: none;">
+          <router-link to="/login" class="success-login-link">
             <md-filled-button>Go to Sign In</md-filled-button>
           </router-link>
         </div>
 
         <!-- Signup Form -->
         <template v-else>
-          <h1 class="form-heading md-headline-small">Create account</h1>
+          <h1 class="form-heading md-headline-small">Create your account</h1>
 
           <!-- Error Banner -->
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
-            <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
-            <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+            <span class="material-symbols-outlined err-icon">error</span>
+            <span class="md-body-medium err-text">{{ errorMessage }}</span>
             <md-icon-button @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
             </md-icon-button>
@@ -87,7 +87,7 @@
 
             <!-- First Name + Last Name row -->
             <div class="name-row">
-              <div class="field-wrap" style="flex: 1;">
+              <div class="field-wrap name-field">
                 <md-outlined-text-field
                   :value="form.firstName"
                   @input="form.firstName = ($event.target as HTMLInputElement).value"
@@ -96,10 +96,10 @@
                   autocomplete="given-name"
                   :error="!!errors.firstName"
                   :error-text="errors.firstName"
-                  style="width: 100%;"
+                  class="field-full"
                 />
               </div>
-              <div class="field-wrap" style="flex: 1;">
+              <div class="field-wrap name-field">
                 <md-outlined-text-field
                   :value="form.lastName"
                   @input="form.lastName = ($event.target as HTMLInputElement).value"
@@ -108,7 +108,7 @@
                   autocomplete="family-name"
                   :error="!!errors.lastName"
                   :error-text="errors.lastName"
-                  style="width: 100%;"
+                  class="field-full"
                 />
               </div>
             </div>
@@ -122,7 +122,7 @@
                 autocomplete="email"
                 :error="!!errors.email"
                 :error-text="errors.email"
-                style="width: 100%;"
+                class="field-full"
               />
             </div>
 
@@ -136,7 +136,7 @@
                 :error="!!errors.password"
                 :error-text="errors.password"
                 supporting-text="Must be at least 8 characters long."
-                style="width: 100%;"
+                class="field-full"
               >
                 <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
@@ -165,7 +165,7 @@
                 autocomplete="new-password"
                 :error="!!errors.confirmPassword"
                 :error-text="errors.confirmPassword"
-                style="width: 100%;"
+                class="field-full"
               >
                 <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
@@ -173,8 +173,8 @@
               </md-outlined-text-field>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-top: 8px;">
-              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mt">
+              <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Create Account
             </md-filled-button>
           </form>
@@ -547,6 +547,10 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
   margin-bottom: 28px;
 }
 
+.success-login-link {
+  text-decoration: none;
+}
+
 /* ── Form elements ────────────────────────────────────────────── */
 .form-heading {
   color: var(--md-sys-color-on-surface);
@@ -579,13 +583,43 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
   margin-bottom: 20px;
 }
 
+.err-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.err-text {
+  flex: 1;
+}
+
 .name-row {
   display: flex;
   gap: 12px;
 }
 
+.name-field {
+  flex: 1;
+}
+
 .field-wrap {
   margin-bottom: 16px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-mt {
+  margin-top: 8px;
+}
+
+.btn-spinner {
+  --md-circular-progress-size: 20px;
+  margin-right: 8px;
 }
 
 /* ── Password strength bar ────────────────────────────────────── */
@@ -697,9 +731,8 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
   .auth-right-panel {
     width: 100%;
     min-height: 100vh;
-    padding: 32px 20px;
+    padding: 48px 20px 32px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .right-panel-inner {

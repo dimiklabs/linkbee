@@ -1,11 +1,11 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" class="clone-dialog">
-    <div slot="headline" class="dialog-headline">
+  <BaseModal v-model="isOpen" size="md" @closed="onDialogClosed">
+    <template #headline>
       <span class="material-symbols-outlined dialog-headline-icon">content_copy</span>
       Clone Link
-    </div>
+    </template>
 
-    <div slot="content" class="dialog-content">
+    <div class="dialog-content">
 
       <!-- Source link card -->
       <div v-if="link" class="source-card">
@@ -87,21 +87,22 @@
 
     </div>
 
-    <div slot="actions" class="dialog-actions">
+    <template #actions>
       <md-text-button @click="hide" :disabled="cloning">Cancel</md-text-button>
       <md-filled-button :disabled="cloning" @click="doClone" class="clone-btn">
-        <md-circular-progress v-if="cloning" indeterminate style="--md-circular-progress-size:18px" slot="icon" />
-        <span class="material-symbols-outlined" v-else slot="icon">content_copy</span>
+        <md-circular-progress v-if="cloning" indeterminate style="--md-circular-progress-size:18px;margin-right:6px" />
+        <span class="material-symbols-outlined" v-else style="font-size:18px;margin-right:6px">content_copy</span>
         {{ cloning ? 'Cloning…' : 'Clone Link' }}
       </md-filled-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import linksApi from '@/api/links';
 import type { LinkResponse } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 const props = defineProps<{
   modalId?: string;
@@ -195,21 +196,7 @@ defineExpose({ show, hide });
 </script>
 
 <style scoped lang="scss">
-.clone-dialog {
-  --md-dialog-container-shape: 20px;
-  --md-dialog-container-max-inline-size: 520px;
-}
-
 /* ── Headline ─────────────────────────────────────────── */
-.dialog-headline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--md-sys-color-on-surface);
-}
-
 .dialog-headline-icon {
   font-size: 22px;
   color: var(--md-sys-color-primary);
@@ -403,13 +390,6 @@ defineExpose({ show, hide });
 }
 
 /* ── Actions ──────────────────────────────────────────── */
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
 .clone-btn {
   min-width: 130px;
 }

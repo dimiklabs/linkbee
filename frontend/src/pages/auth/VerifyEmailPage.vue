@@ -58,7 +58,7 @@
         <!-- Loading state -->
         <div v-if="verifying" class="state-block">
           <div class="verifying-spinner">
-            <md-circular-progress indeterminate style="--md-circular-progress-size:56px;" />
+            <md-circular-progress indeterminate class="verify-progress" />
           </div>
           <h2 class="md-headline-small state-heading">Verifying your email...</h2>
           <p class="md-body-medium state-text">Please wait a moment.</p>
@@ -68,10 +68,10 @@
         <div v-else-if="verified" class="state-block">
           <span class="material-symbols-outlined state-icon state-icon--success">check_circle</span>
           <h2 class="md-headline-small state-heading">Email Verified!</h2>
-          <p class="md-body-medium state-text" style="margin-bottom: 28px;">
+          <p class="md-body-medium state-text state-text--mb">
             Your email has been successfully verified. You can now sign in to your Shortlink account.
           </p>
-          <router-link to="/login" style="text-decoration: none;">
+          <router-link to="/login" class="state-action-link">
             <md-filled-button>Sign In to Shortlink</md-filled-button>
           </router-link>
         </div>
@@ -80,7 +80,7 @@
         <div v-else class="error-content">
           <span class="material-symbols-outlined state-icon state-icon--error">cancel</span>
           <h2 class="md-headline-small state-heading">Verification Failed</h2>
-          <p class="md-body-medium state-text" style="margin-bottom: 24px;">
+          <p class="md-body-medium state-text state-text--mb-sm">
             {{ errorMessage }}
           </p>
 
@@ -89,11 +89,11 @@
             <p class="md-title-small resend-title">Resend verification email</p>
 
             <div v-if="resendSuccess" class="success-banner">
-              <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">check_circle</span>
+              <span class="material-symbols-outlined resend-icon">check_circle</span>
               <span class="md-body-medium">{{ resendSuccess }}</span>
             </div>
             <div v-if="resendError" class="m3-error-banner">
-              <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+              <span class="material-symbols-outlined resend-icon">error</span>
               <span class="md-body-medium">{{ resendError }}</span>
             </div>
 
@@ -103,14 +103,14 @@
                 @input="resendEmail = ($event.target as HTMLInputElement).value"
                 label="your@email.com"
                 type="email"
-                style="flex: 1;"
+                class="resend-field"
               />
               <md-filled-button
                 :disabled="resending || !resendEmail"
                 @click="handleResend"
-                style="height: 56px;"
+                class="resend-btn"
               >
-                <md-circular-progress v-if="resending" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+                <md-circular-progress v-if="resending" indeterminate class="btn-spinner" />
                 Resend
               </md-filled-button>
             </div>
@@ -362,6 +362,10 @@ async function handleResend() {
   margin-bottom: 24px;
 }
 
+.verify-progress {
+  --md-circular-progress-size: 56px;
+}
+
 .state-icon {
   font-size: 64px;
   display: block;
@@ -383,6 +387,18 @@ async function handleResend() {
 
 .state-text {
   color: var(--md-sys-color-on-surface-variant);
+}
+
+.state-text--mb {
+  margin-bottom: 28px;
+}
+
+.state-text--mb-sm {
+  margin-bottom: 24px;
+}
+
+.state-action-link {
+  text-decoration: none;
 }
 
 .error-content {
@@ -407,6 +423,24 @@ async function handleResend() {
   gap: 12px;
   align-items: flex-start;
   margin-top: 12px;
+}
+
+.resend-field {
+  flex: 1;
+}
+
+.resend-btn {
+  height: 56px;
+}
+
+.resend-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.btn-spinner {
+  --md-circular-progress-size: 20px;
+  margin-right: 8px;
 }
 
 .success-banner {
@@ -469,9 +503,8 @@ async function handleResend() {
   .auth-right-panel {
     width: 100%;
     min-height: 100vh;
-    padding: 32px 20px;
+    padding: 48px 20px 32px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .right-panel-inner {

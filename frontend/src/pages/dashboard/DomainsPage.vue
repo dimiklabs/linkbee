@@ -79,10 +79,14 @@
                 <span :class="['m3-badge', statusClass(d.status)]">{{ d.status }}</span>
               </td>
               <td>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <code style="font-size:0.75rem;word-break:break-all;max-width:200px;">{{ d.verify_token }}</code>
-                  <md-icon-button title="Copy token" @click="copyToken(d.verify_token)" style="--md-icon-button-state-layer-size:32px;">
-                    <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
+                <div class="copy-field">
+                  <code class="copy-field__value">{{ d.verify_token }}</code>
+                  <md-icon-button
+                    title="Copy verification token"
+                    @click="copyToken(d.verify_token)"
+                    style="--md-icon-button-state-layer-size:28px;flex-shrink:0;"
+                  >
+                    <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
                   </md-icon-button>
                 </div>
               </td>
@@ -116,9 +120,12 @@
     </div>
 
     <!-- Add Domain Dialog -->
-    <md-dialog :open="showAddModal" @closed="closeAddModal">
-      <div slot="headline">Add Custom Domain</div>
-      <div slot="content" style="min-width:480px;max-width:100%;">
+    <BaseModal v-model="showAddModal" size="md" @closed="closeAddModal">
+      <template #headline>
+        Add Custom Domain
+      </template>
+
+      <div style="min-width:480px;max-width:100%;">
         <div v-if="addError" style="margin-bottom:16px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
           {{ addError }}
         </div>
@@ -134,29 +141,34 @@
           Enter the domain or subdomain you want to use (e.g. <code>go.acme.com</code>).
         </div>
       </div>
-      <div slot="actions">
+
+      <template #actions>
         <md-text-button @click="closeAddModal">Cancel</md-text-button>
         <md-filled-button :disabled="adding" @click="addDomain">
           <md-circular-progress v-if="adding" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           Add Domain
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
     <!-- Confirm Delete Dialog -->
-    <md-dialog :open="!!deleteTarget" @closed="deleteTarget = null">
-      <div slot="headline">Remove Domain</div>
-      <div slot="content" style="min-width:400px;max-width:100%;">
+    <BaseModal v-model="showDeleteModal" size="sm" @closed="deleteTarget = null">
+      <template #headline>
+        Remove Domain
+      </template>
+
+      <div style="min-width:400px;max-width:100%;">
         <p style="margin:0;font-size:0.9375rem;">Remove <strong>{{ deleteTarget?.domain }}</strong>? This cannot be undone.</p>
       </div>
-      <div slot="actions">
-        <md-text-button @click="deleteTarget = null">Cancel</md-text-button>
+
+      <template #actions>
+        <md-text-button @click="showDeleteModal = false; deleteTarget = null">Cancel</md-text-button>
         <md-filled-button :disabled="!!deleting" @click="deleteDomain" style="--md-filled-button-container-color:var(--md-sys-color-error);--md-filled-button-label-text-color:var(--md-sys-color-on-error);">
           <md-circular-progress v-if="deleting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
           Remove
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
   </div>
 </template>
@@ -165,6 +177,7 @@
 import { ref, onMounted } from 'vue';
 import domainsApi from '@/api/domains';
 import type { DomainResponse } from '@/types/domains';
+import BaseModal from '@/components/BaseModal.vue';
 
 const domains = ref<DomainResponse[]>([]);
 const loading = ref(true);
@@ -179,6 +192,7 @@ const addError = ref('');
 const verifying = ref<string | null>(null);
 const deleting = ref<string | null>(null);
 const deleteTarget = ref<DomainResponse | null>(null);
+const showDeleteModal = ref(false);
 
 // Show the app's main domain so users know where to point their CNAME
 const appDomain = window.location.hostname;
@@ -232,6 +246,7 @@ async function verify(d: DomainResponse) {
 
 function confirmDelete(d: DomainResponse) {
   deleteTarget.value = d;
+  showDeleteModal.value = true;
 }
 
 async function deleteDomain() {
@@ -242,6 +257,7 @@ async function deleteDomain() {
     await domainsApi.remove(d.id);
     domains.value = domains.value.filter((x) => x.id !== d.id);
     deleteTarget.value = null;
+    showDeleteModal.value = false;
     showAlert('Domain removed.', 'success');
   } catch {
     showAlert('Failed to remove domain.', 'error');
@@ -434,6 +450,30 @@ onMounted(fetchDomains);
       opacity: 0.6;
     }
   }
+}
+
+/* Copy field */
+.copy-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 10px;
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  max-width: 240px;
+  overflow: hidden;
+}
+
+.copy-field__value {
+  font-family: 'Courier New', 'Courier', monospace;
+  font-size: 0.72rem;
+  color: var(--md-sys-color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 /* Snackbar */

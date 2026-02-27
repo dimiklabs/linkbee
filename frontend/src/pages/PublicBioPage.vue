@@ -10,11 +10,16 @@
 
     <!-- Not found -->
     <div v-else-if="notFound" class="bio-not-found">
-      <span class="material-symbols-outlined not-found-icon">link_off</span>
+      <div class="bio-not-found__icon-wrap">
+        <span class="material-symbols-outlined not-found-icon">link_off</span>
+      </div>
       <h3 class="md-headline-small not-found-title">Page not found</h3>
       <p class="md-body-medium not-found-desc">This bio page doesn't exist or has been unpublished.</p>
       <a href="/">
-        <md-filled-button>Go home</md-filled-button>
+        <md-filled-button>
+          <span class="material-symbols-outlined" slot="icon">home</span>
+          Go home
+        </md-filled-button>
       </a>
     </div>
 
@@ -148,9 +153,21 @@ onMounted(async () => {
   }
 }
 
+.bio-not-found__icon-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
 .not-found-icon {
-  font-size: 56px;
+  font-size: 40px;
   color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.7;
 }
 
 .not-found-title {
@@ -217,18 +234,27 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-radius: 12px;
+  border-radius: 14px;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.15s;
   border: 1.5px solid var(--md-sys-color-outline-variant);
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(-1px);
   }
 
   &--light {
     background: var(--md-sys-color-surface);
     color: var(--md-sys-color-on-surface);
+
+    &:hover {
+      background: var(--md-sys-color-surface-container-low);
+    }
   }
 
   &--dark {
@@ -238,6 +264,7 @@ onMounted(async () => {
 
     &:hover {
       background: #28283d;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
     }
   }
 }

@@ -1,16 +1,18 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-section" style="max-width: 1100px;">
 
     <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">Webhooks</h1>
-        <p class="page-subtitle">Receive real-time HTTP notifications when events happen.</p>
+    <div class="dash-page-header">
+      <div class="dash-page-header__left">
+        <h1 class="dash-page-header__title">Webhooks</h1>
+        <p class="dash-page-header__subtitle">Receive real-time HTTP notifications when events happen.</p>
       </div>
-      <md-filled-button @click="showCreate = !showCreate">
-        <span class="material-symbols-outlined" slot="icon">add</span>
-        Add Webhook
-      </md-filled-button>
+      <div class="dash-page-header__actions">
+        <md-filled-button @click="showCreate = !showCreate">
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+          Add Webhook
+        </md-filled-button>
+      </div>
     </div>
 
     <!-- Usage Warning Banner -->
@@ -24,55 +26,55 @@
 
     <!-- Create form -->
     <div v-if="showCreate" class="m3-card m3-card--elevated create-form">
-      <div class="wh-table-header">
+      <div class="m3-card-header">
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_circle</span>
-          <span class="md-title-medium">New Webhook Endpoint</span>
+          <span style="font-size:16px;font-weight:600;">New Webhook Endpoint</span>
         </div>
       </div>
       <md-divider />
       <div style="padding:20px;">
-      <div style="margin-bottom:16px;">
-        <md-outlined-text-field
-          :value="newURL"
-          @input="newURL=($event.target as HTMLInputElement).value"
-          label="Endpoint URL"
-          type="url"
-          placeholder="https://your-server.com/webhook"
-          style="width:100%;"
-          ref="urlInputRef"
-        />
-      </div>
-      <div style="margin-bottom:16px;">
-        <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Events to subscribe</div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
-            <input
-              type="checkbox"
-              :value="ev.value"
-              v-model="newEvents"
-              style="margin-top:2px;accent-color:var(--md-sys-color-primary);"
-            />
-            <div>
-              <span style="font-weight:500;font-size:0.875rem;">{{ ev.label }}</span>
-              <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;"> — {{ ev.description }}</span>
-            </div>
-          </label>
+        <div style="margin-bottom:16px;">
+          <md-outlined-text-field
+            :value="newURL"
+            @input="newURL=($event.target as HTMLInputElement).value"
+            label="Endpoint URL"
+            type="url"
+            placeholder="https://your-server.com/webhook"
+            style="width:100%;"
+            ref="urlInputRef"
+          />
         </div>
-        <div v-if="newEvents.length === 0" style="color:var(--md-sys-color-error);font-size:0.8rem;margin-top:4px;">
-          Select at least one event.
+        <div style="margin-bottom:16px;">
+          <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Events to subscribe</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+              <input
+                type="checkbox"
+                :value="ev.value"
+                v-model="newEvents"
+                style="margin-top:2px;accent-color:var(--md-sys-color-primary);"
+              />
+              <div>
+                <span style="font-weight:500;font-size:0.875rem;">{{ ev.label }}</span>
+                <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;"> — {{ ev.description }}</span>
+              </div>
+            </label>
+          </div>
+          <div v-if="newEvents.length === 0" style="color:var(--md-sys-color-error);font-size:0.8rem;margin-top:4px;">
+            Select at least one event.
+          </div>
         </div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <md-filled-button :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
-          <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
-          Create
-        </md-filled-button>
-        <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
-      </div>
-      <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
-        {{ createError }}
-      </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <md-filled-button :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
+            <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+            Create
+          </md-filled-button>
+          <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+        </div>
+        <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
+          {{ createError }}
+        </div>
       </div>
     </div>
 
@@ -89,17 +91,17 @@
       <div class="md-title-medium" style="margin-bottom:8px;">No webhooks yet</div>
       <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;max-width:380px;">Add a webhook endpoint to start receiving real-time event notifications for link activity.</p>
       <md-filled-button @click="showCreate = true">
-        <span class="material-symbols-outlined" slot="icon">add</span>
+        <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
         Add Webhook
       </md-filled-button>
     </div>
 
     <!-- Webhooks table -->
     <div v-else-if="webhooks.length > 0" class="m3-card m3-card--elevated">
-      <div class="wh-table-header">
+      <div class="m3-card-header">
         <div style="display:flex;align-items:center;gap:8px;">
           <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">notifications</span>
-          <span class="md-title-medium">Webhook Endpoints</span>
+          <span style="font-size:16px;font-weight:600;">Webhook Endpoints</span>
         </div>
         <span class="m3-badge m3-badge--neutral">{{ webhooks.length }} endpoint{{ webhooks.length !== 1 ? 's' : '' }}</span>
       </div>
@@ -145,11 +147,11 @@
                       {{ ev.label }}
                     </label>
                   </div>
-                  <div v-else style="display:flex;flex-wrap:wrap;gap:4px;">
+                  <div v-else class="event-chips">
                     <span
                       v-for="ev in wh.events"
                       :key="ev"
-                      :class="['m3-badge', eventBadgeClass(ev)]"
+                      :class="['event-chip', eventChipClass(ev)]"
                     >{{ ev }}</span>
                   </div>
                 </td>
@@ -161,7 +163,7 @@
                     <span style="font-size:0.875rem;">Active</span>
                   </div>
                   <span v-else :class="['m3-badge', wh.is_active ? 'm3-badge--success' : 'm3-badge--warning']">
-                    <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;">{{ wh.is_active ? 'circle' : 'pause_circle' }}</span>
+                    <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;margin-right:3px;">{{ wh.is_active ? 'circle' : 'pause_circle' }}</span>
                     {{ wh.is_active ? 'Active' : 'Paused' }}
                   </span>
                 </td>
@@ -189,7 +191,7 @@
                     <md-icon-button @click="startEdit(wh)" title="Edit">
                       <span class="material-symbols-outlined">edit</span>
                     </md-icon-button>
-                    <md-icon-button @click="deleteWebhook(wh.id)" title="Delete" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
+                    <md-icon-button @click="promptDelete(wh.id)" title="Delete" style="--md-icon-button-icon-color:var(--md-sys-color-error);">
                       <span class="material-symbols-outlined">delete</span>
                     </md-icon-button>
                   </div>
@@ -204,19 +206,27 @@
                     <!-- Secret reveal -->
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
                       <span style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Signing secret:</span>
-                      <code v-if="revealedSecret[wh.id]" style="font-size:0.8rem;">{{ revealedSecret[wh.id] }}</code>
-                      <span v-else style="font-size:0.8rem;font-family:monospace;color:var(--md-sys-color-on-surface-variant);">••••••••••••••••</span>
-                      <md-text-button @click="toggleSecret(wh.id)">
-                        {{ revealedSecret[wh.id] ? 'Hide' : 'Reveal' }}
-                      </md-text-button>
-                      <md-text-button v-if="revealedSecret[wh.id]" @click="copyText(revealedSecret[wh.id])">Copy</md-text-button>
+                      <div class="copy-field" style="flex:1;min-width:200px;max-width:480px;">
+                        <span class="copy-field__value">
+                          <span v-if="revealedSecret[wh.id]">{{ revealedSecret[wh.id] }}</span>
+                          <span v-else style="font-family:monospace;">••••••••••••••••</span>
+                        </span>
+                        <button class="copy-field__btn" @click="toggleSecret(wh.id)">
+                          <span class="material-symbols-outlined">{{ revealedSecret[wh.id] ? 'visibility_off' : 'visibility' }}</span>
+                          {{ revealedSecret[wh.id] ? 'Hide' : 'Reveal' }}
+                        </button>
+                        <button v-if="revealedSecret[wh.id]" class="copy-field__btn" @click="copyText(revealedSecret[wh.id])">
+                          <span class="material-symbols-outlined">content_copy</span>
+                          Copy
+                        </button>
+                      </div>
                     </div>
 
                     <!-- Test result banner -->
                     <div v-if="testResults[wh.id]" style="margin-bottom:16px;">
                       <div :style="`padding:10px 14px;border-radius:8px;font-size:0.875rem;background:${testResults[wh.id].success ? '#dcfce7' : '#fee2e2'};color:${testResults[wh.id].success ? '#16a34a' : '#dc2626'};`">
                         <strong>Test delivery:</strong>
-                        {{ testResults[wh.id].success ? `✓ HTTP ${testResults[wh.id].response_code}` : `✗ ${testResults[wh.id].error_message || 'Failed'}` }}
+                        {{ testResults[wh.id].success ? `HTTP ${testResults[wh.id].response_code}` : `${testResults[wh.id].error_message || 'Failed'}` }}
                         <span style="opacity:0.7;margin-left:8px;">({{ testResults[wh.id].duration_ms }}ms)</span>
                       </div>
                     </div>
@@ -316,12 +326,31 @@ def verify(secret: str, body: bytes, header: str) -> bool:
 }</code></pre>
     </div>
 
+    <!-- Confirm Delete Webhook Dialog -->
+    <BaseModal v-model="showDeleteConfirm" size="sm" :persistent="false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">delete</span>
+        Delete Webhook
+      </template>
+      <p style="color:var(--md-sys-color-on-surface-variant);">Delete this webhook endpoint? This cannot be undone and any subscribed integrations will stop receiving events.</p>
+      <template #actions>
+        <md-text-button @click="showDeleteConfirm = false">Cancel</md-text-button>
+        <md-filled-button
+          style="--md-filled-button-container-color:var(--md-sys-color-error)"
+          @click="confirmDelete"
+        >
+          Delete
+        </md-filled-button>
+      </template>
+    </BaseModal>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, watch } from 'vue';
 import { RouterLink } from 'vue-router';
+import BaseModal from '@/components/BaseModal.vue';
 import webhooksApi from '@/api/webhooks';
 import { WEBHOOK_EVENTS } from '@/types/webhooks';
 import type { Webhook, WebhookDelivery } from '@/types/webhooks';
@@ -371,6 +400,10 @@ const testingId = ref<string | null>(null);
 const testResults = ref<Record<string, WebhookDelivery>>({});
 const revealedSecret = ref<Record<string, string>>({});
 const resendingId = ref<string | null>(null);
+
+// Confirm delete dialog
+const showDeleteConfirm = ref(false);
+const webhookIdToDelete = ref<string | null>(null);
 
 async function fetchWebhooks() {
   loading.value = true;
@@ -431,8 +464,14 @@ async function saveEdit(id: string) {
   }
 }
 
-async function deleteWebhook(id: string) {
-  if (!confirm('Delete this webhook? This cannot be undone.')) return;
+function promptDelete(id: string) {
+  webhookIdToDelete.value = id;
+  showDeleteConfirm.value = true;
+}
+
+async function confirmDelete() {
+  if (!webhookIdToDelete.value) return;
+  const id = webhookIdToDelete.value;
   await webhooksApi.delete(id);
   webhooks.value = webhooks.value.filter((w) => w.id !== id);
   delete deliveries.value[id];
@@ -442,13 +481,15 @@ async function deleteWebhook(id: string) {
   delete testResults.value[id];
   delete revealedSecret.value[id];
   if (openDeliveriesId.value === id) openDeliveriesId.value = null;
+  showDeleteConfirm.value = false;
+  webhookIdToDelete.value = null;
 }
 
-function eventBadgeClass(event: string) {
-  if (event === 'link.created') return 'm3-badge--success';
-  if (event === 'link.deleted') return 'm3-badge--error';
-  if (event === 'link.clicked') return 'm3-badge--primary';
-  return 'm3-badge--neutral';
+function eventChipClass(event: string): string {
+  if (event === 'link.created') return 'event-chip--success';
+  if (event === 'link.deleted') return 'event-chip--error';
+  if (event === 'link.clicked') return 'event-chip--primary';
+  return 'event-chip--neutral';
 }
 
 function formatDate(iso: string) {
@@ -568,33 +609,45 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
-  max-width: 1100px;
-}
+/* page-section (global) handles padding; max-width set via style attribute on root */
 
-.page-header {
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.dash-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 }
 
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 4px;
-  color: var(--md-sys-color-on-surface);
-}
-
-.page-subtitle {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
+/* ── Cards ────────────────────────────────────────────────────────────────── */
 .m3-card {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
@@ -610,8 +663,8 @@ onMounted(async () => {
   }
 }
 
-/* Webhook table header */
-.wh-table-header {
+/* ── M3 Card header ───────────────────────────────────────────────────────── */
+.m3-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -620,12 +673,12 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
-/* M3 Table wrapper */
+/* ── M3 Table wrapper ─────────────────────────────────────────────────────── */
 .m3-table-wrapper {
   overflow-x: auto;
 }
 
-/* M3 Empty state */
+/* ── M3 Empty state ───────────────────────────────────────────────────────── */
 .m3-empty-state {
   display: flex;
   flex-direction: column;
@@ -652,6 +705,7 @@ onMounted(async () => {
   }
 }
 
+/* ── Warning banner ───────────────────────────────────────────────────────── */
 .warning-banner {
   display: flex;
   align-items: center;
@@ -672,10 +726,7 @@ onMounted(async () => {
   color: #92400e;
 }
 
-.create-form {
-  // header adds padding
-}
-
+/* ── Table ────────────────────────────────────────────────────────────────── */
 .m3-table {
   width: 100%;
   border-collapse: collapse;
@@ -711,6 +762,7 @@ onMounted(async () => {
   background: var(--md-sys-color-surface-container-low);
 }
 
+/* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -719,11 +771,6 @@ onMounted(async () => {
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.m3-badge--primary {
-  background: rgba(99, 91, 255, 0.12);
-  color: var(--md-sys-color-primary);
 }
 
 .m3-badge--neutral {
@@ -747,14 +794,103 @@ onMounted(async () => {
   color: #dc2626;
 }
 
+/* ── Event chips ──────────────────────────────────────────────────────────── */
+.event-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.event-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+
+  &--success {
+    background: rgba(22, 163, 74, 0.10);
+    color: #15803d;
+    border: 1px solid rgba(22, 163, 74, 0.20);
+  }
+
+  &--error {
+    background: rgba(220, 38, 38, 0.10);
+    color: #dc2626;
+    border: 1px solid rgba(220, 38, 38, 0.20);
+  }
+
+  &--primary {
+    background: rgba(99, 91, 255, 0.10);
+    color: var(--md-sys-color-primary);
+    border: 1px solid rgba(99, 91, 255, 0.20);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+}
+
+/* ── Copy field ───────────────────────────────────────────────────────────── */
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  padding: 6px 8px 6px 12px;
+  flex-wrap: wrap;
+
+  &__value {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.78rem;
+    color: var(--md-sys-color-on-surface);
+    word-break: break-all;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .material-symbols-outlined {
+      font-size: 16px;
+    }
+  }
+}
+
+/* ── Deliveries panel ─────────────────────────────────────────────────────── */
 .deliveries-panel {
   background: var(--md-sys-color-surface-container-low);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   padding: 16px 20px;
 }
 
-/* info card */
-
+/* ── Info card ────────────────────────────────────────────────────────────── */
 .info-card {
   padding: 20px;
 }

@@ -2,10 +2,16 @@
   <div class="page-wrapper">
 
     <!-- Impersonation Banner -->
-    <div v-if="isImpersonating" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);padding:12px 24px;display:flex;align-items:center;gap:12px">
-      <span class="material-symbols-outlined">person_off</span>
-      <span style="flex:1" class="md-body-medium">You are impersonating a user.</span>
-      <md-outlined-button @click="stopImpersonation" style="--md-outlined-button-label-text-color:var(--md-sys-color-on-error-container);--md-outlined-button-outline-color:var(--md-sys-color-on-error-container)">Stop</md-outlined-button>
+    <div v-if="isImpersonating" class="impersonation-banner">
+      <span class="material-symbols-outlined" style="font-size:20px;color:#92400e;flex-shrink:0;">manage_accounts</span>
+      <span class="md-body-medium" style="flex:1;color:#78350f;">You are currently impersonating a user. Actions taken will affect the impersonated account.</span>
+      <md-outlined-button
+        @click="stopImpersonation"
+        style="--md-outlined-button-label-text-color:#92400e;--md-outlined-button-outline-color:#d97706;"
+      >
+        <span class="material-symbols-outlined" slot="icon">close</span>
+        Stop impersonating
+      </md-outlined-button>
     </div>
 
     <!-- Page Header -->
@@ -13,6 +19,33 @@
       <div>
         <h1 class="page-title">Admin Dashboard</h1>
         <p class="page-subtitle">Platform overview and user management.</p>
+      </div>
+    </div>
+
+    <!-- Quick stats bar -->
+    <div v-if="stats" class="quick-stats-bar">
+      <div class="quick-stat-item">
+        <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-primary);">group</span>
+        <span class="md-label-large">{{ stats.total_users.toLocaleString() }}</span>
+        <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Total Users</span>
+      </div>
+      <div class="quick-stat-divider"></div>
+      <div class="quick-stat-item">
+        <span class="material-symbols-outlined" style="font-size:16px;color:#16a34a;">person_check</span>
+        <span class="md-label-large" style="color:#16a34a;">{{ stats.active_users.toLocaleString() }}</span>
+        <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Active</span>
+      </div>
+      <div class="quick-stat-divider"></div>
+      <div class="quick-stat-item">
+        <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-primary);">link</span>
+        <span class="md-label-large">{{ stats.total_links.toLocaleString() }}</span>
+        <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Links</span>
+      </div>
+      <div class="quick-stat-divider"></div>
+      <div class="quick-stat-item">
+        <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-primary);">ads_click</span>
+        <span class="md-label-large">{{ stats.total_clicks.toLocaleString() }}</span>
+        <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Clicks</span>
       </div>
     </div>
 
@@ -118,8 +151,13 @@
           <tbody>
             <tr v-for="u in users" :key="u.id">
               <td>
-                <div style="font-weight:500;font-size:0.875rem;">{{ displayName(u) }}</div>
-                <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.75rem;">{{ u.email }}</div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div class="user-avatar">{{ (displayName(u)).charAt(0).toUpperCase() }}</div>
+                  <div style="min-width:0;">
+                    <div style="font-weight:500;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ displayName(u) }}</div>
+                    <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ u.email }}</div>
+                  </div>
+                </div>
               </td>
               <td>
                 <span class="m3-badge m3-badge--neutral" style="text-transform:capitalize;">{{ u.auth_provider }}</span>
@@ -134,15 +172,15 @@
               <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ u.last_login ? formatDate(u.last_login) : '—' }}</td>
               <td>
                 <div style="display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;">
-                  <md-outlined-select
-                    style="--md-outlined-select-container-height:36px;min-width:90px;"
-                    :value="u.role"
+                  <AppSelect
+                    style="min-width:90px;"
+                    :model-value="u.role"
                     :disabled="changingRole === u.id || u.id === authStore.profile?.id"
-                    @change="setRole(u, ($event.target as HTMLSelectElement).value)"
+                    @update:model-value="setRole(u, $event)"
                   >
-                    <md-select-option value="user"><div slot="headline">User</div></md-select-option>
-                    <md-select-option value="admin"><div slot="headline">Admin</div></md-select-option>
-                  </md-outlined-select>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </AppSelect>
                   <md-icon-button
                     :disabled="impersonating === u.id || u.id === authStore.profile?.id"
                     @click="startImpersonation(u)"
@@ -202,6 +240,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import AppSelect from '@/components/AppSelect.vue';
 import { use } from 'echarts/core';
 import { BarChart, PieChart, LineChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -663,6 +702,62 @@ onMounted(() => {
     background: rgba(220, 38, 38, 0.12);
     color: #dc2626;
   }
+}
+
+/* Quick stats bar */
+.quick-stats-bar {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.quick-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 20px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.quick-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--md-sys-color-outline-variant);
+  flex-shrink: 0;
+}
+
+/* User avatar */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Impersonation banner */
+.impersonation-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  flex-wrap: wrap;
 }
 
 /* Pagination */

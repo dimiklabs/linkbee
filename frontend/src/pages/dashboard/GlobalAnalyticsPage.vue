@@ -8,13 +8,13 @@
         <p class="md-body-medium page-subtitle">Account-wide click performance across all your links.</p>
       </div>
       <div class="page-header__filters">
-        <!-- Period presets button group -->
-        <div class="preset-btn-group" role="group" aria-label="Period presets">
+        <!-- Period presets chip group -->
+        <div class="chip-group" role="group" aria-label="Period presets">
           <button
             v-for="p in presets"
             :key="p.label"
-            class="preset-btn"
-            :class="{ 'preset-btn--active': activePreset === p.label }"
+            class="chip"
+            :class="{ active: activePreset === p.label }"
             @click="applyPreset(p)"
           >
             {{ p.label }}
@@ -762,41 +762,39 @@ const deviceOption = computed(() => {
   font-weight: 600;
 }
 
-/* ── Period preset button group ──────────────────────────────────────────── */
-.preset-btn-group {
+/* ── Period chip group ───────────────────────────────────────────────────── */
+.chip-group {
   display: flex;
   align-items: center;
-  gap: 0;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: 999px;
-  overflow: hidden;
-  background: var(--md-sys-color-surface);
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
-.preset-btn {
-  padding: 6px 16px;
-  border: none;
-  background: transparent;
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface);
   cursor: pointer;
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
-  transition: background 0.15s, color 0.15s;
-  border-right: 1px solid var(--md-sys-color-outline-variant);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   white-space: nowrap;
-
-  &:last-child {
-    border-right: none;
-  }
+  line-height: 1.4;
 
   &:hover {
     background: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface);
+    border-color: var(--md-sys-color-outline);
   }
 
-  &--active {
+  &.active {
     background: var(--md-sys-color-primary);
     color: var(--md-sys-color-on-primary);
+    border-color: var(--md-sys-color-primary);
 
     &:hover {
       background: var(--md-sys-color-primary);

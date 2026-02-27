@@ -62,7 +62,7 @@
           <p class="md-body-medium state-text">
             The link you followed is invalid or has expired.
           </p>
-          <router-link to="/forgot-password" style="text-decoration: none;">
+          <router-link to="/forgot-password" class="state-action-link">
             <md-filled-button>Request a new reset link</md-filled-button>
           </router-link>
         </div>
@@ -77,7 +77,7 @@
           <p class="md-body-medium state-subtext">
             Redirecting to sign in in <strong>{{ countdown }}</strong> second{{ countdown !== 1 ? 's' : '' }}...
           </p>
-          <router-link to="/login" style="text-decoration: none;">
+          <router-link to="/login" class="state-action-link">
             <md-filled-button>Sign In Now</md-filled-button>
           </router-link>
         </div>
@@ -89,8 +89,8 @@
 
           <!-- Error Banner -->
           <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
-            <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
-            <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+            <span class="material-symbols-outlined err-icon">error</span>
+            <span class="md-body-medium err-text">{{ errorMessage }}</span>
             <md-icon-button @click="errorMessage = ''">
               <span class="material-symbols-outlined">close</span>
             </md-icon-button>
@@ -107,7 +107,7 @@
                 :error="!!errors.newPassword"
                 :error-text="errors.newPassword"
                 supporting-text="Must be at least 8 characters long."
-                style="width: 100%;"
+                class="field-full"
               >
                 <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
@@ -124,7 +124,7 @@
                 autocomplete="new-password"
                 :error="!!errors.confirmPassword"
                 :error-text="errors.confirmPassword"
-                style="width: 100%;"
+                class="field-full"
               >
                 <md-icon-button slot="trailing-icon" type="button" @click="showConfirmPassword = !showConfirmPassword" tabindex="-1">
                   <span class="material-symbols-outlined">{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</span>
@@ -132,8 +132,8 @@
               </md-outlined-text-field>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-bottom: 16px;">
-              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+              <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Update Password
             </md-filled-button>
           </form>
@@ -429,6 +429,10 @@ async function handleSubmit() {
   margin-bottom: 28px;
 }
 
+.state-action-link {
+  text-decoration: none;
+}
+
 /* ── Form elements ────────────────────────────────────────────── */
 .form-heading {
   color: var(--md-sys-color-on-surface);
@@ -466,8 +470,34 @@ async function handleSubmit() {
   margin-bottom: 20px;
 }
 
+.err-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.err-text {
+  flex: 1;
+}
+
 .field-wrap {
   margin-bottom: 16px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-mb {
+  margin-bottom: 16px;
+}
+
+.btn-spinner {
+  --md-circular-progress-size: 20px;
+  margin-right: 8px;
 }
 
 .back-row {
@@ -506,9 +536,8 @@ async function handleSubmit() {
   .auth-right-panel {
     width: 100%;
     min-height: 100vh;
-    padding: 32px 20px;
+    padding: 48px 20px 32px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .right-panel-inner {

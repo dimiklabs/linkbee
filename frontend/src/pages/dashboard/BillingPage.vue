@@ -1,11 +1,12 @@
 <template>
-  <div class="billing-page">
-    <!-- Page header -->
-    <div class="page-header">
-      <h1 class="md-headline-small">Billing &amp; Plan</h1>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:4px 0 0;">
-        Manage your subscription and track usage.
-      </p>
+  <div class="page-section" style="max-width: 900px;">
+
+    <!-- Page Header -->
+    <div class="dash-page-header">
+      <div class="dash-page-header__left">
+        <h1 class="dash-page-header__title">Billing &amp; Plan</h1>
+        <p class="dash-page-header__subtitle">Manage your subscription and track usage.</p>
+      </div>
     </div>
 
     <!-- Loading -->
@@ -19,25 +20,25 @@
       <div class="billing-grid">
 
         <!-- Current Plan card -->
-        <div class="m3-card m3-card--elevated section-card">
-          <div class="card-section-body">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
-              <div>
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;margin-bottom:4px;">
-                  Current plan
-                </div>
-                <div class="md-headline-small" style="color:var(--md-sys-color-on-surface);">{{ planLabel }}</div>
-              </div>
-              <span class="m3-badge" :class="statusClass">{{ statusLabel }}</span>
+        <div class="m3-card m3-card--elevated">
+          <div class="m3-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">workspace_premium</span>
+              <span style="font-size:16px;font-weight:600;">Current Plan</span>
             </div>
+            <span class="m3-badge" :class="statusClass">{{ statusLabel }}</span>
+          </div>
+          <md-divider />
+          <div class="card-body">
+            <div class="plan-name">{{ planLabel }}</div>
 
             <div v-if="sub?.current_period_end" class="meta-row">
-              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Renews</span>
-              <span class="md-body-small" style="font-weight:500;">{{ formatDate(sub.current_period_end) }}</span>
+              <span class="meta-row__label">Renews</span>
+              <span class="meta-row__value">{{ formatDate(sub.current_period_end) }}</span>
             </div>
             <div v-if="sub?.cancelled_at" class="meta-row">
-              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Cancelled</span>
-              <span class="md-body-small" style="font-weight:500;color:var(--md-sys-color-error);">{{ formatDate(sub.cancelled_at) }}</span>
+              <span class="meta-row__label">Cancelled</span>
+              <span class="meta-row__value" style="color:var(--md-sys-color-error);">{{ formatDate(sub.cancelled_at) }}</span>
             </div>
 
             <!-- Upgrade CTAs -->
@@ -48,6 +49,7 @@
                 @click="goCheckout('pro')"
               >
                 <md-circular-progress v-if="checkoutLoading === 'pro'" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+                <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">arrow_upward</span>
                 Upgrade to Pro
               </md-filled-button>
               <md-filled-button
@@ -56,9 +58,10 @@
                 @click="goCheckout('business')"
               >
                 <md-circular-progress v-if="checkoutLoading === 'business'" indeterminate style="--md-circular-progress-size:20px;margin-right:8px;" />
+                <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">rocket_launch</span>
                 Upgrade to Business
               </md-filled-button>
-              <span v-if="currentPlanID === 'business'" class="md-body-medium" style="color:var(--md-sys-color-primary);font-weight:500;align-self:center;">
+              <span v-if="currentPlanID === 'business'" class="plan-top-badge">
                 <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">check_circle</span>
                 You're on the highest plan
               </span>
@@ -69,28 +72,29 @@
         </div>
 
         <!-- Usage card -->
-        <div class="m3-card m3-card--elevated section-card">
-          <div class="card-section-header">
+        <div class="m3-card m3-card--elevated">
+          <div class="m3-card-header">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">analytics</span>
-              <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Usage this period</span>
+              <span style="font-size:16px;font-weight:600;">Usage This Period</span>
             </div>
           </div>
-          <div class="card-section-body">
+          <md-divider />
+          <div class="card-body">
 
             <!-- Links -->
             <div class="usage-item">
               <div class="usage-item__header">
                 <div style="display:flex;align-items:center;gap:6px;">
                   <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">link</span>
-                  <span class="md-label-large">Links</span>
+                  <span style="font-size:0.875rem;font-weight:500;">Links</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }}
+                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }} used
                   </span>
                   <span
-                    class="m3-badge"
+                    class="m3-usage-badge"
                     :class="pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
                   >{{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%</span>
                 </div>
@@ -103,14 +107,14 @@
               <div class="usage-item__header">
                 <div style="display:flex;align-items:center;gap:6px;">
                   <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">key</span>
-                  <span class="md-label-large">API Keys</span>
+                  <span style="font-size:0.875rem;font-weight:500;">API Keys</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }}
+                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }} used
                   </span>
                   <span
-                    class="m3-badge"
+                    class="m3-usage-badge"
                     :class="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
                   >{{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%</span>
                 </div>
@@ -123,20 +127,20 @@
               <div class="usage-item__header">
                 <div style="display:flex;align-items:center;gap:6px;">
                   <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">notifications</span>
-                  <span class="md-label-large">Webhooks</span>
+                  <span style="font-size:0.875rem;font-weight:500;">Webhooks</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }}
+                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
+                    {{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }} used
                   </span>
                   <span
-                    class="m3-badge"
+                    class="m3-usage-badge"
                     :class="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
                   >{{ pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) }}%</span>
                 </div>
               </div>
               <md-linear-progress :value="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) / 100" />
-              <p v-if="!plan?.has_webhooks" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:6px 0 0;">
+              <p v-if="!plan?.has_webhooks" style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);margin:6px 0 0;">
                 Webhooks are not available on the {{ planLabel }} plan.
                 <button class="btn-link-inline" @click="goCheckout('pro')">Upgrade to Pro</button>
               </p>
@@ -147,21 +151,31 @@
       </div>
 
       <!-- ── Plan Comparison table ─────────────────────────────────────── -->
-      <div class="m3-card m3-card--elevated section-card" style="margin-top:20px;">
-        <div class="card-section-header">
+      <div class="m3-card m3-card--elevated">
+        <div class="m3-card-header">
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">compare</span>
-            <span class="md-label-large" style="text-transform:uppercase;letter-spacing:0.05em;color:var(--md-sys-color-on-surface-variant);">Plan comparison</span>
+            <span style="font-size:16px;font-weight:600;">Plan Comparison</span>
           </div>
         </div>
+        <md-divider />
         <div class="m3-table-wrapper">
           <table class="m3-table compare-table">
             <thead>
               <tr>
                 <th>Feature</th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">Free</th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">Pro</th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Business</th>
+                <th class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
+                  Free
+                  <span v-if="currentPlanID === 'free'" class="current-plan-tag">Current</span>
+                </th>
+                <th class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
+                  Pro
+                  <span v-if="currentPlanID === 'pro'" class="current-plan-tag">Current</span>
+                </th>
+                <th class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">
+                  Business
+                  <span v-if="currentPlanID === 'business'" class="current-plan-tag">Current</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -179,7 +193,9 @@
               </tr>
               <tr>
                 <td>Webhooks</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">—</td>
+                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
+                  <span class="material-symbols-outlined x-icon">close</span>
+                </td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">5</td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
               </tr>
@@ -209,7 +225,9 @@
               </tr>
               <tr>
                 <td>Priority support</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">—</td>
+                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
+                  <span class="material-symbols-outlined x-icon">close</span>
+                </td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
                   <span class="material-symbols-outlined check-icon">check_circle</span>
                 </td>
@@ -308,68 +326,113 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.billing-page {
-  max-width: 900px;
-  padding: 24px 0;
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.dash-page-header {
   display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.page-header {
+  align-items: flex-start;
+  justify-content: space-between;
   margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
 }
 
+/* ── Layout ───────────────────────────────────────────────────────────────── */
 .billing-content {
   display: flex;
   flex-direction: column;
+  gap: 0;
 }
 
 .billing-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+  margin-bottom: 20px;
 
   @media (max-width: 767px) {
     grid-template-columns: 1fr;
   }
 }
 
-.section-card {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
+/* ── Cards ────────────────────────────────────────────────────────────────── */
 .m3-card {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
+  margin-bottom: 0;
 
   &--elevated {
     box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
   }
 }
 
-.card-section-header {
+/* ── M3 Card header ───────────────────────────────────────────────────────── */
+.m3-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 14px 24px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  padding: 14px 20px;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.card-section-body {
-  padding: 24px;
+.card-body {
+  padding: 20px 24px 24px;
 }
 
+/* ── Plan name ────────────────────────────────────────────────────────────── */
+.plan-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.plan-top-badge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--md-sys-color-primary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  align-self: center;
+}
+
+/* ── Meta row ─────────────────────────────────────────────────────────────── */
 .meta-row {
   display: flex;
   gap: 8px;
   margin-top: 6px;
+  font-size: 0.875rem;
+
+  &__label {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &__value {
+    font-weight: 500;
+  }
 }
 
-/* Usage items */
+/* ── Usage items ──────────────────────────────────────────────────────────── */
 .usage-item {
   margin-bottom: 20px;
 
@@ -387,7 +450,7 @@ onMounted(async () => {
   gap: 4px;
 }
 
-/* Status badges */
+/* ── Status badges ────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -418,22 +481,33 @@ onMounted(async () => {
   }
 }
 
-/* Usage percentage badges */
-.m3-usage-badge--danger {
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
+/* ── Usage percentage badges ──────────────────────────────────────────────── */
+.m3-usage-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--danger {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+  }
+
+  &--ok {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
 }
 
-.m3-usage-badge--warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
-}
-
-.m3-usage-badge--ok {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
-}
-
+/* ── Inline link button ───────────────────────────────────────────────────── */
 .btn-link-inline {
   background: none;
   border: none;
@@ -446,7 +520,7 @@ onMounted(async () => {
   text-underline-offset: 2px;
 }
 
-/* Compare table */
+/* ── Compare table ────────────────────────────────────────────────────────── */
 .m3-table-wrapper {
   overflow-x: auto;
 }
@@ -471,12 +545,11 @@ onMounted(async () => {
   }
 
   th {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
     font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
     background: var(--md-sys-color-surface-container-low);
+    text-align: left;
   }
 
   .text-center {
@@ -489,9 +562,26 @@ onMounted(async () => {
   }
 }
 
+.current-plan-tag {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-primary);
+  margin-top: 2px;
+}
+
 .check-icon {
   font-size: 18px;
   color: #16a34a;
+  vertical-align: middle;
+}
+
+.x-icon {
+  font-size: 18px;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0.4;
   vertical-align: middle;
 }
 </style>

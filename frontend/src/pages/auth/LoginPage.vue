@@ -57,8 +57,8 @@
 
         <!-- Error Banner -->
         <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
-          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
-          <span class="md-body-medium" style="flex:1;">{{ errorMessage }}</span>
+          <span class="material-symbols-outlined err-icon">error</span>
+          <span class="md-body-medium err-text">{{ errorMessage }}</span>
           <md-icon-button @click="errorMessage = ''">
             <span class="material-symbols-outlined">close</span>
           </md-icon-button>
@@ -81,15 +81,15 @@
                 maxlength="8"
                 autocomplete="one-time-code"
                 autofocus
-                style="width: 100%; text-align: center;"
+                class="field-full totp-field"
               />
             </div>
-            <md-filled-button type="submit" :disabled="loading" style="width: 100%; margin-bottom: 8px;">
-              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            <md-filled-button type="submit" :disabled="loading" class="btn-full btn-mb">
+              <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Verify &amp; Sign In
             </md-filled-button>
-            <md-text-button type="button" @click="pendingTOTPSession = ''" style="width: 100%;">
-              <span class="material-symbols-outlined" style="font-size:18px; margin-right:4px;">arrow_back</span>
+            <md-text-button type="button" @click="pendingTOTPSession = ''" class="btn-full">
+              <span class="material-symbols-outlined back-icon-sm">arrow_back</span>
               Back to login
             </md-text-button>
           </form>
@@ -97,7 +97,7 @@
 
         <!-- Login Form -->
         <template v-else>
-          <h1 class="form-heading md-headline-small">Sign in</h1>
+          <h1 class="form-heading md-headline-small">Welcome back</h1>
 
           <form @submit.prevent="handleLogin" novalidate>
             <div class="field-wrap">
@@ -109,13 +109,13 @@
                 autocomplete="email"
                 :error="!!errors.email"
                 :error-text="errors.email"
-                style="width: 100%;"
+                class="field-full"
               />
             </div>
 
             <div class="field-wrap">
               <div class="password-label-row">
-                <span class="md-label-large" style="color: var(--md-sys-color-on-surface-variant);">Password</span>
+                <span class="md-label-large pass-label">Password</span>
                 <router-link to="/forgot-password" class="forgot-link md-label-large">
                   Forgot password?
                 </router-link>
@@ -129,7 +129,7 @@
                   autocomplete="current-password"
                   :error="!!errors.password"
                   :error-text="errors.password"
-                  style="width: 100%;"
+                  class="field-full"
                 >
                   <md-icon-button slot="trailing-icon" type="button" @click="showPassword = !showPassword" tabindex="-1">
                     <span class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
@@ -144,12 +144,12 @@
                   :checked="form.rememberMe"
                   @change="form.rememberMe = ($event.target as HTMLInputElement).checked"
                 />
-                <span class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant);">Remember me</span>
+                <span class="md-body-medium remember-text">Remember me</span>
               </label>
             </div>
 
-            <md-filled-button type="submit" :disabled="loading" style="width: 100%;">
-              <md-circular-progress v-if="loading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+            <md-filled-button type="submit" :disabled="loading" class="btn-full">
+              <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Sign In
             </md-filled-button>
           </form>
@@ -200,15 +200,18 @@
     </div>
 
     <!-- Reactivation Dialog -->
-    <md-dialog :open="showReactivationModal" @closed="showReactivationModal = false">
-      <div slot="headline">Reactivate Your Account</div>
-      <div slot="content" style="width: 400px; max-width: 100%;">
-        <p class="md-body-medium" style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 20px;">
+    <BaseModal v-model="showReactivationModal" size="sm">
+      <template #headline>
+        Reactivate Your Account
+      </template>
+
+      <div class="reactivation-body">
+        <p class="md-body-medium reactivation-text">
           Your account has been deactivated. Enter your credentials below to reactivate it and restore full access.
         </p>
 
-        <div v-if="reactivationError" class="m3-error-banner" style="margin-bottom: 16px;">
-          <span class="material-symbols-outlined" style="font-size:20px; flex-shrink:0;">error</span>
+        <div v-if="reactivationError" class="m3-error-banner reactivation-error">
+          <span class="material-symbols-outlined err-icon">error</span>
           <span class="md-body-medium">{{ reactivationError }}</span>
         </div>
 
@@ -218,7 +221,7 @@
             @input="reactivationForm.email = ($event.target as HTMLInputElement).value"
             label="Email address"
             type="email"
-            style="width: 100%;"
+            class="field-full"
           />
         </div>
         <div class="field-wrap">
@@ -227,18 +230,19 @@
             @input="reactivationForm.password = ($event.target as HTMLInputElement).value"
             label="Password"
             type="password"
-            style="width: 100%;"
+            class="field-full"
           />
         </div>
       </div>
-      <div slot="actions">
+
+      <template #actions>
         <md-text-button @click="showReactivationModal = false">Cancel</md-text-button>
         <md-filled-button :disabled="reactivationLoading" @click="handleReactivation">
-          <md-circular-progress v-if="reactivationLoading" indeterminate style="--md-circular-progress-size:20px; margin-right:8px;" />
+          <md-circular-progress v-if="reactivationLoading" indeterminate class="btn-spinner" />
           Reactivate Account
         </md-filled-button>
-      </div>
-    </md-dialog>
+      </template>
+    </BaseModal>
 
   </div>
 </template>
@@ -248,6 +252,7 @@ import { ref, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import authApi, { oauthApi } from '@/api/auth';
+import BaseModal from '@/components/BaseModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -599,8 +604,25 @@ async function handleReactivation() {
   margin-bottom: 20px;
 }
 
+.err-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.err-text {
+  flex: 1;
+}
+
 .field-wrap {
   margin-bottom: 16px;
+}
+
+.field-full {
+  width: 100%;
+}
+
+.totp-field {
+  text-align: center;
 }
 
 .password-label-row {
@@ -608,6 +630,10 @@ async function handleReactivation() {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
+}
+
+.pass-label {
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .forgot-link {
@@ -633,6 +659,28 @@ async function handleReactivation() {
   align-items: center;
   gap: 10px;
   cursor: pointer;
+}
+
+.remember-text {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-mb {
+  margin-bottom: 8px;
+}
+
+.btn-spinner {
+  --md-circular-progress-size: 20px;
+  margin-right: 8px;
+}
+
+.back-icon-sm {
+  font-size: 18px;
+  margin-right: 4px;
 }
 
 .auth-divider {
@@ -701,6 +749,21 @@ async function handleReactivation() {
   }
 }
 
+/* ── Reactivation modal body ─────────────────────────────────── */
+.reactivation-body {
+  width: 400px;
+  max-width: 100%;
+}
+
+.reactivation-text {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 20px;
+}
+
+.reactivation-error {
+  margin-bottom: 16px;
+}
+
 /* ── Responsive: mobile ───────────────────────────────────────── */
 @media (max-width: 1023px) {
   .auth-split-page {
@@ -714,9 +777,8 @@ async function handleReactivation() {
   .auth-right-panel {
     width: 100%;
     min-height: 100vh;
-    padding: 32px 20px;
+    padding: 48px 20px 32px;
     align-items: flex-start;
-    padding-top: 48px;
   }
 
   .right-panel-inner {

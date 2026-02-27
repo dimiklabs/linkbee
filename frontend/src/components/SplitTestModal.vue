@@ -1,11 +1,11 @@
 <template>
-  <md-dialog :open="isOpen" @closed="onDialogClosed" style="--md-dialog-container-shape:16px">
-    <div slot="headline">
+  <BaseModal v-model="isOpen" size="lg" @closed="onDialogClosed">
+    <template #headline>
       A/B Split Test
       <span style="font-size:0.8rem;font-weight:400;color:var(--md-sys-color-on-surface-variant);display:block;margin-top:2px">{{ props.slug }}</span>
-    </div>
+    </template>
 
-    <div slot="content" style="min-width:560px;max-width:100%;padding:0 4px;max-height:70vh;overflow-y:auto">
+    <div style="min-width:560px;max-width:100%;padding:0 4px;">
       <!-- Error -->
       <div v-if="error" class="split-error-banner">
         <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error)">error</span>
@@ -163,16 +163,17 @@
       </div>
     </div>
 
-    <div slot="actions">
+    <template #actions>
       <md-text-button @click="hide">Close</md-text-button>
-    </div>
-  </md-dialog>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import variantsApi from '@/api/variants';
 import type { LinkVariant } from '@/types/links';
+import BaseModal from '@/components/BaseModal.vue';
 
 interface Props {
   linkId: string;

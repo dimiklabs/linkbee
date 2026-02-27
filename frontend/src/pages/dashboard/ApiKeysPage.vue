@@ -1,19 +1,21 @@
 <template>
-  <div class="page-wrapper">
+  <div class="page-section" style="max-width: 900px;">
 
     <!-- Page Header -->
-    <div class="page-header">
-      <div>
-        <h1 class="page-title">API Keys</h1>
-        <p class="page-subtitle">
+    <div class="dash-page-header">
+      <div class="dash-page-header__left">
+        <h1 class="dash-page-header__title">API Keys</h1>
+        <p class="dash-page-header__subtitle">
           Use API keys to authenticate programmatic requests with
           <code style="color:var(--md-sys-color-primary);">X-API-Key: &lt;key&gt;</code> header.
         </p>
       </div>
-      <md-filled-button @click="showCreate = true">
-        <span class="material-symbols-outlined" slot="icon">add</span>
-        New API Key
-      </md-filled-button>
+      <div class="dash-page-header__actions">
+        <md-filled-button @click="showCreate = true">
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+          New API Key
+        </md-filled-button>
+      </div>
     </div>
 
     <!-- Usage Warning Banner -->
@@ -30,12 +32,12 @@
       <span class="material-symbols-outlined" style="color:#b45309;font-size:1.25rem;flex-shrink:0;margin-top:2px;">lock</span>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;margin-bottom:8px;">Save your API key — it won't be shown again</div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <code class="key-display">{{ newKey.key }}</code>
-          <md-filled-tonal-button @click="copyKey(newKey.key)">
-            <span class="material-symbols-outlined" slot="icon">{{ copied ? 'check' : 'content_copy' }}</span>
+        <div class="copy-field">
+          <span class="copy-field__value">{{ newKey.key }}</span>
+          <button class="copy-field__btn" @click="copyKey(newKey.key)">
+            <span class="material-symbols-outlined">{{ copied ? 'check' : 'content_copy' }}</span>
             {{ copied ? 'Copied' : 'Copy' }}
-          </md-filled-tonal-button>
+          </button>
         </div>
       </div>
       <md-icon-button @click="newKey = null">
@@ -46,50 +48,50 @@
     <!-- Create form (inline) -->
     <div v-if="showCreate" class="m3-card m3-card--elevated create-form">
       <div class="m3-card-header">
-        <div class="m3-card-header__left">
+        <div style="display:flex;align-items:center;gap:8px;">
           <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_circle</span>
-          <span class="md-title-medium">Create New API Key</span>
+          <span style="font-size:16px;font-weight:600;">Create New API Key</span>
         </div>
       </div>
       <md-divider />
       <div style="padding:1.25rem;">
-      <div class="create-form-fields">
-        <md-outlined-text-field
-          :value="form.name"
-          @input="form.name=($event.target as HTMLInputElement).value"
-          label="Name *"
-          placeholder="e.g. My integration, CI/CD pipeline"
-          maxlength="100"
-          style="flex:2;min-width:220px;"
-          @keydown.enter="createKey"
-          ref="nameInputRef"
-        />
-        <md-outlined-text-field
-          :value="form.expires_at"
-          @input="form.expires_at=($event.target as HTMLInputElement).value"
-          label="Expiry (optional)"
-          type="date"
-          :min="tomorrow"
-          style="flex:1;min-width:160px;"
-        />
-        <div style="display:flex;gap:8px;align-items:center;">
-          <md-filled-button @click="createKey" :disabled="!form.name.trim() || creating">
-            <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
-            Create
-          </md-filled-button>
-          <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+        <div class="create-form-fields">
+          <md-outlined-text-field
+            :value="form.name"
+            @input="form.name=($event.target as HTMLInputElement).value"
+            label="Name *"
+            placeholder="e.g. My integration, CI/CD pipeline"
+            maxlength="100"
+            style="flex:2;min-width:220px;"
+            @keydown.enter="createKey"
+            ref="nameInputRef"
+          />
+          <md-outlined-text-field
+            :value="form.expires_at"
+            @input="form.expires_at=($event.target as HTMLInputElement).value"
+            label="Expiry (optional)"
+            type="date"
+            :min="tomorrow"
+            style="flex:1;min-width:160px;"
+          />
+          <div style="display:flex;gap:8px;align-items:center;">
+            <md-filled-button @click="createKey" :disabled="!form.name.trim() || creating">
+              <md-circular-progress v-if="creating" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+              Create
+            </md-filled-button>
+            <md-outlined-button @click="cancelCreate">Cancel</md-outlined-button>
+          </div>
         </div>
-      </div>
-      <div v-if="createError" style="color:var(--md-sys-color-error);font-size:0.875rem;margin-top:8px;">{{ createError }}</div>
+        <div v-if="createError" style="color:var(--md-sys-color-error);font-size:0.875rem;margin-top:8px;">{{ createError }}</div>
       </div>
     </div>
 
     <!-- Keys table -->
     <div class="m3-card m3-card--elevated">
       <div class="m3-card-header">
-        <div class="m3-card-header__left">
+        <div style="display:flex;align-items:center;gap:8px;">
           <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">key</span>
-          <span class="md-title-medium">Your API Keys</span>
+          <span style="font-size:16px;font-weight:600;">Your API Keys</span>
         </div>
         <span class="m3-badge m3-badge--neutral">{{ keys.length }} key{{ keys.length !== 1 ? 's' : '' }}</span>
       </div>
@@ -106,7 +108,7 @@
         <div class="md-title-medium" style="margin-bottom:0.5rem;">No API keys yet</div>
         <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 1rem;">Create an API key to authenticate programmatic requests.</p>
         <md-filled-button @click="showCreate = true">
-          <span class="material-symbols-outlined" slot="icon">add</span>
+          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
           Create your first key
         </md-filled-button>
       </div>
@@ -117,7 +119,7 @@
             <tr>
               <th>Name</th>
               <th>Key Prefix</th>
-              <th>Last used</th>
+              <th>Last Used</th>
               <th>Expires</th>
               <th>Created</th>
               <th style="text-align:right">Actions</th>
@@ -150,7 +152,7 @@
                   <md-icon-button
                     title="Revoke key"
                     :disabled="revokingId === key.id"
-                    @click="revokeKey(key)"
+                    @click="promptRevoke(key)"
                     class="danger-btn"
                   >
                     <md-circular-progress v-if="revokingId === key.id" indeterminate style="--md-circular-progress-size:20px" />
@@ -167,9 +169,9 @@
     <!-- Usage docs -->
     <div class="m3-card m3-card--elevated">
       <div class="m3-card-header">
-        <div class="m3-card-header__left">
+        <div style="display:flex;align-items:center;gap:8px;">
           <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">code</span>
-          <span class="md-title-medium">How to use</span>
+          <span style="font-size:16px;font-weight:600;">How to use</span>
         </div>
       </div>
       <md-divider />
@@ -184,12 +186,35 @@
       </div>
     </div>
 
+    <!-- Confirm Revoke Dialog -->
+    <BaseModal v-model="showRevokeConfirm" size="sm" :persistent="false">
+      <template #headline>
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">delete</span>
+        Revoke API Key
+      </template>
+      <p style="color:var(--md-sys-color-on-surface-variant);">
+        Revoke <strong>{{ keyToRevoke?.name }}</strong>? Any integrations using it will stop working immediately. This cannot be undone.
+      </p>
+      <template #actions>
+        <md-text-button @click="showRevokeConfirm = false">Cancel</md-text-button>
+        <md-filled-button
+          style="--md-filled-button-container-color:var(--md-sys-color-error)"
+          :disabled="revokingId !== null"
+          @click="confirmRevoke"
+        >
+          <md-circular-progress v-if="revokingId !== null" indeterminate style="--md-circular-progress-size:18px;margin-right:6px;" />
+          Revoke Key
+        </md-filled-button>
+      </template>
+    </BaseModal>
+
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { RouterLink } from 'vue-router';
+import BaseModal from '@/components/BaseModal.vue';
 import apiKeysApi from '@/api/apikeys';
 import type { APIKey, CreateAPIKeyResponse } from '@/types/apikeys';
 import billingApi from '@/api/billing';
@@ -219,6 +244,10 @@ const createError = ref('');
 const revokingId = ref<string | null>(null);
 const newKey = ref<CreateAPIKeyResponse | null>(null);
 const copied = ref(false);
+
+// Confirm revoke dialog
+const showRevokeConfirm = ref(false);
+const keyToRevoke = ref<APIKey | null>(null);
 
 const form = ref({ name: '', expires_at: '' });
 const nameInputRef = ref<HTMLInputElement | null>(null);
@@ -292,13 +321,21 @@ async function copyKey(key: string) {
 }
 
 // ── Revoke ─────────────────────────────────────────────────────────────────────
-async function revokeKey(key: APIKey) {
-  if (!confirm(`Revoke key "${key.name}"? Any integrations using it will stop working.`)) return;
+function promptRevoke(key: APIKey) {
+  keyToRevoke.value = key;
+  showRevokeConfirm.value = true;
+}
+
+async function confirmRevoke() {
+  if (!keyToRevoke.value) return;
+  const key = keyToRevoke.value;
   revokingId.value = key.id;
   try {
     await apiKeysApi.revoke(key.id);
     keys.value = keys.value.filter(k => k.id !== key.id);
     if (newKey.value?.id === key.id) newKey.value = null;
+    showRevokeConfirm.value = false;
+    keyToRevoke.value = null;
   } catch {
     // ignore
   } finally {
@@ -329,33 +366,45 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
-  max-width: 900px;
-}
+/* page-section (global) handles padding; max-width set via style attribute on root */
 
-.page-header {
+/* ── Page Header ──────────────────────────────────────────────────────────── */
+.dash-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+
+  &__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__subtitle {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
 }
 
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 4px;
-  color: var(--md-sys-color-on-surface);
-}
-
-.page-subtitle {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
+/* ── Cards ────────────────────────────────────────────────────────────────── */
 .m3-card {
   border-radius: 12px;
   background: var(--md-sys-color-surface);
@@ -371,7 +420,7 @@ onMounted(async () => {
   }
 }
 
-/* M3 Card header */
+/* ── M3 Card header ───────────────────────────────────────────────────────── */
 .m3-card-header {
   display: flex;
   align-items: center;
@@ -379,20 +428,14 @@ onMounted(async () => {
   padding: 14px 20px;
   gap: 1rem;
   flex-wrap: wrap;
-
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
 }
 
-/* M3 Table wrapper */
+/* ── M3 Table wrapper ─────────────────────────────────────────────────────── */
 .m3-table-wrapper {
   overflow-x: auto;
 }
 
-/* M3 Badges */
+/* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -409,12 +452,17 @@ onMounted(async () => {
   }
 
   &--error {
-    background: #fee2e2;
+    background: rgba(220, 38, 38, 0.12);
     color: #dc2626;
+  }
+
+  &--success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
   }
 }
 
-/* M3 Empty state */
+/* ── M3 Empty state ───────────────────────────────────────────────────────── */
 .m3-empty-state {
   display: flex;
   flex-direction: column;
@@ -441,21 +489,68 @@ onMounted(async () => {
   }
 }
 
-/* Key name */
+/* ── Copy field ───────────────────────────────────────────────────────────── */
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  padding: 6px 8px 6px 12px;
+  flex-wrap: wrap;
+
+  &__value {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.78rem;
+    color: var(--md-sys-color-on-surface);
+    word-break: break-all;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--md-sys-color-surface-container);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .material-symbols-outlined {
+      font-size: 16px;
+    }
+  }
+}
+
+/* ── Key name ─────────────────────────────────────────────────────────────── */
 .key-name {
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--md-sys-color-on-surface);
 }
 
-/* Key prefix cell */
+/* ── Key prefix cell ──────────────────────────────────────────────────────── */
 .key-prefix-cell {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Key actions */
+/* ── Key actions ──────────────────────────────────────────────────────────── */
 .key-actions {
   display: flex;
   justify-content: flex-end;
@@ -463,12 +558,12 @@ onMounted(async () => {
   gap: 4px;
 }
 
-/* Danger button */
+/* ── Danger button ────────────────────────────────────────────────────────── */
 .danger-btn {
   --md-icon-button-icon-color: var(--md-sys-color-error);
 }
 
-/* Warning banner */
+/* ── Warning banner ───────────────────────────────────────────────────────── */
 .warning-banner {
   display: flex;
   align-items: center;
@@ -489,7 +584,7 @@ onMounted(async () => {
   color: #92400e;
 }
 
-/* New key banner */
+/* ── New key banner ───────────────────────────────────────────────────────── */
 .new-key-banner {
   display: flex;
   align-items: flex-start;
@@ -501,23 +596,7 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.key-display {
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 0.78rem;
-  background: #f8f9fa;
-  color: #212529;
-  padding: 8px 12px;
-  border-radius: 8px;
-  word-break: break-all;
-  flex: 1;
-  display: inline-block;
-}
-
-/* Create form */
-.create-form {
-  // card header adds its own padding
-}
-
+/* ── Create form ──────────────────────────────────────────────────────────── */
 .create-form-fields {
   display: flex;
   flex-wrap: wrap;
@@ -525,7 +604,7 @@ onMounted(async () => {
   align-items: flex-end;
 }
 
-/* Table */
+/* ── Table ────────────────────────────────────────────────────────────────── */
 .m3-table {
   width: 100%;
   border-collapse: collapse;
@@ -569,12 +648,12 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
-/* Usage docs */
+/* ── Usage docs ───────────────────────────────────────────────────────────── */
 .usage-card {
   padding: 20px;
 }
 
-/* Usage note */
+/* ── Usage note ───────────────────────────────────────────────────────────── */
 .usage-note {
   display: flex;
   align-items: flex-start;

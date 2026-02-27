@@ -739,3 +739,420 @@ a:has(.nav-item),
     radial-gradient(ellipse at 80% 20%, rgba(14, 165, 160, 0.06) 0%, transparent 50%),
     var(--md-sys-color-background);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTON ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Make all md-* buttons consistent height and font */
+md-filled-button,
+md-outlined-button,
+md-text-button,
+md-filled-tonal-button {
+  --md-filled-button-container-height: 40px;
+  --md-outlined-button-container-height: 40px;
+  --md-text-button-container-height: 40px;
+  --md-filled-tonal-button-container-height: 40px;
+  --md-filled-button-label-text-font: 'Roboto', sans-serif;
+  --md-outlined-button-label-text-font: 'Roboto', sans-serif;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Large button variant */
+md-filled-button.btn-lg,
+md-outlined-button.btn-lg {
+  --md-filled-button-container-height: 48px;
+  --md-outlined-button-container-height: 48px;
+  font-size: 15px;
+  padding: 0 28px;
+}
+
+/* Full-width button */
+md-filled-button.w-full,
+md-outlined-button.w-full,
+md-text-button.w-full,
+md-filled-tonal-button.w-full {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INPUT / FORM FIELD ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+md-outlined-text-field,
+md-filled-text-field {
+  --md-outlined-text-field-container-height: 56px;
+  --md-filled-text-field-container-height: 56px;
+  width: 100%;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Supporting text spacing */
+md-outlined-text-field::part(supporting-text),
+md-filled-text-field::part(supporting-text) {
+  font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM NATIVE SELECT  (app-select pattern)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Target the AppSelect wrapper globally for dark mode */
+[data-theme="dark"] .app-select-field {
+  border-color: var(--md-sys-color-outline);
+  background: transparent;
+}
+
+[data-theme="dark"] .app-select-native {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .app-select-label {
+  background: var(--md-sys-color-surface);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Round-corner table wrapper */
+.m3-table-card {
+  background: var(--md-sys-color-surface);
+  border-radius: var(--app-border-radius-md);
+  overflow: hidden;
+  border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.m3-table-card .m3-table-wrapper {
+  border-radius: 0;
+}
+
+/* Sticky table header in scrollable containers */
+.m3-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Table action cell */
+.m3-table .cell-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIST ITEMS
+   ═══════════════════════════════════════════════════════════════ */
+
+.m3-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.m3-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 0;
+  transition: background var(--app-transition-fast);
+  cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
+}
+
+.m3-list-item:last-child { border-bottom: none; }
+.m3-list-item:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 6%, transparent); }
+.m3-list-item:active { background: color-mix(in srgb, var(--md-sys-color-on-surface) 10%, transparent); }
+
+.m3-list-item__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--md-sys-color-surface-container);
+}
+
+.m3-list-item__content { flex: 1; min-width: 0; }
+.m3-list-item__headline {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.m3-list-item__supporting {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.m3-list-item__trailing {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DROPDOWN MENU  (custom, not md-menu)
+   ═══════════════════════════════════════════════════════════════ */
+
+.app-dropdown {
+  position: absolute;
+  z-index: 500;
+  background: var(--md-sys-color-surface-container);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px 3px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.2);
+  overflow: hidden;
+  min-width: 180px;
+  animation: dropdown-in 0.15s cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.app-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  transition: background 0.12s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.app-dropdown-item:hover { background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent); }
+.app-dropdown-item:active { background: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent); }
+
+.app-dropdown-item .material-symbols-outlined { font-size: 20px; color: var(--md-sys-color-on-surface-variant); }
+
+.app-dropdown-item--danger {
+  color: var(--md-sys-color-error);
+}
+.app-dropdown-item--danger .material-symbols-outlined { color: var(--md-sys-color-error); }
+
+.app-dropdown-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHIP GROUP  (period selectors, filters)
+   ═══════════════════════════════════════════════════════════════ */
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.chip:hover {
+  background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  border-color: var(--md-sys-color-outline);
+}
+
+.chip--active,
+.chip.active {
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  border-color: var(--md-sys-color-secondary-container);
+}
+
+.chip .material-symbols-outlined { font-size: 16px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGINATION
+   ═══════════════════════════════════════════════════════════════ */
+
+.m3-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  flex-wrap: wrap;
+}
+
+.m3-pagination__info {
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.m3-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORM SECTION LABEL  (CreateLink / Settings sections)
+   ═══════════════════════════════════════════════════════════════ */
+
+.form-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-sys-color-primary);
+  margin-bottom: 12px;
+  margin-top: 4px;
+}
+
+.form-section-label .material-symbols-outlined { font-size: 14px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   COPY FIELD  (API keys, short URLs)
+   ═══════════════════════════════════════════════════════════════ */
+
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.copy-field__value {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  color: var(--md-sys-color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: text;
+}
+
+.copy-field__btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 14px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+  min-height: 40px;
+}
+
+.copy-field__btn:hover { background: var(--md-sys-color-primary-container); }
+.copy-field__btn--success { color: var(--md-sys-color-success, #15803D); }
+
+.copy-field__btn .material-symbols-outlined { font-size: 16px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   STATUS DOT INDICATOR
+   ═══════════════════════════════════════════════════════════════ */
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-dot--active  { background: var(--md-sys-color-success, #15803D); }
+.status-dot--paused  { background: var(--md-sys-color-warning, #D97706); }
+.status-dot--error   { background: var(--md-sys-color-error); }
+.status-dot--inactive { background: var(--md-sys-color-outline); }
+
+/* ═══════════════════════════════════════════════════════════════
+   AVATAR  (user initials circle)
+   ═══════════════════════════════════════════════════════════════ */
+
+.m3-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-weight: 600;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.m3-avatar--sm  { width: 28px; height: 28px; font-size: 11px; }
+.m3-avatar--md  { width: 36px; height: 36px; font-size: 14px; }
+.m3-avatar--lg  { width: 48px; height: 48px; font-size: 18px; }
+.m3-avatar--xl  { width: 64px; height: 64px; font-size: 24px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOGGLE / SWITCH ROW
+   ═══════════════════════════════════════════════════════════════ */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
+}
+
+.toggle-row:last-child { border-bottom: none; }
+
+.toggle-row__info { flex: 1; min-width: 0; }
+.toggle-row__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+.toggle-row__description {
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+}
