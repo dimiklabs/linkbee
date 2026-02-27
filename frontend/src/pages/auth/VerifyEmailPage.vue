@@ -105,11 +105,11 @@
                 type="email"
                 class="resend-field"
               />
-              <button class="btn-filled"
-                :disabled="resending || !resendEmail"
-                @click="handleResend"
-                class="resend-btn"
-              >
+              <button class="btn-filled resend-btn" 
+ :disabled="resending || !resendEmail"
+ @click="handleResend"
+ 
+ >
                 <md-circular-progress v-if="resending" indeterminate class="btn-spinner" />
                 Resend
               </button>

@@ -171,12 +171,12 @@
         <span class="material-symbols-outlined">upload_file</span>
         Import Another
       </button>
-      <button class="btn-filled"
-        v-else
-        :disabled="!selectedFile || importing"
-        @click="handleImport"
-        class="action-btn"
-      >
+      <button class="btn-filled action-btn" 
+ v-else
+ :disabled="!selectedFile || importing"
+ @click="handleImport"
+ 
+ >
         <md-circular-progress v-if="importing" indeterminate />
         <span class="material-symbols-outlined" v-else>rocket_launch</span>
         {{ importing ? 'Importing…' : 'Import Links' }}

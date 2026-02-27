@@ -109,11 +109,11 @@
                   class="demo-text-field"
                   @keyup.enter="handleDemoShorten"
                 />
-                <button class="btn-filled"
-                  :disabled="demoLoading || !demoUrl"
-                  @click="handleDemoShorten"
-                  class="demo-shorten-btn"
-                >
+                <button class="btn-filled demo-shorten-btn" 
+ :disabled="demoLoading || !demoUrl"
+ @click="handleDemoShorten"
+ 
+ >
                   <md-circular-progress
                     v-if="demoLoading"
                     indeterminate

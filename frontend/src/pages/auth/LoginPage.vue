@@ -163,27 +163,27 @@
 
           <!-- OAuth Buttons -->
           <div class="oauth-row">
-            <button class="btn-outlined"
-              :disabled="oauthLoading"
-              @click="handleOAuth('google')"
-              class="oauth-btn"
-            >
+            <button class="btn-outlined oauth-btn" 
+ :disabled="oauthLoading"
+ @click="handleOAuth('google')"
+ 
+ >
               <span class="oauth-letter oauth-letter--google">G</span>
               <span class="oauth-label">Google</span>
             </button>
-            <button class="btn-outlined"
-              :disabled="oauthLoading"
-              @click="handleOAuth('github')"
-              class="oauth-btn"
-            >
+            <button class="btn-outlined oauth-btn" 
+ :disabled="oauthLoading"
+ @click="handleOAuth('github')"
+ 
+ >
               <span class="oauth-letter oauth-letter--github">GH</span>
               <span class="oauth-label">GitHub</span>
             </button>
-            <button class="btn-outlined"
-              :disabled="oauthLoading"
-              @click="handleOAuth('facebook')"
-              class="oauth-btn"
-            >
+            <button class="btn-outlined oauth-btn" 
+ :disabled="oauthLoading"
+ @click="handleOAuth('facebook')"
+ 
+ >
               <span class="oauth-letter oauth-letter--facebook">FB</span>
               <span class="oauth-label">Facebook</span>
             </button>
