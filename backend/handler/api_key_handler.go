@@ -10,15 +10,17 @@ import (
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
 	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
+	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	"github.com/shafikshaon/shortlink/transport"
 )
 
 type APIKeyHandler struct {
-	svc apiKeySvc.APIKeyServiceI
+	svc          apiKeySvc.APIKeyServiceI
+	planEnforcer billingSvc.PlanEnforcerI
 }
 
-func NewAPIKeyHandler(svc apiKeySvc.APIKeyServiceI) *APIKeyHandler {
-	return &APIKeyHandler{svc: svc}
+func NewAPIKeyHandler(svc apiKeySvc.APIKeyServiceI, planEnforcer billingSvc.PlanEnforcerI) *APIKeyHandler {
+	return &APIKeyHandler{svc: svc, planEnforcer: planEnforcer}
 }
 
 func (h *APIKeyHandler) userID(c *gin.Context) (uuid.UUID, bool) {
@@ -90,6 +92,11 @@ func (h *APIKeyHandler) CreateAPIKey(c *gin.Context) {
 			return
 		}
 		expiresAt = &t
+	}
+
+	if svcErr := h.planEnforcer.CheckAPIKeyLimit(c.Request.Context(), userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
 	}
 
 	resp, svcErr := h.svc.Create(c.Request.Context(), userID, req.Name, expiresAt)

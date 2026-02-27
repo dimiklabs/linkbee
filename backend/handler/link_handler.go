@@ -9,6 +9,7 @@ import (
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
 	"github.com/shafikshaon/shortlink/request"
+	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	linkSvc "github.com/shafikshaon/shortlink/service/link"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/transport"
@@ -18,10 +19,11 @@ import (
 type LinkHandler struct {
 	linkService    linkSvc.LinkServiceI
 	webhookService webhookSvc.WebhookServiceI
+	planEnforcer   billingSvc.PlanEnforcerI
 }
 
-func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.WebhookServiceI) *LinkHandler {
-	return &LinkHandler{linkService: linkService, webhookService: webhookService}
+func NewLinkHandler(linkService linkSvc.LinkServiceI, webhookService webhookSvc.WebhookServiceI, planEnforcer billingSvc.PlanEnforcerI) *LinkHandler {
+	return &LinkHandler{linkService: linkService, webhookService: webhookService, planEnforcer: planEnforcer}
 }
 
 // ListLinks godoc
@@ -100,6 +102,11 @@ func (h *LinkHandler) CreateLink(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		code, msg := util.TranslateValidationError(err)
 		transport.RespondWithError(c, http.StatusBadRequest, code, msg)
+		return
+	}
+
+	if svcErr := h.planEnforcer.CheckLinkLimit(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
 

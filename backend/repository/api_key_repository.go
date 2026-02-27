@@ -13,6 +13,7 @@ import (
 type APIKeyRepositoryI interface {
 	Create(ctx context.Context, key *model.APIKey) error
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]model.APIKey, error)
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	GetByPrefix(ctx context.Context, prefix string) (*model.APIKey, error)
 	Delete(ctx context.Context, id, userID uuid.UUID) error
 	UpdateLastUsed(ctx context.Context, id uuid.UUID) error
@@ -38,6 +39,14 @@ func (r *apiKeyRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([
 		Order("created_at DESC").
 		Find(&keys).Error
 	return keys, err
+}
+
+func (r *apiKeyRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.replica.WithContext(ctx).Model(&model.APIKey{}).
+		Where("user_id = ?", userID).
+		Count(&count).Error
+	return count, err
 }
 
 func (r *apiKeyRepository) GetByPrefix(ctx context.Context, prefix string) (*model.APIKey, error) {

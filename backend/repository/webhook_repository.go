@@ -12,6 +12,7 @@ import (
 type WebhookRepositoryI interface {
 	Create(ctx context.Context, webhook *model.Webhook) error
 	GetByUserID(ctx context.Context, userID uuid.UUID) ([]model.Webhook, error)
+	CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*model.Webhook, error)
 	Update(ctx context.Context, webhook *model.Webhook) error
 	Delete(ctx context.Context, id, userID uuid.UUID) error
@@ -38,6 +39,14 @@ func (r *webhookRepository) GetByUserID(ctx context.Context, userID uuid.UUID) (
 		Order("created_at DESC").
 		Find(&webhooks).Error
 	return webhooks, err
+}
+
+func (r *webhookRepository) CountByUserID(ctx context.Context, userID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.replica.WithContext(ctx).Model(&model.Webhook{}).
+		Where("user_id = ?", userID).
+		Count(&count).Error
+	return count, err
 }
 
 func (r *webhookRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (*model.Webhook, error) {

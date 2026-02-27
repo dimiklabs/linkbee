@@ -9,16 +9,18 @@ import (
 	"github.com/shafikshaon/shortlink/constant"
 	"github.com/shafikshaon/shortlink/middlewares"
 	"github.com/shafikshaon/shortlink/request"
+	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
 	"github.com/shafikshaon/shortlink/transport"
 )
 
 type WebhookHandler struct {
 	webhookService webhookSvc.WebhookServiceI
+	planEnforcer   billingSvc.PlanEnforcerI
 }
 
-func NewWebhookHandler(webhookService webhookSvc.WebhookServiceI) *WebhookHandler {
-	return &WebhookHandler{webhookService: webhookService}
+func NewWebhookHandler(webhookService webhookSvc.WebhookServiceI, planEnforcer billingSvc.PlanEnforcerI) *WebhookHandler {
+	return &WebhookHandler{webhookService: webhookService, planEnforcer: planEnforcer}
 }
 
 func (h *WebhookHandler) userID(c *gin.Context) (uuid.UUID, bool) {
@@ -79,6 +81,12 @@ func (h *WebhookHandler) CreateWebhook(c *gin.Context) {
 		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeValidationError, err.Error())
 		return
 	}
+
+	if svcErr := h.planEnforcer.CheckWebhookLimit(c.Request.Context(), userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
 	webhook, svcErr := h.webhookService.Create(c.Request.Context(), userID, req.URL, req.Events)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
