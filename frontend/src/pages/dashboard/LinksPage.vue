@@ -251,6 +251,24 @@
                     +{{ link.tags.length - 3 }}
                   </span>
                 </div>
+                <!-- Expiry / limit / password meta -->
+                <div class="mt-1 d-flex flex-wrap gap-2" style="font-size: 0.72rem; color: #697386;">
+                  <span v-if="link.has_password" title="Password protected">🔒 Protected</span>
+                  <span
+                    v-if="link.expires_at"
+                    :class="isExpired(link) ? 'text-danger fw-medium' : ''"
+                    :title="isExpired(link) ? 'This link has expired' : 'Expiry date'"
+                  >
+                    ⏱ {{ isExpired(link) ? 'Expired' : 'Expires' }} {{ formatDate(link.expires_at) }}
+                  </span>
+                  <span
+                    v-if="link.max_clicks"
+                    :class="isClickLimitReached(link) ? 'text-warning fw-medium' : ''"
+                    :title="isClickLimitReached(link) ? 'Click limit reached' : 'Max clicks'"
+                  >
+                    ⚡ {{ link.click_count }}/{{ link.max_clicks }} clicks
+                  </span>
+                </div>
               </td>
 
               <!-- Short URL -->
@@ -289,10 +307,10 @@
               <td class="py-3">
                 <span
                   class="badge rounded-pill px-3 py-2"
-                  :class="link.is_active ? 'text-bg-success' : 'text-bg-danger'"
+                  :class="statusBadgeClass(link)"
                   style="font-size: 0.75rem;"
                 >
-                  {{ link.is_active ? 'Active' : 'Inactive' }}
+                  {{ statusLabel(link) }}
                 </span>
               </td>
 
@@ -867,6 +885,26 @@ async function runHealthCheck(link: LinkResponse) {
   } finally {
     checkingHealthId.value = null;
   }
+}
+
+function isExpired(link: LinkResponse): boolean {
+  return !!link.expires_at && new Date(link.expires_at) < new Date();
+}
+
+function isClickLimitReached(link: LinkResponse): boolean {
+  return !!link.max_clicks && link.click_count >= link.max_clicks;
+}
+
+function statusBadgeClass(link: LinkResponse): string {
+  if (isExpired(link)) return 'text-bg-secondary';
+  if (isClickLimitReached(link)) return 'text-bg-warning';
+  return link.is_active ? 'text-bg-success' : 'text-bg-danger';
+}
+
+function statusLabel(link: LinkResponse): string {
+  if (isExpired(link)) return 'Expired';
+  if (isClickLimitReached(link)) return 'Limit Reached';
+  return link.is_active ? 'Active' : 'Inactive';
 }
 
 function healthBadgeClass(status: string): string {
