@@ -169,21 +169,21 @@
               </button>
             </div>
 
-            <md-outlined-button @click="exportCSV" :disabled="exporting">
-              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:18px;margin-right:6px" />
-              <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px">download</span>
+            <button class="hdr-btn hdr-btn--outlined" @click="exportCSV" :disabled="exporting">
+              <md-circular-progress v-if="exporting" indeterminate style="--md-circular-progress-size:16px" />
+              <span v-else class="material-symbols-outlined">download</span>
               Export CSV
-            </md-outlined-button>
+            </button>
 
-            <md-outlined-button @click="openImportModal">
-              <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">upload_file</span>
+            <button class="hdr-btn hdr-btn--outlined" @click="openImportModal">
+              <span class="material-symbols-outlined">upload_file</span>
               Import CSV
-            </md-outlined-button>
+            </button>
 
-            <md-filled-button @click="openCreateModal">
-              <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add</span>
+            <button class="hdr-btn hdr-btn--filled" @click="openCreateModal">
+              <span class="material-symbols-outlined">add</span>
               New Link
-            </md-filled-button>
+            </button>
           </div>
         </div>
 
@@ -1537,6 +1537,48 @@ const visiblePages = computed<(number | string)[]>(() => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* ── Header buttons ──────────────────────────────────────────────────────────── */
+.hdr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 20px;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, box-shadow 0.15s, opacity 0.15s;
+
+  .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+
+  &:disabled { opacity: 0.38; cursor: not-allowed; }
+
+  &--outlined {
+    border: 1px solid var(--md-sys-color-outline);
+    background: transparent;
+    color: var(--md-sys-color-primary);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    }
+  }
+
+  &--filled {
+    border: none;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    }
+  }
 }
 
 /* ── Search field ────────────────────────────────────────────────────────────── */
