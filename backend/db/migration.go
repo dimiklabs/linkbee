@@ -27,6 +27,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.BioPage{},
 		&model.BioLink{},
 		&model.Subscription{},
+		&model.CustomDomain{},
 	)
 	if err != nil {
 		logger.Error("Auto migration failed", zap.Error(err))

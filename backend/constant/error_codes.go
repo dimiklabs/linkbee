@@ -58,6 +58,11 @@ const (
 	// Rate Limiting
 	ErrCodeRateLimited = "RATE_LIMITED"
 
+	// Custom Domains
+	ErrCodeDomainAlreadyExists = "DOMAIN_ALREADY_EXISTS"
+	ErrCodeDomainNotFound      = "DOMAIN_NOT_FOUND"
+	ErrCodeDomainVerifyFailed  = "DOMAIN_VERIFY_FAILED"
+
 	// Links
 	ErrCodeLinkNotFound     = "LINK_NOT_FOUND"
 	ErrCodeSlugTaken        = "SLUG_ALREADY_TAKEN"

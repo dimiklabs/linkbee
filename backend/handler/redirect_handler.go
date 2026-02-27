@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/shafikshaon/shortlink/constant"
+	"github.com/shafikshaon/shortlink/model"
 	"github.com/shafikshaon/shortlink/repository"
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	geoSvc "github.com/shafikshaon/shortlink/service/geo"
@@ -20,12 +22,14 @@ import (
 )
 
 type RedirectHandler struct {
-	redirectService redirectSvc.RedirectServiceI
-	clickService    clickSvc.ClickServiceI
-	geoService      geoSvc.GeoServiceI
-	pixelService    pixelSvc.PixelServiceI
-	webhookService  webhookSvc.WebhookServiceI
-	linkRepo        repository.LinkRepositoryI
+	redirectService  redirectSvc.RedirectServiceI
+	clickService     clickSvc.ClickServiceI
+	geoService       geoSvc.GeoServiceI
+	pixelService     pixelSvc.PixelServiceI
+	webhookService   webhookSvc.WebhookServiceI
+	linkRepo         repository.LinkRepositoryI
+	customDomainRepo repository.CustomDomainRepositoryI
+	baseDomainHost   string // hostname[:port] parsed from BaseDomain config
 }
 
 func NewRedirectHandler(
@@ -35,14 +39,22 @@ func NewRedirectHandler(
 	pixelService pixelSvc.PixelServiceI,
 	webhookService webhookSvc.WebhookServiceI,
 	linkRepo repository.LinkRepositoryI,
+	customDomainRepo repository.CustomDomainRepositoryI,
+	baseDomain string,
 ) *RedirectHandler {
+	host := baseDomain
+	if u, err := url.Parse(baseDomain); err == nil && u.Host != "" {
+		host = u.Host
+	}
 	return &RedirectHandler{
-		redirectService: redirectService,
-		clickService:    clickService,
-		geoService:      geoService,
-		pixelService:    pixelService,
-		webhookService:  webhookService,
-		linkRepo:        linkRepo,
+		redirectService:  redirectService,
+		clickService:     clickService,
+		geoService:       geoService,
+		pixelService:     pixelService,
+		webhookService:   webhookService,
+		linkRepo:         linkRepo,
+		customDomainRepo: customDomainRepo,
+		baseDomainHost:   host,
 	}
 }
 
@@ -61,14 +73,36 @@ func NewRedirectHandler(
 //	@Failure		410	{object}	transport.ErrorResponse
 //	@Router			/{slug} [get]
 // Redirect handles GET /:slug — cache-first lookup + async click tracking.
+// For custom domains (Host header != baseDomainHost) the slug is scoped to
+// the domain owner instead of using the shared cache.
 func (h *RedirectHandler) Redirect(c *gin.Context) {
 	ctx := c.Request.Context()
 	slug := c.Param("slug")
 
-	link, svcErr := h.redirectService.GetCachedLink(ctx, slug)
-	if svcErr != nil {
-		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
-		return
+	var link *model.Link
+
+	requestHost := c.Request.Host
+	if requestHost != h.baseDomainHost {
+		// Custom domain path — bypass cache, scope by domain owner
+		cd, err := h.customDomainRepo.GetByDomain(ctx, requestHost)
+		if err != nil {
+			transport.RespondWithError(c, http.StatusNotFound, constant.ErrCodeNotFound, "domain not found")
+			return
+		}
+		l, err := h.linkRepo.GetBySlugAndUserID(ctx, slug, cd.UserID)
+		if err != nil {
+			transport.RespondWithError(c, http.StatusNotFound, constant.ErrCodeLinkNotFound, "link not found")
+			return
+		}
+		link = l
+	} else {
+		// Standard path — cache-first
+		cached, svcErr := h.redirectService.GetCachedLink(ctx, slug)
+		if svcErr != nil {
+			transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+			return
+		}
+		link = cached
 	}
 
 	if !link.IsActive {

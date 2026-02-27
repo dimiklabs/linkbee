@@ -26,6 +26,9 @@ type LinkRepositoryI interface {
 	// Duplicate check
 	FindByDestinationURL(ctx context.Context, userID uuid.UUID, destURL string) (*model.Link, error)
 
+	// Custom domain scoped lookup
+	GetBySlugAndUserID(ctx context.Context, slug string, userID uuid.UUID) (*model.Link, error)
+
 	// Update
 	Update(ctx context.Context, link *model.Link) error
 	IncrementClickCount(ctx context.Context, id uuid.UUID) error
@@ -97,6 +100,16 @@ func (r *LinkRepository) GetBySlug(ctx context.Context, slug string) (*model.Lin
 	var link model.Link
 	if err := r.replicaDB.WithContext(ctx).
 		Where("slug = ? AND is_active = ?", slug, true).
+		First(&link).Error; err != nil {
+		return nil, err
+	}
+	return &link, nil
+}
+
+func (r *LinkRepository) GetBySlugAndUserID(ctx context.Context, slug string, userID uuid.UUID) (*model.Link, error) {
+	var link model.Link
+	if err := r.replicaDB.WithContext(ctx).
+		Where("slug = ? AND user_id = ? AND is_active = ?", slug, userID, true).
 		First(&link).Error; err != nil {
 		return nil, err
 	}

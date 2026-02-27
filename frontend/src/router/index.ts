@@ -80,6 +80,11 @@ const router = createRouter({
           component: () => import('@/pages/dashboard/BioPage.vue'),
         },
         {
+          path: 'domains',
+          name: 'domains',
+          component: () => import('@/pages/dashboard/DomainsPage.vue'),
+        },
+        {
           path: 'billing',
           name: 'billing',
           component: () => import('@/pages/dashboard/BillingPage.vue'),

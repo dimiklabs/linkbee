@@ -35,6 +35,7 @@ import (
 	adminSvc   "github.com/shafikshaon/shortlink/service/admin"
 	billingSvc "github.com/shafikshaon/shortlink/service/billing"
 	bioSvc     "github.com/shafikshaon/shortlink/service/bio"
+	domainSvc  "github.com/shafikshaon/shortlink/service/domain"
 	pixelSvc   "github.com/shafikshaon/shortlink/service/pixel"
 	previewSvc "github.com/shafikshaon/shortlink/service/preview"
 	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
@@ -64,6 +65,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	rateLimitRepo         := repository.NewRateLimitRepository(s.Cache)
 	linkRepo              := repository.NewLinkRepository(s.MasterDB, s.ReplicaDB)
 	clickEventRepo        := repository.NewClickEventRepository(s.MasterDB, s.ReplicaDB)
+	customDomainRepo      := repository.NewCustomDomainRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
@@ -93,6 +95,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	qrService          := qrSvc.NewQRService()
 	analyticsService   := analyticsSvc.NewAnalyticsService(linkRepo, clickEventRepo)
 	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
+	domainService      := domainSvc.NewDomainService(customDomainRepo)
 
 	// ── Click worker (background goroutine) ───────────────────────────────────
 	clickWorker := worker.NewClickWorker(
@@ -123,7 +126,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	splitHandler     := handler.NewSplitHandler(splitService)
 	geoHandler       := handler.NewGeoHandler(geoRoutingService)
 	linkHandler      := handler.NewLinkHandler(linkService, webhookService, planEnforcer)
-	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo)
+	domainHandler    := handler.NewDomainHandler(domainService)
+	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo, customDomainRepo, s.Cfg.App.BaseDomain)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
 	demoHandler      := handler.NewDemoHandler(demoService)
@@ -258,6 +262,12 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 				v1Admin.GET("/users", adminHandler.ListUsers)
 				v1Admin.PATCH("/users/:id/status", adminHandler.UpdateUserStatus)
 			}
+
+			// Custom Domains
+			v1Auth.GET("/domains", domainHandler.ListDomains)
+			v1Auth.POST("/domains", domainHandler.AddDomain)
+			v1Auth.POST("/domains/:id/verify", domainHandler.VerifyDomain)
+			v1Auth.DELETE("/domains/:id", domainHandler.DeleteDomain)
 
 			// Bio page (link-in-bio)
 			v1Auth.GET("/bio", bioHandler.GetBioPage)
