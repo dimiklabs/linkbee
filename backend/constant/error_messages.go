@@ -58,6 +58,12 @@ const (
 	ErrMsgAccountRateLimited = "Too many failed login attempts for this account. Please try again later."
 	ErrMsgIPRateLimited      = "Too many failed login attempts from this IP address. Please try again later."
 
+	// TOTP / 2FA
+	ErrMsgTOTPNotEnabled     = "Two-factor authentication is not enabled"
+	ErrMsgTOTPAlreadyEnabled = "Two-factor authentication is already enabled"
+	ErrMsgTOTPInvalidCode    = "Invalid or expired authentication code"
+	ErrMsgTOTPInvalidSession = "Invalid or expired two-factor session"
+
 	// Links
 	ErrMsgLinkNotFound     = "Link not found or you do not have access"
 	ErrMsgSlugTaken        = "This custom slug is already taken. Please try another."

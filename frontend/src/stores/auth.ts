@@ -49,15 +49,40 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
     try {
       const response = await authApi.login(data);
-      if (response.data) {
+      if (response.data?.requires_totp) {
+        // TOTP challenge — caller handles the next step
+        return { requiresTOTP: true, totpSession: response.data.totp_session };
+      }
+      if (response.data?.access_token && response.data?.refresh_token) {
         setTokens(response.data.access_token, response.data.refresh_token);
-        user.value = response.data.user;
+        user.value = response.data.user ?? null;
         await fetchProfile();
         return { success: true };
       }
       throw new Error(response.message || 'Login failed');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Login failed';
+      error.value = message;
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const completeTOTPLogin = async (totpSession: string, code: string) => {
+    loading.value = true;
+    error.value = null;
+    try {
+      const response = await authApi.verifyTOTPLogin({ totp_session: totpSession, code });
+      if (response.data?.access_token && response.data?.refresh_token) {
+        setTokens(response.data.access_token, response.data.refresh_token);
+        user.value = response.data.user ?? null;
+        await fetchProfile();
+        return { success: true };
+      }
+      throw new Error(response.message || 'TOTP verification failed');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'TOTP verification failed';
       error.value = message;
       throw err;
     } finally {
@@ -169,7 +194,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     user, profile, accessToken, refreshToken, loading, error,
     isAuthenticated, isAdmin, userInitials, userName,
-    login, signup, logout, fetchProfile, updateProfile, changePassword, deleteAccount, init,
+    login, completeTOTPLogin, signup, logout, fetchProfile, updateProfile, changePassword, deleteAccount, init,
     setTokens, clearTokens,
   };
 });

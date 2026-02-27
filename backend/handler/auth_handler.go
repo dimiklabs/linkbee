@@ -797,6 +797,125 @@ func (h *AuthHandler) GetRateLimitStatus(c *gin.Context) {
 	transport.RespondWithSuccess(c, http.StatusOK, "Rate limit status retrieved", status)
 }
 
+func (h *AuthHandler) GetTOTPStatus(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, exists := c.Get(middlewares.ContextKeyUserID)
+	if !exists {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	resp, svcErr := h.authService.GetTOTPStatus(ctx, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "TOTP status retrieved", resp)
+}
+
+func (h *AuthHandler) SetupTOTP(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, exists := c.Get(middlewares.ContextKeyUserID)
+	if !exists {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	resp, svcErr := h.authService.SetupTOTP(ctx, userID)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "TOTP setup initiated. Scan the QR code and confirm with a code.", resp)
+}
+
+func (h *AuthHandler) ConfirmTOTP(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, exists := c.Get(middlewares.ContextKeyUserID)
+	if !exists {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	var req request.TOTPConfirmRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errCode, errMsg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, errCode, errMsg)
+		return
+	}
+	resp, svcErr := h.authService.ConfirmTOTP(ctx, userID, req.Code)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Two-factor authentication enabled. Save your backup codes.", resp)
+}
+
+func (h *AuthHandler) DisableTOTP(c *gin.Context) {
+	ctx := c.Request.Context()
+	userIDStr, exists := c.Get(middlewares.ContextKeyUserID)
+	if !exists {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+	var req request.TOTPDisableRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errCode, errMsg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, errCode, errMsg)
+		return
+	}
+	if svcErr := h.authService.DisableTOTP(ctx, userID, req.Password); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+	transport.RespondWithSuccess(c, http.StatusOK, "Two-factor authentication disabled", nil)
+}
+
+func (h *AuthHandler) VerifyTOTPLogin(c *gin.Context) {
+	ctx := c.Request.Context()
+	var req request.TOTPVerifyLoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		errCode, errMsg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, errCode, errMsg)
+		return
+	}
+	userAgent := c.GetHeader("User-Agent")
+	ipAddress := c.ClientIP()
+
+	loginResp, svcErr := h.authService.VerifyTOTPLogin(ctx, &req, userAgent, ipAddress)
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	if uid, err := uuid.Parse(loginResp.User.ID); err == nil {
+		h.auditService.LogAsync(auditSvc.LogEntry{
+			UserID: uid, Action: model.AuditActionUserLogin,
+			ResourceType: model.AuditResourceUser, ResourceID: loginResp.User.ID,
+			IPAddress: ipAddress, UserAgent: userAgent,
+		})
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Login successful", loginResp)
+}
+
 func (h *AuthHandler) ValidateSession(c *gin.Context) {
 	ctx := c.Request.Context()
 

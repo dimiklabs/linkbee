@@ -99,6 +99,11 @@ const router = createRouter({
           name: 'settings',
           component: () => import('@/pages/dashboard/SettingsPage.vue'),
         },
+        {
+          path: 'security',
+          name: 'security',
+          component: () => import('@/pages/dashboard/SecurityPage.vue'),
+        },
       ],
     },
 

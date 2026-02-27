@@ -2,10 +2,14 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base32"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/pquerna/otp/totp"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
@@ -41,6 +45,12 @@ type AuthServiceI interface {
 	ValidateSession(ctx context.Context, req *request.RefreshTokenRequest) *dto.ServiceError
 	GetJWTSecret() string
 	GetJWTIssuer() string
+	// TOTP
+	GetTOTPStatus(ctx context.Context, userID uuid.UUID) (*response.TOTPStatusResponse, *dto.ServiceError)
+	SetupTOTP(ctx context.Context, userID uuid.UUID) (*response.TOTPSetupResponse, *dto.ServiceError)
+	ConfirmTOTP(ctx context.Context, userID uuid.UUID, code string) (*response.TOTPBackupCodesResponse, *dto.ServiceError)
+	DisableTOTP(ctx context.Context, userID uuid.UUID, password string) *dto.ServiceError
+	VerifyTOTPLogin(ctx context.Context, req *request.TOTPVerifyLoginRequest, userAgent, ipAddress string) (*response.LoginResponse, *dto.ServiceError)
 }
 
 type EmailSenderI interface {
@@ -50,13 +60,14 @@ type EmailSenderI interface {
 }
 
 type AuthService struct {
-	userService        userSrv.UserServiceI
-	passwordResetRepo  repository.PasswordResetRepositoryI
-	tokenBlacklistRepo repository.TokenBlacklistRepositoryI
-	sessionRepo        repository.SessionRepositoryI
-	emailService       EmailSenderI
-	cfg                *config.AppConfig
-	sessionCfg         *config.SessionConfig
+	userService         userSrv.UserServiceI
+	passwordResetRepo   repository.PasswordResetRepositoryI
+	tokenBlacklistRepo  repository.TokenBlacklistRepositoryI
+	sessionRepo         repository.SessionRepositoryI
+	totpBackupCodeRepo  repository.TotpBackupCodeRepositoryI
+	emailService        EmailSenderI
+	cfg                 *config.AppConfig
+	sessionCfg          *config.SessionConfig
 }
 
 func NewAuthService(
@@ -64,6 +75,7 @@ func NewAuthService(
 	passwordResetRepo repository.PasswordResetRepositoryI,
 	tokenBlacklistRepo repository.TokenBlacklistRepositoryI,
 	sessionRepo repository.SessionRepositoryI,
+	totpBackupCodeRepo repository.TotpBackupCodeRepositoryI,
 	emailService EmailSenderI,
 	cfg *config.AppConfig,
 	sessionCfg *config.SessionConfig,
@@ -73,6 +85,7 @@ func NewAuthService(
 		passwordResetRepo:  passwordResetRepo,
 		tokenBlacklistRepo: tokenBlacklistRepo,
 		sessionRepo:        sessionRepo,
+		totpBackupCodeRepo: totpBackupCodeRepo,
 		emailService:       emailService,
 		cfg:                cfg,
 		sessionCfg:         sessionCfg,
@@ -145,6 +158,27 @@ func (s *AuthService) Login(ctx context.Context, req *request.LoginRequest, user
 		logger.WarnCtx(ctx, "Login failed: user inactive",
 			zap.String("user_id", user.ID.String()))
 		return nil, nil, dto.NewServiceError(constant.ErrCodeUserInactive, constant.ErrMsgUserInactive, http.StatusForbidden)
+	}
+
+	// If TOTP is enabled, issue a short-lived TOTP session token instead of full login
+	if user.TotpEnabled {
+		jwtCfg := &util.JWTConfig{
+			Secret: s.cfg.JWTSecret,
+			Issuer: s.cfg.JWTIssuer,
+		}
+		totpToken, err := util.GenerateTOTPSessionToken(jwtCfg, user.ID.String())
+		if err != nil {
+			logger.ErrorCtx(ctx, "Failed to generate TOTP session token",
+				zap.String("user_id", user.ID.String()),
+				zap.Error(err))
+			return nil, nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+		}
+		logger.InfoCtx(ctx, "TOTP required, returning TOTP session token",
+			zap.String("user_id", user.ID.String()))
+		return &response.LoginResponse{
+			RequiresTOTP: true,
+			TOTPSession:  totpToken,
+		}, nil, nil
 	}
 
 	opts := &dto.LoginOptions{
@@ -992,6 +1026,210 @@ func (s *AuthService) ResendVerificationEmail(ctx context.Context, email string)
 	logger.InfoCtx(ctx, "Verification email resent successfully",
 		zap.String("email", email))
 	return nil
+}
+
+func (s *AuthService) GetTOTPStatus(ctx context.Context, userID uuid.UUID) (*response.TOTPStatusResponse, *dto.ServiceError) {
+	user, svcErr := s.userService.GetUserByID(ctx, userID)
+	if svcErr != nil {
+		return nil, svcErr
+	}
+	return &response.TOTPStatusResponse{Enabled: user.TotpEnabled}, nil
+}
+
+func (s *AuthService) SetupTOTP(ctx context.Context, userID uuid.UUID) (*response.TOTPSetupResponse, *dto.ServiceError) {
+	user, svcErr := s.userService.GetUserByID(ctx, userID)
+	if svcErr != nil {
+		return nil, svcErr
+	}
+
+	if user.TotpEnabled {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPAlreadyEnabled, constant.ErrMsgTOTPAlreadyEnabled, http.StatusConflict)
+	}
+
+	// Generate a random 20-byte secret, base32-encode it (RFC 4648)
+	secretBytes := make([]byte, 20)
+	if _, err := rand.Read(secretBytes); err != nil {
+		logger.ErrorCtx(ctx, "Failed to generate TOTP secret", zap.Error(err))
+		return nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+	secret := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secretBytes)
+
+	// Temporarily store the pending secret (not yet enabled)
+	if err := s.userService.UpdateFields(ctx, userID, map[string]interface{}{"totp_secret": secret}); err != nil {
+		logger.ErrorCtx(ctx, "Failed to store TOTP secret", zap.Error(err))
+		return nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+
+	// Build otpauth:// URI for the QR code
+	qrURL := fmt.Sprintf("otpauth://totp/%s:%s?secret=%s&issuer=%s&algorithm=SHA1&digits=6&period=30",
+		s.cfg.JWTIssuer, user.Email, secret, s.cfg.JWTIssuer)
+
+	logger.InfoCtx(ctx, "TOTP setup initiated", zap.String("user_id", userID.String()))
+	return &response.TOTPSetupResponse{Secret: secret, QRCodeURL: qrURL}, nil
+}
+
+func (s *AuthService) ConfirmTOTP(ctx context.Context, userID uuid.UUID, code string) (*response.TOTPBackupCodesResponse, *dto.ServiceError) {
+	user, svcErr := s.userService.GetUserByID(ctx, userID)
+	if svcErr != nil {
+		return nil, svcErr
+	}
+
+	if user.TotpEnabled {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPAlreadyEnabled, constant.ErrMsgTOTPAlreadyEnabled, http.StatusConflict)
+	}
+
+	if user.TotpSecret == "" {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPNotEnabled, "TOTP setup has not been initiated", http.StatusBadRequest)
+	}
+
+	// Validate the TOTP code against the stored (pending) secret
+	valid := totp.Validate(code, user.TotpSecret)
+	if !valid {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPInvalidCode, constant.ErrMsgTOTPInvalidCode, http.StatusUnauthorized)
+	}
+
+	// Enable TOTP
+	if err := s.userService.UpdateFields(ctx, userID, map[string]interface{}{"totp_enabled": true}); err != nil {
+		logger.ErrorCtx(ctx, "Failed to enable TOTP", zap.Error(err))
+		return nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+
+	// Generate 10 single-use backup codes
+	backupPlain, backupHashed, genErr := generateBackupCodes(10)
+	if genErr != nil {
+		logger.ErrorCtx(ctx, "Failed to generate backup codes", zap.Error(genErr))
+		return nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+
+	// Delete any existing backup codes and store fresh ones
+	_ = s.totpBackupCodeRepo.DeleteByUserID(ctx, userID)
+	models := make([]*model.TotpBackupCode, len(backupHashed))
+	for i, h := range backupHashed {
+		models[i] = &model.TotpBackupCode{UserID: userID, CodeHash: h}
+	}
+	if err := s.totpBackupCodeRepo.CreateBatch(ctx, models); err != nil {
+		logger.ErrorCtx(ctx, "Failed to store backup codes", zap.Error(err))
+		return nil, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+
+	logger.InfoCtx(ctx, "TOTP confirmed and enabled", zap.String("user_id", userID.String()))
+	return &response.TOTPBackupCodesResponse{BackupCodes: backupPlain}, nil
+}
+
+func (s *AuthService) DisableTOTP(ctx context.Context, userID uuid.UUID, password string) *dto.ServiceError {
+	user, svcErr := s.userService.GetUserByID(ctx, userID)
+	if svcErr != nil {
+		return svcErr
+	}
+
+	if !user.TotpEnabled {
+		return dto.NewServiceError(constant.ErrCodeTOTPNotEnabled, constant.ErrMsgTOTPNotEnabled, http.StatusBadRequest)
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		return dto.NewServiceError(constant.ErrCodeInvalidCredentials, constant.ErrMsgInvalidCredentials, http.StatusUnauthorized)
+	}
+
+	if err := s.userService.UpdateFields(ctx, userID, map[string]interface{}{
+		"totp_enabled": false,
+		"totp_secret":  "",
+	}); err != nil {
+		logger.ErrorCtx(ctx, "Failed to disable TOTP", zap.Error(err))
+		return dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
+	}
+
+	_ = s.totpBackupCodeRepo.DeleteByUserID(ctx, userID)
+
+	logger.InfoCtx(ctx, "TOTP disabled", zap.String("user_id", userID.String()))
+	return nil
+}
+
+func (s *AuthService) VerifyTOTPLogin(ctx context.Context, req *request.TOTPVerifyLoginRequest, userAgent, ipAddress string) (*response.LoginResponse, *dto.ServiceError) {
+	jwtCfg := &util.JWTConfig{
+		Secret: s.cfg.JWTSecret,
+		Issuer: s.cfg.JWTIssuer,
+	}
+
+	claims, err := util.ValidateTOTPSessionToken(req.TOTPSession, s.cfg.JWTSecret, s.cfg.JWTIssuer)
+	if err != nil {
+		logger.WarnCtx(ctx, "Invalid TOTP session token", zap.Error(err))
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPInvalidSession, constant.ErrMsgTOTPInvalidSession, http.StatusUnauthorized)
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPInvalidSession, constant.ErrMsgTOTPInvalidSession, http.StatusUnauthorized)
+	}
+
+	user, svcErr := s.userService.GetUserByID(ctx, userID)
+	if svcErr != nil {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPInvalidSession, constant.ErrMsgTOTPInvalidSession, http.StatusUnauthorized)
+	}
+
+	if !user.TotpEnabled {
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPNotEnabled, constant.ErrMsgTOTPNotEnabled, http.StatusBadRequest)
+	}
+
+	// Try TOTP code first
+	codeValid := false
+	if len(req.Code) == 6 {
+		codeValid = totp.Validate(req.Code, user.TotpSecret)
+	}
+
+	// If TOTP code invalid, try backup codes
+	if !codeValid {
+		codes, listErr := s.totpBackupCodeRepo.ListByUserID(ctx, userID)
+		if listErr == nil {
+			for _, c := range codes {
+				if !c.Used && bcrypt.CompareHashAndPassword([]byte(c.CodeHash), []byte(req.Code)) == nil {
+					_ = s.totpBackupCodeRepo.MarkUsed(ctx, c.ID)
+					codeValid = true
+					break
+				}
+			}
+		}
+	}
+
+	if !codeValid {
+		logger.WarnCtx(ctx, "Invalid TOTP code", zap.String("user_id", userID.String()))
+		return nil, dto.NewServiceError(constant.ErrCodeTOTPInvalidCode, constant.ErrMsgTOTPInvalidCode, http.StatusUnauthorized)
+	}
+
+	_ = jwtCfg // used above for ValidateTOTPSessionToken
+	opts := &dto.LoginOptions{
+		LoginMethod: model.LoginMethodLocal,
+		UserAgent:   userAgent,
+		IPAddress:   ipAddress,
+	}
+	loginResp, _, svcErr := s.completeLoginWithOptions(ctx, user, opts)
+	if svcErr != nil {
+		return nil, svcErr
+	}
+	return loginResp, nil
+}
+
+// generateBackupCodes creates n random 8-char alphanumeric codes and returns (plain, hashed).
+func generateBackupCodes(n int) ([]string, []string, error) {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	plain := make([]string, n)
+	hashed := make([]string, n)
+	buf := make([]byte, 8)
+	for i := 0; i < n; i++ {
+		if _, err := rand.Read(buf); err != nil {
+			return nil, nil, err
+		}
+		code := make([]byte, 8)
+		for j, b := range buf {
+			code[j] = charset[int(b)%len(charset)]
+		}
+		plain[i] = string(code)
+		h, err := bcrypt.GenerateFromPassword([]byte(plain[i]), bcrypt.DefaultCost)
+		if err != nil {
+			return nil, nil, err
+		}
+		hashed[i] = string(h)
+	}
+	return plain, hashed, nil
 }
 
 func (s *AuthService) ValidateSession(ctx context.Context, req *request.RefreshTokenRequest) *dto.ServiceError {

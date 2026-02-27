@@ -25,6 +25,8 @@ type User struct {
 	EmailVerified        bool           `gorm:"default:false;not null" json:"email_verified"`
 	EmailVerifiedAt      *time.Time     `gorm:"type:timestamptz" json:"email_verified_at,omitempty"`
 	LastLogin            *time.Time     `gorm:"type:timestamptz" json:"last_login,omitempty"`
+	TotpSecret           string         `gorm:"type:varchar(255)" json:"-"`
+	TotpEnabled          bool           `gorm:"default:false;not null" json:"totp_enabled"`
 	ScheduledDeletionAt  *time.Time     `gorm:"type:timestamptz" json:"-"`
 	CreatedAt            time.Time      `gorm:"type:timestamptz;not null" json:"created_at"`
 	UpdatedAt            time.Time      `gorm:"type:timestamptz;not null" json:"updated_at"`

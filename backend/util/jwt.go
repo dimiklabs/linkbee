@@ -11,11 +11,88 @@ import (
 )
 
 const (
-	TokenTypeAccess  = "access"
-	TokenTypeRefresh = "refresh"
+	TokenTypeAccess      = "access"
+	TokenTypeRefresh     = "refresh"
+	TokenTypeTOTPPending = "totp_pending"
 
 	minSecretLength = 64
 )
+
+type TOTPSessionClaims struct {
+	UserID    string `json:"user_id"`
+	TokenType string `json:"token_type"`
+	jwt.RegisteredClaims
+}
+
+func GenerateTOTPSessionToken(cfg *JWTConfig, userID string) (string, error) {
+	if err := ValidateSecret(cfg.Secret); err != nil {
+		return "", err
+	}
+
+	jti, err := generateJTI()
+	if err != nil {
+		return "", fmt.Errorf("failed to generate TOTP session JTI: %w", err)
+	}
+
+	now := time.Now()
+	claims := TOTPSessionClaims{
+		UserID:    userID,
+		TokenType: TokenTypeTOTPPending,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    cfg.Issuer,
+			Subject:   userID,
+			Audience:  jwt.ClaimStrings{cfg.Issuer},
+			ExpiresAt: jwt.NewNumericDate(now.Add(5 * time.Minute)),
+			NotBefore: jwt.NewNumericDate(now),
+			IssuedAt:  jwt.NewNumericDate(now),
+			ID:        jti,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	signed, err := token.SignedString([]byte(cfg.Secret))
+	if err != nil {
+		return "", fmt.Errorf("failed to sign TOTP session token: %w", err)
+	}
+	return signed, nil
+}
+
+func ValidateTOTPSessionToken(tokenStr, secret, issuer string) (*TOTPSessionClaims, error) {
+	if err := ValidateSecret(secret); err != nil {
+		return nil, err
+	}
+
+	token, err := jwt.ParseWithClaims(tokenStr, &TOTPSessionClaims{}, func(token *jwt.Token) (any, error) {
+		if token.Method.Alg() != jwt.SigningMethodHS512.Alg() {
+			return nil, fmt.Errorf("unexpected signing method: %s", token.Method.Alg())
+		}
+		return []byte(secret), nil
+	},
+		jwt.WithIssuer(issuer),
+		jwt.WithAudience(issuer),
+		jwt.WithExpirationRequired(),
+		jwt.WithIssuedAt(),
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS512.Alg()}),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("TOTP session token validation failed: %w", err)
+	}
+
+	claims, ok := token.Claims.(*TOTPSessionClaims)
+	if !ok || !token.Valid {
+		return nil, errors.New("invalid TOTP session token claims")
+	}
+
+	if claims.TokenType != TokenTypeTOTPPending {
+		return nil, errors.New("token is not a TOTP session token")
+	}
+
+	if claims.Subject == "" {
+		return nil, errors.New("TOTP session token subject is empty")
+	}
+
+	return claims, nil
+}
 
 type AccessTokenClaims struct {
 	UserID    string `json:"user_id"`

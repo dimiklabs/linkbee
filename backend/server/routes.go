@@ -68,12 +68,13 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	clickEventRepo        := repository.NewClickEventRepository(s.MasterDB, s.ReplicaDB)
 	customDomainRepo      := repository.NewCustomDomainRepository(s.MasterDB, s.ReplicaDB)
 	auditLogRepo          := repository.NewAuditLogRepository(s.MasterDB, s.ReplicaDB)
+	totpBackupCodeRepo    := repository.NewTotpBackupCodeRepository(s.MasterDB, s.ReplicaDB)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	healthService        := healthSrv.NewHealthService(s.MasterDB, s.ReplicaDB, s.Cache, s.Cfg.App.Env)
 	userService          := userSrv.NewUserService(userRepo)
 	emailService         := emailSrv.NewEmailService(s.Cfg.Email, emailVerificationRepo, userRepo)
-	authService          := authSrv.NewAuthService(userService, passwordResetRepo, tokenBlacklistRepo, sessionRepo, emailService, s.Cfg.App, s.Cfg.Session)
+	authService          := authSrv.NewAuthService(userService, passwordResetRepo, tokenBlacklistRepo, sessionRepo, totpBackupCodeRepo, emailService, s.Cfg.App, s.Cfg.Session)
 	rateLimitService     := rateLimitSrv.NewRateLimitService(rateLimitRepo, s.Cfg.RateLimit)
 	googleOAuthService   := googleSrv.NewGoogleOAuthService(s.Cfg.Google, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
@@ -165,6 +166,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Public.POST("/auth/session/validate", authHandler.ValidateSession)
 			v1Public.POST("/auth/verify-email", authHandler.VerifyEmail)
 			v1Public.POST("/auth/resend-verification", authHandler.ResendVerificationEmail)
+			v1Public.POST("/auth/totp/verify-login", authHandler.VerifyTOTPLogin)
 
 			// OAuth
 			v1Public.GET("/auth/google", oauthHandler.GoogleLogin)
@@ -189,6 +191,12 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 		v1Auth.Use(middlewares.AuthOrAPIKeyMiddleware(s.Cfg.App, tokenBlacklistRepo, apiKeyService))
 		v1Auth.Use(middlewares.SessionActivityMiddleware(sessionRepo, s.Cfg.Session))
 		{
+			// TOTP / 2FA
+			v1Auth.GET("/auth/totp/status", authHandler.GetTOTPStatus)
+			v1Auth.GET("/auth/totp/setup", authHandler.SetupTOTP)
+			v1Auth.POST("/auth/totp/confirm", authHandler.ConfirmTOTP)
+			v1Auth.DELETE("/auth/totp/disable", authHandler.DisableTOTP)
+
 			// Auth profile & session management
 			v1Auth.GET("/auth/profile", authHandler.GetProfile)
 			v1Auth.PUT("/auth/profile", authHandler.UpdateProfile)

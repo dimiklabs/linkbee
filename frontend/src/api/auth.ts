@@ -15,6 +15,10 @@ import type {
   SessionsListResponse,
   SignupRequest,
   SignupResponse,
+  TOTPBackupCodesResponse,
+  TOTPSetupResponse,
+  TOTPStatusResponse,
+  TOTPVerifyLoginRequest,
   UpdateProfileRequest,
   VerifyEmailRequest,
 } from '@/types/auth';
@@ -103,6 +107,31 @@ export const authApi = {
 
   logoutAll: async (): Promise<ApiResponse<{ message: string }>> => {
     const response = await apiClient.post('/auth/logout-all');
+    return response.data;
+  },
+
+  getTOTPStatus: async (): Promise<ApiResponse<TOTPStatusResponse>> => {
+    const response = await apiClient.get('/auth/totp/status');
+    return response.data;
+  },
+
+  setupTOTP: async (): Promise<ApiResponse<TOTPSetupResponse>> => {
+    const response = await apiClient.get('/auth/totp/setup');
+    return response.data;
+  },
+
+  confirmTOTP: async (code: string): Promise<ApiResponse<TOTPBackupCodesResponse>> => {
+    const response = await apiClient.post('/auth/totp/confirm', { code });
+    return response.data;
+  },
+
+  disableTOTP: async (password: string): Promise<ApiResponse<null>> => {
+    const response = await apiClient.delete('/auth/totp/disable', { data: { password } });
+    return response.data;
+  },
+
+  verifyTOTPLogin: async (data: TOTPVerifyLoginRequest): Promise<ApiResponse<LoginResponse>> => {
+    const response = await apiClient.post('/auth/totp/verify-login', data);
     return response.data;
   },
 

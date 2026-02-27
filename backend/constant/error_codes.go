@@ -63,6 +63,12 @@ const (
 	ErrCodeDomainNotFound      = "DOMAIN_NOT_FOUND"
 	ErrCodeDomainVerifyFailed  = "DOMAIN_VERIFY_FAILED"
 
+	// TOTP / 2FA
+	ErrCodeTOTPNotEnabled      = "TOTP_NOT_ENABLED"
+	ErrCodeTOTPAlreadyEnabled  = "TOTP_ALREADY_ENABLED"
+	ErrCodeTOTPInvalidCode     = "TOTP_INVALID_CODE"
+	ErrCodeTOTPInvalidSession  = "TOTP_INVALID_SESSION"
+
 	// Links
 	ErrCodeLinkNotFound     = "LINK_NOT_FOUND"
 	ErrCodeSlugTaken        = "SLUG_ALREADY_TAKEN"

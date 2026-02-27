@@ -48,6 +48,9 @@ type UserServiceI interface {
 	ScheduleDeletion(ctx context.Context, id uuid.UUID, days int) *dto.ServiceError
 	CancelScheduledDeletion(ctx context.Context, id uuid.UUID) *dto.ServiceError
 
+	// Patch
+	UpdateFields(ctx context.Context, id uuid.UUID, fields map[string]interface{}) error
+
 	// Checks
 	IsEmailAvailable(ctx context.Context, email string, excludeID *uuid.UUID) (bool, *dto.ServiceError)
 
@@ -600,6 +603,10 @@ func (s *UserService) GetUserCountByStatus(ctx context.Context, status string) (
 		return 0, dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
 	}
 	return count, nil
+}
+
+func (s *UserService) UpdateFields(ctx context.Context, id uuid.UUID, fields map[string]interface{}) error {
+	return s.userRepo.UpdateFields(ctx, id, fields)
 }
 
 // --------------- Helpers ---------------

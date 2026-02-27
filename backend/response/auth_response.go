@@ -11,11 +11,27 @@ type SignupResponse struct {
 }
 
 type LoginResponse struct {
-	AccessToken  string       `json:"access_token"`
-	RefreshToken string       `json:"refresh_token"`
-	TokenType    string       `json:"token_type"`
-	ExpiresIn    int          `json:"expires_in"`
-	User         UserResponse `json:"user"`
+	AccessToken  string       `json:"access_token,omitempty"`
+	RefreshToken string       `json:"refresh_token,omitempty"`
+	TokenType    string       `json:"token_type,omitempty"`
+	ExpiresIn    int          `json:"expires_in,omitempty"`
+	User         UserResponse `json:"user,omitempty"`
+	// TOTP challenge — set when 2FA is required; access_token is absent
+	RequiresTOTP bool   `json:"requires_totp,omitempty"`
+	TOTPSession  string `json:"totp_session,omitempty"`
+}
+
+type TOTPSetupResponse struct {
+	Secret    string `json:"secret"`
+	QRCodeURL string `json:"qr_code_url"`
+}
+
+type TOTPStatusResponse struct {
+	Enabled bool `json:"enabled"`
+}
+
+type TOTPBackupCodesResponse struct {
+	BackupCodes []string `json:"backup_codes"`
 }
 
 type UserResponse struct {

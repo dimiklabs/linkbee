@@ -52,3 +52,16 @@ type VerifyEmailRequest struct {
 type ResendVerificationRequest struct {
 	Email string `json:"email" binding:"required,email"`
 }
+
+type TOTPConfirmRequest struct {
+	Code string `json:"code" binding:"required,len=6"`
+}
+
+type TOTPDisableRequest struct {
+	Password string `json:"password" binding:"required"`
+}
+
+type TOTPVerifyLoginRequest struct {
+	TOTPSession string `json:"totp_session" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+}

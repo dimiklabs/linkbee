@@ -94,6 +94,15 @@
           <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Billing</span>
         </router-link>
         <router-link
+          to="/dashboard/security"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/security') }"
+          @click="uiStore.closeSidebar()"
+        >
+          <span class="nav-icon">🔒</span>
+          <span v-if="!uiStore.sidebarCollapsed" class="nav-label">Security</span>
+        </router-link>
+        <router-link
           to="/dashboard/settings"
           class="nav-item"
           :class="{ active: $route.path.startsWith('/dashboard/settings') }"
@@ -245,6 +254,7 @@ const pageTitle = computed(() => {
     domains: 'Custom Domains',
     'audit-logs': 'Audit Logs',
     billing: 'Billing & Plan',
+    security: 'Security',
     settings: 'Settings',
     bio: 'Link-in-Bio',
     admin: 'Admin',

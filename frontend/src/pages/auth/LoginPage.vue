@@ -20,110 +20,141 @@
                 <button type="button" class="btn-close btn-close-sm" @click="errorMessage = ''"></button>
               </div>
 
-              <!-- Login Form -->
-              <form @submit.prevent="handleLogin" novalidate>
-                <div class="mb-3">
-                  <label for="email" class="form-label">Email address</label>
-                  <input
-                    id="email"
-                    v-model="form.email"
-                    type="email"
-                    class="form-control"
-                    :class="{ 'is-invalid': errors.email }"
-                    placeholder="you@example.com"
-                    autocomplete="email"
-                    required
-                  />
-                  <div v-if="errors.email" class="invalid-feedback">{{ errors.email }}</div>
-                </div>
-
-                <div class="mb-3">
-                  <div class="d-flex justify-content-between align-items-center mb-1">
-                    <label for="password" class="form-label mb-0">Password</label>
-                    <router-link to="/auth/forgot-password" class="text-decoration-none small" style="color: #635bff;">
-                      Forgot password?
-                    </router-link>
-                  </div>
-                  <div class="input-group">
+              <!-- TOTP Step -->
+              <div v-if="pendingTOTPSession">
+                <p class="text-center text-muted small mb-3">
+                  Enter the 6-digit code from your authenticator app, or a backup code.
+                </p>
+                <form @submit.prevent="handleTOTPVerify" novalidate>
+                  <div class="mb-4">
+                    <label for="totpCode" class="form-label">Authentication code</label>
                     <input
-                      id="password"
-                      v-model="form.password"
-                      :type="showPassword ? 'text' : 'password'"
+                      id="totpCode"
+                      v-model="totpCode"
+                      type="text"
+                      class="form-control form-control-lg text-center"
+                      placeholder="000000"
+                      maxlength="8"
+                      autocomplete="one-time-code"
+                      autofocus
+                    />
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100" :disabled="loading">
+                    <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Verify &amp; Sign In
+                  </button>
+                  <button type="button" class="btn btn-link w-100 mt-2 small text-muted" @click="pendingTOTPSession = ''">
+                    ← Back to login
+                  </button>
+                </form>
+              </div>
+
+              <!-- Login Form -->
+              <template v-else>
+                <form @submit.prevent="handleLogin" novalidate>
+                  <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input
+                      id="email"
+                      v-model="form.email"
+                      type="email"
                       class="form-control"
-                      :class="{ 'is-invalid': errors.password }"
-                      placeholder="••••••••"
-                      autocomplete="current-password"
+                      :class="{ 'is-invalid': errors.email }"
+                      placeholder="you@example.com"
+                      autocomplete="email"
                       required
                     />
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      @click="showPassword = !showPassword"
-                      tabindex="-1"
-                    >
-                      {{ showPassword ? '🙈' : '👁️' }}
-                    </button>
-                    <div v-if="errors.password" class="invalid-feedback">{{ errors.password }}</div>
+                    <div v-if="errors.email" class="invalid-feedback">{{ errors.email }}</div>
                   </div>
+
+                  <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <label for="password" class="form-label mb-0">Password</label>
+                      <router-link to="/forgot-password" class="text-decoration-none small" style="color: #635bff;">
+                        Forgot password?
+                      </router-link>
+                    </div>
+                    <div class="input-group">
+                      <input
+                        id="password"
+                        v-model="form.password"
+                        :type="showPassword ? 'text' : 'password'"
+                        class="form-control"
+                        :class="{ 'is-invalid': errors.password }"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        @click="showPassword = !showPassword"
+                        tabindex="-1"
+                      >
+                        {{ showPassword ? '🙈' : '👁️' }}
+                      </button>
+                      <div v-if="errors.password" class="invalid-feedback">{{ errors.password }}</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-4">
+                    <div class="form-check">
+                      <input
+                        id="rememberMe"
+                        v-model="form.rememberMe"
+                        type="checkbox"
+                        class="form-check-input"
+                      />
+                      <label for="rememberMe" class="form-check-label small text-muted">Remember me</label>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="btn btn-primary w-100"
+                    :disabled="loading"
+                  >
+                    <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Sign In
+                  </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="auth-divider my-4">
+                  <span class="text-muted small">Or continue with</span>
                 </div>
 
-                <div class="mb-4">
-                  <div class="form-check">
-                    <input
-                      id="rememberMe"
-                      v-model="form.rememberMe"
-                      type="checkbox"
-                      class="form-check-input"
-                    />
-                    <label for="rememberMe" class="form-check-label small text-muted">Remember me</label>
-                  </div>
+                <!-- OAuth Buttons -->
+                <div class="d-flex gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary flex-fill oauth-btn"
+                    :disabled="oauthLoading"
+                    @click="handleOAuth('google')"
+                  >
+                    <span class="oauth-icon fw-bold">G</span>
+                    <span class="d-none d-sm-inline">Google</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary flex-fill oauth-btn"
+                    :disabled="oauthLoading"
+                    @click="handleOAuth('github')"
+                  >
+                    <span class="oauth-icon fw-bold">GH</span>
+                    <span class="d-none d-sm-inline">GitHub</span>
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary flex-fill oauth-btn"
+                    :disabled="oauthLoading"
+                    @click="handleOAuth('facebook')"
+                  >
+                    <span class="oauth-icon fw-bold">FB</span>
+                    <span class="d-none d-sm-inline">Facebook</span>
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  class="btn btn-primary w-100"
-                  :disabled="loading"
-                >
-                  <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  Sign In
-                </button>
-              </form>
-
-              <!-- Divider -->
-              <div class="auth-divider my-4">
-                <span class="text-muted small">Or continue with</span>
-              </div>
-
-              <!-- OAuth Buttons -->
-              <div class="d-flex gap-2">
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('google')"
-                >
-                  <span class="oauth-icon fw-bold">G</span>
-                  <span class="d-none d-sm-inline">Google</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('github')"
-                >
-                  <span class="oauth-icon fw-bold">GH</span>
-                  <span class="d-none d-sm-inline">GitHub</span>
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary flex-fill oauth-btn"
-                  :disabled="oauthLoading"
-                  @click="handleOAuth('facebook')"
-                >
-                  <span class="oauth-icon fw-bold">FB</span>
-                  <span class="d-none d-sm-inline">Facebook</span>
-                </button>
-              </div>
+              </template>
 
             </div>
           </div>
@@ -225,6 +256,10 @@ const showReactivationModal = ref(false);
 const reactivationLoading = ref(false);
 const reactivationError = ref('');
 
+// TOTP step
+const pendingTOTPSession = ref('');
+const totpCode = ref('');
+
 const form = reactive({
   email: '',
   password: '',
@@ -265,11 +300,17 @@ async function handleLogin() {
   errorMessage.value = '';
 
   try {
-    await authStore.login({
+    const result = await authStore.login({
       email: form.email,
       password: form.password,
       remember_me: form.rememberMe,
     });
+
+    if (result?.requiresTOTP) {
+      pendingTOTPSession.value = result.totpSession ?? '';
+      totpCode.value = '';
+      return;
+    }
 
     const redirect = (route.query.redirect as string) || '/dashboard/links';
     router.push(redirect);
@@ -283,6 +324,24 @@ async function handleLogin() {
     } else {
       errorMessage.value = data?.message || data?.description || 'Invalid email or password.';
     }
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleTOTPVerify() {
+  if (!totpCode.value.trim()) return;
+
+  loading.value = true;
+  errorMessage.value = '';
+
+  try {
+    await authStore.completeTOTPLogin(pendingTOTPSession.value, totpCode.value.trim());
+    const redirect = (route.query.redirect as string) || '/dashboard/links';
+    router.push(redirect);
+  } catch (err: any) {
+    const data = err?.response?.data;
+    errorMessage.value = data?.message || data?.description || 'Invalid authentication code.';
   } finally {
     loading.value = false;
   }

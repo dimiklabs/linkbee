@@ -29,6 +29,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.Subscription{},
 		&model.CustomDomain{},
 		&model.AuditLog{},
+		&model.TotpBackupCode{},
 	)
 	if err != nil {
 		logger.Error("Auto migration failed", zap.Error(err))
