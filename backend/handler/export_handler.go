@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -148,4 +152,76 @@ func (h *ExportHandler) ExportData(c *gin.Context) {
 	filename := fmt.Sprintf("shortlink-data-%s.json", time.Now().UTC().Format("2006-01-02"))
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	c.Data(http.StatusOK, "application/json; charset=utf-8", payload)
+}
+
+// ExportLinksCSV streams a CSV file containing all of the authenticated user's links.
+// Columns: slug, short_url, destination_url, title, click_count, is_active, is_starred,
+//
+//	redirect_type, tags, expires_at, max_clicks, password_protected,
+//	utm_source, utm_medium, utm_campaign, health_status, created_at
+func (h *ExportHandler) ExportLinksCSV(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	rawID, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, ok := rawID.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_code": "UNAUTHORIZED", "description": "unauthorized"})
+		return
+	}
+
+	links, err := h.linkRepo.GetAllByUserID(ctx, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error_code": "INTERNAL_SERVER_ERROR", "description": "failed to fetch links"})
+		return
+	}
+
+	var buf bytes.Buffer
+	w := csv.NewWriter(&buf)
+
+	// Header row
+	_ = w.Write([]string{
+		"slug", "short_url", "destination_url", "title",
+		"click_count", "is_active", "is_starred", "redirect_type",
+		"tags", "expires_at", "max_clicks", "password_protected",
+		"utm_source", "utm_medium", "utm_campaign", "health_status", "created_at",
+	})
+
+	for _, l := range links {
+		expiresAt := ""
+		if l.ExpiresAt != nil {
+			expiresAt = l.ExpiresAt.UTC().Format(time.RFC3339)
+		}
+		maxClicks := ""
+		if l.MaxClicks != nil {
+			maxClicks = strconv.FormatInt(*l.MaxClicks, 10)
+		}
+		tags := ""
+		if len(l.Tags) > 0 {
+			tags = strings.Join(l.Tags, "|")
+		}
+		_ = w.Write([]string{
+			l.Slug,
+			fmt.Sprintf("%s/%s", h.appCfg.BaseDomain, l.Slug),
+			l.DestinationURL,
+			l.Title,
+			strconv.FormatInt(l.ClickCount, 10),
+			strconv.FormatBool(l.IsActive),
+			strconv.FormatBool(l.IsStarred),
+			strconv.Itoa(int(l.RedirectType)),
+			tags,
+			expiresAt,
+			maxClicks,
+			strconv.FormatBool(l.PasswordHash != ""),
+			l.UTMSource,
+			l.UTMMedium,
+			l.UTMCampaign,
+			l.HealthStatus,
+			l.CreatedAt.UTC().Format(time.RFC3339),
+		})
+	}
+	w.Flush()
+
+	filename := fmt.Sprintf("links-%s.csv", time.Now().UTC().Format("2006-01-02"))
+	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	c.Data(http.StatusOK, "text/csv; charset=utf-8", buf.Bytes())
 }

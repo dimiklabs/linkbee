@@ -56,6 +56,18 @@ export const linksApi = {
     return response.data;
   },
 
+  exportCSV: async (): Promise<void> => {
+    const response = await apiClient.get('/links/export', { responseType: 'blob' });
+    const blob = new Blob([response.data as BlobPart], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const date = new Date().toISOString().slice(0, 10);
+    a.download = `links-${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
   getQRUrl: (id: string, opts?: { fg?: string; bg?: string; size?: number; ec?: string; format?: 'png' | 'svg' }): string => {
     const base = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
     const token = localStorage.getItem('access_token');

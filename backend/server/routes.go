@@ -204,6 +204,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 			// Link CRUD
 			v1Auth.GET("/links", linkHandler.ListLinks)
+			v1Auth.GET("/links/export", exportHandler.ExportLinksCSV)
 			v1Auth.GET("/links/duplicate", linkHandler.CheckDuplicate)
 			v1Auth.POST("/links", linkHandler.CreateLink)
 			v1Auth.POST("/links/import", linkHandler.ImportLinks)

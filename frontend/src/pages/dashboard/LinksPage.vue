@@ -153,6 +153,16 @@
           />
         </div>
 
+        <!-- Export button -->
+        <button class="btn btn-outline-secondary d-flex align-items-center gap-2" :disabled="exporting" @click="exportCSV">
+          <span v-if="exporting" class="spinner-border spinner-border-sm"></span>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708z"/>
+          </svg>
+          Export CSV
+        </button>
+
         <!-- Import button -->
         <button class="btn btn-outline-secondary d-flex align-items-center gap-2" @click="openImportModal">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -620,6 +630,7 @@ import type { ImportLinksResponse } from '@/types/links';
 
 const linksStore = useLinksStore();
 
+const exporting = ref(false);
 const searchQuery = ref('');
 const editingLink = ref<LinkResponse | null>(null);
 const qrLink = ref<LinkResponse | null>(null);
@@ -796,6 +807,17 @@ function openCreateModal() {
 
 function openImportModal() {
   importModalRef.value?.show();
+}
+
+async function exportCSV() {
+  exporting.value = true;
+  try {
+    await linksApi.exportCSV();
+  } catch {
+    // silently ignore — browser will show no download
+  } finally {
+    exporting.value = false;
+  }
 }
 
 function openSplitModal(link: LinkResponse) {
