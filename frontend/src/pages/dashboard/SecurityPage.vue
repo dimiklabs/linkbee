@@ -3,27 +3,27 @@
 
     <!-- Page header -->
     <div class="page-header">
-      <h1 class="md-headline-small page-title">Security</h1>
-      <p class="md-body-medium page-subtitle">
-        Manage two-factor authentication and account security.
-      </p>
+      <h1 class="page-title">Security</h1>
+      <p class="page-subtitle">Manage two-factor authentication and account security.</p>
     </div>
 
     <!-- Loading -->
     <div v-if="loadingStatus" class="loading-center">
-      <md-circular-progress indeterminate />
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:12px 0 0;">Loading security settings…</p>
+      <div class="css-spinner"></div>
+      <p class="loading-label">Loading security settings…</p>
     </div>
 
     <template v-else>
 
       <!-- ── 2FA Card ───────────────────────────────────────────────────── -->
-      <div class="m3-card m3-card--outlined section-card">
-        <div class="card-section-header">
-          <span class="material-symbols-outlined card-section-header__icon">shield</span>
-          <span class="md-title-medium">Two-Factor Authentication (2FA)</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">shield</span>
+          </div>
+          <span class="an-card-title">Two-Factor Authentication (2FA)</span>
         </div>
-        <div class="card-section-body">
+        <div class="an-card-body">
           <div class="twofa-status-row">
             <div class="twofa-status-info">
               <div class="twofa-status-badge-row">
@@ -31,7 +31,7 @@
                 <span v-if="totpEnabled" class="m3-badge m3-badge--success">Enabled</span>
                 <span v-else class="m3-badge m3-badge--neutral">Disabled</span>
               </div>
-              <p class="md-body-medium twofa-description">
+              <p class="twofa-description">
                 Add an extra layer of security to your account. When enabled, you'll need a 6-digit
                 code from an authenticator app (e.g. Google Authenticator, Authy) at every login.
               </p>
@@ -41,10 +41,7 @@
                 <span class="material-symbols-outlined">lock</span>
                 Enable 2FA
               </button>
-              <button class="btn-outlined btn-danger"
-                v-else
-                @click="showDisableModal = true"
-              >
+              <button class="btn-outlined btn-danger" v-else @click="showDisableModal = true">
                 <span class="material-symbols-outlined">lock_open</span>
                 Disable 2FA
               </button>
@@ -54,77 +51,67 @@
       </div>
 
       <!-- ── Setup Wizard ──────────────────────────────────────────────── -->
-      <div v-if="setupStep && !totpEnabled" class="m3-card m3-card--outlined section-card">
-        <div class="card-section-header">
-          <span class="material-symbols-outlined card-section-header__icon">manage_accounts</span>
-          <span class="md-title-medium">Setup Two-Factor Authentication</span>
+      <div v-if="setupStep && !totpEnabled" class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-icon an-card-icon--neutral">
+            <span class="material-symbols-outlined">manage_accounts</span>
+          </div>
+          <span class="an-card-title">Setup Two-Factor Authentication</span>
         </div>
 
         <!-- Step indicator -->
         <div class="wizard-steps">
           <div class="wizard-step" :class="{ 'wizard-step--active': setupStep === 'scan', 'wizard-step--done': setupStep === 'confirm' || setupStep === 'backup' }">
             <div class="wizard-step__dot">
-              <span v-if="setupStep === 'confirm' || setupStep === 'backup'" class="material-symbols-outlined" style="font-size:16px">check</span>
+              <span v-if="setupStep === 'confirm' || setupStep === 'backup'" class="material-symbols-outlined wizard-check-icon">check</span>
               <span v-else>1</span>
             </div>
-            <span class="wizard-step__label md-label-medium">Scan QR</span>
+            <span class="wizard-step__label">Scan QR</span>
           </div>
           <div class="wizard-step__connector" :class="{ 'wizard-step__connector--done': setupStep === 'confirm' || setupStep === 'backup' }"></div>
           <div class="wizard-step" :class="{ 'wizard-step--active': setupStep === 'confirm', 'wizard-step--done': setupStep === 'backup' }">
             <div class="wizard-step__dot">
-              <span v-if="setupStep === 'backup'" class="material-symbols-outlined" style="font-size:16px">check</span>
+              <span v-if="setupStep === 'backup'" class="material-symbols-outlined wizard-check-icon">check</span>
               <span v-else>2</span>
             </div>
-            <span class="wizard-step__label md-label-medium">Verify Code</span>
+            <span class="wizard-step__label">Verify Code</span>
           </div>
           <div class="wizard-step__connector" :class="{ 'wizard-step__connector--done': setupStep === 'backup' }"></div>
           <div class="wizard-step" :class="{ 'wizard-step--active': setupStep === 'backup' }">
             <div class="wizard-step__dot">3</div>
-            <span class="wizard-step__label md-label-medium">Save Codes</span>
+            <span class="wizard-step__label">Save Codes</span>
           </div>
         </div>
 
-        <md-divider />
-
-        <div class="card-section-body">
+        <div class="an-card-body">
 
           <!-- Step 1: Scan QR -->
           <div v-if="setupStep === 'scan'" class="wizard-panel">
-            <h2 class="md-title-medium wizard-panel__title">Scan this QR code</h2>
-            <p class="md-body-medium wizard-panel__subtitle">
+            <h2 class="wizard-panel__title">Scan this QR code</h2>
+            <p class="wizard-panel__subtitle">
               Open your authenticator app and scan the QR code below. If you can't scan,
               use the manual secret key instead.
             </p>
 
             <div class="qr-container">
               <div class="qr-frame">
-                <img
-                  :src="qrImageUrl"
-                  alt="TOTP QR Code"
-                  width="180"
-                  height="180"
-                  class="qr-image"
-                />
+                <img :src="qrImageUrl" alt="TOTP QR Code" width="180" height="180" class="qr-image" />
               </div>
-              <p class="md-body-small qr-helper">Scan with Google Authenticator, Authy, or similar</p>
+              <p class="qr-helper">Scan with Google Authenticator, Authy, or similar</p>
             </div>
 
             <div class="secret-key-block">
-              <div class="md-label-large secret-key-label">
-                <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-right:4px;">vpn_key</span>
+              <div class="secret-key-label">
+                <span class="material-symbols-outlined secret-key-icon">vpn_key</span>
                 Manual secret key
               </div>
               <div class="secret-key-row">
-                <md-outlined-text-field
-                  :value="totpSecret"
-                  label="Secret key"
-                  readonly
-                  style="flex:1;font-family:monospace;"
-                />
+                <label class="form-field form-field--mono">
+                  <span class="form-field__label">Secret key</span>
+                  <input type="text" class="form-input form-input--mono" :value="totpSecret" readonly />
+                </label>
                 <button class="btn-outlined" @click="copySecret">
-                  <span class="material-symbols-outlined">
-                    {{ copied ? 'check' : 'content_copy' }}
-                  </span>
+                  <span class="material-symbols-outlined">{{ copied ? 'check' : 'content_copy' }}</span>
                   {{ copied ? 'Copied' : 'Copy' }}
                 </button>
               </div>
@@ -140,28 +127,30 @@
 
           <!-- Step 2: Confirm code -->
           <div v-else-if="setupStep === 'confirm'" class="wizard-panel">
-            <h2 class="md-title-medium wizard-panel__title">Enter the verification code</h2>
-            <p class="md-body-medium wizard-panel__subtitle">
+            <h2 class="wizard-panel__title">Enter the verification code</h2>
+            <p class="wizard-panel__subtitle">
               Enter the 6-digit code shown in your authenticator app to verify the setup is working correctly.
             </p>
 
             <div v-if="setupError" class="feedback-error">
-              <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+              <span class="material-symbols-outlined feedback-icon">error</span>
               {{ setupError }}
             </div>
 
             <div class="code-input-wrap">
-              <md-outlined-text-field
-                :value="confirmCode"
-                @input="confirmCode = ($event.target as HTMLInputElement).value"
-                label="6-digit code"
-                maxlength="6"
-                autocomplete="one-time-code"
-                style="max-width:220px;font-family:monospace;"
-              />
-              <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:6px;">
-                The code refreshes every 30 seconds.
-              </p>
+              <label class="form-field form-field--narrow">
+                <span class="form-field__label">6-digit code</span>
+                <input
+                  type="text"
+                  class="form-input form-input--mono"
+                  :value="confirmCode"
+                  @input="confirmCode = ($event.target as HTMLInputElement).value"
+                  maxlength="6"
+                  autocomplete="one-time-code"
+                  placeholder="000000"
+                />
+              </label>
+              <p class="code-hint">The code refreshes every 30 seconds.</p>
             </div>
 
             <div class="wizard-actions">
@@ -170,7 +159,7 @@
                 Back
               </button>
               <button class="btn-filled" :disabled="confirmLoading" @click="confirmSetup">
-                <md-circular-progress v-if="confirmLoading" indeterminate style="margin-right:8px;" />
+                <div v-if="confirmLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
                 <span class="material-symbols-outlined" v-else>verified</span>
                 Confirm &amp; Enable
               </button>
@@ -182,32 +171,26 @@
             <div class="success-banner">
               <span class="material-symbols-outlined success-banner__icon">verified</span>
               <div>
-                <div class="md-title-small" style="font-weight:600;margin-bottom:2px;">2FA Successfully Enabled!</div>
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Your account is now protected with two-factor authentication.</div>
+                <div class="success-banner__title">2FA Successfully Enabled!</div>
+                <div class="success-banner__subtitle">Your account is now protected with two-factor authentication.</div>
               </div>
             </div>
 
             <div class="backup-warning">
               <span class="material-symbols-outlined backup-warning__icon">warning</span>
-              <div class="md-body-medium">
+              <div class="backup-warning__text">
                 <strong>Save these backup codes now.</strong> They are shown only once. Use them to
                 access your account if you ever lose your authenticator app.
               </div>
             </div>
 
             <div class="backup-codes-grid">
-              <code
-                v-for="code in backupCodes"
-                :key="code"
-                class="backup-code"
-              >{{ code }}</code>
+              <code v-for="code in backupCodes" :key="code" class="backup-code">{{ code }}</code>
             </div>
 
             <div class="wizard-actions">
               <button class="btn-outlined" @click="copyBackupCodes">
-                <span class="material-symbols-outlined">
-                  {{ copiedBackup ? 'check' : 'content_copy' }}
-                </span>
+                <span class="material-symbols-outlined">{{ copiedBackup ? 'check' : 'content_copy' }}</span>
                 {{ copiedBackup ? 'Copied all!' : 'Copy all codes' }}
               </button>
               <button class="btn-filled" @click="finishSetup">
@@ -225,30 +208,29 @@
     <!-- ── Disable 2FA Dialog ────────────────────────────────────────────── -->
     <BaseModal v-model="showDisableModal" size="sm" @closed="closeDisableModal">
       <template #headline>Disable Two-Factor Authentication</template>
-      <div style="min-width:360px;max-width:100%;">
-        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:20px;">
+      <div class="disable-modal-body">
+        <p class="disable-modal-desc">
           Enter your account password to confirm you want to disable 2FA.
         </p>
-        <div v-if="disableError" class="feedback-error" style="margin-bottom:16px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+        <div v-if="disableError" class="feedback-error disable-modal-error">
+          <span class="material-symbols-outlined feedback-icon">error</span>
           {{ disableError }}
         </div>
-        <md-outlined-text-field
-          :value="disablePassword"
-          @input="disablePassword = ($event.target as HTMLInputElement).value"
-          label="Password"
-          type="password"
-          autocomplete="current-password"
-          style="width:100%;"
-        />
+        <label class="form-field">
+          <span class="form-field__label">Password</span>
+          <input
+            type="password"
+            class="form-input"
+            :value="disablePassword"
+            @input="disablePassword = ($event.target as HTMLInputElement).value"
+            autocomplete="current-password"
+          />
+        </label>
       </div>
       <template #actions>
         <button class="btn-text" @click="closeDisableModal">Cancel</button>
-        <button class="btn-filled btn-danger"
-          :disabled="disableLoading"
-          @click="disableTOTP"
-        >
-          <md-circular-progress v-if="disableLoading" indeterminate style="margin-right:8px;" />
+        <button class="btn-filled btn-danger" :disabled="disableLoading" @click="disableTOTP">
+          <div v-if="disableLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Disable 2FA
         </button>
       </template>
@@ -383,15 +365,10 @@ async function disableTOTP() {
 <style scoped lang="scss">
 .security-page {
   max-width: 780px;
-  padding: 24px 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-
-  @media (max-width: 575px) {
-    padding: 16px 0;
-    gap: 16px;
-  }
+  gap: 20px;
 }
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
@@ -401,12 +378,14 @@ async function disableTOTP() {
 
 .page-title {
   margin: 0 0 4px;
+  font-size: 1.375rem;
   font-weight: 700;
   color: var(--md-sys-color-on-surface);
 }
 
 .page-subtitle {
   margin: 0;
+  font-size: 0.9rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -417,41 +396,89 @@ async function disableTOTP() {
   align-items: center;
   justify-content: center;
   padding: 64px 0;
+  gap: 16px;
 }
 
-/* ── M3 Cards ────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 16px;
-  overflow: hidden;
+.loading-label {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
 
-  &--outlined {
-    background: var(--md-sys-color-surface);
-    border: 1px solid var(--md-sys-color-outline-variant);
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
   }
 }
 
-.section-card {
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 16px;
   overflow: hidden;
 }
 
-/* ── Card section header ─────────────────────────────────────────────────── */
-.card-section-header {
+.an-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 24px;
+  gap: 12px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   background: var(--md-sys-color-surface-container-low);
 }
 
-.card-section-header__icon {
-  font-size: 20px;
-  color: var(--md-sys-color-primary);
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+
+  .material-symbols-outlined {
+    font-size: 18px;
+  }
+
+  &--primary {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    color: var(--md-sys-color-primary);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
-.card-section-body {
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.an-card-body {
   padding: 24px;
 }
 
@@ -503,6 +530,7 @@ async function disableTOTP() {
 .twofa-description {
   color: var(--md-sys-color-on-surface-variant);
   margin: 0;
+  font-size: 0.9rem;
   max-width: 500px;
 }
 
@@ -510,24 +538,24 @@ async function disableTOTP() {
   flex-shrink: 0;
 }
 
-/* ── M3 Badges ───────────────────────────────────────────────────────────── */
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 10px;
-  border-radius: 999px;
-}
+  border-radius: 6px;
 
-.m3-badge--success {
-  background: color-mix(in srgb, #1aa563 14%, transparent);
-  color: #0a7040;
-}
+  &--success {
+    background: color-mix(in srgb, #1aa563 14%, transparent);
+    color: #0a7040;
+  }
 
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface-variant);
+  &--neutral {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
 }
 
 /* ── Wizard steps ────────────────────────────────────────────────────────── */
@@ -535,7 +563,6 @@ async function disableTOTP() {
   display: flex;
   align-items: center;
   padding: 20px 24px 16px;
-  gap: 0;
   overflow-x: auto;
 }
 
@@ -573,6 +600,10 @@ async function disableTOTP() {
     color: #0a7040;
     border-color: #1aa563;
   }
+}
+
+.wizard-check-icon {
+  font-size: 16px;
 }
 
 .wizard-step__label {
@@ -613,12 +644,14 @@ async function disableTOTP() {
 
 .wizard-panel__title {
   margin: 0;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--md-sys-color-on-surface);
 }
 
 .wizard-panel__subtitle {
   margin: 0;
+  font-size: 0.9rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
@@ -644,8 +677,9 @@ async function disableTOTP() {
 }
 
 .qr-helper {
-  color: var(--md-sys-color-on-surface-variant);
   margin: 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 /* ── Secret key block ────────────────────────────────────────────────────── */
@@ -656,23 +690,84 @@ async function disableTOTP() {
 }
 
 .secret-key-label {
-  color: var(--md-sys-color-on-surface-variant);
   display: flex;
   align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.secret-key-icon {
+  font-size: 16px;
 }
 
 .secret-key-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+
+  &--narrow {
+    max-width: 220px;
+  }
+
+  &--mono .form-input {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.04em;
+  }
+}
+
+.form-field__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+
+  &[readonly] {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: default;
+  }
 }
 
 /* ── Code input ──────────────────────────────────────────────────────────── */
 .code-input-wrap {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
+}
+
+.code-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 /* ── Wizard actions ──────────────────────────────────────────────────────── */
@@ -699,6 +794,18 @@ async function disableTOTP() {
   flex-shrink: 0;
 }
 
+.success-banner__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.success-banner__subtitle {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 /* ── Backup warning ──────────────────────────────────────────────────────── */
 .backup-warning {
   display: flex;
@@ -708,7 +815,6 @@ async function disableTOTP() {
   border-radius: 10px;
   background: color-mix(in srgb, #f59e0b 12%, transparent);
   border: 1px solid color-mix(in srgb, #f59e0b 35%, transparent);
-  color: #78350f;
 }
 
 .backup-warning__icon {
@@ -716,6 +822,11 @@ async function disableTOTP() {
   color: #d97706;
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+.backup-warning__text {
+  font-size: 0.9rem;
+  color: #78350f;
 }
 
 /* ── Backup codes grid ───────────────────────────────────────────────────── */
@@ -746,6 +857,25 @@ async function disableTOTP() {
   }
 }
 
+/* ── Disable modal ───────────────────────────────────────────────────────── */
+.disable-modal-body {
+  min-width: 320px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.disable-modal-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.disable-modal-error {
+  margin: 0;
+}
+
 /* ── Feedback ────────────────────────────────────────────────────────────── */
 .feedback-error {
   display: flex;
@@ -757,5 +887,23 @@ async function disableTOTP() {
   border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 30%, transparent);
   color: var(--md-sys-color-on-error-container, var(--md-sys-color-error));
   font-size: 0.875rem;
+}
+
+.feedback-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn-danger {
+  --btn-color: var(--md-sys-color-error, #dc2626);
+  background: var(--btn-color) !important;
+  border-color: var(--btn-color) !important;
+
+  &.btn-outlined {
+    background: transparent !important;
+    color: var(--btn-color) !important;
+    border-color: var(--btn-color) !important;
+  }
 }
 </style>

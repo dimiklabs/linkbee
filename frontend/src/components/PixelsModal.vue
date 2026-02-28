@@ -213,7 +213,7 @@ async function addPixel() {
       pixel_id: selectedType.value !== 'custom' ? pixelID.value.trim() : undefined,
       custom_script: selectedType.value === 'custom' ? customScript.value.trim() : undefined,
     });
-    pixels.value.push(res.data);
+    if (res.data) pixels.value.push(res.data);
     pixelID.value = '';
     customScript.value = '';
   } catch (err: any) {

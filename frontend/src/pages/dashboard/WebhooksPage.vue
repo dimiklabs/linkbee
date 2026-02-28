@@ -1,5 +1,5 @@
 <template>
-  <div class="page-section" style="max-width: 1100px;">
+  <div class="webhooks-page">
 
     <!-- Page Header -->
     <div class="dash-page-header">
@@ -9,7 +9,7 @@
       </div>
       <div class="dash-page-header__actions">
         <button class="btn-filled" @click="showCreate = !showCreate">
-          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+          <span class="material-symbols-outlined">add</span>
           Add Webhook
         </button>
       </div>
@@ -25,30 +25,29 @@
     </div>
 
     <!-- Create form -->
-    <div v-if="showCreate" class="m3-card m3-card--elevated create-form">
-      <div class="m3-card-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_circle</span>
-          <span style="font-size:16px;font-weight:600;">New Webhook Endpoint</span>
+    <div v-if="showCreate" class="an-card create-form">
+      <div class="an-card-header">
+        <div class="an-card-icon an-card-icon--primary">
+          <span class="material-symbols-outlined">add_circle</span>
         </div>
+        <span class="an-card-title">New Webhook Endpoint</span>
       </div>
-      <md-divider />
-      <div style="padding:20px;">
-        <div style="margin-bottom:16px;">
-          <md-outlined-text-field
+      <div class="an-card-body">
+        <div class="form-field">
+          <label class="form-field__label">Endpoint URL</label>
+          <input
+            ref="urlInputRef"
+            class="form-input"
+            type="url"
             :value="newURL"
             @input="newURL=($event.target as HTMLInputElement).value"
-            label="Endpoint URL"
-            type="url"
             placeholder="https://your-server.com/webhook"
-            style="width:100%;"
-            ref="urlInputRef"
           />
         </div>
-        <div style="margin-bottom:16px;">
-          <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Events to subscribe</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+        <div class="events-section">
+          <div class="events-section__label">Events to subscribe</div>
+          <div class="events-list">
+            <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" class="event-label">
               <input
                 type="checkbox"
                 :value="ev.value"
@@ -56,56 +55,51 @@
                 style="margin-top:2px;accent-color:var(--md-sys-color-primary);"
               />
               <div>
-                <span style="font-weight:500;font-size:0.875rem;">{{ ev.label }}</span>
-                <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;"> — {{ ev.description }}</span>
+                <span class="event-label__name">{{ ev.label }}</span>
+                <span class="event-label__desc"> — {{ ev.description }}</span>
               </div>
             </label>
           </div>
-          <div v-if="newEvents.length === 0" style="color:var(--md-sys-color-error);font-size:0.8rem;margin-top:4px;">
-            Select at least one event.
-          </div>
+          <div v-if="newEvents.length === 0" class="events-error">Select at least one event.</div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="form-actions">
           <button class="btn-filled" :disabled="creating || !newURL || newEvents.length === 0" @click="createWebhook">
-            <md-circular-progress v-if="creating" indeterminate style="margin-right:6px;" />
+            <span v-if="creating" class="css-spinner css-spinner--sm css-spinner--white"></span>
             Create
           </button>
           <button class="btn-outlined" @click="cancelCreate">Cancel</button>
         </div>
-        <div v-if="createError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
-          {{ createError }}
-        </div>
+        <div v-if="createError" class="error-box">{{ createError }}</div>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-state">
+      <span class="css-spinner"></span>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="webhooks.length === 0 && !showCreate" class="m3-card m3-card--elevated m3-empty-state">
-      <div class="m3-empty-state__icon">
+    <div v-else-if="webhooks.length === 0 && !showCreate" class="an-card empty-state-card">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">notifications_active</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:8px;">No webhooks yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;max-width:380px;">Add a webhook endpoint to start receiving real-time event notifications for link activity.</p>
+      <div class="empty-title">No webhooks yet</div>
+      <p class="empty-desc">Add a webhook endpoint to start receiving real-time event notifications for link activity.</p>
       <button class="btn-filled" @click="showCreate = true">
-        <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+        <span class="material-symbols-outlined">add</span>
         Add Webhook
       </button>
     </div>
 
     <!-- Webhooks table -->
-    <div v-else-if="webhooks.length > 0" class="m3-card m3-card--elevated">
-      <div class="m3-card-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">notifications</span>
-          <span style="font-size:16px;font-weight:600;">Webhook Endpoints</span>
+    <div v-else-if="webhooks.length > 0" class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-icon an-card-icon--primary">
+          <span class="material-symbols-outlined">notifications</span>
         </div>
+        <span class="an-card-title">Webhook Endpoints</span>
         <span class="m3-badge m3-badge--neutral">{{ webhooks.length }} endpoint{{ webhooks.length !== 1 ? 's' : '' }}</span>
       </div>
-      <md-divider />
       <div class="m3-table-wrapper">
         <table class="m3-table">
           <thead>
@@ -123,21 +117,22 @@
                 <!-- Endpoint -->
                 <td>
                   <div v-if="editingId === wh.id">
-                    <md-outlined-text-field
+                    <input
+                      class="form-input"
+                      type="url"
                       :value="editURL"
                       @input="editURL=($event.target as HTMLInputElement).value"
-                      type="url"
-                      label="URL"
+                      placeholder="https://..."
                       style="min-width:240px;"
                     />
                   </div>
-                  <code v-else style="font-size:0.8rem;word-break:break-all;">{{ wh.url }}</code>
+                  <code v-else class="code-value">{{ wh.url }}</code>
                 </td>
 
                 <!-- Events -->
                 <td>
-                  <div v-if="editingId === wh.id" style="display:flex;flex-direction:column;gap:6px;">
-                    <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.8rem;">
+                  <div v-if="editingId === wh.id" class="edit-events">
+                    <label v-for="ev in WEBHOOK_EVENTS" :key="ev.value" class="edit-event-label">
                       <input
                         type="checkbox"
                         :value="ev.value"
@@ -158,9 +153,9 @@
 
                 <!-- Status -->
                 <td>
-                  <div v-if="editingId === wh.id" style="display:flex;align-items:center;gap:8px;">
+                  <div v-if="editingId === wh.id" class="edit-status">
                     <input type="checkbox" v-model="editIsActive" style="accent-color:var(--md-sys-color-primary);" />
-                    <span style="font-size:0.875rem;">Active</span>
+                    <span class="edit-status__label">Active</span>
                   </div>
                   <span v-else :class="['m3-badge', wh.is_active ? 'm3-badge--success' : 'm3-badge--warning']">
                     <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;margin-right:3px;">{{ wh.is_active ? 'circle' : 'pause_circle' }}</span>
@@ -169,20 +164,20 @@
                 </td>
 
                 <!-- Created -->
-                <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ formatDate(wh.created_at) }}</td>
+                <td class="cell-muted cell-nowrap">{{ formatDate(wh.created_at) }}</td>
 
                 <!-- Actions -->
                 <td>
-                  <div v-if="editingId === wh.id" style="display:flex;justify-content:flex-end;gap:8px;">
+                  <div v-if="editingId === wh.id" class="row-actions row-actions--right">
                     <button class="btn-filled" :disabled="saving" @click="saveEdit(wh.id)">
-                      <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
+                      <span v-if="saving" class="css-spinner css-spinner--sm css-spinner--white"></span>
                       Save
                     </button>
                     <button class="btn-outlined" @click="cancelEdit">Cancel</button>
                   </div>
-                  <div v-else style="display:flex;justify-content:flex-end;gap:4px;flex-wrap:wrap;">
+                  <div v-else class="row-actions row-actions--right">
                     <button class="btn-icon" @click="sendTest(wh.id)" :disabled="testingId === wh.id" title="Send test event">
-                      <md-circular-progress v-if="testingId === wh.id" indeterminate />
+                      <span v-if="testingId === wh.id" class="css-spinner css-spinner--sm"></span>
                       <span v-else class="material-symbols-outlined">send</span>
                     </button>
                     <button class="btn-icon" @click="toggleDeliveries(wh.id)" title="Delivery logs">
@@ -204,8 +199,8 @@
                   <div class="deliveries-panel">
 
                     <!-- Secret reveal -->
-                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-                      <span style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Signing secret:</span>
+                    <div class="secret-row">
+                      <span class="secret-label">Signing secret:</span>
                       <div class="copy-field" style="flex:1;min-width:200px;max-width:480px;">
                         <span class="copy-field__value">
                           <span v-if="revealedSecret[wh.id]">{{ revealedSecret[wh.id] }}</span>
@@ -215,7 +210,7 @@
                           <span class="material-symbols-outlined">{{ revealedSecret[wh.id] ? 'visibility_off' : 'visibility' }}</span>
                           {{ revealedSecret[wh.id] ? 'Hide' : 'Reveal' }}
                         </button>
-                        <button v-if="revealedSecret[wh.id]" class="copy-field__btn" @click="copyText(revealedSecret[wh.id])">
+                        <button v-if="revealedSecret[wh.id]" class="copy-field__btn" @click="copyText(revealedSecret[wh.id] ?? '')"  >
                           <span class="material-symbols-outlined">content_copy</span>
                           Copy
                         </button>
@@ -223,24 +218,22 @@
                     </div>
 
                     <!-- Test result banner -->
-                    <div v-if="testResults[wh.id]" style="margin-bottom:16px;">
-                      <div :style="`padding:10px 14px;border-radius:8px;font-size:0.875rem;background:${testResults[wh.id].success ? '#dcfce7' : '#fee2e2'};color:${testResults[wh.id].success ? '#16a34a' : '#dc2626'};`">
-                        <strong>Test delivery:</strong>
-                        {{ testResults[wh.id].success ? `HTTP ${testResults[wh.id].response_code}` : `${testResults[wh.id].error_message || 'Failed'}` }}
-                        <span style="opacity:0.7;margin-left:8px;">({{ testResults[wh.id].duration_ms }}ms)</span>
-                      </div>
+                    <div v-if="testResults[wh.id]" class="test-result-banner" :class="testResults[wh.id]?.success ? 'test-result-banner--success' : 'test-result-banner--error'">
+                      <strong>Test delivery:</strong>
+                      {{ testResults[wh.id]?.success ? `HTTP ${testResults[wh.id]?.response_code}` : `${testResults[wh.id]?.error_message || 'Failed'}` }}
+                      <span class="test-result-banner__duration">({{ testResults[wh.id]?.duration_ms }}ms)</span>
                     </div>
 
                     <!-- Deliveries table -->
-                    <div style="font-size:0.875rem;font-weight:600;margin-bottom:8px;">Recent Deliveries</div>
-                    <div v-if="deliveriesLoading[wh.id]" style="display:flex;justify-content:center;padding:16px;">
-                      <md-circular-progress indeterminate />
+                    <div class="deliveries-heading">Recent Deliveries</div>
+                    <div v-if="deliveriesLoading[wh.id]" class="deliveries-loading">
+                      <span class="css-spinner css-spinner--sm"></span>
                     </div>
-                    <div v-else-if="!deliveries[wh.id] || deliveries[wh.id].length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;padding:8px 0;">
+                    <div v-else-if="!deliveries[wh.id] || (deliveries[wh.id]?.length ?? 0) === 0" class="deliveries-empty">
                       No deliveries recorded yet. Send a test event to get started.
                     </div>
                     <div v-else>
-                      <table class="m3-table" style="font-size:0.8rem;">
+                      <table class="m3-table deliveries-table">
                         <thead>
                           <tr>
                             <th>Time</th>
@@ -252,19 +245,19 @@
                         </thead>
                         <tbody>
                           <tr v-for="d in deliveries[wh.id]" :key="d.id">
-                            <td style="white-space:nowrap;color:var(--md-sys-color-on-surface-variant);">{{ formatDateTime(d.created_at) }}</td>
+                            <td class="cell-muted cell-nowrap">{{ formatDateTime(d.created_at) }}</td>
                             <td><code>{{ d.event }}</code></td>
                             <td>
                               <span :class="['m3-badge', d.success ? 'm3-badge--success' : 'm3-badge--error']">{{ d.success ? d.response_code : (d.response_code || 'Error') }}</span>
                             </td>
-                            <td style="color:var(--md-sys-color-on-surface-variant);">{{ d.duration_ms }}ms</td>
+                            <td class="cell-muted">{{ d.duration_ms }}ms</td>
                             <td style="text-align:right;">
                               <button class="btn-text"
                                 @click="resendDelivery(wh.id, d.id)"
                                 :disabled="resendingId === d.id"
                                 style="font-size:0.75rem;"
                               >
-                                <md-circular-progress v-if="resendingId === d.id" indeterminate />
+                                <span v-if="resendingId === d.id" class="css-spinner css-spinner--sm"></span>
                                 <span v-else>Resend</span>
                               </button>
                             </td>
@@ -273,13 +266,13 @@
                       </table>
 
                       <!-- Pagination -->
-                      <div v-if="deliveryTotals[wh.id] > 20" style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
-                        <span style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ deliveryTotals[wh.id] }} total</span>
+                      <div v-if="(deliveryTotals[wh.id] ?? 0) > 20" class="deliveries-pagination">
+                        <span class="cell-muted">{{ deliveryTotals[wh.id] }} total</span>
                         <div style="display:flex;gap:4px;">
-                          <button class="btn-icon" :disabled="deliveryPages[wh.id] <= 1" @click="loadDeliveries(wh.id, deliveryPages[wh.id] - 1)">
+                          <button class="btn-icon" :disabled="(deliveryPages[wh.id] ?? 1) <= 1" @click="loadDeliveries(wh.id, (deliveryPages[wh.id] ?? 1) - 1)">
                             <span class="material-symbols-outlined">chevron_left</span>
                           </button>
-                          <button class="btn-icon" :disabled="deliveryPages[wh.id] * 20 >= deliveryTotals[wh.id]" @click="loadDeliveries(wh.id, deliveryPages[wh.id] + 1)">
+                          <button class="btn-icon" :disabled="(deliveryPages[wh.id] ?? 1) * 20 >= (deliveryTotals[wh.id] ?? 0)" @click="loadDeliveries(wh.id, (deliveryPages[wh.id] ?? 1) + 1)">
                             <span class="material-symbols-outlined">chevron_right</span>
                           </button>
                         </div>
@@ -295,9 +288,9 @@
     </div>
 
     <!-- Signing info card -->
-    <div class="m3-card m3-card--outlined info-card">
-      <h6 style="font-weight:600;margin:0 0 8px;">Verifying webhook signatures</h6>
-      <p style="font-size:0.875rem;color:var(--md-sys-color-on-surface-variant);margin:0 0 8px;">
+    <div class="an-card info-card">
+      <h6 class="info-card__title">Verifying webhook signatures</h6>
+      <p class="info-card__body">
         Every delivery includes an <code>X-Webhook-Signature</code> header with an HMAC-SHA256 signature of the raw request body, prefixed with <code>sha256=</code>.
         Your signing secret was generated when you created the webhook (stored server-side only).
         Verify on your server to ensure the request is genuine:
@@ -312,8 +305,8 @@ def verify(secret: str, body: bytes, header: str) -> bool:
     </div>
 
     <!-- Example payload card -->
-    <div class="m3-card m3-card--outlined info-card">
-      <h6 style="font-weight:600;margin:0 0 8px;">Example payload</h6>
+    <div class="an-card info-card">
+      <h6 class="info-card__title">Example payload</h6>
       <pre class="code-block"><code>{
   "event": "link.created",
   "timestamp": "2025-01-01T12:00:00Z",
@@ -335,11 +328,7 @@ def verify(secret: str, body: bytes, header: str) -> bool:
       <p style="color:var(--md-sys-color-on-surface-variant);">Delete this webhook endpoint? This cannot be undone and any subscribed integrations will stop receiving events.</p>
       <template #actions>
         <button class="btn-text" @click="showDeleteConfirm = false">Cancel</button>
-        <button class="btn-filled btn-danger"
-          @click="confirmDelete"
-        >
-          Delete
-        </button>
+        <button class="btn-filled btn-danger" @click="confirmDelete">Delete</button>
       </template>
     </BaseModal>
 
@@ -427,7 +416,7 @@ async function createWebhook() {
   createError.value = '';
   try {
     const res = await webhooksApi.create({ url: newURL.value, events: newEvents.value });
-    webhooks.value.unshift(res.data);
+    if (res.data) webhooks.value.unshift(res.data);
     cancelCreate();
   } catch (err: any) {
     createError.value = err?.response?.data?.description ?? 'Failed to create webhook.';
@@ -456,7 +445,7 @@ async function saveEdit(id: string) {
       is_active: editIsActive.value,
     });
     const idx = webhooks.value.findIndex((w) => w.id === id);
-    if (idx !== -1) webhooks.value[idx] = res.data;
+    if (idx !== -1 && res.data) webhooks.value[idx] = res.data;
     editingId.value = null;
   } finally {
     saving.value = false;
@@ -519,9 +508,9 @@ async function loadDeliveries(id: string, page: number) {
   deliveriesLoading.value[id] = true;
   try {
     const res = await webhooksApi.getDeliveries(id, page);
-    deliveries.value[id] = res.data.deliveries ?? [];
-    deliveryTotals.value[id] = res.data.total ?? 0;
-    deliveryPages.value[id] = res.data.page ?? page;
+    deliveries.value[id] = res.data?.deliveries ?? [];
+    deliveryTotals.value[id] = res.data?.total ?? 0;
+    deliveryPages.value[id] = res.data?.page ?? page;
   } finally {
     deliveriesLoading.value[id] = false;
   }
@@ -534,7 +523,7 @@ async function sendTest(id: string) {
   }
   try {
     const res = await webhooksApi.test(id);
-    testResults.value[id] = res.data;
+    if (res.data) testResults.value[id] = res.data;
     await loadDeliveries(id, 1);
   } catch (err: any) {
     testResults.value[id] = {
@@ -562,7 +551,7 @@ async function toggleSecret(id: string) {
   }
   try {
     const res = await webhooksApi.getSecret(id);
-    revealedSecret.value[id] = res.data.secret;
+    if (res.data) revealedSecret.value[id] = res.data.secret;
   } catch {
     // ignore
   }
@@ -580,7 +569,7 @@ async function resendDelivery(webhookId: string, deliveryId: string) {
   resendingId.value = deliveryId;
   try {
     const res = await webhooksApi.resendDelivery(webhookId, deliveryId);
-    testResults.value[webhookId] = res.data;
+    if (res.data) testResults.value[webhookId] = res.data;
     await loadDeliveries(webhookId, deliveryPages.value[webhookId] ?? 1);
   } finally {
     resendingId.value = null;
@@ -598,24 +587,30 @@ onMounted(async () => {
   await fetchWebhooks();
   try {
     const res = await billingApi.getUsage();
-    usage.value = res.data.data;
+    if (res.data.data) usage.value = res.data.data;
   } catch {}
   try {
     const res = await billingApi.getSubscription();
-    plan.value = res.data.data.plan;
+    if (res.data.data) plan.value = res.data.data.plan;
   } catch {}
 });
 </script>
 
 <style scoped lang="scss">
-/* page-section (global) handles padding; max-width set via style attribute on root */
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+.webhooks-page {
+  max-width: 1100px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 /* ── Page Header ──────────────────────────────────────────────────────────── */
 .dash-page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
 
@@ -646,64 +641,6 @@ onMounted(async () => {
   }
 }
 
-/* ── Cards ────────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 12px;
-  background: var(--md-sys-color-surface);
-  overflow: hidden;
-  margin-bottom: 20px;
-
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline-variant);
-  }
-
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
-  }
-}
-
-/* ── M3 Card header ───────────────────────────────────────────────────────── */
-.m3-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* ── M3 Table wrapper ─────────────────────────────────────────────────────── */
-.m3-table-wrapper {
-  overflow-x: auto;
-}
-
-/* ── M3 Empty state ───────────────────────────────────────────────────────── */
-.m3-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-
-  &__icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-
-    .material-symbols-outlined {
-      font-size: 2rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
-  }
-}
-
 /* ── Warning banner ───────────────────────────────────────────────────────── */
 .warning-banner {
   display: flex;
@@ -711,62 +648,329 @@ onMounted(async () => {
   gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
+
+  &--error {
+    background: var(--md-sys-color-error-container, #ffdad6);
+    color: var(--md-sys-color-on-error-container, #410002);
+  }
+
+  &--warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
 }
 
-.warning-banner--error {
-  background: var(--md-sys-color-error-container, #ffdad6);
-  color: var(--md-sys-color-on-error-container, #410002);
+/* ── AN Card ──────────────────────────────────────────────────────────────── */
+.an-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
 }
 
-.warning-banner--warning {
-  background: #fef3c7;
-  color: #92400e;
+.an-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: var(--md-sys-color-primary-container);
+    .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-high);
+    .material-symbols-outlined { color: var(--md-sys-color-on-surface-variant); }
+  }
+}
+
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  flex: 1;
+  min-width: 0;
+}
+
+.an-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── CSS Spinner ──────────────────────────────────────────────────────────── */
+.css-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Loading state ────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0 0 20px;
+  max-width: 380px;
+}
+
+/* ── Create form ──────────────────────────────────────────────────────────── */
+.create-form .an-card-body {
+  max-width: 640px;
+}
+
+/* ── Form field ───────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+}
+
+/* ── Events ───────────────────────────────────────────────────────────────── */
+.events-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.event-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+
+  &__name {
+    font-weight: 500;
+    font-size: 0.875rem;
+  }
+
+  &__desc {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+  }
+}
+
+.events-error {
+  color: var(--md-sys-color-error);
+  font-size: 0.8rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.error-box {
+  padding: 10px 14px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+/* ── Edit inline ──────────────────────────────────────────────────────────── */
+.edit-events {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.edit-event-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.edit-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__label {
+    font-size: 0.875rem;
+  }
+}
+
+.row-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  &--right { justify-content: flex-end; }
 }
 
 /* ── Table ────────────────────────────────────────────────────────────────── */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
 .m3-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
+
+  thead tr {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-low);
+  }
 }
 
-.m3-table thead tr {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.m3-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
+.deliveries-table {
   font-size: 0.8rem;
-  color: var(--md-sys-color-on-surface-variant);
-  background: var(--md-sys-color-surface-container-low);
-  white-space: nowrap;
 }
 
-.m3-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface);
-  vertical-align: middle;
+.code-value {
+  font-size: 0.8rem;
+  word-break: break-all;
 }
 
-.m3-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.m3-table tbody tr:hover td {
-  background: var(--md-sys-color-surface-container-low);
-}
+.cell-muted { color: var(--md-sys-color-on-surface-variant); }
+.cell-nowrap { white-space: nowrap; }
 
 /* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -876,9 +1080,7 @@ onMounted(async () => {
       color: var(--md-sys-color-on-surface);
     }
 
-    .material-symbols-outlined {
-      font-size: 16px;
-    }
+    .material-symbols-outlined { font-size: 16px; }
   }
 }
 
@@ -887,11 +1089,79 @@ onMounted(async () => {
   background: var(--md-sys-color-surface-container-low);
   border-top: 1px solid var(--md-sys-color-outline-variant);
   padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.secret-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.secret-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.test-result-banner {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+
+  &--success { background: #dcfce7; color: #16a34a; }
+  &--error   { background: #fee2e2; color: #dc2626; }
+
+  &__duration {
+    opacity: 0.7;
+    margin-left: 8px;
+  }
+}
+
+.deliveries-heading {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.deliveries-loading {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.deliveries-empty {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+  padding: 8px 0;
+}
+
+.deliveries-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
 }
 
 /* ── Info card ────────────────────────────────────────────────────────────── */
 .info-card {
   padding: 20px;
+
+  &__title {
+    font-weight: 600;
+    margin: 0 0 8px;
+    font-size: 0.9375rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__body {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0 0 8px;
+  }
 }
 
 .code-block {

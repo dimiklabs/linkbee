@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="global-analytics-page">
 
     <!-- Page Header + Filters -->
     <div class="page-header">
@@ -23,23 +23,17 @@
 
         <!-- Date range inputs -->
         <div class="date-range-row">
-          <md-outlined-text-field
-            type="date"
-            label="From"
-            :value="filterFrom"
-            @input="filterFrom = ($event.target as HTMLInputElement).value"
-            style="min-width:148px;"
-          />
+          <label class="date-field">
+            <span class="date-field__label">From</span>
+            <input type="date" class="form-input" :value="filterFrom" @input="filterFrom = ($event.target as HTMLInputElement).value" />
+          </label>
           <span class="date-range-sep">–</span>
-          <md-outlined-text-field
-            type="date"
-            label="To"
-            :value="filterTo"
-            @input="filterTo = ($event.target as HTMLInputElement).value"
-            style="min-width:148px;"
-          />
+          <label class="date-field">
+            <span class="date-field__label">To</span>
+            <input type="date" class="form-input" :value="filterTo" @input="filterTo = ($event.target as HTMLInputElement).value" />
+          </label>
           <button class="btn-filled" :disabled="loading" @click="load">
-            <span v-if="loading"><md-circular-progress indeterminate /></span>
+            <span v-if="loading" class="css-spinner css-spinner--sm css-spinner--white"></span>
             <span v-else class="material-symbols-outlined">refresh</span>
             Apply
           </button>
@@ -55,7 +49,7 @@
 
     <!-- Loading skeleton -->
     <template v-if="loading && !data">
-      <div class="stat-grid" style="margin-bottom:1.5rem;">
+      <div class="stat-grid">
         <div v-for="i in 4" :key="i" class="m3-card m3-card--elevated stat-skeleton-card">
           <div class="skeleton-icon-box skeleton"></div>
           <div style="flex:1">
@@ -69,7 +63,7 @@
     <template v-else-if="data">
 
       <!-- Stat Cards -->
-      <div class="stat-grid" style="margin-bottom:1.5rem;">
+      <div class="stat-grid">
         <div class="m3-card m3-card--elevated stat-card" aria-label="Total clicks" role="region">
           <div class="stat-card__icon stat-card__icon--primary">
             <span class="material-symbols-outlined">ads_click</span>
@@ -109,7 +103,7 @@
       </div>
 
       <!-- Period Comparison Card -->
-      <div v-if="comparison" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
+      <div v-if="comparison" class="m3-card m3-card--outlined">
         <div class="card-header-row">
           <div>
             <span class="md-title-medium">Period Comparison</span>
@@ -119,44 +113,30 @@
             {{ formatShortDate(comparison.previous.from) }} → {{ formatShortDate(comparison.current.to) }}
           </span>
         </div>
-        <md-divider />
         <div style="padding:1rem 1.25rem;">
           <div class="comparison-grid">
-            <!-- Total Clicks comparison -->
             <div class="comparison-metric">
               <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Total Clicks</div>
               <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
                 <span class="md-headline-small">{{ comparison.current.total_clicks.toLocaleString() }}</span>
-                <span
-                  :style="{ color: comparison.clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }"
-                  class="trend-indicator"
-                >
+                <span :style="{ color: comparison.clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }" class="trend-indicator">
                   <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">{{ comparison.clicks.trend === 'up' ? 'trending_up' : 'trending_down' }}</span>
                   {{ Math.abs(comparison.clicks.percent_change).toFixed(1) }}%
                 </span>
               </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
-                vs {{ comparison.previous.total_clicks.toLocaleString() }} prev.
-              </div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">vs {{ comparison.previous.total_clicks.toLocaleString() }} prev.</div>
             </div>
-            <!-- Unique Clicks comparison -->
             <div class="comparison-metric">
               <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Unique Clicks</div>
               <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
                 <span class="md-headline-small">{{ comparison.current.unique_clicks.toLocaleString() }}</span>
-                <span
-                  :style="{ color: comparison.unique_clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }"
-                  class="trend-indicator"
-                >
+                <span :style="{ color: comparison.unique_clicks.trend === 'up' ? 'var(--md-sys-color-tertiary,#16a34a)' : 'var(--md-sys-color-error)' }" class="trend-indicator">
                   <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle">{{ comparison.unique_clicks.trend === 'up' ? 'trending_up' : 'trending_down' }}</span>
                   {{ Math.abs(comparison.unique_clicks.percent_change).toFixed(1) }}%
                 </span>
               </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
-                vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev.
-              </div>
+              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev.</div>
             </div>
-            <!-- Current period summary -->
             <div class="comparison-period-box comparison-period-box--current">
               <div class="md-label-large" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--md-sys-color-primary);margin-bottom:0.2rem;">Current Period</div>
               <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:0.25rem;">{{ formatShortDate(comparison.current.from) }} – {{ formatShortDate(comparison.current.to) }}</div>
@@ -165,7 +145,6 @@
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);"><strong>{{ comparison.current.unique_clicks.toLocaleString() }}</strong> unique</span>
               </div>
             </div>
-            <!-- Previous period summary -->
             <div class="comparison-period-box comparison-period-box--previous">
               <div class="md-label-large" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--md-sys-color-on-surface-variant);margin-bottom:0.2rem;">Previous Period</div>
               <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:0.25rem;">{{ formatShortDate(comparison.previous.from) }} – {{ formatShortDate(comparison.previous.to) }}</div>
@@ -179,7 +158,7 @@
       </div>
 
       <!-- Click Trend Chart -->
-      <div class="m3-card m3-card--elevated chart-section" style="margin-bottom:1.5rem;">
+      <div class="m3-card m3-card--elevated chart-section">
         <div class="card-header-row">
           <div class="card-header-row__left">
             <span class="material-symbols-outlined card-header-row__icon">show_chart</span>
@@ -189,7 +168,6 @@
             </div>
           </div>
         </div>
-        <md-divider />
         <div class="chart-body-pad">
           <div v-if="!data.time_series.length" class="m3-empty-state m3-empty-state--compact">
             <span class="material-symbols-outlined m3-empty-state__icon">show_chart</span>
@@ -200,37 +178,29 @@
       </div>
 
       <!-- Two-column: Countries + Devices -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- Top Countries -->
+      <div class="two-col-grid">
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Top Countries</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.top_countries.length" class="empty-state">No country data yet.</div>
             <div v-else class="breakdown-list">
-              <div
-                v-for="(c, idx) in data.top_countries"
-                :key="c.country"
-                class="country-item"
-              >
+              <div v-for="(c, idx) in data.top_countries" :key="c.country" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ countryName(c.country) }}</span>
-                <md-linear-progress :value="countryPct(c.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: countryPct(c.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Device Breakdown -->
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Device Breakdown</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.device_breakdown.length" class="empty-state">No device data yet.</div>
             <template v-else>
@@ -248,32 +218,28 @@
       </div>
 
       <!-- Two-column: OS + Top Cities -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- OS Breakdown -->
+      <div class="two-col-grid">
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Operating Systems</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.os_breakdown.length" class="empty-state">No OS data yet.</div>
             <div v-else class="breakdown-list">
               <div v-for="(o, idx) in data.os_breakdown" :key="o.os" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ o.os || 'Unknown' }}</span>
-                <md-linear-progress :value="osPct(o.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: osPct(o.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ o.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Top Cities -->
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Top Cities</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.top_cities.length" class="empty-state">No city data yet.</div>
             <div v-else class="breakdown-list">
@@ -282,7 +248,7 @@
                 <span class="flag-emoji">{{ countryFlag(c.country) }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.city }}</span>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ countryName(c.country) }}</span>
-                <md-linear-progress :value="cityPct(c.count) / 100" style="width:80px;flex-shrink:0;" />
+                <div class="mini-bar mini-bar--sm"><div class="mini-bar__fill" :style="{ width: cityPct(c.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ c.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -291,39 +257,35 @@
       </div>
 
       <!-- Two-column: Browsers + Referrers -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- Top Browsers -->
+      <div class="two-col-grid">
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Top Browsers</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.top_browsers.length" class="empty-state">No browser data yet.</div>
             <div v-else class="breakdown-list">
               <div v-for="(b, idx) in data.top_browsers" :key="b.browser" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.browser || 'Unknown' }}</span>
-                <md-linear-progress :value="browserPct(b.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: browserPct(b.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ b.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Top Referrers -->
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Top Referrers</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.top_referrers.length" class="empty-state">No referrer data yet.</div>
             <div v-else class="breakdown-list">
               <div v-for="(r, idx) in data.top_referrers" :key="r.referrer" class="country-item">
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-medium" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;" :title="r.referrer">{{ r.referrer }}</span>
-                <md-linear-progress :value="referrerPct(r.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: referrerPct(r.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ r.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -332,13 +294,11 @@
       </div>
 
       <!-- Two-column: Click Source + Traffic Channels -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- Click Source -->
+      <div class="two-col-grid">
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Click Source</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.source_breakdown.length" class="empty-state">No source data yet.</div>
             <div v-else class="breakdown-list">
@@ -346,19 +306,17 @@
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-small">{{ sourceIcon(s.source) }}</span>
                 <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ s.source }}</span>
-                <md-linear-progress :value="sourcePct(s.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: sourcePct(s.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ s.count.toLocaleString() }}</span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Traffic Channels -->
         <div class="m3-card m3-card--outlined">
           <div class="card-header-row">
             <span class="md-title-medium">Traffic Channels</span>
           </div>
-          <md-divider />
           <div style="padding:0.75rem 1.25rem;">
             <div v-if="!data.referrer_categories.length" class="empty-state">No channel data yet.</div>
             <div v-else class="breakdown-list">
@@ -366,7 +324,7 @@
                 <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                 <span class="md-body-small">{{ channelIcon(rc.category) }}</span>
                 <span class="md-body-medium" style="flex:1;text-transform:capitalize;">{{ rc.category }}</span>
-                <md-linear-progress :value="refCatPct(rc.count) / 100" style="width:100px;flex-shrink:0;" />
+                <div class="mini-bar"><div class="mini-bar__fill" :style="{ width: refCatPct(rc.count) + '%' }"></div></div>
                 <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:36px;text-align:right;">{{ rc.count.toLocaleString() }}</span>
               </div>
             </div>
@@ -375,48 +333,44 @@
       </div>
 
       <!-- UTM Tracking -->
-      <div v-if="hasUTMData" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
+      <div v-if="hasUTMData" class="m3-card m3-card--outlined">
         <div class="card-header-row">
           <span class="md-title-medium">UTM Tracking</span>
         </div>
-        <md-divider />
         <div style="padding:1rem 1.25rem;">
           <div class="utm-grid">
-            <!-- UTM Sources -->
             <div>
-              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Source</div>
+              <div class="utm-section-label">UTM Source</div>
               <div v-if="!data.utm_sources.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM source data.</div>
               <div v-else class="breakdown-list">
                 <div v-for="(u, idx) in data.utm_sources" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmSrcPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
+                  <div class="mini-bar mini-bar--sm"><div class="mini-bar__fill" :style="{ width: utmSrcPct(u.count) + '%' }"></div></div>
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
             </div>
-            <!-- UTM Mediums -->
             <div>
-              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Medium</div>
+              <div class="utm-section-label">UTM Medium</div>
               <div v-if="!data.utm_mediums.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM medium data.</div>
               <div v-else class="breakdown-list">
                 <div v-for="(u, idx) in data.utm_mediums" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmMedPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
+                  <div class="mini-bar mini-bar--sm"><div class="mini-bar__fill" :style="{ width: utmMedPct(u.count) + '%' }"></div></div>
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
             </div>
-            <!-- UTM Campaigns -->
             <div>
-              <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.04em;font-size:0.7rem;margin-bottom:0.75rem;">UTM Campaign</div>
+              <div class="utm-section-label">UTM Campaign</div>
               <div v-if="!data.utm_campaigns.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No UTM campaign data.</div>
               <div v-else class="breakdown-list">
                 <div v-for="(u, idx) in data.utm_campaigns" :key="u.value" class="country-item">
                   <span class="rank-num md-body-small">{{ idx + 1 }}</span>
                   <span class="md-body-medium" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="u.value">{{ u.value || '—' }}</span>
-                  <md-linear-progress :value="utmCamPct(u.count) / 100" style="width:80px;flex-shrink:0;" />
+                  <div class="mini-bar mini-bar--sm"><div class="mini-bar__fill" :style="{ width: utmCamPct(u.count) + '%' }"></div></div>
                   <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:30px;text-align:right;">{{ u.count.toLocaleString() }}</span>
                 </div>
               </div>
@@ -645,6 +599,7 @@ const trendOption = computed(() => {
       trigger: 'axis',
       formatter: (params: { name: string; value: number }[]) => {
         const p = params[0];
+        if (!p) return '';
         return `${p.name}<br/><strong>${p.value.toLocaleString()} clicks</strong>`;
       },
       backgroundColor: '#fff',
@@ -705,13 +660,16 @@ const deviceOption = computed(() => {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 1.5rem;
+.global-analytics-page {
+  padding: 0;
   max-width: 1400px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 
   @media (max-width: 575px) {
-    padding: 1rem;
+    gap: 16px;
   }
 }
 
@@ -722,7 +680,6 @@ const deviceOption = computed(() => {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.5rem;
 }
 
 .page-header__title-block {
@@ -752,7 +709,7 @@ const deviceOption = computed(() => {
 
 .date-range-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
@@ -760,6 +717,67 @@ const deviceOption = computed(() => {
 .date-range-sep {
   color: var(--md-sys-color-on-surface-variant);
   font-weight: 600;
+  padding-bottom: 8px;
+}
+
+/* ── Date field ──────────────────────────────────────────────────────────── */
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.form-input {
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+}
+
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ── Period chip group ───────────────────────────────────────────────────── */
@@ -811,6 +829,7 @@ const deviceOption = computed(() => {
   padding: 0.875rem 1.25rem;
   gap: 1rem;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .card-header-row__left {
@@ -834,7 +853,6 @@ const deviceOption = computed(() => {
   border-radius: 12px;
   background: var(--md-sys-color-error-container);
   border: 1px solid var(--md-sys-color-error);
-  margin-bottom: 1rem;
 }
 
 /* ── Stat grid ───────────────────────────────────────────────────────────── */
@@ -975,7 +993,7 @@ const deviceOption = computed(() => {
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 1.25rem;
 
   @media (max-width: 767px) { grid-template-columns: 1fr; }
 }
@@ -1015,6 +1033,25 @@ const deviceOption = computed(() => {
   flex-shrink: 0;
 }
 
+/* ── Mini progress bar ───────────────────────────────────────────────────── */
+.mini-bar {
+  width: 100px;
+  height: 6px;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &--sm { width: 80px; }
+}
+
+.mini-bar__fill {
+  height: 100%;
+  background: var(--md-sys-color-primary);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
 /* ── UTM grid ────────────────────────────────────────────────────────────── */
 .utm-grid {
   display: grid;
@@ -1023,6 +1060,15 @@ const deviceOption = computed(() => {
 
   @media (max-width: 991px) { grid-template-columns: 1fr 1fr; }
   @media (max-width: 575px) { grid-template-columns: 1fr; }
+}
+
+.utm-section-label {
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
 }
 
 /* ── M3 Cards ────────────────────────────────────────────────────────────── */
@@ -1048,7 +1094,7 @@ const deviceOption = computed(() => {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  border-radius: 6px;
 
   &--primary {
     background: var(--md-sys-color-primary-container);
@@ -1059,6 +1105,13 @@ const deviceOption = computed(() => {
     background: var(--md-sys-color-surface-container-high);
     color: var(--md-sys-color-on-surface-variant);
   }
+}
+
+/* ── Empty state (inline) ────────────────────────────────────────────────── */
+.empty-state {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  padding: 8px 0;
 }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
@@ -1101,7 +1154,7 @@ const deviceOption = computed(() => {
 .m3-empty-state__icon-wrap {
   width: 76px;
   height: 76px;
-  border-radius: 50%;
+  border-radius: 20px;
   background: var(--md-sys-color-surface-container-low);
   display: flex;
   align-items: center;

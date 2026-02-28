@@ -335,7 +335,7 @@ async function handleDemoShorten() {
 
   try {
     const response = await linksApi.demoShorten({ destination_url: demoUrl.value });
-    demoResult.value = response.data?.short_url || response.short_url || '';
+    demoResult.value = response.data?.short_url ?? '';
   } catch (err: unknown) {
     const anyErr = err as { response?: { data?: { message?: string; description?: string } } };
     const data = anyErr?.response?.data;

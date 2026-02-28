@@ -1,5 +1,5 @@
 <template>
-  <div class="page-section" style="max-width: 900px;">
+  <div class="reports-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -14,23 +14,23 @@
     </div>
 
     <!-- Error -->
-    <div v-if="error" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:12px;margin-bottom:16px;font-size:0.875rem;">
+    <div v-if="error" class="error-banner">
       <span class="material-symbols-outlined">warning</span>
       {{ error }}
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-state">
+      <span class="css-spinner"></span>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="!loading && reports.length === 0 && !error" class="m3-card m3-card--elevated m3-empty-state">
-      <div class="m3-empty-state__icon">
+    <div v-else-if="!loading && reports.length === 0 && !error" class="an-card empty-state-card">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">email</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:8px;">No scheduled reports yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Set up automated email summaries to track your link performance.</p>
+      <div class="empty-title">No scheduled reports yet</div>
+      <p class="empty-desc">Set up automated email summaries to track your link performance.</p>
       <button class="btn-filled" @click="openCreate">
         <span class="material-symbols-outlined">add</span>
         Create your first report
@@ -39,19 +39,19 @@
 
     <!-- Reports list -->
     <div v-else class="reports-list">
-      <div v-for="report in reports" :key="report.id" class="m3-card m3-card--elevated report-card">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;">
+      <div v-for="report in reports" :key="report.id" class="report-card an-card">
+        <div class="report-card__body">
           <!-- Status dot -->
           <span
-            style="width:10px;height:10px;border-radius:50%;flex-shrink:0;"
+            class="status-dot"
             :style="{ background: report.is_active ? '#22c55e' : 'var(--md-sys-color-outline-variant)' }"
             :title="report.is_active ? 'Active' : 'Paused'"
           ></span>
 
           <!-- Info -->
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ report.name }}</div>
-            <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="report-info">
+            <div class="report-info__name">{{ report.name }}</div>
+            <div class="report-info__meta">
               <span class="freq-badge">{{ capitalize(report.frequency) }}</span>
               <span>{{ report.link_ids.length }} link{{ report.link_ids.length !== 1 ? 's' : '' }}</span>
               <span v-if="report.next_run_at">· Next: {{ formatDate(report.next_run_at) }}</span>
@@ -59,7 +59,7 @@
           </div>
 
           <!-- Actions -->
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+          <div class="report-actions">
             <button class="btn-outlined"
               :title="report.is_active ? 'Pause report' : 'Resume report'"
               :disabled="actionLoading === report.id"
@@ -72,7 +72,7 @@
               :disabled="actionLoading === report.id"
               @click="sendNow(report.id)"
             >
-              <md-circular-progress v-if="actionLoading === report.id" indeterminate style="margin-right:4px;" />
+              <span v-if="actionLoading === report.id" class="css-spinner css-spinner--sm"></span>
               Send now
             </button>
             <button class="btn-icon" title="Preview report" @click="openPreview(report)">
@@ -98,37 +98,38 @@
         {{ editingReport ? 'Edit Report' : 'New Scheduled Report' }}
       </template>
 
-      <div style="min-width:480px;max-width:100%;display:flex;flex-direction:column;gap:16px;">
+      <div class="modal-form">
 
         <!-- Name -->
-        <md-outlined-text-field
-          :value="form.name"
-          @input="form.name=($event.target as HTMLInputElement).value"
-          label="Report Name *"
-          placeholder="e.g. Weekly Top Links"
-          maxlength="255"
-          style="width:100%;"
-        />
+        <div class="form-field">
+          <label class="form-field__label">Report Name *</label>
+          <input
+            class="form-input"
+            :value="form.name"
+            @input="form.name=($event.target as HTMLInputElement).value"
+            placeholder="e.g. Weekly Top Links"
+            maxlength="255"
+          />
+        </div>
 
         <!-- Links selector -->
         <div>
-          <div style="font-size:0.875rem;font-weight:500;margin-bottom:8px;color:var(--md-sys-color-on-surface);">Links * <span style="color:var(--md-sys-color-on-surface-variant);font-weight:400;">(select 1–10)</span></div>
+          <div class="form-field__label" style="margin-bottom:8px;">
+            Links * <span style="color:var(--md-sys-color-on-surface-variant);font-weight:400;">(select 1–10)</span>
+          </div>
           <div class="link-selector" ref="selectorRef">
-            <div
-              class="selector-trigger"
-              @click="selectorOpen = !selectorOpen"
-            >
-              <span v-if="form.link_ids.length === 0" style="color:var(--md-sys-color-on-surface-variant);">Choose links…</span>
+            <div class="selector-trigger" @click="selectorOpen = !selectorOpen">
+              <span v-if="form.link_ids.length === 0" class="selector-placeholder">Choose links…</span>
               <span v-else>{{ form.link_ids.length }} link{{ form.link_ids.length !== 1 ? 's' : '' }} selected</span>
-              <span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0;">expand_more</span>
+              <span class="material-symbols-outlined selector-chevron">expand_more</span>
             </div>
-            <div v-if="selectorOpen" class="selector-dropdown m3-card m3-card--outlined">
+            <div v-if="selectorOpen" class="selector-dropdown">
               <div style="padding:8px 8px 0;">
-                <md-outlined-text-field
+                <input
+                  class="form-input"
                   :value="linkSearch"
                   @input="linkSearch=($event.target as HTMLInputElement).value"
-                  label="Search"
-                  style="width:100%;"
+                  placeholder="Search…"
                   @click.stop
                 />
               </div>
@@ -148,11 +149,11 @@
                     style="accent-color:var(--md-sys-color-primary);flex-shrink:0;"
                   />
                   <div style="min-width:0;">
-                    <div style="font-size:0.8125rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.title || link.slug }}</div>
-                    <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.7rem;">{{ link.short_url }}</div>
+                    <div class="selector-option__title">{{ link.title || link.slug }}</div>
+                    <div class="selector-option__url">{{ link.short_url }}</div>
                   </div>
                 </label>
-                <div v-if="filteredAllLinks.length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;text-align:center;padding:16px;">No links found</div>
+                <div v-if="filteredAllLinks.length === 0" class="selector-empty">No links found</div>
               </div>
             </div>
           </div>
@@ -160,12 +161,12 @@
 
         <!-- Frequency -->
         <div>
-          <div style="font-size:0.875rem;font-weight:500;margin-bottom:8px;color:var(--md-sys-color-on-surface);">Frequency *</div>
-          <div style="display:flex;gap:8px;">
+          <div class="form-field__label" style="margin-bottom:8px;">Frequency *</div>
+          <div class="freq-buttons">
             <button :class="['btn-outlined', form.frequency === freq.value ? 'btn-active' : '']"
               v-for="freq in frequencies"
               :key="freq.value"
-              @click="form.frequency = freq.value"
+              @click="form.frequency = freq.value as 'daily' | 'weekly' | 'monthly'"
               style="flex:1;"
             >
               {{ freq.label }}
@@ -174,9 +175,7 @@
         </div>
 
         <!-- Error -->
-        <div v-if="formError" style="padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
-          {{ formError }}
-        </div>
+        <div v-if="formError" class="error-box">{{ formError }}</div>
       </div>
       <template #actions>
         <button class="btn-text" @click="closeForm">Cancel</button>
@@ -184,7 +183,7 @@
           :disabled="formLoading || !form.name.trim() || form.link_ids.length === 0"
           @click="submitForm"
         >
-          <md-circular-progress v-if="formLoading" indeterminate style="margin-right:6px;" />
+          <span v-if="formLoading" class="css-spinner css-spinner--sm css-spinner--white"></span>
           {{ editingReport ? 'Save Changes' : 'Create Report' }}
         </button>
       </template>
@@ -196,27 +195,23 @@
         Delivery History — {{ deliveriesReport?.name }}
       </template>
 
-      <div style="min-width:480px;max-width:100%;min-height:200px;">
-        <div v-if="deliveriesLoading" style="display:flex;justify-content:center;padding:24px;">
-          <md-circular-progress indeterminate />
+      <div class="modal-deliveries">
+        <div v-if="deliveriesLoading" class="loading-state">
+          <span class="css-spinner"></span>
         </div>
-        <div v-else-if="deliveries.length === 0" style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;text-align:center;padding:24px;">No deliveries yet.</div>
-        <div v-else style="max-height:360px;overflow-y:auto;">
-          <div
-            v-for="d in deliveries"
-            :key="d.id"
-            style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);"
-          >
+        <div v-else-if="deliveries.length === 0" class="deliveries-empty">No deliveries yet.</div>
+        <div v-else class="deliveries-list">
+          <div v-for="d in deliveries" :key="d.id" class="delivery-row">
             <span
-              style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;"
-              :style="d.status === 'sent' ? 'background:#dcfce7;color:#16a34a;' : 'background:#fee2e2;color:#dc2626;'"
+              class="delivery-status-dot"
+              :class="d.status === 'sent' ? 'delivery-status-dot--success' : 'delivery-status-dot--error'"
             >{{ d.status === 'sent' ? '✓' : '✗' }}</span>
-            <div style="min-width:0;flex:1;">
-              <div style="font-size:0.875rem;font-weight:500;">{{ d.status === 'sent' ? 'Sent' : 'Failed' }}</div>
-              <div v-if="d.delivered_at" style="color:var(--md-sys-color-on-surface-variant);font-size:0.72rem;">{{ formatDateTime(d.delivered_at) }}</div>
-              <div v-if="d.failure_reason" style="color:var(--md-sys-color-error);font-size:0.72rem;">{{ d.failure_reason }}</div>
+            <div class="delivery-info">
+              <div class="delivery-info__status">{{ d.status === 'sent' ? 'Sent' : 'Failed' }}</div>
+              <div v-if="d.delivered_at" class="delivery-info__date">{{ formatDateTime(d.delivered_at) }}</div>
+              <div v-if="d.failure_reason" class="delivery-info__error">{{ d.failure_reason }}</div>
             </div>
-            <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.72rem;white-space:nowrap;flex-shrink:0;">{{ formatDateTime(d.created_at) }}</div>
+            <div class="delivery-created">{{ formatDateTime(d.created_at) }}</div>
           </div>
         </div>
       </div>
@@ -232,11 +227,11 @@
         Report Preview
       </template>
 
-      <div style="min-width:540px;max-width:100%;">
-        <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin-bottom:16px;">{{ previewReport?.name }}</div>
+      <div class="modal-preview">
+        <div class="preview-report-name">{{ previewReport?.name }}</div>
 
         <!-- Loading skeleton -->
-        <div v-if="previewLoading" style="padding:16px 0;">
+        <div v-if="previewLoading" class="preview-skeleton">
           <div class="skeleton-line" style="width:60%;height:14px;margin-bottom:12px;"></div>
           <div class="skeleton-line" style="width:100%;height:10px;margin-bottom:8px;"></div>
           <div class="skeleton-line" style="width:100%;height:10px;margin-bottom:8px;"></div>
@@ -249,67 +244,66 @@
         <!-- Preview content -->
         <div v-else-if="previewData">
           <!-- Header -->
-          <div style="background:#f0efff;border-left:4px solid var(--md-sys-color-primary);padding:12px 16px;border-radius:0 8px 8px 0;margin-bottom:20px;">
-            <div style="font-weight:600;color:var(--md-sys-color-primary);">Analytics Report</div>
-            <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.875rem;margin-top:4px;">
+          <div class="preview-header-bar">
+            <div class="preview-header-bar__label">Analytics Report</div>
+            <div class="preview-header-bar__period">
               <span style="text-transform:capitalize;font-weight:500;">{{ previewReport?.frequency }}</span> summary — {{ previewPeriodLabel }}
             </div>
           </div>
 
           <!-- Stats -->
           <div class="preview-stats-grid">
-            <div class="m3-card m3-card--outlined preview-stat-card">
-              <div style="font-size:1.4rem;font-weight:700;color:var(--md-sys-color-primary);">{{ previewData.total_clicks.toLocaleString() }}</div>
-              <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:4px;">Total Clicks</div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-value">{{ previewData.total_clicks.toLocaleString() }}</div>
+              <div class="preview-stat-label">Total Clicks</div>
             </div>
-            <div class="m3-card m3-card--outlined preview-stat-card">
-              <div style="font-size:1.4rem;font-weight:700;color:var(--md-sys-color-primary);">{{ previewData.total_links.toLocaleString() }}</div>
-              <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:4px;">Active Links</div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-value">{{ previewData.total_links.toLocaleString() }}</div>
+              <div class="preview-stat-label">Active Links</div>
             </div>
-            <div class="m3-card m3-card--outlined preview-stat-card">
-              <div style="font-size:1.4rem;font-weight:700;color:var(--md-sys-color-primary);">{{ previewData.clicks_7_days.toLocaleString() }}</div>
-              <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:4px;">Last 7 Days</div>
+            <div class="preview-stat-card">
+              <div class="preview-stat-value">{{ previewData.clicks_7_days.toLocaleString() }}</div>
+              <div class="preview-stat-label">Last 7 Days</div>
             </div>
           </div>
 
           <!-- Report links -->
-          <div style="margin-bottom:16px;">
-            <div style="font-weight:600;font-size:0.875rem;margin-bottom:8px;">This report would include:</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          <div class="preview-links-section">
+            <div class="preview-section-title">This report would include:</div>
+            <div class="preview-link-chips">
               <span
                 v-for="lid in previewReport?.link_ids"
                 :key="lid"
                 class="m3-badge m3-badge--neutral"
-                style="font-size:0.72rem;"
               >{{ lid.slice(0, 8) }}…</span>
             </div>
           </div>
 
           <!-- Top links -->
-          <div v-if="previewData.top_links && previewData.top_links.length > 0" style="margin-bottom:16px;">
-            <div style="font-weight:600;font-size:0.875rem;margin-bottom:8px;">Top Performing Links (Account-wide)</div>
+          <div v-if="previewData.top_links && previewData.top_links.length > 0" class="preview-top-links">
+            <div class="preview-section-title">Top Performing Links (Account-wide)</div>
             <div>
               <div
                 v-for="(link, idx) in previewData.top_links.slice(0, 5)"
                 :key="link.id"
-                style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);"
+                class="top-link-row"
               >
-                <span style="width:20px;font-size:0.75rem;font-weight:700;color:var(--md-sys-color-on-surface-variant);">{{ idx + 1 }}</span>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-size:0.875rem;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.title || link.slug }}</div>
-                  <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.7rem;">{{ link.short_url }}</div>
+                <span class="top-link-rank">{{ idx + 1 }}</span>
+                <div class="top-link-info">
+                  <div class="top-link-info__title">{{ link.title || link.slug }}</div>
+                  <div class="top-link-info__url">{{ link.short_url }}</div>
                 </div>
-                <div style="text-align:right;flex-shrink:0;">
-                  <div style="font-size:0.875rem;font-weight:600;color:var(--md-sys-color-primary);">{{ (link.click_count || 0).toLocaleString() }}</div>
-                  <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.68rem;">clicks</div>
+                <div class="top-link-clicks">
+                  <div class="top-link-clicks__value">{{ (link.click_count || 0).toLocaleString() }}</div>
+                  <div class="top-link-clicks__label">clicks</div>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Schedule note -->
-          <div style="background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);padding:12px 16px;border-radius:8px;font-size:0.875rem;color:var(--md-sys-color-on-surface-variant);">
-            <span style="font-weight:500;color:var(--md-sys-color-on-surface);">Email delivery schedule:</span>
+          <div class="preview-schedule-note">
+            <span class="preview-schedule-note__label">Email delivery schedule:</span>
             <span v-if="previewReport?.frequency === 'daily'"> This report is sent every day.</span>
             <span v-else-if="previewReport?.frequency === 'weekly'"> This report is sent every Monday.</span>
             <span v-else-if="previewReport?.frequency === 'monthly'"> This report is sent on the 1st of each month.</span>
@@ -318,17 +312,15 @@
         </div>
 
         <!-- Error fallback -->
-        <div v-else style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:32px;font-size:0.875rem;">
-          Could not load preview data.
-        </div>
+        <div v-else class="preview-error">Could not load preview data.</div>
 
-        <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:16px;">Preview shows current account analytics data.</div>
+        <div class="preview-footnote">Preview shows current account analytics data.</div>
       </div>
 
       <template #actions>
         <button class="btn-text" @click="showPreviewModal = false">Close</button>
         <button class="btn-filled" :disabled="sendingPreview" @click="sendNowFromPreview">
-          <md-circular-progress v-if="sendingPreview" indeterminate style="margin-right:6px;" />
+          <span v-if="sendingPreview" class="css-spinner css-spinner--sm css-spinner--white"></span>
           Send now
         </button>
       </template>
@@ -407,7 +399,7 @@ const previewPeriodLabel = computed(() => {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function capitalize(s: string): string {
   if (!s) return s;
-  return s[0].toUpperCase() + s.slice(1);
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function formatDate(iso: string): string {
@@ -591,13 +583,20 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* page-section (global) handles padding; max-width set via style attribute on root */
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+.reports-page {
+  max-width: 900px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+/* ── Page header ──────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -615,27 +614,178 @@ onUnmounted(() => {
   margin: 0;
 }
 
-/* Cards */
-.m3-card {
+/* ── Error banner ─────────────────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
   border-radius: 12px;
-  background: var(--md-sys-color-surface);
-  overflow: hidden;
+  font-size: 0.875rem;
+}
 
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+/* ── Loading ──────────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+/* ── CSS Spinner ──────────────────────────────────────────────────────────── */
+.css-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
   }
 
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline-variant);
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
   }
 }
 
-/* Badges */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── AN Card ──────────────────────────────────────────────────────────────── */
+.an-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 8px;
+}
+
+.empty-desc {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0 0 20px;
+}
+
+/* ── Reports list ─────────────────────────────────────────────────────────── */
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Report card ──────────────────────────────────────────────────────────── */
+.report-card {
+  transition: box-shadow 0.15s;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  }
+
+  &__body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+  }
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.report-info {
+  flex: 1;
+  min-width: 0;
+
+  &__name {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__meta {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+/* ── Frequency badge ──────────────────────────────────────────────────────── */
+.freq-badge {
+  display: inline-block;
+  background: rgba(99, 91, 255, 0.10);
+  color: var(--md-sys-color-primary, #635bff);
+  border-radius: 6px;
+  padding: 0.1em 0.55em;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -647,61 +797,64 @@ onUnmounted(() => {
   }
 }
 
-/* Reports list */
-.reports-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ── Error box ────────────────────────────────────────────────────────────── */
+.error-box {
+  padding: 10px 14px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  font-size: 0.875rem;
 }
 
-/* Report card */
-.report-card {
-  transition: box-shadow 0.15s;
+/* ── Form field ───────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 
-  &:hover {
-    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
   }
 }
 
-/* Frequency badge */
-.freq-badge {
-  display: inline-block;
-  background: rgba(99, 91, 255, 0.10);
-  color: var(--md-sys-color-primary, #635bff);
-  border-radius: 999px;
-  padding: 0.1em 0.55em;
-  font-size: 0.72rem;
-  font-weight: 600;
-}
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
 
-/* Empty state */
-.m3-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-
-  &__icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-
-    .material-symbols-outlined {
-      font-size: 2rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
   }
 }
 
-/* Link selector */
+/* ── Modal form ───────────────────────────────────────────────────────────── */
+.modal-form {
+  min-width: 480px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Frequency buttons ────────────────────────────────────────────────────── */
+.freq-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Link selector ────────────────────────────────────────────────────────── */
 .link-selector {
   position: relative;
 }
@@ -710,9 +863,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  border: 1px solid var(--md-sys-color-outline);
-  border-radius: 4px;
+  padding: 10px 16px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
   font-size: 0.9375rem;
@@ -725,14 +878,27 @@ onUnmounted(() => {
   }
 }
 
+.selector-placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.selector-chevron {
+  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 .selector-dropdown {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
   z-index: 500;
-  border-radius: 8px !important;
+  border-radius: 8px;
   overflow: hidden;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .selector-options {
@@ -749,22 +915,134 @@ onUnmounted(() => {
   font-size: 0.8125rem;
   transition: background 0.12s;
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-low);
-  }
+  &:hover { background: var(--md-sys-color-surface-container-low); }
 
   &.disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__url {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.7rem;
+  }
 }
 
-/* Preview stats */
+.selector-empty {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 16px;
+}
+
+/* ── Deliveries modal ─────────────────────────────────────────────────────── */
+.modal-deliveries {
+  min-width: 480px;
+  max-width: 100%;
+  min-height: 200px;
+}
+
+.deliveries-empty {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 24px;
+}
+
+.deliveries-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.delivery-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  &:last-child { border-bottom: none; }
+}
+
+.delivery-status-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &--success { background: #dcfce7; color: #16a34a; }
+  &--error   { background: #fee2e2; color: #dc2626; }
+}
+
+.delivery-info {
+  min-width: 0;
+  flex: 1;
+
+  &__status { font-size: 0.875rem; font-weight: 500; }
+  &__date   { color: var(--md-sys-color-on-surface-variant); font-size: 0.72rem; }
+  &__error  { color: var(--md-sys-color-error); font-size: 0.72rem; }
+}
+
+.delivery-created {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Preview modal ────────────────────────────────────────────────────────── */
+.modal-preview {
+  min-width: 540px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.preview-report-name {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+.preview-skeleton {
+  padding: 16px 0;
+}
+
+.preview-header-bar {
+  background: #f0efff;
+  border-left: 4px solid var(--md-sys-color-primary);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+
+  &__label {
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+  }
+
+  &__period {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.875rem;
+    margin-top: 4px;
+  }
+}
+
 .preview-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 20px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -772,11 +1050,127 @@ onUnmounted(() => {
 }
 
 .preview-stat-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 10px;
   padding: 16px;
   text-align: center;
 }
 
-/* Skeleton loading */
+.preview-stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+}
+
+.preview-stat-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.preview-links-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-link-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.preview-section-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.preview-top-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.top-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  &:last-child { border-bottom: none; }
+}
+
+.top-link-rank {
+  width: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.top-link-info {
+  flex: 1;
+  min-width: 0;
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__url {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.7rem;
+  }
+}
+
+.top-link-clicks {
+  text-align: right;
+  flex-shrink: 0;
+
+  &__value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+  }
+
+  &__label {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.68rem;
+  }
+}
+
+.preview-schedule-note {
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+
+  &__label {
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+.preview-error {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  padding: 32px;
+  font-size: 0.875rem;
+}
+
+.preview-footnote {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+}
+
+/* ── Skeleton loading ─────────────────────────────────────────────────────── */
 .skeleton-line {
   background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
   background-size: 200% 100%;

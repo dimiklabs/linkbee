@@ -217,7 +217,7 @@ function variantPercent(w: number): number {
 }
 
 function variantColor(i: number): string {
-  return VARIANT_COLORS[i % VARIANT_COLORS.length];
+  return VARIANT_COLORS[i % VARIANT_COLORS.length] ?? '#635BFF';
 }
 
 onMounted(() => {

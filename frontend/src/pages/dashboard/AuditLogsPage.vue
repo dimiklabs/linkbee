@@ -1,68 +1,63 @@
 <template>
-  <div class="page-section" style="max-width: 1100px;">
+  <div class="audit-page">
 
     <!-- Page Header -->
-    <div class="dash-page-header">
-      <div class="dash-page-header__left">
-        <h1 class="dash-page-header__title">Audit Logs</h1>
-        <p class="dash-page-header__subtitle">A record of all security-relevant actions in your account.</p>
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-title">Audit Logs</h1>
+        <p class="page-subtitle">A record of all security-relevant actions in your account.</p>
       </div>
-      <div class="dash-page-header__actions">
+      <div class="page-header__actions">
         <button class="btn-outlined" :disabled="exporting" @click="exportLogs">
-          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">download</span>
-          <md-circular-progress v-if="exporting" indeterminate style="margin-right:6px;" />
+          <div v-if="exporting" class="css-spinner css-spinner--sm"></div>
+          <span v-else class="material-symbols-outlined btn-icon-left">download</span>
           Export CSV
         </button>
       </div>
     </div>
 
-    <!-- Filters -->
-    <div class="m3-card m3-card--elevated filters-card">
-      <div class="m3-card-header">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">filter_list</span>
-          <span style="font-size:16px;font-weight:600;">Filter Events</span>
+    <!-- Filters Card -->
+    <div class="an-card filters-card">
+      <div class="an-card-header">
+        <div class="an-card-icon an-card-icon--primary">
+          <span class="material-symbols-outlined">filter_list</span>
         </div>
+        <span class="an-card-title">Filter Events</span>
       </div>
-      <md-divider />
       <div class="filters-row">
-        <AppSelect
-          v-model="filters.action"
-          label="Action"
-          style="min-width:160px;"
-        >
+        <AppSelect v-model="filters.action" label="Action">
           <option value="">All actions</option>
           <option v-for="(label, key) in ACTION_LABELS" :key="key" :value="key">{{ label }}</option>
         </AppSelect>
 
-        <AppSelect
-          v-model="filters.resource_type"
-          label="Resource"
-          style="min-width:140px;"
-        >
+        <AppSelect v-model="filters.resource_type" label="Resource">
           <option value="">All resources</option>
           <option v-for="(label, key) in RESOURCE_LABELS" :key="key" :value="key">{{ label }}</option>
         </AppSelect>
 
-        <md-outlined-text-field
-          :value="filters.from"
-          @input="filters.from=($event.target as HTMLInputElement).value"
-          label="From"
-          type="date"
-          style="min-width:160px;"
-        />
+        <label class="form-field">
+          <span class="form-field__label">From</span>
+          <input
+            type="date"
+            class="form-input"
+            :value="filters.from"
+            @input="filters.from=($event.target as HTMLInputElement).value"
+          />
+        </label>
 
-        <md-outlined-text-field
-          :value="filters.to"
-          @input="filters.to=($event.target as HTMLInputElement).value"
-          label="To"
-          type="date"
-          style="min-width:160px;"
-        />
+        <label class="form-field">
+          <span class="form-field__label">To</span>
+          <input
+            type="date"
+            class="form-input"
+            :value="filters.to"
+            @input="filters.to=($event.target as HTMLInputElement).value"
+          />
+        </label>
 
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div class="filter-actions">
           <button class="btn-filled" @click="applyFilters">
-            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">search</span>
+            <span class="material-symbols-outlined btn-icon-left">search</span>
             Apply
           </button>
           <button class="btn-outlined" @click="resetFilters">Reset</button>
@@ -71,32 +66,33 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-center">
+      <div class="css-spinner"></div>
     </div>
 
     <!-- Empty -->
-    <div v-else-if="logs.length === 0" class="m3-card m3-card--elevated m3-empty-state">
-      <div class="m3-empty-state__icon">
+    <div v-else-if="logs.length === 0" class="an-card empty-state">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">event_note</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:8px;">No audit logs found</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0;">Actions you take will be recorded here for security and compliance.</p>
+      <div class="empty-title">No audit logs found</div>
+      <p class="empty-desc">Actions you take will be recorded here for security and compliance.</p>
     </div>
 
     <!-- Table -->
     <div v-else>
-      <div class="m3-card m3-card--elevated">
-        <div class="m3-card-header">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">security</span>
-            <span style="font-size:16px;font-weight:600;">Audit Events</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">security</span>
+            </div>
+            <span class="an-card-title">Audit Events</span>
           </div>
           <span class="m3-badge m3-badge--neutral">{{ total }} total</span>
         </div>
-        <md-divider />
-        <div class="m3-table-wrapper">
-          <table class="m3-table">
+        <div class="table-wrapper">
+          <table class="data-table">
             <thead>
               <tr>
                 <th>Time</th>
@@ -108,21 +104,19 @@
             </thead>
             <tbody>
               <tr v-for="log in logs" :key="log.id">
-                <td style="white-space:nowrap;color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ formatDate(log.created_at) }}</td>
+                <td class="cell-muted cell-nowrap cell-sm">{{ formatDate(log.created_at) }}</td>
                 <td>
                   <span :class="['m3-badge', actionBadge(log.action)]">
                     {{ actionLabel(log.action) }}
                   </span>
                 </td>
-                <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;text-transform:capitalize;">{{ resourceLabel(log.resource_type) }}</td>
-                <td style="font-size:0.875rem;">
-                  <span v-if="log.resource_name" style="font-weight:500;">{{ log.resource_name }}</span>
-                  <span v-else-if="log.resource_id" style="color:var(--md-sys-color-on-surface-variant);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;" :title="log.resource_id">
-                    {{ log.resource_id }}
-                  </span>
-                  <span v-else style="color:var(--md-sys-color-on-surface-variant);">—</span>
+                <td class="cell-muted cell-sm cell-capitalize">{{ resourceLabel(log.resource_type) }}</td>
+                <td class="cell-sm">
+                  <span v-if="log.resource_name" class="cell-strong">{{ log.resource_name }}</span>
+                  <span v-else-if="log.resource_id" class="cell-truncate cell-muted" :title="log.resource_id">{{ log.resource_id }}</span>
+                  <span v-else class="cell-muted">—</span>
                 </td>
-                <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;">{{ log.ip_address || '—' }}</td>
+                <td class="cell-muted cell-sm">{{ log.ip_address || '—' }}</td>
               </tr>
             </tbody>
           </table>
@@ -130,19 +124,19 @@
       </div>
 
       <!-- Pagination -->
-      <div class="m3-pagination">
-        <p class="m3-pagination__info">
+      <div class="pagination">
+        <p class="pagination__info">
           Showing {{ (page - 1) * limit + 1 }}–{{ Math.min(page * limit, total) }} of {{ total }} events
         </p>
-        <div class="m3-pagination__controls">
+        <div class="pagination__controls">
           <button class="btn-outlined" :disabled="page <= 1" @click="changePage(page - 1)">
-            <span class="material-symbols-outlined" style="font-size:18px;margin-right:4px;">chevron_left</span>
+            <span class="material-symbols-outlined">chevron_left</span>
             Prev
           </button>
-          <span class="m3-pagination__page-label">Page {{ page }}</span>
+          <span class="pagination__label">Page {{ page }}</span>
           <button class="btn-outlined" :disabled="page * limit >= total" @click="changePage(page + 1)">
             Next
-            <span class="material-symbols-outlined" style="font-size:18px;margin-left:4px;">chevron_right</span>
+            <span class="material-symbols-outlined">chevron_right</span>
           </button>
         </div>
       </div>
@@ -260,71 +254,118 @@ onMounted(fetchLogs);
 </script>
 
 <style scoped lang="scss">
-/* page-section (global) handles padding; max-width set via style attribute on root */
+.audit-page {
+  max-width: 1100px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-/* ── Page Header ──────────────────────────────────────────────────────────── */
-.dash-page-header {
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+.page-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.an-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
 
   &__left {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &__subtitle {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.875rem;
-    margin: 0;
-  }
-
-  &__actions {
-    display: flex;
     align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
+    gap: 12px;
+    flex: 1;
   }
 }
 
-/* ── Cards ────────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 12px;
-  background: var(--md-sys-color-surface);
-  overflow: hidden;
-  margin-bottom: 24px;
-
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline-variant);
-  }
-
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
-  }
-}
-
-/* ── M3 Card header ───────────────────────────────────────────────────────── */
-.m3-card-header {
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  gap: 1rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    color: var(--md-sys-color-primary);
+  }
 }
 
-/* ── Filters card ─────────────────────────────────────────────────────────── */
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ── Filters ─────────────────────────────────────────────────────────────── */
 .filters-card {
   overflow: visible;
 }
@@ -337,117 +378,182 @@ onMounted(fetchLogs);
   padding: 16px 20px;
 }
 
-/* ── M3 Table wrapper ─────────────────────────────────────────────────────── */
-.m3-table-wrapper {
-  overflow-x: auto;
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
-/* ── M3 Empty state ───────────────────────────────────────────────────────── */
-.m3-empty-state {
+/* ── Form field ──────────────────────────────────────────────────────────── */
+.form-field {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
+  gap: 6px;
+}
 
-  &__icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
+.form-field__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
 
-    .material-symbols-outlined {
-      font-size: 2rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+  outline: none;
+  min-width: 148px;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
   }
 }
 
-/* ── Table ────────────────────────────────────────────────────────────────── */
-.m3-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
 }
 
-.m3-table thead tr {
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
 }
 
-.m3-table th {
-  padding: 12px 16px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.8rem;
-  color: var(--md-sys-color-on-surface-variant);
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
   background: var(--md-sys-color-surface-container-low);
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
 }
 
-.m3-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
   color: var(--md-sys-color-on-surface);
 }
 
-.m3-table tbody tr:last-child td {
-  border-bottom: none;
+.empty-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.m3-table tbody tr:hover td {
-  background: var(--md-sys-color-surface-container-low);
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.table-wrapper {
+  overflow-x: auto;
 }
 
-/* ── M3 Badges ────────────────────────────────────────────────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+
+  thead tr {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  th {
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover td {
+    background: var(--md-sys-color-surface-container-low);
+  }
+}
+
+.cell-muted { color: var(--md-sys-color-on-surface-variant); }
+.cell-nowrap { white-space: nowrap; }
+.cell-sm { font-size: 0.8rem; }
+.cell-capitalize { text-transform: capitalize; }
+.cell-strong { font-weight: 500; }
+.cell-truncate {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+
+  &--primary {
+    background: rgba(99, 91, 255, 0.12);
+    color: var(--md-sys-color-primary);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-low);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  &--success {
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+  }
+
+  &--error {
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+  }
 }
 
-.m3-badge--primary {
-  background: rgba(99, 91, 255, 0.12);
-  color: var(--md-sys-color-primary);
-}
-
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
-  border: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.m3-badge--success {
-  background: rgba(22, 163, 74, 0.12);
-  color: #16a34a;
-}
-
-.m3-badge--warning {
-  background: rgba(245, 158, 11, 0.12);
-  color: #b45309;
-}
-
-.m3-badge--error {
-  background: rgba(220, 38, 38, 0.12);
-  color: #dc2626;
-}
-
-/* ── Pagination ───────────────────────────────────────────────────────────── */
-.m3-pagination {
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 16px;
-  margin-bottom: 8px;
   flex-wrap: wrap;
   gap: 8px;
 
@@ -463,11 +569,17 @@ onMounted(fetchLogs);
     gap: 8px;
   }
 
-  &__page-label {
+  &__label {
     font-size: 0.875rem;
     color: var(--md-sys-color-on-surface-variant);
     min-width: 56px;
     text-align: center;
   }
+}
+
+/* ── Button helper ───────────────────────────────────────────────────────── */
+.btn-icon-left {
+  font-size: 18px;
+  margin-right: 4px;
 }
 </style>

@@ -461,12 +461,12 @@ async function startImpersonation(user: AdminUser) {
   impersonating.value = user.id;
   try {
     const res = await adminApi.impersonateUser(user.id);
-    const impersonationToken = res.data.data.access_token;
+    const impersonationToken = res.data.data?.access_token;
     const currentToken = localStorage.getItem('access_token');
     if (currentToken) {
       localStorage.setItem(ORIGINAL_TOKEN_KEY, currentToken);
     }
-    localStorage.setItem('access_token', impersonationToken);
+    localStorage.setItem('access_token', impersonationToken ?? '');
     window.location.href = '/dashboard/overview';
   } catch {
     impersonating.value = null;

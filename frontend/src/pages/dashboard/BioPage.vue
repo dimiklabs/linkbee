@@ -1,5 +1,5 @@
 <template>
-  <div class="page-section" style="max-width: 900px;">
+  <div class="bio-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -7,30 +7,25 @@
         <h1 class="page-title">Bio Page</h1>
         <p class="page-subtitle">Share a single page with all your important links.</p>
       </div>
-      <div v-if="bioPage" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="padding:6px 14px;font-size:0.78rem;">
+      <div v-if="bioPage" class="page-header__actions">
+        <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="padding:6px 14px;">
           {{ bioPage.is_published ? 'Published' : 'Draft' }}
         </span>
-        <a
-          v-if="bioPage.is_published"
-          :href="publicUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+        <a v-if="bioPage.is_published" :href="publicUrl" target="_blank" rel="noopener noreferrer">
           <button class="btn-outlined">
             <span class="material-symbols-outlined">open_in_new</span>
             View page
           </button>
         </a>
         <button class="btn-filled" :disabled="saving" @click="saveSettings">
-          <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
+          <span v-if="saving" class="css-spinner css-spinner--sm css-spinner--white"></span>
           Save settings
         </button>
       </div>
     </div>
 
     <!-- Copy Public URL -->
-    <div v-if="bioPage && bioPage.is_published && bioPage.username" style="margin-bottom:16px;">
+    <div v-if="bioPage && bioPage.is_published && bioPage.username">
       <button class="btn-text" @click="copyBioUrl">
         <span class="material-symbols-outlined">{{ bioCopied ? 'check' : 'content_copy' }}</span>
         {{ bioCopied ? 'Copied!' : 'Copy public URL' }}
@@ -39,19 +34,19 @@
 
     <!-- Stats Row -->
     <div v-if="bioPage" class="stats-row">
-      <div class="m3-card m3-card--elevated stat-card">
+      <div class="stat-card">
         <div class="stat-label">Total Links</div>
         <div class="stat-value">{{ bioStats.total }}</div>
       </div>
-      <div class="m3-card m3-card--elevated stat-card">
+      <div class="stat-card">
         <div class="stat-label">Active Links</div>
-        <div class="stat-value" style="color:#16a34a;">{{ bioStats.active }}</div>
+        <div class="stat-value stat-value--success">{{ bioStats.active }}</div>
       </div>
-      <div class="m3-card m3-card--elevated stat-card">
+      <div class="stat-card">
         <div class="stat-label">Inactive Links</div>
-        <div class="stat-value" style="color:var(--md-sys-color-on-surface-variant);">{{ bioStats.inactive }}</div>
+        <div class="stat-value stat-value--muted">{{ bioStats.inactive }}</div>
       </div>
-      <div class="m3-card m3-card--elevated stat-card">
+      <div class="stat-card">
         <div class="stat-label">Status</div>
         <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="margin-top:4px;">
           {{ bioPage.is_published ? 'Published' : 'Draft' }}
@@ -60,90 +55,85 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-state">
+      <span class="css-spinner"></span>
     </div>
 
     <div v-else-if="bioPage" class="two-column-layout">
 
       <!-- Left: Settings Form -->
-      <div class="m3-card m3-card--elevated settings-card">
-        <div class="card-section-header">
-          <div class="card-section-header__left">
-            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">settings</span>
-            <span class="md-label-large">Page Settings</span>
+      <div class="an-card settings-card">
+        <div class="an-card-header">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">settings</span>
           </div>
+          <span class="an-card-title">Page Settings</span>
         </div>
-        <div class="card-body">
+        <div class="an-card-body">
 
           <!-- Username -->
-          <div style="margin-bottom:16px;">
-            <div style="display:flex;align-items:center;gap:0;">
-              <span style="padding:0 12px;height:56px;display:flex;align-items:center;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline);border-right:none;border-radius:4px 0 0 4px;font-size:0.875rem;color:var(--md-sys-color-on-surface-variant);">/bio/</span>
-              <md-outlined-text-field
+          <div class="form-field">
+            <label class="form-field__label">Username *</label>
+            <div class="bio-username-row">
+              <span class="bio-prefix">/bio/</span>
+              <input
+                class="form-input bio-username-input"
                 :value="form.username"
                 @input="form.username=($event.target as HTMLInputElement).value"
-                label="Username *"
                 placeholder="your-username"
                 maxlength="30"
-                style="flex:1;"
               />
             </div>
-            <div style="font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);margin-top:4px;">Letters, numbers, underscores only. Min 3 characters.</div>
+            <span class="form-hint">Letters, numbers, underscores only. Min 3 characters.</span>
           </div>
 
           <!-- Title -->
-          <div style="margin-bottom:16px;">
-            <md-outlined-text-field
+          <div class="form-field">
+            <label class="form-field__label">Page title</label>
+            <input
+              class="form-input"
               :value="form.title"
               @input="form.title=($event.target as HTMLInputElement).value"
-              label="Page title"
               placeholder="My Links"
               maxlength="100"
-              style="width:100%;"
             />
           </div>
 
           <!-- Description -->
-          <div style="margin-bottom:16px;">
-            <md-outlined-text-field
+          <div class="form-field">
+            <label class="form-field__label">Bio / description</label>
+            <textarea
+              class="form-textarea"
               :value="form.description"
-              @input="form.description=($event.target as HTMLInputElement).value"
-              label="Bio / description"
+              @input="form.description=($event.target as HTMLTextAreaElement).value"
               placeholder="A short bio or description..."
-              type="textarea"
               rows="3"
-              style="width:100%;"
-            />
+            ></textarea>
           </div>
 
           <!-- Avatar URL -->
-          <div style="margin-bottom:16px;">
-            <md-outlined-text-field
+          <div class="form-field">
+            <label class="form-field__label">Avatar URL</label>
+            <input
+              class="form-input"
+              type="url"
               :value="form.avatar_url"
               @input="form.avatar_url=($event.target as HTMLInputElement).value"
-              label="Avatar URL"
-              type="url"
               placeholder="https://..."
-              style="width:100%;"
             />
           </div>
 
           <!-- Theme -->
-          <div style="margin-bottom:16px;">
-            <div style="font-size:0.875rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-bottom:8px;">Theme</div>
-            <div style="display:flex;gap:8px;">
+          <div class="form-field">
+            <label class="form-field__label">Theme</label>
+            <div class="theme-toggle">
               <button :class="['btn-outlined', form.theme === 'light' ? 'btn-active' : '']"
-                @click="form.theme = 'light'"
-                style="flex:1;"
-              >
+                @click="form.theme = 'light'" style="flex:1;">
                 <span class="material-symbols-outlined">light_mode</span>
                 Light
               </button>
               <button :class="['btn-outlined', form.theme === 'dark' ? 'btn-active' : '']"
-                @click="form.theme = 'dark'"
-                style="flex:1;"
-              >
+                @click="form.theme = 'dark'" style="flex:1;">
                 <span class="material-symbols-outlined">dark_mode</span>
                 Dark
               </button>
@@ -153,8 +143,8 @@
           <!-- Published toggle -->
           <div :class="['published-toggle', form.is_published ? 'published-toggle--active' : '']">
             <div>
-              <div style="font-weight:600;font-size:0.875rem;">Published</div>
-              <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;margin-top:2px;">Make your bio page publicly accessible</div>
+              <div class="published-toggle__label">Published</div>
+              <div class="published-toggle__hint">Make your bio page publicly accessible</div>
             </div>
             <label style="display:flex;align-items:center;cursor:pointer;">
               <input
@@ -166,38 +156,37 @@
             </label>
           </div>
 
-          <div v-if="saveError" style="margin-top:12px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
-            {{ saveError }}
-          </div>
+          <div v-if="saveError" class="error-box">{{ saveError }}</div>
         </div>
       </div>
 
       <!-- Right: Links Management -->
-      <div>
+      <div class="links-column">
 
         <!-- Add Link Form -->
-        <div class="m3-card m3-card--elevated" style="margin-bottom:16px;">
-          <div class="card-section-header">
-            <div class="card-section-header__left">
-              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">add_link</span>
-              <span class="md-label-large">Add Link</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">add_link</span>
             </div>
+            <span class="an-card-title">Add Link</span>
           </div>
-          <div class="card-body">
+          <div class="an-card-body">
             <div class="add-link-row">
-              <md-outlined-text-field
+              <input
+                class="form-input"
                 :value="newTitle"
                 @input="newTitle=($event.target as HTMLInputElement).value"
-                label="Link title"
+                placeholder="Link title"
                 maxlength="100"
                 style="flex:1;min-width:160px;"
                 @keydown.enter="addLink"
               />
-              <md-outlined-text-field
+              <input
+                class="form-input"
+                type="url"
                 :value="newUrl"
                 @input="newUrl=($event.target as HTMLInputElement).value"
-                label="URL"
-                type="url"
                 placeholder="https://..."
                 style="flex:1;min-width:160px;"
                 @keydown.enter="addLink"
@@ -207,33 +196,31 @@
                 @click="addLink"
                 style="flex-shrink:0;"
               >
-                <md-circular-progress v-if="addingLink" indeterminate style="margin-right:4px;" />
+                <span v-if="addingLink" class="css-spinner css-spinner--sm css-spinner--white"></span>
                 <span v-else class="material-symbols-outlined">add</span>
                 Add
               </button>
             </div>
-            <div v-if="addError" style="margin-top:8px;padding:8px 12px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.8rem;">
-              {{ addError }}
-            </div>
+            <div v-if="addError" class="error-box">{{ addError }}</div>
           </div>
         </div>
 
         <!-- Links List -->
-        <div class="m3-card m3-card--elevated">
-          <div class="card-section-header">
-            <div class="card-section-header__left">
-              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">list</span>
-              <span class="md-label-large">Links ({{ links.length }})</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">list</span>
             </div>
-            <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Drag to reorder</span>
+            <span class="an-card-title">Links ({{ links.length }})</span>
+            <span class="an-card-hint">Drag to reorder</span>
           </div>
 
-          <div v-if="links.length === 0" class="m3-empty-state">
-            <div class="m3-empty-state__icon">
+          <div v-if="links.length === 0" class="empty-state">
+            <div class="empty-icon">
               <span class="material-symbols-outlined">link_off</span>
             </div>
-            <div class="md-title-small" style="margin-bottom:4px;">No links yet</div>
-            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;">Add your first link using the form above.</p>
+            <div class="empty-title">No links yet</div>
+            <p class="empty-desc">Add your first link using the form above.</p>
           </div>
 
           <div v-else>
@@ -249,22 +236,18 @@
               @dragend="onDragEnd"
             >
               <!-- View mode -->
-              <div v-if="editingLinkId !== link.id" style="display:flex;align-items:center;gap:8px;width:100%;">
-                <span class="material-symbols-outlined" style="cursor:grab;color:var(--md-sys-color-on-surface-variant);font-size:1.2rem;flex-shrink:0;">drag_indicator</span>
+              <div v-if="editingLinkId !== link.id" class="link-item__view">
+                <span class="material-symbols-outlined link-drag">drag_indicator</span>
+                <span class="link-pos">{{ idx + 1 }}</span>
                 <span
-                  style="width:1.4rem;height:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);font-size:0.68rem;color:var(--md-sys-color-on-surface-variant);flex-shrink:0;"
-                  :title="`Position ${idx + 1}`"
-                >{{ idx + 1 }}</span>
-                <span
-                  style="width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;"
+                  class="link-status-dot"
                   :style="{ backgroundColor: link.is_active ? '#16a34a' : 'var(--md-sys-color-outline-variant)' }"
                   :title="link.is_active ? 'Active' : 'Inactive'"
                 ></span>
-                <div style="flex:1;min-width:0;">
-                  <div style="font-weight:500;font-size:0.875rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.title }}</div>
-                  <div style="color:var(--md-sys-color-on-surface-variant);font-size:0.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.url }}</div>
+                <div class="link-info">
+                  <div class="link-info__title">{{ link.title }}</div>
+                  <div class="link-info__url">{{ link.url }}</div>
                 </div>
-                <!-- Active toggle -->
                 <input
                   type="checkbox"
                   role="switch"
@@ -281,24 +264,26 @@
               </div>
 
               <!-- Edit mode -->
-              <div v-else style="display:flex;align-items:center;gap:8px;width:100%;flex-wrap:wrap;">
-                <md-outlined-text-field
+              <div v-else class="link-item__edit">
+                <input
+                  class="form-input"
                   :value="editTitle"
                   @input="editTitle=($event.target as HTMLInputElement).value"
-                  label="Title"
+                  placeholder="Title"
                   maxlength="100"
                   style="flex:1;min-width:160px;"
                 />
-                <md-outlined-text-field
+                <input
+                  class="form-input"
+                  type="url"
                   :value="editUrl"
                   @input="editUrl=($event.target as HTMLInputElement).value"
-                  label="URL"
-                  type="url"
+                  placeholder="URL"
                   style="flex:1;min-width:160px;"
                 />
-                <div style="display:flex;gap:4px;flex-shrink:0;">
+                <div class="link-edit-actions">
                   <button class="btn-icon" :disabled="savingEdit" @click="saveEdit(link)">
-                    <md-circular-progress v-if="savingEdit" indeterminate />
+                    <span v-if="savingEdit" class="css-spinner css-spinner--sm"></span>
                     <span v-else class="material-symbols-outlined">check</span>
                   </button>
                   <button class="btn-icon" @click="cancelEdit">
@@ -489,6 +474,7 @@ function onDragOver(idx: number) {
   if (dragFrom === idx) return;
   const items = [...links.value];
   const [moved] = items.splice(dragFrom, 1);
+  if (!moved) return;
   items.splice(idx, 0, moved);
   links.value = items;
   dragFrom = idx;
@@ -505,15 +491,29 @@ function onDragEnd() {
 </script>
 
 <style scoped lang="scss">
-/* page-section (global) handles padding; max-width set via style attribute on root */
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+.bio-page {
+  max-width: 900px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
+/* ── Page header ──────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 }
 
 .page-title {
@@ -529,15 +529,17 @@ function onDragEnd() {
   margin: 0;
 }
 
-/* Stats */
+/* ── Stats ────────────────────────────────────────────────────────────────── */
 .stats-row {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
 }
 
 .stat-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-surface);
   padding: 14px 20px;
   display: flex;
   flex-direction: column;
@@ -558,30 +560,312 @@ function onDragEnd() {
   font-weight: 700;
   color: var(--md-sys-color-on-surface);
   line-height: 1.2;
+
+  &--success { color: #16a34a; }
+  &--muted { color: var(--md-sys-color-on-surface-variant); }
 }
 
-/* Cards */
-.m3-card {
-  border-radius: 12px;
+/* ── Loading ──────────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+/* ── AN Card ──────────────────────────────────────────────────────────────── */
+.an-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
   background: var(--md-sys-color-surface);
   overflow: hidden;
-  margin-bottom: 0;
+}
 
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
-  }
+.an-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
 
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline-variant);
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: var(--md-sys-color-primary-container);
+    .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
   }
 }
 
-/* Badges */
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  flex: 1;
+}
+
+.an-card-hint {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.an-card-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── CSS Spinner ──────────────────────────────────────────────────────────── */
+.css-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+}
+
+.form-textarea {
+  padding: 8px 12px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Username row ─────────────────────────────────────────────────────────── */
+.bio-username-row {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus-within {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+}
+
+.bio-prefix {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  background: var(--md-sys-color-surface-container-low);
+  border-right: 1.5px solid var(--md-sys-color-outline-variant);
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.bio-username-input {
+  flex: 1;
+  border: none;
+  border-radius: 0;
+  height: 40px;
+
+  &:focus {
+    box-shadow: none;
+    outline: none;
+  }
+}
+
+/* ── Theme toggle ─────────────────────────────────────────────────────────── */
+.theme-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Published toggle ─────────────────────────────────────────────────────── */
+.published-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-surface-container-low);
+  gap: 12px;
+
+  &--active {
+    background: rgba(22, 163, 74, 0.06);
+    border: 1px solid rgba(22, 163, 74, 0.25);
+  }
+
+  &__label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__hint {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+    margin-top: 2px;
+  }
+}
+
+/* ── Error box ────────────────────────────────────────────────────────────── */
+.error-box {
+  padding: 10px 14px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+/* ── Two column layout ────────────────────────────────────────────────────── */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 20px;
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.settings-card {
+  /* styling from .an-card */
+}
+
+.links-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Add link row ─────────────────────────────────────────────────────────── */
+.add-link-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+
+  .material-symbols-outlined {
+    font-size: 1.75rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 4px;
+}
+
+.empty-desc {
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -598,109 +882,88 @@ function onDragEnd() {
   }
 }
 
-/* Two column layout */
-.two-column-layout {
-  display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 20px;
-  align-items: start;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.settings-card {
-  /* card styling applied from m3-card classes */
-}
-
-.card-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-}
-
-.card-body {
-  padding: 16px 20px;
-}
-
-/* Published toggle */
-.published-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: var(--md-sys-color-surface-container-low);
-  gap: 12px;
-
-  &--active {
-    background: rgba(22, 163, 74, 0.06);
-    border: 1px solid rgba(22, 163, 74, 0.25);
-  }
-}
-
-/* Add link row */
-.add-link-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-}
-
-/* Empty state */
-.m3-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-  text-align: center;
-
-  &__icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 12px;
-
-    .material-symbols-outlined {
-      font-size: 1.75rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
-  }
-}
-
-/* Link items */
+/* ── Link items ───────────────────────────────────────────────────────────── */
 .link-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   cursor: default;
   user-select: none;
   transition: background 0.12s;
 
-  &:last-child {
-    border-bottom: none;
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--md-sys-color-surface-container-low); }
+}
+
+.link-item__view {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  width: 100%;
+}
+
+.link-item__edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  width: 100%;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+}
+
+.link-drag {
+  cursor: grab;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.link-pos {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  font-size: 0.68rem;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.link-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.link-info {
+  flex: 1;
+  min-width: 0;
+
+  &__title {
+    font-weight: 500;
+    font-size: 0.875rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-low);
+  &__url {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+}
+
+.link-edit-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
 }
 </style>

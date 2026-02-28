@@ -1,20 +1,24 @@
 <template>
   <div class="settings-page">
+
     <!-- Page header -->
     <div class="page-header">
-      <h1 class="md-headline-small page-title">Profile &amp; Settings</h1>
-      <p class="md-body-medium page-subtitle">
-        Manage your account information and security preferences.
-      </p>
+      <h1 class="page-title">Profile &amp; Settings</h1>
+      <p class="page-subtitle">Manage your account information and security preferences.</p>
     </div>
 
-    <!-- ── Profile ──────────────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header">
-        <span class="material-symbols-outlined card-section-header__icon">person</span>
-        <span class="md-title-medium">Profile Information</span>
+    <!-- ── Profile ──────────────────────────────────────────────────── -->
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">person</span>
+          </div>
+          <div class="an-card-title">Profile Information</div>
+        </div>
       </div>
-      <div class="card-section-body">
+      <div class="an-card-body">
+
         <!-- Avatar row -->
         <div class="avatar-row">
           <div class="avatar-wrapper">
@@ -34,34 +38,33 @@
             <div class="avatar-status-ring"></div>
           </div>
           <div class="avatar-controls">
-            <div class="md-label-large" style="margin-bottom:8px;">Profile photo</div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="avatar-controls__label">Profile photo</div>
+            <div class="avatar-controls__row">
               <label class="choose-photo-label">
-                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">upload</span>
+                <span class="material-symbols-outlined choose-photo-label__icon">upload</span>
                 Choose photo
                 <input
                   ref="avatarFileInputRef"
                   type="file"
                   accept="image/*"
-                  style="display:none"
+                  class="visually-hidden"
                   @change="onAvatarFileChange"
                 />
               </label>
-              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                {{ avatarFileName || 'No file chosen' }}
-              </span>
+              <span class="avatar-filename">{{ avatarFileName || 'No file chosen' }}</span>
             </div>
-            <div style="margin-top:8px;">
+            <div class="avatar-url-toggle">
               <button class="btn-text" @click="showUrlInput = !showUrlInput">
                 {{ showUrlInput ? 'Hide URL input' : 'Or enter image URL manually' }}
               </button>
-              <div v-if="showUrlInput" style="margin-top:8px;">
-                <md-outlined-text-field
+              <div v-if="showUrlInput" class="avatar-url-field">
+                <label class="form-field__label">Image URL</label>
+                <input
+                  type="url"
+                  class="form-input"
                   :value="profileForm.profile_picture"
                   @input="profileForm.profile_picture = ($event.target as HTMLInputElement).value"
-                  label="Image URL"
-                  type="url"
-                  style="width:100%;"
+                  placeholder="https://example.com/photo.jpg"
                 />
               </div>
             </div>
@@ -70,315 +73,351 @@
 
         <!-- Name row -->
         <div class="form-row-2">
-          <md-outlined-text-field
-            :value="profileForm.first_name"
-            @input="profileForm.first_name = ($event.target as HTMLInputElement).value"
-            label="First name"
-            maxlength="50"
-            style="width:100%;"
-          />
-          <md-outlined-text-field
-            :value="profileForm.last_name"
-            @input="profileForm.last_name = ($event.target as HTMLInputElement).value"
-            label="Last name"
-            maxlength="50"
-            style="width:100%;"
-          />
+          <div class="form-field">
+            <label class="form-field__label">First name</label>
+            <input
+              type="text"
+              class="form-input"
+              :value="profileForm.first_name"
+              @input="profileForm.first_name = ($event.target as HTMLInputElement).value"
+              maxlength="50"
+              placeholder="First name"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-field__label">Last name</label>
+            <input
+              type="text"
+              class="form-input"
+              :value="profileForm.last_name"
+              @input="profileForm.last_name = ($event.target as HTMLInputElement).value"
+              maxlength="50"
+              placeholder="Last name"
+            />
+          </div>
         </div>
 
         <!-- Email (readonly) -->
-        <md-outlined-text-field
-          :value="authStore.profile?.email ?? ''"
-          label="Email"
-          type="email"
-          readonly
-          style="width:100%;margin-bottom:16px;"
-        >
-          <span slot="supporting-text">Email cannot be changed here.</span>
-        </md-outlined-text-field>
+        <div class="form-field">
+          <label class="form-field__label">Email</label>
+          <input
+            type="email"
+            class="form-input form-input--readonly"
+            :value="authStore.profile?.email ?? ''"
+            readonly
+          />
+          <span class="form-field__hint">Email cannot be changed here.</span>
+        </div>
 
         <!-- Phone -->
-        <md-outlined-text-field
-          :value="profileForm.phone"
-          @input="profileForm.phone = ($event.target as HTMLInputElement).value"
-          label="Phone"
-          type="tel"
-          maxlength="20"
-          style="width:100%;margin-bottom:20px;"
-        />
+        <div class="form-field">
+          <label class="form-field__label">Phone</label>
+          <input
+            type="tel"
+            class="form-input"
+            :value="profileForm.phone"
+            @input="profileForm.phone = ($event.target as HTMLInputElement).value"
+            maxlength="20"
+            placeholder="+1 555 000 0000"
+          />
+        </div>
 
         <!-- Feedback -->
         <div v-if="profileSuccess" class="feedback-success">
-          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          <span class="material-symbols-outlined feedback__icon">check_circle</span>
           {{ profileSuccess }}
         </div>
         <div v-if="profileError" class="feedback-error">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          <span class="material-symbols-outlined feedback__icon">error</span>
           {{ profileError }}
         </div>
 
         <button class="btn-filled" :disabled="savingProfile" @click="saveProfile">
-          <md-circular-progress v-if="savingProfile" indeterminate style="margin-right:8px;" />
+          <div v-if="savingProfile" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Save profile
         </button>
       </div>
     </div>
 
-    <!-- ── Change Password ──────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header">
-        <span class="material-symbols-outlined card-section-header__icon">lock</span>
-        <span class="md-title-medium">Change Password</span>
+    <!-- ── Change Password ─────────────────────────────────────────── -->
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--neutral">
+            <span class="material-symbols-outlined">lock</span>
+          </div>
+          <div class="an-card-title">Change Password</div>
+        </div>
       </div>
-      <div class="card-section-body">
-        <md-outlined-text-field
-          :value="passwordForm.old_password"
-          @input="passwordForm.old_password = ($event.target as HTMLInputElement).value"
-          label="Current password"
-          type="password"
-          autocomplete="current-password"
-          style="width:100%;margin-bottom:16px;"
-        />
-        <md-outlined-text-field
-          :value="passwordForm.new_password"
-          @input="passwordForm.new_password = ($event.target as HTMLInputElement).value"
-          label="New password (at least 8 characters)"
-          type="password"
-          autocomplete="new-password"
-          style="width:100%;margin-bottom:16px;"
-        />
-        <md-outlined-text-field
-          :value="passwordForm.confirm_password"
-          @input="passwordForm.confirm_password = ($event.target as HTMLInputElement).value"
-          label="Confirm new password"
-          type="password"
-          autocomplete="new-password"
-          style="width:100%;margin-bottom:4px;"
-          :error="passwordMismatch"
-        >
-          <span v-if="passwordMismatch" slot="error-text">Passwords do not match.</span>
-        </md-outlined-text-field>
-        <div style="margin-bottom:20px;" />
+      <div class="an-card-body">
+        <div class="form-field">
+          <label class="form-field__label">Current password</label>
+          <input
+            type="password"
+            class="form-input"
+            :value="passwordForm.old_password"
+            @input="passwordForm.old_password = ($event.target as HTMLInputElement).value"
+            autocomplete="current-password"
+            placeholder="••••••••"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-field__label">New password <span class="form-field__hint-inline">(at least 8 characters)</span></label>
+          <input
+            type="password"
+            class="form-input"
+            :value="passwordForm.new_password"
+            @input="passwordForm.new_password = ($event.target as HTMLInputElement).value"
+            autocomplete="new-password"
+            placeholder="••••••••"
+          />
+        </div>
+        <div class="form-field">
+          <label class="form-field__label">Confirm new password</label>
+          <input
+            type="password"
+            class="form-input"
+            :class="{ 'form-input--error': passwordMismatch }"
+            :value="passwordForm.confirm_password"
+            @input="passwordForm.confirm_password = ($event.target as HTMLInputElement).value"
+            autocomplete="new-password"
+            placeholder="••••••••"
+          />
+          <span v-if="passwordMismatch" class="form-field__error">Passwords do not match.</span>
+        </div>
 
         <div v-if="passwordSuccess" class="feedback-success">
-          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+          <span class="material-symbols-outlined feedback__icon">check_circle</span>
           {{ passwordSuccess }}
         </div>
         <div v-if="passwordError" class="feedback-error">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          <span class="material-symbols-outlined feedback__icon">error</span>
           {{ passwordError }}
         </div>
 
         <button class="btn-filled" :disabled="savingPassword || !canChangePassword" @click="changePassword">
-          <md-circular-progress v-if="savingPassword" indeterminate style="margin-right:8px;" />
+          <div v-if="savingPassword" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Update password
         </button>
       </div>
     </div>
 
-    <!-- ── Notification Preferences ────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header">
-        <span class="material-symbols-outlined card-section-header__icon">notifications</span>
-        <span class="md-title-medium">Notification Preferences</span>
+    <!-- ── Notification Preferences ──────────────────────────────── -->
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">notifications</span>
+          </div>
+          <div class="an-card-title">Notification Preferences</div>
+        </div>
       </div>
-      <div class="card-section-body">
-        <!-- Link expiry warnings -->
+
+      <div class="switch-rows">
         <div class="switch-row">
-          <div>
-            <div class="md-title-small">Link expiry warnings</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Get emailed 7 days before a link expires.</div>
+          <div class="switch-row__content">
+            <div class="switch-row__title">Link expiry warnings</div>
+            <div class="switch-row__desc">Get emailed 7 days before a link expires.</div>
           </div>
-          <md-switch
-            :selected="notifPrefs.expiry_warnings"
-            @change="notifPrefs.expiry_warnings = ($event.target as HTMLInputElement).checked"
-          />
+          <label class="m3-switch">
+            <input type="checkbox" class="m3-switch__input"
+              :checked="notifPrefs.expiry_warnings"
+              @change="notifPrefs.expiry_warnings = ($event.target as HTMLInputElement).checked"
+            />
+            <span class="m3-switch__track"></span>
+          </label>
         </div>
 
-        <!-- Health alert emails -->
         <div class="switch-row">
-          <div>
-            <div class="md-title-small">Health alert emails</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Notify when a link becomes unhealthy.</div>
+          <div class="switch-row__content">
+            <div class="switch-row__title">Health alert emails</div>
+            <div class="switch-row__desc">Notify when a link becomes unhealthy.</div>
           </div>
-          <md-switch
-            :selected="notifPrefs.health_alerts"
-            @change="notifPrefs.health_alerts = ($event.target as HTMLInputElement).checked"
-          />
+          <label class="m3-switch">
+            <input type="checkbox" class="m3-switch__input"
+              :checked="notifPrefs.health_alerts"
+              @change="notifPrefs.health_alerts = ($event.target as HTMLInputElement).checked"
+            />
+            <span class="m3-switch__track"></span>
+          </label>
         </div>
 
-        <!-- Weekly analytics digest -->
         <div class="switch-row">
-          <div>
-            <div class="md-title-small">Weekly analytics digest</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Summary of clicks sent every Monday.</div>
+          <div class="switch-row__content">
+            <div class="switch-row__title">Weekly analytics digest</div>
+            <div class="switch-row__desc">Summary of clicks sent every Monday.</div>
           </div>
-          <md-switch
-            :selected="notifPrefs.weekly_digest"
-            @change="notifPrefs.weekly_digest = ($event.target as HTMLInputElement).checked"
-          />
+          <label class="m3-switch">
+            <input type="checkbox" class="m3-switch__input"
+              :checked="notifPrefs.weekly_digest"
+              @change="notifPrefs.weekly_digest = ($event.target as HTMLInputElement).checked"
+            />
+            <span class="m3-switch__track"></span>
+          </label>
         </div>
 
-        <!-- Click milestone alerts -->
-        <div class="switch-row" style="border-bottom:none;">
-          <div>
-            <div class="md-title-small">Click milestone alerts</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Notified at 100, 1K, 10K clicks per link.</div>
+        <div class="switch-row switch-row--last">
+          <div class="switch-row__content">
+            <div class="switch-row__title">Click milestone alerts</div>
+            <div class="switch-row__desc">Notified at 100, 1K, 10K clicks per link.</div>
           </div>
-          <md-switch
-            :selected="notifPrefs.milestone_alerts"
-            @change="notifPrefs.milestone_alerts = ($event.target as HTMLInputElement).checked"
-          />
+          <label class="m3-switch">
+            <input type="checkbox" class="m3-switch__input"
+              :checked="notifPrefs.milestone_alerts"
+              @change="notifPrefs.milestone_alerts = ($event.target as HTMLInputElement).checked"
+            />
+            <span class="m3-switch__track"></span>
+          </label>
         </div>
+      </div>
 
-        <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:16px 0 20px;">
+      <div class="an-card-body">
+        <p class="notif-note">
           Email preferences affect automated system emails. Transactional emails (password reset, verification) are always sent.
         </p>
-
-        <div v-if="notifSaved" class="feedback-success" style="margin-bottom:16px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">check_circle</span>
+        <div v-if="notifSaved" class="feedback-success">
+          <span class="material-symbols-outlined feedback__icon">check_circle</span>
           Preferences saved.
         </div>
-
         <button class="btn-filled" @click="saveNotifPrefs">Save preferences</button>
       </div>
     </div>
 
-    <!-- ── Active Sessions ──────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header card-section-header--row">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="material-symbols-outlined card-section-header__icon">devices</span>
-          <span class="md-title-medium">Active Sessions</span>
+    <!-- ── Active Sessions ────────────────────────────────────────── -->
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--neutral">
+            <span class="material-symbols-outlined">devices</span>
+          </div>
+          <div class="an-card-title">Active Sessions</div>
         </div>
-        <button class="btn-outlined btn-danger"
-          :disabled="revokingAll"
-          @click="logoutAllOther"
-        >
-          <md-circular-progress v-if="revokingAll" indeterminate style="margin-right:6px;" />
+        <button class="btn-outlined btn-danger" :disabled="revokingAll" @click="logoutAllOther">
+          <div v-if="revokingAll" class="css-spinner css-spinner--sm"></div>
           Logout all other devices
         </button>
       </div>
-      <div>
-        <div v-if="sessionsLoading" style="text-align:center;padding:32px 24px;">
-          <md-circular-progress indeterminate />
-        </div>
-        <div v-else-if="sessions.length === 0" style="text-align:center;padding:32px 24px;" class="md-body-medium">
-          <span style="color:var(--md-sys-color-on-surface-variant);">No active sessions found.</span>
-        </div>
-        <div v-else>
-          <div
-            v-for="session in sessions"
-            :key="session.id"
-            class="session-row"
-          >
-            <span class="material-symbols-outlined session-device-icon">
-              {{ session.device_type?.toLowerCase() === 'mobile' ? 'smartphone' : session.device_type?.toLowerCase() === 'tablet' ? 'tablet' : 'computer' }}
-            </span>
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span class="md-label-large">{{ sessionLabel(session) }}</span>
-                <span v-if="session.is_current" class="m3-badge m3-badge--success">Current</span>
-                <span v-if="session.login_method" class="m3-badge m3-badge--neutral">{{ session.login_method }}</span>
-              </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:2px;">
-                <span v-if="session.ip_address">{{ session.ip_address }}</span>
-                <span v-if="session.ip_address && session.last_activity_at"> · </span>
-                <span>Last active {{ formatRelative(session.last_activity_at) }}</span>
-              </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
-                Signed in {{ formatDate(session.created_at) }}
-              </div>
+
+      <div v-if="sessionsLoading" class="sessions-loading">
+        <div class="css-spinner"></div>
+      </div>
+      <div v-else-if="sessions.length === 0" class="sessions-empty">
+        No active sessions found.
+      </div>
+      <div v-else>
+        <div v-for="session in sessions" :key="session.id" class="session-row">
+          <span class="material-symbols-outlined session-device-icon">
+            {{ session.device_type?.toLowerCase() === 'mobile' ? 'smartphone' : session.device_type?.toLowerCase() === 'tablet' ? 'tablet' : 'computer' }}
+          </span>
+          <div class="session-body">
+            <div class="session-label-row">
+              <span class="session-label">{{ sessionLabel(session) }}</span>
+              <span v-if="session.is_current" class="m3-badge m3-badge--success">Current</span>
+              <span v-if="session.login_method" class="m3-badge m3-badge--neutral">{{ session.login_method }}</span>
             </div>
-            <button class="btn-text"
-              v-if="!session.is_current"
-              :disabled="revokingId === session.id"
-              @click="revokeSession(session)"
-             
-            >
-              <md-circular-progress v-if="revokingId === session.id" indeterminate />
-              <span v-else>Revoke</span>
-            </button>
+            <div class="session-meta">
+              <span v-if="session.ip_address">{{ session.ip_address }}</span>
+              <span v-if="session.ip_address && session.last_activity_at"> · </span>
+              <span>Last active {{ formatRelative(session.last_activity_at) }}</span>
+            </div>
+            <div class="session-meta">Signed in {{ formatDate(session.created_at) }}</div>
           </div>
+          <button
+            class="btn-text"
+            v-if="!session.is_current"
+            :disabled="revokingId === session.id"
+            @click="revokeSession(session)"
+          >
+            <div v-if="revokingId === session.id" class="css-spinner css-spinner--sm"></div>
+            <span v-else>Revoke</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- ── Data Export ──────────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card">
-      <div class="card-section-header">
-        <span class="material-symbols-outlined card-section-header__icon">download</span>
-        <span class="md-title-medium">Data Export</span>
+    <!-- ── Data Export ────────────────────────────────────────────── -->
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--neutral">
+            <span class="material-symbols-outlined">download</span>
+          </div>
+          <div class="an-card-title">Data Export</div>
+        </div>
       </div>
-      <div class="card-section-body">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-          <div>
-            <div class="md-label-large" style="margin-bottom:4px;">Download your data</div>
-            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;max-width:480px;">
+      <div class="an-card-body">
+        <div class="export-row">
+          <div class="export-row__text">
+            <div class="export-row__title">Download your data</div>
+            <p class="export-row__desc">
               Export a JSON file containing your profile information and all your short links.
               Your data will be ready to download immediately.
             </p>
           </div>
-          <button class="btn-tonal" :disabled="exportingData" @click="downloadExport">
-            <md-circular-progress v-if="exportingData" indeterminate style="margin-right:8px;" />
-            <span v-else>
-              <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">download</span>
-            </span>
+          <button class="btn-tonal export-btn" :disabled="exportingData" @click="downloadExport">
+            <div v-if="exportingData" class="css-spinner css-spinner--sm"></div>
+            <span v-else class="material-symbols-outlined">download</span>
             Download my data
           </button>
         </div>
-        <div v-if="exportError" class="feedback-error" style="margin-top:16px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+        <div v-if="exportError" class="feedback-error feedback--mt">
+          <span class="material-symbols-outlined feedback__icon">error</span>
           {{ exportError }}
         </div>
       </div>
     </div>
 
-    <!-- ── Danger Zone ──────────────────────────────────────────────────── -->
-    <div class="m3-card m3-card--outlined section-card danger-zone-card">
-      <div class="card-section-header danger-zone-header">
-        <span class="material-symbols-outlined card-section-header__icon" style="color:var(--md-sys-color-error);">warning</span>
-        <span class="md-title-medium" style="color:var(--md-sys-color-error);">Danger Zone</span>
+    <!-- ── Danger Zone ────────────────────────────────────────────── -->
+    <div class="an-card danger-zone-card">
+      <div class="an-card-header danger-zone-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--error">
+            <span class="material-symbols-outlined">warning</span>
+          </div>
+          <div class="an-card-title danger-zone-title">Danger Zone</div>
+        </div>
       </div>
-      <div class="card-section-body">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-          <div>
-            <div class="md-label-large" style="margin-bottom:4px;">Delete account</div>
-            <p class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin:0;max-width:480px;">
+      <div class="an-card-body">
+        <div class="export-row">
+          <div class="export-row__text">
+            <div class="export-row__title">Delete account</div>
+            <p class="export-row__desc">
               Permanently delete your account and all associated links, analytics, and data.
               This action <strong>cannot be undone</strong>.
             </p>
           </div>
-          <button class="btn-outlined btn-danger"
-            @click="showDeleteConfirm = true"
-          >
+          <button class="btn-outlined btn-danger" @click="showDeleteConfirm = true">
             Delete account
           </button>
         </div>
 
         <!-- Delete confirmation -->
         <div v-if="showDeleteConfirm" class="delete-confirm-box">
-          <p class="md-body-medium" style="margin-bottom:12px;">
-            To confirm, type <code>DELETE</code> in the box below:
+          <p class="delete-confirm-box__prompt">
+            To confirm, type <code class="inline-code">DELETE</code> in the box below:
           </p>
-          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-            <md-outlined-text-field
-              :value="deleteConfirmText"
-              @input="deleteConfirmText = ($event.target as HTMLInputElement).value"
-              label="Type DELETE"
-              style="max-width:200px;"
-            />
-            <button class="btn-filled btn-danger"
+          <div class="delete-confirm-box__actions">
+            <div class="form-field form-field--inline">
+              <input
+                type="text"
+                class="form-input"
+                :value="deleteConfirmText"
+                @input="deleteConfirmText = ($event.target as HTMLInputElement).value"
+                placeholder="DELETE"
+              />
+            </div>
+            <button
+              class="btn-filled btn-danger"
               :disabled="deleteConfirmText !== 'DELETE' || deletingAccount"
               @click="deleteAccount"
             >
-              <md-circular-progress v-if="deletingAccount" indeterminate style="margin-right:8px;" />
+              <div v-if="deletingAccount" class="css-spinner css-spinner--sm css-spinner--white"></div>
               Confirm delete
             </button>
             <button class="btn-outlined" @click="showDeleteConfirm = false; deleteConfirmText = ''">Cancel</button>
           </div>
-          <div v-if="deleteError" class="feedback-error" style="margin-top:12px;">
-            <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+          <div v-if="deleteError" class="feedback-error feedback--mt">
+            <span class="material-symbols-outlined feedback__icon">error</span>
             {{ deleteError }}
           </div>
         </div>
@@ -687,71 +726,123 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+/* ── Root ─────────────────────────────────────────────────────────── */
 .settings-page {
   max-width: 780px;
-  padding: 24px 0;
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding: 0;
 
-  @media (max-width: 575px) {
-    padding: 16px 0;
-    gap: 16px;
-  }
+  @media (max-width: 575px) { gap: 16px; }
 }
 
-/* ── Page header ─────────────────────────────────────────────────────────── */
-.page-header {
-  margin-bottom: 4px;
-}
-
+/* ── Page header ─────────────────────────────────────────────────── */
 .page-title {
-  margin: 0 0 4px;
+  font-size: 1.5rem;
   font-weight: 700;
+  margin: 0 0 4px;
   color: var(--md-sys-color-on-surface);
 }
 
 .page-subtitle {
   margin: 0;
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
-/* ── Section card ────────────────────────────────────────────────────────── */
-.section-card {
+/* ── Cards ───────────────────────────────────────────────────────── */
+.an-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
   border-radius: 16px;
   overflow: hidden;
 }
 
-/* ── Card section header ─────────────────────────────────────────────────── */
-.card-section-header {
+.an-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background: var(--md-sys-color-surface-container-low);
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  background: var(--md-sys-color-surface-container-low, #f8f9fa);
 
-  &--row {
-    justify-content: space-between;
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 }
 
-.card-section-header__icon {
-  font-size: 20px;
-  color: var(--md-sys-color-primary);
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: rgba(99, 91, 255, 0.1);
+    color: var(--md-sys-color-primary, #635bff);
+  }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container, #f3f4f6);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &--error {
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+  }
 }
 
-.card-section-body {
-  padding: 24px;
+.an-card-body {
+  padding: 20px 24px;
 }
 
-/* ── Avatar ──────────────────────────────────────────────────────────────── */
+/* ── CSS spinner ─────────────────────────────────────────────────── */
+.css-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  border-top-color: var(--md-sys-color-primary, #635bff);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Avatar ──────────────────────────────────────────────────────── */
 .avatar-row {
   display: flex;
   align-items: flex-start;
   gap: 24px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 
   @media (max-width: 500px) {
     flex-direction: column;
@@ -797,12 +888,47 @@ onMounted(async () => {
 .avatar-controls {
   flex: 1;
   min-width: 0;
+
+  &__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 8px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.avatar-filename {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar-url-toggle {
+  margin-top: 8px;
+}
+
+.avatar-url-field {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .choose-photo-label {
   display: inline-flex;
   align-items: center;
-  padding: 8px 16px;
+  gap: 4px;
+  padding: 7px 14px;
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   cursor: pointer;
@@ -810,96 +936,93 @@ onMounted(async () => {
   font-weight: 500;
   color: var(--md-sys-color-on-surface);
   transition: background 0.15s, border-color 0.15s;
-  gap: 4px;
 
   &:hover {
     background: var(--md-sys-color-surface-container-low);
     border-color: var(--md-sys-color-outline);
   }
+
+  &__icon { font-size: 18px; }
 }
 
-/* ── Form layout ─────────────────────────────────────────────────────────── */
+/* ── Form fields ─────────────────────────────────────────────────── */
 .form-row-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 
-  @media (max-width: 540px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 540px) { grid-template-columns: 1fr; }
 }
 
-/* ── Toggle / Switch rows ────────────────────────────────────────────────── */
-.switch-row,
-.toggle-row {
+.form-field {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  transition: background 0.15s;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-lowest, transparent);
+  &:last-of-type { margin-bottom: 0; }
+
+  &--inline { margin-bottom: 0; }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &__hint-inline {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &__error {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-error, #dc2626);
   }
 }
 
-/* ── Session rows ────────────────────────────────────────────────────────── */
-.session-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  transition: background 0.15s;
+.form-input {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
 
-  &:last-child {
-    border-bottom: none;
+  &::placeholder { color: var(--md-sys-color-on-surface-variant); opacity: 0.6; }
+  &:focus { border-color: var(--md-sys-color-primary, #635bff); }
+
+  &--readonly {
+    background: var(--md-sys-color-surface-container-low, #f8f9fa);
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: not-allowed;
   }
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-low);
+  &--error {
+    border-color: var(--md-sys-color-error, #dc2626);
   }
 }
 
-.session-device-icon {
-  color: var(--md-sys-color-on-surface-variant);
-  margin-top: 2px;
-  flex-shrink: 0;
-  font-size: 28px;
-}
-
-/* ── M3 Badges ───────────────────────────────────────────────────────────── */
-.m3-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 999px;
-}
-
-.m3-badge--success {
-  background: color-mix(in srgb, #1aa563 14%, transparent);
-  color: #0a7040;
-}
-
-.m3-badge--neutral {
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-/* ── Feedback ────────────────────────────────────────────────────────────── */
+/* ── Feedback ────────────────────────────────────────────────────── */
 .feedback-success {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: color-mix(in srgb, #1aa563 12%, transparent);
-  border: 1px solid color-mix(in srgb, #1aa563 30%, transparent);
+  background: rgba(26, 165, 99, 0.1);
+  border: 1px solid rgba(26, 165, 99, 0.25);
   color: #0a6639;
   font-size: 0.875rem;
   margin-bottom: 16px;
@@ -911,40 +1034,269 @@ onMounted(async () => {
   gap: 8px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: var(--md-sys-color-error-container);
-  border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 30%, transparent);
-  color: var(--md-sys-color-on-error-container, var(--md-sys-color-error));
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  color: #dc2626;
   font-size: 0.875rem;
   margin-bottom: 16px;
 }
 
-/* ── Danger zone ─────────────────────────────────────────────────────────── */
+.feedback--mt { margin-top: 16px; margin-bottom: 0; }
+.feedback__icon { font-size: 18px; flex-shrink: 0; }
+
+/* ── Notification switches ───────────────────────────────────────── */
+.switch-rows {
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transition: background 0.15s;
+
+  &:hover { background: var(--md-sys-color-surface-container-low, #f8f9fa); }
+
+  &--last { border-bottom: none; }
+
+  &__content { flex: 1; min-width: 0; }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 2px;
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+/* ── M3 native toggle switch ─────────────────────────────────────── */
+.m3-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.m3-switch__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.m3-switch__track {
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--md-sys-color-surface-container-highest, #dde1e7);
+  border: 2px solid var(--md-sys-color-outline, #888);
+  position: relative;
+  transition: background 0.2s, border-color 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--md-sys-color-outline, #888);
+    top: 6px;
+    left: 6px;
+    transition: transform 0.2s, background 0.2s, width 0.15s, height 0.15s, top 0.15s, left 0.15s;
+  }
+}
+
+.m3-switch__input:checked + .m3-switch__track {
+  background: var(--md-sys-color-primary, #635bff);
+  border-color: var(--md-sys-color-primary, #635bff);
+
+  &::after {
+    background: #fff;
+    transform: translateX(20px);
+    width: 24px;
+    height: 24px;
+    top: 2px;
+    left: 2px;
+  }
+}
+
+.m3-switch:hover .m3-switch__track {
+  border-color: var(--md-sys-color-on-surface-variant, #666);
+}
+
+/* ── Notif note ──────────────────────────────────────────────────── */
+.notif-note {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 16px;
+}
+
+/* ── Sessions ────────────────────────────────────────────────────── */
+.sessions-loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+.sessions-empty {
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.session-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: var(--md-sys-color-surface-container-low); }
+}
+
+.session-device-icon {
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-size: 28px;
+}
+
+.session-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.session-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.session-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.session-meta {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+}
+
+/* ── Export row ──────────────────────────────────────────────────── */
+.export-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+  }
+
+  &__desc {
+    font-size: 0.8125rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
+    max-width: 480px;
+  }
+}
+
+.export-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Danger zone ─────────────────────────────────────────────────── */
 .danger-zone-card {
-  border-left: 4px solid var(--md-sys-color-error) !important;
-  border-color: var(--md-sys-color-error) !important;
+  border-color: rgba(220, 38, 38, 0.25);
 }
 
 .danger-zone-header {
-  border-bottom-color: color-mix(in srgb, var(--md-sys-color-error) 30%, transparent) !important;
-  background: color-mix(in srgb, var(--md-sys-color-error) 6%, transparent) !important;
+  background: rgba(220, 38, 38, 0.04);
+  border-bottom-color: rgba(220, 38, 38, 0.15);
 }
+
+.danger-zone-title { color: #dc2626; }
 
 .delete-confirm-box {
-  margin-top: 24px;
+  margin-top: 20px;
   padding: 16px 20px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--md-sys-color-error) 40%, transparent);
-  background: color-mix(in srgb, var(--md-sys-color-error) 5%, transparent);
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  background: rgba(220, 38, 38, 0.04);
+
+  &__prompt {
+    font-size: 0.9rem;
+    color: var(--md-sys-color-on-surface);
+    margin: 0 0 12px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 }
 
-/* ── M3 Cards ────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 16px;
-  overflow: hidden;
+.inline-code {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  background: var(--md-sys-color-surface-container-low);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
 
-  &--outlined {
-    background: var(--md-sys-color-surface);
-    border: 1px solid var(--md-sys-color-outline-variant);
+/* ── Badges ──────────────────────────────────────────────────────── */
+.m3-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+
+  &--success {
+    background: rgba(26, 165, 99, 0.12);
+    color: #0a7040;
   }
+
+  &--neutral {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+/* ── Utility ─────────────────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 </style>

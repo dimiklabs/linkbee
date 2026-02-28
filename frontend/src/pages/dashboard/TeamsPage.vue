@@ -1,50 +1,45 @@
 <template>
-  <div class="page-section" style="max-width: 1100px;">
+  <div class="teams-page">
 
     <!-- Toast notifications -->
     <Transition name="snack">
-      <div
-        v-if="toasts.length > 0"
-        class="m3-snackbar"
-      >
-        <span class="material-symbols-outlined" style="font-size:20px;">
-          {{ toasts[0].type === 'error' ? 'error' : 'check_circle' }}
+      <div v-if="toasts.length > 0" class="m3-snackbar">
+        <span class="material-symbols-outlined snack-icon">
+          {{ toasts[0]?.type === 'error' ? 'error' : 'check_circle' }}
         </span>
-        <span style="flex:1;">{{ toasts[0].message }}</span>
-        <button class="btn-text" @click="removeToast(toasts[0].id)">Dismiss</button>
+        <span class="snack-text">{{ toasts[0]?.message }}</span>
+        <button class="btn-text" @click="removeToast(toasts[0]?.id ?? 0)">Dismiss</button>
       </div>
     </Transition>
 
     <!-- Page Header -->
-    <div class="dash-page-header">
-      <div class="dash-page-header__left">
-        <h1 class="dash-page-header__title">Teams</h1>
-        <p class="dash-page-header__subtitle">Manage your teams and collaborate with others.</p>
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-title">Teams</h1>
+        <p class="page-subtitle">Manage your teams and collaborate with others.</p>
       </div>
-      <div class="dash-page-header__actions">
+      <div class="page-header__actions">
         <button class="btn-filled" @click="openCreateModal">
-          <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+          <span class="material-symbols-outlined">add</span>
           Create Team
         </button>
       </div>
     </div>
 
     <!-- Loading state -->
-    <div v-if="loading" style="text-align:center;padding:64px 0;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-center">
+      <div class="css-spinner"></div>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="teams.length === 0" class="m3-card m3-card--elevated m3-empty-state">
-      <div class="m3-empty-state__icon">
+    <div v-else-if="teams.length === 0" class="an-card empty-state">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">group</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:8px;">No teams yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">
-        Create a team to collaborate with your colleagues.
-      </p>
+      <div class="empty-title">No teams yet</div>
+      <p class="empty-desc">Create a team to collaborate with your colleagues.</p>
       <button class="btn-filled" @click="openCreateModal">
-        <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">add</span>
+        <span class="material-symbols-outlined">add</span>
         Create Your First Team
       </button>
     </div>
@@ -54,103 +49,84 @@
       <div
         v-for="team in teams"
         :key="team.id"
-        class="m3-card m3-card--elevated team-card"
-        :class="{ selected: selectedTeam?.id === team.id }"
+        class="team-card"
+        :class="{ 'team-card--selected': selectedTeam?.id === team.id }"
         @click="selectTeam(team)"
       >
-        <div class="team-card-body">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+        <div class="team-card__body">
+          <div class="team-card__top">
             <div class="team-avatar">{{ team.name.charAt(0).toUpperCase() }}</div>
             <span class="m3-badge" :class="getRoleBadgeM3Class(getMyRole(team))">
               {{ getMyRole(team) }}
             </span>
           </div>
-          <div class="md-title-medium" style="margin-bottom:4px;">{{ team.name }}</div>
-          <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:6px;">@{{ team.slug }}</div>
-          <p v-if="team.description" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:8px;line-height:1.4;">
-            {{ team.description }}
-          </p>
-          <div style="display:flex;align-items:center;gap:6px;" class="md-body-small">
-            <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">group</span>
-            <span style="color:var(--md-sys-color-on-surface-variant);">
-              {{ team.member_count }} member{{ team.member_count !== 1 ? 's' : '' }}
-            </span>
+          <div class="team-name">{{ team.name }}</div>
+          <div class="team-slug">@{{ team.slug }}</div>
+          <p v-if="team.description" class="team-description">{{ team.description }}</p>
+          <div class="team-members-count">
+            <span class="material-symbols-outlined member-icon">group</span>
+            <span>{{ team.member_count }} member{{ team.member_count !== 1 ? 's' : '' }}</span>
           </div>
         </div>
       </div>
     </div>
 
     <!-- ── Team Detail Panel ──────────────────────────────────────────────── -->
-    <div v-if="selectedTeam" class="m3-card m3-card--elevated team-detail-card">
-      <div class="m3-card-header">
-        <div style="display:flex;align-items:center;gap:12px;">
+    <div v-if="selectedTeam" class="an-card team-detail">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
           <div class="team-avatar-sm">{{ selectedTeam.name.charAt(0).toUpperCase() }}</div>
           <div>
-            <div style="font-size:1rem;font-weight:600;color:var(--md-sys-color-on-surface);">{{ selectedTeam.name }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">@{{ selectedTeam.slug }}</div>
+            <div class="team-detail-name">{{ selectedTeam.name }}</div>
+            <div class="team-detail-slug">@{{ selectedTeam.slug }}</div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <button class="btn-filled"
-            v-if="canManageMembers(selectedTeam)"
-            @click="openInviteModal"
-          >
-            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">person_add</span>
+        <div class="team-detail-actions">
+          <button class="btn-filled" v-if="canManageMembers(selectedTeam)" @click="openInviteModal">
+            <span class="material-symbols-outlined">person_add</span>
             Invite Member
           </button>
-          <button class="btn-outlined"
-            v-if="isTeamOwner(selectedTeam)"
-            @click="openEditModal"
-          >
-            <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">edit</span>
+          <button class="btn-outlined" v-if="isTeamOwner(selectedTeam)" @click="openEditModal">
+            <span class="material-symbols-outlined">edit</span>
             Edit
           </button>
-          <button class="btn-outlined btn-danger"
-            v-if="!isTeamOwner(selectedTeam)"
-            @click="confirmLeave(selectedTeam)"
-          >
+          <button class="btn-outlined btn-danger" v-if="!isTeamOwner(selectedTeam)" @click="confirmLeave(selectedTeam)">
             Leave Team
           </button>
-          <button class="btn-outlined btn-danger"
-            v-if="isTeamOwner(selectedTeam)"
-            @click="confirmDelete(selectedTeam)"
-          >
+          <button class="btn-outlined btn-danger" v-if="isTeamOwner(selectedTeam)" @click="confirmDelete(selectedTeam)">
             Delete Team
           </button>
         </div>
       </div>
-      <md-divider />
 
       <!-- Members loading -->
-      <div v-if="membersLoading" style="text-align:center;padding:32px;">
-        <md-circular-progress indeterminate />
+      <div v-if="membersLoading" class="loading-center loading-center--sm">
+        <div class="css-spinner"></div>
       </div>
 
       <!-- Members table -->
-      <div v-else class="m3-table-wrapper">
-        <table class="m3-table members-table">
+      <div v-else class="table-wrapper">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Member</th>
               <th>Role</th>
               <th>Status</th>
               <th>Joined</th>
-              <th v-if="canManageMembers(selectedTeam)" style="text-align:right;">Actions</th>
+              <th v-if="canManageMembers(selectedTeam)" class="th-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="members.length === 0">
-              <td :colspan="canManageMembers(selectedTeam) ? 5 : 4" style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:32px;">
-                No members yet.
-              </td>
+              <td :colspan="canManageMembers(selectedTeam) ? 5 : 4" class="td-empty">No members yet.</td>
             </tr>
             <tr v-for="member in members" :key="member.id">
               <td>
-                <div style="display:flex;align-items:center;gap:10px;">
+                <div class="member-row">
                   <div class="member-avatar">{{ getMemberInitial(member) }}</div>
                   <div>
-                    <div style="font-weight:600;font-size:0.875rem;color:var(--md-sys-color-on-surface);">{{ getMemberName(member) }}</div>
-                    <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ member.email }}</div>
+                    <div class="member-name">{{ getMemberName(member) }}</div>
+                    <div class="member-email">{{ member.email }}</div>
                   </div>
                 </div>
               </td>
@@ -160,29 +136,28 @@
               <td>
                 <span class="m3-badge" :class="getStatusBadgeM3Class(member.status)">{{ member.status }}</span>
               </td>
-              <td class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">
+              <td class="cell-muted cell-sm">
                 {{ member.joined_at ? formatDate(member.joined_at) : '—' }}
               </td>
-              <td v-if="canManageMembers(selectedTeam)" style="text-align:right;">
-                <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+              <td v-if="canManageMembers(selectedTeam)" class="td-right">
+                <div class="member-actions">
                   <AppSelect
                     v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
                     :model-value="member.role"
                     @update:model-value="changeMemberRole(member, $event)"
                     label="Role"
-                    style="min-width:110px;"
                   >
                     <option value="admin">Admin</option>
                     <option value="member">Member</option>
                   </AppSelect>
-                  <button class="btn-icon btn-sm btn-danger"
+                  <button class="btn-icon btn-icon--danger"
                     v-if="member.role !== 'owner' && member.user_id !== authStore.profile?.id"
                     @click="confirmRemoveMember(member)"
                     title="Remove member"
                   >
                     <span class="material-symbols-outlined">person_remove</span>
                   </button>
-                  <span v-if="member.role === 'owner'" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Owner</span>
+                  <span v-if="member.role === 'owner'" class="owner-label">Owner</span>
                 </div>
               </td>
             </tr>
@@ -194,51 +169,41 @@
     <!-- ── Create Team Dialog ─────────────────────────────────────────────── -->
     <BaseModal v-model="showCreateModal" size="md" @closed="closeCreateModal">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">group_add</span>
+        <span class="material-symbols-outlined modal-icon modal-icon--primary">group_add</span>
         Create Team
       </template>
-      <div style="min-width:480px;max-width:100%;">
-        <form @submit.prevent="submitCreateTeam">
-          <md-outlined-text-field
-            :value="createForm.name"
+      <div class="modal-form">
+        <label class="form-field">
+          <span class="form-field__label">Team Name *</span>
+          <input type="text" class="form-input" :value="createForm.name"
             @input="createForm.name = ($event.target as HTMLInputElement).value; autoSlug()"
-            label="Team Name"
-            required
-            style="width:100%;margin-bottom:16px;"
-          />
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">@</span>
-            <md-outlined-text-field
-              :value="createForm.slug"
+            required />
+        </label>
+        <div class="slug-row">
+          <span class="slug-prefix">@</span>
+          <label class="form-field form-field--grow">
+            <span class="form-field__label">Slug *</span>
+            <input type="text" class="form-input" :value="createForm.slug"
               @input="createForm.slug = ($event.target as HTMLInputElement).value"
-              label="Slug"
-              required
-              pattern="[a-z0-9-]+"
-              title="Only lowercase letters, numbers, and hyphens"
-              style="flex:1;"
-            />
-          </div>
-          <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:16px;">
-            Lowercase letters, numbers, and hyphens only.
-          </div>
-          <md-outlined-text-field
-            :value="createForm.description"
-            @input="createForm.description = ($event.target as HTMLInputElement).value"
-            label="Description (optional)"
-            type="textarea"
-            rows="2"
-            style="width:100%;margin-bottom:16px;"
-          />
-          <div v-if="createError" class="feedback-error">
-            <span class="material-symbols-outlined" style="font-size:18px;">error</span>
-            {{ createError }}
-          </div>
-        </form>
+              pattern="[a-z0-9-]+" required />
+          </label>
+        </div>
+        <p class="form-hint">Lowercase letters, numbers, and hyphens only.</p>
+        <label class="form-field">
+          <span class="form-field__label">Description (optional)</span>
+          <textarea class="form-textarea" :value="createForm.description"
+            @input="createForm.description = ($event.target as HTMLTextAreaElement).value"
+            rows="2"></textarea>
+        </label>
+        <div v-if="createError" class="feedback-error">
+          <span class="material-symbols-outlined feedback-icon">error</span>
+          {{ createError }}
+        </div>
       </div>
       <template #actions>
         <button class="btn-text" @click="closeCreateModal">Cancel</button>
         <button class="btn-filled" :disabled="createLoading" @click="submitCreateTeam">
-          <md-circular-progress v-if="createLoading" indeterminate style="margin-right:8px;" />
+          <div v-if="createLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Create Team
         </button>
       </template>
@@ -247,33 +212,30 @@
     <!-- ── Edit Team Dialog ───────────────────────────────────────────────── -->
     <BaseModal v-model="showEditModal" size="md" @closed="showEditModal = false">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">edit</span>
+        <span class="material-symbols-outlined modal-icon modal-icon--primary">edit</span>
         Edit Team
       </template>
-      <div style="min-width:480px;max-width:100%;">
-        <md-outlined-text-field
-          :value="editForm.name"
-          @input="editForm.name = ($event.target as HTMLInputElement).value"
-          label="Team Name"
-          style="width:100%;margin-bottom:16px;"
-        />
-        <md-outlined-text-field
-          :value="editForm.description"
-          @input="editForm.description = ($event.target as HTMLInputElement).value"
-          label="Description"
-          type="textarea"
-          rows="2"
-          style="width:100%;"
-        />
-        <div v-if="editError" class="feedback-error" style="margin-top:16px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+      <div class="modal-form">
+        <label class="form-field">
+          <span class="form-field__label">Team Name</span>
+          <input type="text" class="form-input" :value="editForm.name"
+            @input="editForm.name = ($event.target as HTMLInputElement).value" />
+        </label>
+        <label class="form-field">
+          <span class="form-field__label">Description</span>
+          <textarea class="form-textarea" :value="editForm.description"
+            @input="editForm.description = ($event.target as HTMLTextAreaElement).value"
+            rows="2"></textarea>
+        </label>
+        <div v-if="editError" class="feedback-error">
+          <span class="material-symbols-outlined feedback-icon">error</span>
           {{ editError }}
         </div>
       </div>
       <template #actions>
         <button class="btn-text" @click="showEditModal = false">Cancel</button>
         <button class="btn-filled" :disabled="editLoading" @click="submitEditTeam">
-          <md-circular-progress v-if="editLoading" indeterminate style="margin-right:8px;" />
+          <div v-if="editLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Save Changes
         </button>
       </template>
@@ -282,36 +244,31 @@
     <!-- ── Invite Member Dialog ───────────────────────────────────────────── -->
     <BaseModal v-model="showInviteModal" size="md" @closed="closeInviteModal">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">person_add</span>
+        <span class="material-symbols-outlined modal-icon modal-icon--primary">person_add</span>
         Invite Member
       </template>
-      <div style="min-width:480px;max-width:100%;">
-        <md-outlined-text-field
-          :value="inviteForm.email"
-          @input="inviteForm.email = ($event.target as HTMLInputElement).value"
-          label="Email Address"
-          type="email"
-          required
-          style="width:100%;margin-bottom:16px;"
-        />
-        <AppSelect
-          :model-value="inviteForm.role"
+      <div class="modal-form">
+        <label class="form-field">
+          <span class="form-field__label">Email Address *</span>
+          <input type="email" class="form-input" :value="inviteForm.email"
+            @input="inviteForm.email = ($event.target as HTMLInputElement).value"
+            required />
+        </label>
+        <AppSelect :model-value="inviteForm.role"
           @update:model-value="inviteForm.role = $event as 'admin' | 'member'"
-          label="Role"
-          style="width:100%;"
-        >
+          label="Role">
           <option value="member">Member</option>
           <option value="admin">Admin</option>
         </AppSelect>
-        <div v-if="inviteError" class="feedback-error" style="margin-top:16px;">
-          <span class="material-symbols-outlined" style="font-size:18px;">error</span>
+        <div v-if="inviteError" class="feedback-error">
+          <span class="material-symbols-outlined feedback-icon">error</span>
           {{ inviteError }}
         </div>
       </div>
       <template #actions>
         <button class="btn-text" @click="closeInviteModal">Cancel</button>
         <button class="btn-filled" :disabled="inviteLoading" @click="submitInvite">
-          <md-circular-progress v-if="inviteLoading" indeterminate style="margin-right:8px;" />
+          <div v-if="inviteLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Send Invitation
         </button>
       </template>
@@ -320,19 +277,16 @@
     <!-- ── Confirm Delete Dialog ──────────────────────────────────────────── -->
     <BaseModal v-model="showDeleteConfirm" size="sm" :persistent="false" @closed="showDeleteConfirm = false">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">delete</span>
+        <span class="material-symbols-outlined modal-icon modal-icon--danger">delete</span>
         Delete Team
       </template>
-      <p style="color:var(--md-sys-color-on-surface-variant);">
+      <p class="modal-text">
         Are you sure you want to delete <strong>{{ teamToDelete?.name }}</strong>? This action cannot be undone.
       </p>
       <template #actions>
         <button class="btn-text" @click="showDeleteConfirm = false">Cancel</button>
-        <button class="btn-filled btn-danger"
-          :disabled="deleteLoading"
-          @click="deleteTeam"
-        >
-          <md-circular-progress v-if="deleteLoading" indeterminate style="margin-right:8px;" />
+        <button class="btn-filled btn-danger" :disabled="deleteLoading" @click="deleteTeam">
+          <div v-if="deleteLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Delete Team
         </button>
       </template>
@@ -341,19 +295,14 @@
     <!-- ── Confirm Leave Dialog ───────────────────────────────────────────── -->
     <BaseModal v-model="showLeaveConfirm" size="sm" :persistent="false" @closed="showLeaveConfirm = false">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-on-surface-variant)">logout</span>
+        <span class="material-symbols-outlined modal-icon">logout</span>
         Leave Team
       </template>
-      <p style="color:var(--md-sys-color-on-surface-variant);">
-        Are you sure you want to leave <strong>{{ teamToLeave?.name }}</strong>?
-      </p>
+      <p class="modal-text">Are you sure you want to leave <strong>{{ teamToLeave?.name }}</strong>?</p>
       <template #actions>
         <button class="btn-text" @click="showLeaveConfirm = false">Cancel</button>
-        <button class="btn-filled btn-danger"
-          :disabled="leaveLoading"
-          @click="leaveTeam"
-        >
-          <md-circular-progress v-if="leaveLoading" indeterminate style="margin-right:8px;" />
+        <button class="btn-filled btn-danger" :disabled="leaveLoading" @click="leaveTeam">
+          <div v-if="leaveLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Leave Team
         </button>
       </template>
@@ -362,19 +311,16 @@
     <!-- ── Confirm Remove Member Dialog ──────────────────────────────────── -->
     <BaseModal v-model="showRemoveConfirm" size="sm" :persistent="false" @closed="showRemoveConfirm = false">
       <template #headline>
-        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error)">person_remove</span>
+        <span class="material-symbols-outlined modal-icon modal-icon--danger">person_remove</span>
         Remove Member
       </template>
-      <p style="color:var(--md-sys-color-on-surface-variant);margin:0;">
+      <p class="modal-text">
         Remove <strong>{{ memberToRemove?.email }}</strong> from the team? This cannot be undone.
       </p>
       <template #actions>
         <button class="btn-text" @click="showRemoveConfirm = false">Cancel</button>
-        <button class="btn-filled btn-danger"
-          :disabled="removeLoading"
-          @click="removeMember"
-        >
-          <md-circular-progress v-if="removeLoading" indeterminate style="margin-right:8px;" />
+        <button class="btn-filled btn-danger" :disabled="removeLoading" @click="removeMember">
+          <div v-if="removeLoading" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Remove
         </button>
       </template>
@@ -659,7 +605,7 @@ async function changeMemberRole(member: TeamMember, newRole: string) {
   try {
     await teamsApi.updateMemberRole(selectedTeam.value.id, member.user_id, newRole);
     const idx = members.value.findIndex((m) => m.id === member.id);
-    if (idx !== -1) members.value[idx] = { ...members.value[idx], role: newRole as 'admin' | 'member' };
+    if (idx !== -1) members.value[idx] = { ...members.value[idx]!, role: newRole as 'admin' | 'member' };
     showToast('Role updated successfully!');
   } catch (e: any) {
     showToast(e?.response?.data?.error?.description ?? 'Failed to update role', 'error');
@@ -683,7 +629,7 @@ async function removeMember() {
     memberToRemove.value = null;
     // Update member count
     const idx = teams.value.findIndex((t) => t.id === selectedTeam.value?.id);
-    if (idx !== -1) teams.value[idx].member_count = Math.max(0, teams.value[idx].member_count - 1);
+    if (idx !== -1) teams.value[idx]!.member_count = Math.max(0, teams.value[idx]!.member_count - 1);
   } catch (e: any) {
     showToast(e?.response?.data?.error?.description ?? 'Failed to remove member', 'error');
   } finally {
@@ -750,97 +696,133 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-/* ── Page Header ──────────────────────────────────────────────────────────── */
-.dash-page-header {
+.teams-page {
+  max-width: 1100px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
 
-  &__left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &__subtitle {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.875rem;
-    margin: 0;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-  }
+  &__left { display: flex; flex-direction: column; gap: 4px; }
+  &__actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 }
 
-/* ── Empty state ──────────────────────────────────────────────────────────── */
-.m3-empty-state {
+.page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm { width: 16px; height: 16px; border-width: 2px; }
+  &--white { border-color: rgba(255,255,255,0.35); border-top-color: #fff; }
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-center {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 64px 24px;
-  text-align: center;
+  padding: 64px;
 
-  &__icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-
-    .material-symbols-outlined {
-      font-size: 2rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
-  }
+  &--sm { padding: 32px; }
 }
 
-/* ── Cards ────────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 12px;
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-card {
   background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 20px;
-
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
-  }
 }
 
-/* ── M3 Card header ───────────────────────────────────────────────────────── */
-.m3-card-header {
+.an-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 14px 20px;
-  gap: 1rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
   flex-wrap: wrap;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 }
 
-/* ── Teams grid ───────────────────────────────────────────────────────────── */
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.empty-desc {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Teams grid ──────────────────────────────────────────────────────────── */
 .teams-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
-  margin-bottom: 20px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -848,25 +830,67 @@ onMounted(() => {
 }
 
 .team-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.15s, outline 0.15s;
+  transition: box-shadow 0.15s, border-color 0.15s;
 
   &:hover {
     box-shadow: 0 4px 16px rgba(99, 91, 255, 0.15);
-    outline: 1px solid var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
   }
 
-  &.selected {
-    outline: 2px solid var(--md-sys-color-primary);
+  &--selected {
+    border-color: var(--md-sys-color-primary);
+    border-width: 2px;
     box-shadow: 0 0 0 4px rgba(99, 91, 255, 0.12);
   }
+
+  &__body { padding: 20px; }
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
 }
 
-.team-card-body {
-  padding: 20px;
+.team-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 4px;
 }
 
-/* ── Avatars ──────────────────────────────────────────────────────────────── */
+.team-slug {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 6px;
+}
+
+.team-description {
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 8px;
+  line-height: 1.4;
+}
+
+.team-members-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.member-icon {
+  font-size: 16px;
+}
+
+/* ── Avatars ─────────────────────────────────────────────────────────────── */
 .team-avatar {
   width: 42px;
   height: 42px;
@@ -895,31 +919,31 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.member-avatar {
-  width: 32px;
-  height: 32px;
-  background: var(--md-sys-color-surface-container-low);
-  color: var(--md-sys-color-on-surface-variant);
+/* ── Team detail ─────────────────────────────────────────────────────────── */
+.team-detail-name {
+  font-size: 1rem;
   font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.team-detail-slug {
   font-size: 0.8rem;
-  border-radius: 50%;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.team-detail-actions {
   display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
-/* ── Team detail card ─────────────────────────────────────────────────────── */
-.team-detail-card {
-  margin-top: 4px;
-}
-
-/* ── Table ────────────────────────────────────────────────────────────────── */
-.m3-table-wrapper {
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.table-wrapper {
   overflow-x: auto;
 }
 
-.members-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
@@ -942,51 +966,76 @@ onMounted(() => {
     color: var(--md-sys-color-on-surface);
   }
 
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  tbody tr:hover td {
-    background: var(--md-sys-color-surface-container-low);
-  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--md-sys-color-surface-container-low); }
 }
 
-/* ── M3 badge variants ────────────────────────────────────────────────────── */
+.th-right { text-align: right; }
+.td-right { text-align: right; }
+.td-empty { text-align: center; color: var(--md-sys-color-on-surface-variant); padding: 32px 16px !important; }
+.cell-muted { color: var(--md-sys-color-on-surface-variant); }
+.cell-sm { font-size: 0.8rem; }
+
+/* ── Member row ──────────────────────────────────────────────────────────── */
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-avatar {
+  width: 32px;
+  height: 32px;
+  background: var(--md-sys-color-surface-container-low);
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.member-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.member-email {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.owner-label {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
   text-transform: capitalize;
 
-  &--primary {
-    background: rgba(99, 91, 255, 0.12);
-    color: var(--md-sys-color-primary);
-  }
-
-  &--info {
-    background: rgba(2, 136, 209, 0.12);
-    color: #0277bd;
-  }
-
-  &--success {
-    background: rgba(22, 163, 74, 0.12);
-    color: #16a34a;
-  }
-
-  &--warning {
-    background: rgba(245, 158, 11, 0.12);
-    color: #92400e;
-  }
-
-  &--error {
-    background: rgba(220, 38, 38, 0.12);
-    color: var(--md-sys-color-error);
-  }
-
+  &--primary { background: rgba(99, 91, 255, 0.12); color: var(--md-sys-color-primary); }
+  &--info { background: rgba(2, 136, 209, 0.12); color: #0277bd; }
+  &--success { background: rgba(22, 163, 74, 0.12); color: #16a34a; }
+  &--warning { background: rgba(245, 158, 11, 0.12); color: #92400e; }
+  &--error { background: rgba(220, 38, 38, 0.12); color: var(--md-sys-color-error); }
   &--neutral {
     background: var(--md-sys-color-surface-container-low);
     color: var(--md-sys-color-on-surface-variant);
@@ -994,7 +1043,112 @@ onMounted(() => {
   }
 }
 
-/* ── Feedback error ───────────────────────────────────────────────────────── */
+/* ── Danger button ───────────────────────────────────────────────────────── */
+.btn-danger {
+  color: var(--md-sys-color-error) !important;
+  border-color: var(--md-sys-color-error) !important;
+}
+
+.btn-icon--danger {
+  color: var(--md-sys-color-error);
+  &:hover { background: rgba(220,38,38,0.08); }
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-form {
+  min-width: 480px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-text {
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+}
+
+.modal-icon {
+  font-size: 20px;
+  vertical-align: middle;
+  margin-right: 4px;
+
+  &--primary { color: var(--md-sys-color-primary); }
+  &--danger { color: var(--md-sys-color-error); }
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &--grow { flex: 1; }
+}
+
+.form-field__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+}
+
+.form-textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+}
+
+.form-hint {
+  margin: -8px 0 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.slug-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.slug-prefix {
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Feedback ────────────────────────────────────────────────────────────── */
 .feedback-error {
   display: flex;
   align-items: center;
@@ -1006,7 +1160,9 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
-/* ── Snackbar ─────────────────────────────────────────────────────────────── */
+.feedback-icon { font-size: 18px; flex-shrink: 0; }
+
+/* ── Snackbar ────────────────────────────────────────────────────────────── */
 .m3-snackbar {
   position: fixed;
   bottom: 24px;
@@ -1025,14 +1181,9 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0,0,0,0.24);
 }
 
-.snack-enter-active,
-.snack-leave-active {
-  transition: all 0.25s;
-}
+.snack-icon { font-size: 20px; flex-shrink: 0; }
+.snack-text { flex: 1; font-size: 0.875rem; }
 
-.snack-enter-from,
-.snack-leave-to {
-  transform: translateY(80px);
-  opacity: 0;
-}
+.snack-enter-active, .snack-leave-active { transition: all 0.25s; }
+.snack-enter-from, .snack-leave-to { transform: translateY(80px); opacity: 0; }
 </style>

@@ -1,9 +1,9 @@
 <template>
-  <div class="page-wrapper">
+  <div class="domains-page">
 
     <!-- Page Header -->
     <div class="page-header">
-      <div>
+      <div class="page-header__left">
         <h1 class="page-title">Custom Domains</h1>
         <p class="page-subtitle">Use your own domain to serve short links.</p>
       </div>
@@ -15,17 +15,17 @@
 
     <!-- Snackbar / Alert -->
     <Transition name="snack">
-      <div v-if="alertMsg" class="m3-snackbar">
-        <span class="material-symbols-outlined" style="font-size:20px;">{{ alertType === 'error' ? 'error' : 'check_circle' }}</span>
-        <span style="flex:1">{{ alertMsg }}</span>
+      <div v-if="alertMsg" :class="['m3-snackbar', alertType === 'error' ? 'm3-snackbar--error' : '']">
+        <span class="material-symbols-outlined snack-icon">{{ alertType === 'error' ? 'error' : 'check_circle' }}</span>
+        <span class="snack-text">{{ alertMsg }}</span>
         <button class="btn-text" @click="alertMsg = ''">Dismiss</button>
       </div>
     </Transition>
 
     <!-- DNS instructions info card -->
-    <div class="m3-card m3-card--outlined info-card">
-      <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);flex-shrink:0;">info</span>
-      <div style="font-size:0.875rem;color:var(--md-sys-color-on-surface);">
+    <div class="info-card">
+      <span class="material-symbols-outlined info-card__icon">info</span>
+      <div class="info-card__text">
         <strong>How it works:</strong> Add your domain, then create a DNS TXT record
         <code>_shortlink-verify.&lt;yourdomain.com&gt;</code> with the value shown below,
         then click <em>Verify</em>. Once verified, point your domain's CNAME to
@@ -34,17 +34,17 @@
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;justify-content:center;padding:48px;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-center">
+      <div class="css-spinner"></div>
     </div>
 
     <!-- Empty state -->
-    <div v-else-if="domains.length === 0" class="m3-card m3-card--elevated m3-empty-state">
-      <div class="m3-empty-state__icon">
+    <div v-else-if="domains.length === 0" class="an-card empty-state">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">language</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:8px;">No custom domains yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin:0 0 20px;">Add your first domain to start using branded short links.</p>
+      <div class="empty-title">No custom domains yet</div>
+      <p class="empty-desc">Add your first domain to start using branded short links.</p>
       <button class="btn-filled" @click="showAddModal = true">
         <span class="material-symbols-outlined">add</span>
         Add Domain
@@ -52,53 +52,50 @@
     </div>
 
     <!-- Domains table -->
-    <div v-else class="m3-card m3-card--elevated">
-      <div class="m3-card-header">
-        <div class="m3-card-header__left">
-          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">language</span>
-          <span class="md-title-medium">Custom Domains</span>
+    <div v-else class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-header__left">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">language</span>
+          </div>
+          <span class="an-card-title">Custom Domains</span>
         </div>
         <span class="m3-badge m3-badge--neutral">{{ domains.length }} domain{{ domains.length !== 1 ? 's' : '' }}</span>
       </div>
-      <md-divider />
-      <div class="m3-table-wrapper">
-        <table class="m3-table">
+      <div class="table-wrapper">
+        <table class="data-table">
           <thead>
             <tr>
               <th>Domain</th>
               <th>Status</th>
               <th>Verify Token</th>
               <th>Added</th>
-              <th style="text-align:right">Actions</th>
+              <th class="th-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="d in domains" :key="d.id">
-              <td style="font-weight:500;">{{ d.domain }}</td>
+              <td class="cell-strong">{{ d.domain }}</td>
               <td>
                 <span :class="['m3-badge', statusClass(d.status)]">{{ d.status }}</span>
               </td>
               <td>
                 <div class="copy-field">
                   <code class="copy-field__value">{{ d.verify_token }}</code>
-                  <button class="btn-icon"
-                    title="Copy verification token"
-                    @click="copyToken(d.verify_token)"
-                    style="flex-shrink:0;"
-                  >
-                    <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
+                  <button class="btn-icon" title="Copy verification token" @click="copyToken(d.verify_token)">
+                    <span class="material-symbols-outlined copy-icon">content_copy</span>
                   </button>
                 </div>
               </td>
-              <td style="color:var(--md-sys-color-on-surface-variant);font-size:0.8rem;white-space:nowrap;">{{ formatDate(d.created_at) }}</td>
-              <td style="text-align:right;">
-                <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;">
+              <td class="cell-muted cell-sm cell-nowrap">{{ formatDate(d.created_at) }}</td>
+              <td class="td-right">
+                <div class="row-actions">
                   <button class="btn-outlined"
                     v-if="d.status !== 'verified'"
                     :disabled="verifying === d.id"
                     @click="verify(d)"
                   >
-                    <md-circular-progress v-if="verifying === d.id" indeterminate style="margin-right:6px;" />
+                    <div v-if="verifying === d.id" class="css-spinner css-spinner--sm"></div>
                     <span v-else class="material-symbols-outlined">verified</span>
                     Verify
                   </button>
@@ -106,7 +103,7 @@
                     :disabled="deleting === d.id"
                     @click="confirmDelete(d)"
                   >
-                    <md-circular-progress v-if="deleting === d.id" indeterminate style="margin-right:6px;" />
+                    <div v-if="deleting === d.id" class="css-spinner css-spinner--sm"></div>
                     <span v-else class="material-symbols-outlined">delete</span>
                     Remove
                   </button>
@@ -120,31 +117,30 @@
 
     <!-- Add Domain Dialog -->
     <BaseModal v-model="showAddModal" size="md" @closed="closeAddModal">
-      <template #headline>
-        Add Custom Domain
-      </template>
+      <template #headline>Add Custom Domain</template>
 
-      <div style="min-width:480px;max-width:100%;">
-        <div v-if="addError" style="margin-bottom:16px;padding:10px 14px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);border-radius:8px;font-size:0.875rem;">
+      <div class="modal-body">
+        <div v-if="addError" class="feedback-error">
           {{ addError }}
         </div>
-        <md-outlined-text-field
-          :value="newDomain"
-          @input="newDomain=($event.target as HTMLInputElement).value"
-          label="Domain"
-          placeholder="links.yourdomain.com"
-          style="width:100%;"
-          @keydown.enter="addDomain"
-        />
-        <div style="font-size:0.75rem;color:var(--md-sys-color-on-surface-variant);margin-top:8px;">
-          Enter the domain or subdomain you want to use (e.g. <code>go.acme.com</code>).
-        </div>
+        <label class="form-field">
+          <span class="form-field__label">Domain</span>
+          <input
+            type="text"
+            class="form-input"
+            :value="newDomain"
+            @input="newDomain=($event.target as HTMLInputElement).value"
+            placeholder="links.yourdomain.com"
+            @keydown.enter="addDomain"
+          />
+          <span class="form-field__hint">Enter the domain or subdomain you want to use (e.g. <code>go.acme.com</code>).</span>
+        </label>
       </div>
 
       <template #actions>
         <button class="btn-text" @click="closeAddModal">Cancel</button>
         <button class="btn-filled" :disabled="adding" @click="addDomain">
-          <md-circular-progress v-if="adding" indeterminate style="margin-right:6px;" />
+          <div v-if="adding" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Add Domain
         </button>
       </template>
@@ -152,18 +148,16 @@
 
     <!-- Confirm Delete Dialog -->
     <BaseModal v-model="showDeleteModal" size="sm" @closed="deleteTarget = null">
-      <template #headline>
-        Remove Domain
-      </template>
+      <template #headline>Remove Domain</template>
 
-      <div style="min-width:400px;max-width:100%;">
-        <p style="margin:0;font-size:0.9375rem;">Remove <strong>{{ deleteTarget?.domain }}</strong>? This cannot be undone.</p>
+      <div class="modal-body">
+        <p class="modal-text">Remove <strong>{{ deleteTarget?.domain }}</strong>? This cannot be undone.</p>
       </div>
 
       <template #actions>
         <button class="btn-text" @click="showDeleteModal = false; deleteTarget = null">Cancel</button>
         <button class="btn-filled btn-danger" :disabled="!!deleting" @click="deleteDomain">
-          <md-circular-progress v-if="deleting" indeterminate style="margin-right:6px;" />
+          <div v-if="deleting" class="css-spinner css-spinner--sm css-spinner--white"></div>
           Remove
         </button>
       </template>
@@ -301,75 +295,200 @@ onMounted(fetchDomains);
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 24px;
+.domains-page {
   max-width: 1000px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
+/* ── Page Header ─────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
 }
 
+.page-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .page-title {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 700;
-  margin: 0 0 4px;
+  margin: 0;
   color: var(--md-sys-color-on-surface);
 }
 
 .page-subtitle {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
   margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
-.m3-card {
-  border-radius: 12px;
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-card {
   background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 20px;
-
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
-  }
-
-  &--outlined {
-    border: 1px solid var(--md-sys-color-outline-variant);
-  }
 }
 
-.m3-card-header {
+.an-card-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: 14px 20px;
-  gap: 1rem;
-  flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
 
   &__left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    flex: 1;
   }
 }
 
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    color: var(--md-sys-color-primary);
+  }
+}
+
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ── Info card ───────────────────────────────────────────────────────────── */
 .info-card {
   display: flex;
   align-items: flex-start;
   gap: 12px;
   padding: 16px;
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+
+  &__icon {
+    color: var(--md-sys-color-primary);
+    flex-shrink: 0;
+    font-size: 20px;
+    margin-top: 1px;
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface);
+    line-height: 1.5;
+
+    code {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8em;
+      background: var(--md-sys-color-surface-container-low);
+      padding: 1px 4px;
+      border-radius: 4px;
+    }
+  }
 }
 
-.m3-table-wrapper {
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+  gap: 0;
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--md-sys-color-on-surface);
+}
+
+.empty-desc {
+  margin: 0 0 20px;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.table-wrapper {
   overflow-x: auto;
 }
 
-.m3-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
@@ -404,11 +523,26 @@ onMounted(fetchDomains);
   }
 }
 
+.th-right { text-align: right; }
+.td-right { text-align: right; }
+.cell-strong { font-weight: 500; }
+.cell-muted { color: var(--md-sys-color-on-surface-variant); }
+.cell-sm { font-size: 0.8rem; }
+.cell-nowrap { white-space: nowrap; }
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
@@ -424,34 +558,7 @@ onMounted(fetchDomains);
   }
 }
 
-/* Empty state */
-.m3-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 24px;
-  text-align: center;
-
-  &__icon {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: var(--md-sys-color-surface-container-low);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 16px;
-
-    .material-symbols-outlined {
-      font-size: 2rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.6;
-    }
-  }
-}
-
-/* Copy field */
+/* ── Copy field ──────────────────────────────────────────────────────────── */
 .copy-field {
   display: inline-flex;
   align-items: center;
@@ -462,20 +569,99 @@ onMounted(fetchDomains);
   border: 1px solid var(--md-sys-color-outline-variant);
   max-width: 240px;
   overflow: hidden;
+
+  &__value {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: var(--md-sys-color-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+  }
 }
 
-.copy-field__value {
-  font-family: 'Courier New', 'Courier', monospace;
-  font-size: 0.72rem;
+.copy-icon {
+  font-size: 16px !important;
+}
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-body {
+  min-width: 400px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-text {
+  margin: 0;
+  font-size: 0.9375rem;
   color: var(--md-sys-color-on-surface);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1;
-  min-width: 0;
 }
 
-/* Snackbar */
+/* ── Form field ──────────────────────────────────────────────────────────── */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.form-field__hint {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+
+  code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    background: var(--md-sys-color-surface-container-low);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+}
+
+/* ── Feedback error ──────────────────────────────────────────────────────── */
+.feedback-error {
+  padding: 10px 14px;
+  background: var(--md-sys-color-error-container);
+  color: var(--md-sys-color-on-error-container);
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+/* ── Danger button ───────────────────────────────────────────────────────── */
+.btn-danger {
+  --btn-danger: var(--md-sys-color-error, #dc2626);
+  border-color: var(--btn-danger) !important;
+  color: var(--btn-danger) !important;
+}
+
+/* ── Snackbar ────────────────────────────────────────────────────────────── */
 .m3-snackbar {
   position: fixed;
   bottom: 24px;
@@ -492,7 +678,12 @@ onMounted(fetchDomains);
   max-width: 560px;
   z-index: 1000;
   box-shadow: 0 4px 12px rgba(0,0,0,0.24);
+
+  &--error { background: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container); }
 }
+
+.snack-icon { font-size: 20px; flex-shrink: 0; }
+.snack-text { flex: 1; font-size: 0.875rem; }
 
 .snack-enter-active, .snack-leave-active { transition: all .25s; }
 .snack-enter-from, .snack-leave-to { transform: translate(-50%, 80px); opacity: 0; }

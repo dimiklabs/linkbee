@@ -1,174 +1,152 @@
 <template>
-  <div class="page-wrapper">
+  <div class="link-comparison-page">
 
     <!-- Page Header -->
     <div class="page-header">
-      <div>
-        <h1 class="md-title-large">Compare Links</h1>
-        <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.25rem;">Select 2–5 links to compare their performance side by side.</p>
-      </div>
+      <h1 class="md-title-large page-title">Compare Links</h1>
+      <p class="page-subtitle">Select 2–5 links to compare their performance side by side.</p>
     </div>
 
     <!-- Filters Card -->
-    <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
-      <div class="m3-card-header">
-        <div class="m3-card-header__left">
-          <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">compare_arrows</span>
-          <span class="md-title-medium">Configure Comparison</span>
+    <div class="an-card">
+      <div class="an-card-header">
+        <div class="an-card-icon an-card-icon--primary">
+          <span class="material-symbols-outlined">compare_arrows</span>
         </div>
+        <span class="an-card-title">Configure Comparison</span>
       </div>
-      <md-divider />
-      <div style="padding:1.25rem;">
-      <div class="filter-grid">
-        <!-- Link selector -->
-        <div class="link-selector-wrapper">
-          <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:0.5rem;font-weight:500;">
-            Links <span style="font-weight:400;">(select 2–5)</span>
-          </div>
-          <div class="link-selector" :class="{ open: selectorOpen }" ref="selectorRef">
-            <div
-              class="selector-trigger"
-              @click="selectorOpen = !selectorOpen"
-            >
-              <span v-if="selectedIds.length === 0" style="color:var(--md-sys-color-on-surface-variant);" class="md-body-medium">Choose links to compare…</span>
-              <span v-else class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ selectedIds.length }} link{{ selectedIds.length > 1 ? 's' : '' }} selected</span>
-              <span class="material-symbols-outlined" style="font-size:18px;flex-shrink:0;color:var(--md-sys-color-on-surface-variant);">expand_more</span>
+      <div class="an-card-body">
+        <div class="filter-grid">
+          <!-- Link selector -->
+          <div class="link-selector-wrapper">
+            <div class="form-field__label" style="margin-bottom:8px;">
+              Links <span style="font-weight:400;color:var(--md-sys-color-on-surface-variant);">(select 2–5)</span>
             </div>
-            <div v-if="selectorOpen" class="selector-dropdown">
-              <div style="padding:0.5rem 0.75rem 0.25rem;">
-                <md-outlined-text-field
-                  :value="linkSearch"
-                  @input="linkSearch = ($event.target as HTMLInputElement).value"
-                  label="Search links…"
-                  style="width:100%;"
-                  @click.stop
-                />
+            <div class="link-selector" :class="{ open: selectorOpen }" ref="selectorRef">
+              <div class="selector-trigger" @click="selectorOpen = !selectorOpen">
+                <span v-if="selectedIds.length === 0" class="selector-placeholder">Choose links to compare…</span>
+                <span v-else class="selector-value">{{ selectedIds.length }} link{{ selectedIds.length > 1 ? 's' : '' }} selected</span>
+                <span class="material-symbols-outlined selector-chevron">expand_more</span>
               </div>
-              <div class="selector-options">
-                <label
-                  v-for="link in filteredLinks"
-                  :key="link.id"
-                  class="selector-option"
-                  :class="{ disabled: !selectedIds.includes(link.id) && selectedIds.length >= 5 }"
-                  @click.stop
-                >
+              <div v-if="selectorOpen" class="selector-dropdown">
+                <div style="padding:0.5rem 0.75rem 0.25rem;">
                   <input
-                    type="checkbox"
-                    :value="link.id"
-                    v-model="selectedIds"
-                    :disabled="!selectedIds.includes(link.id) && selectedIds.length >= 5"
-                    class="selector-checkbox"
+                    class="form-input"
+                    :value="linkSearch"
+                    @input="linkSearch = ($event.target as HTMLInputElement).value"
+                    placeholder="Search links…"
+                    @click.stop
                   />
-                  <div style="min-width:0;">
-                    <div class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ link.title || link.slug }}</div>
-                    <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ link.short_url }}</div>
-                  </div>
-                </label>
-                <div v-if="filteredLinks.length === 0" class="md-body-small" style="text-align:center;color:var(--md-sys-color-on-surface-variant);padding:1rem;">No links found</div>
+                </div>
+                <div class="selector-options">
+                  <label
+                    v-for="link in filteredLinks"
+                    :key="link.id"
+                    class="selector-option"
+                    :class="{ disabled: !selectedIds.includes(link.id) && selectedIds.length >= 5 }"
+                    @click.stop
+                  >
+                    <input
+                      type="checkbox"
+                      :value="link.id"
+                      v-model="selectedIds"
+                      :disabled="!selectedIds.includes(link.id) && selectedIds.length >= 5"
+                      class="selector-checkbox"
+                    />
+                    <div style="min-width:0;">
+                      <div class="selector-option__title">{{ link.title || link.slug }}</div>
+                      <div class="selector-option__url">{{ link.short_url }}</div>
+                    </div>
+                  </label>
+                  <div v-if="filteredLinks.length === 0" class="selector-empty">No links found</div>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- From date -->
+          <label class="date-field">
+            <span class="date-field__label">From</span>
+            <input type="date" class="form-input form-input--date" :value="filterFrom" @input="filterFrom = ($event.target as HTMLInputElement).value" />
+          </label>
+
+          <!-- To date -->
+          <label class="date-field">
+            <span class="date-field__label">To</span>
+            <input type="date" class="form-input form-input--date" :value="filterTo" @input="filterTo = ($event.target as HTMLInputElement).value" />
+          </label>
+
+          <!-- Actions -->
+          <div class="filter-actions">
+            <button class="btn-filled"
+              style="flex:1;"
+              :disabled="loading || selectedIds.length < 2"
+              @click="runComparison"
+            >
+              <span v-if="loading" class="css-spinner css-spinner--sm css-spinner--white"></span>
+              Compare
+            </button>
+            <button class="btn-icon" v-if="result" title="Export to CSV" @click="exportCSV">
+              <span class="material-symbols-outlined">download</span>
+            </button>
+          </div>
         </div>
 
-        <!-- From date -->
-        <md-outlined-text-field
-          type="date"
-          label="From"
-          :value="filterFrom"
-          @input="filterFrom = ($event.target as HTMLInputElement).value"
-          style="min-width:150px;"
-        />
-
-        <!-- To date -->
-        <md-outlined-text-field
-          type="date"
-          label="To"
-          :value="filterTo"
-          @input="filterTo = ($event.target as HTMLInputElement).value"
-          style="min-width:150px;"
-        />
-
-        <!-- Actions -->
-        <div style="display:flex;gap:0.5rem;align-items:flex-end;padding-bottom:0.125rem;">
-          <button class="btn-filled"
-            style="flex:1;"
-            :disabled="loading || selectedIds.length < 2"
-            @click="runComparison"
-          >
-            <span v-if="loading"><md-circular-progress indeterminate /></span>
-            Compare
-          </button>
-          <button class="btn-icon"
-            v-if="result"
-            title="Export to CSV"
-            @click="exportCSV"
-          >
-            <span class="material-symbols-outlined">download</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Validation hint -->
-      <div v-if="selectedIds.length === 1" style="margin-top:0.75rem;">
-        <span class="md-body-small" style="color:#d97706;">
+        <!-- Validation hint -->
+        <div v-if="selectedIds.length === 1" class="validation-hint">
           <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">info</span>
           Select at least one more link to run a comparison.
-        </span>
-      </div>
+        </div>
 
-      <!-- Selected chips -->
-      <div v-if="selectedIds.length > 0" style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.5rem;">
-        <md-chip-set>
-          <md-input-chip
-            v-for="id in selectedIds"
-            :key="id"
-            :label="getLinkLabel(id)"
-            @remove="selectedIds = selectedIds.filter(s => s !== id)"
-          />
-        </md-chip-set>
-      </div>
+        <!-- Selected chips -->
+        <div v-if="selectedIds.length > 0" class="selected-chips">
+          <span v-for="id in selectedIds" :key="id" class="sel-chip">
+            {{ getLinkLabel(id) }}
+            <button class="sel-chip__remove" @click="selectedIds = selectedIds.filter(s => s !== id)">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="error-banner" style="margin-bottom:1rem;">
+    <div v-if="error" class="error-banner">
       <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
-      <span class="md-body-medium" style="flex:1;">{{ error }}</span>
+      <span style="flex:1;">{{ error }}</span>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 0;gap:1rem;">
-      <md-circular-progress indeterminate />
-      <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">Fetching comparison data…</span>
+    <div v-if="loading" class="loading-state">
+      <span class="css-spinner"></span>
+      <span class="loading-label">Fetching comparison data…</span>
     </div>
 
     <template v-if="!loading && result">
       <!-- Period info -->
-      <div class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);margin-bottom:1rem;">
+      <div class="period-info">
         Showing data from <strong>{{ formatDate(result.from) }}</strong> to <strong>{{ formatDate(result.to) }}</strong>
         &nbsp;·&nbsp; <strong>{{ result.span_days }}</strong> day{{ result.span_days !== 1 ? 's' : '' }}
       </div>
 
       <!-- Bar chart — total clicks -->
-      <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <span class="md-title-medium">Total Clicks Comparison</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <span class="an-card-title">Total Clicks Comparison</span>
         </div>
-        <md-divider />
         <div style="padding:1rem;">
           <VChart :option="barChartOption" style="height:260px;" autoresize />
         </div>
       </div>
 
       <!-- Comparison table -->
-      <div class="m3-card m3-card--elevated">
-        <div class="card-header-row">
+      <div class="an-card">
+        <div class="an-card-header">
           <div>
-            <span class="md-title-medium">Detailed Breakdown</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">Per-link metrics for the selected period</div>
+            <span class="an-card-title">Detailed Breakdown</span>
+            <div class="an-card-subtitle">Per-link metrics for the selected period</div>
           </div>
         </div>
-        <md-divider />
         <div class="m3-table-wrapper">
           <table class="m3-table">
             <thead>
@@ -186,13 +164,11 @@
             <tbody>
               <tr v-for="(link, idx) in result.links" :key="link.link_id">
                 <td>
-                  <div style="display:flex;align-items:center;gap:0.5rem;">
+                  <div class="link-cell">
                     <span class="rank-badge" :style="{ background: chartColors[idx % chartColors.length] }">{{ idx + 1 }}</span>
                     <div style="min-width:0;">
-                      <div class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" :title="link.title || link.slug">
-                        {{ link.title || link.slug }}
-                      </div>
-                      <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ link.slug }}</div>
+                      <div class="link-cell__title" :title="link.title || link.slug">{{ link.title || link.slug }}</div>
+                      <div class="link-cell__slug">{{ link.slug }}</div>
                     </div>
                   </div>
                 </td>
@@ -201,19 +177,19 @@
                 <td style="text-align:right;">{{ link.clicks_per_day.toFixed(1) }}</td>
                 <td>
                   <span v-if="link.top_referrer" class="m3-badge m3-badge--primary">{{ link.top_referrer }}</span>
-                  <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">—</span>
+                  <span v-else class="cell-muted">—</span>
                 </td>
                 <td>
                   <span v-if="link.top_country" class="m3-badge m3-badge--primary">{{ link.top_country }}</span>
-                  <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">—</span>
+                  <span v-else class="cell-muted">—</span>
                 </td>
                 <td>
                   <span v-if="link.top_browser" class="m3-badge m3-badge--primary">{{ link.top_browser }}</span>
-                  <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">—</span>
+                  <span v-else class="cell-muted">—</span>
                 </td>
                 <td>
                   <span v-if="link.top_device" class="m3-badge m3-badge--primary">{{ link.top_device }}</span>
-                  <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">—</span>
+                  <span v-else class="cell-muted">—</span>
                 </td>
               </tr>
             </tbody>
@@ -223,12 +199,12 @@
     </template>
 
     <!-- Empty state -->
-    <div v-if="!loading && !result && !error" class="m3-empty-state-card">
-      <div class="m3-empty-state-icon">
+    <div v-if="!loading && !result && !error" class="empty-state-card">
+      <div class="empty-icon">
         <span class="material-symbols-outlined">bar_chart</span>
       </div>
-      <div class="md-title-medium" style="margin-bottom:0.5rem;">No comparison yet</div>
-      <p class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);max-width:400px;margin:0;">Select 2–5 links above and click <strong>Compare</strong> to see their performance side by side.</p>
+      <div class="empty-title">No comparison yet</div>
+      <p class="empty-desc">Select 2–5 links above and click <strong>Compare</strong> to see their performance side by side.</p>
     </div>
 
   </div>
@@ -393,92 +369,168 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 1.5rem;
+/* ── Root ─────────────────────────────────────────────────────────────────── */
+.link-comparison-page {
   max-width: 1400px;
+  padding: 0;
   margin: 0 auto;
-}
-
-/* Page header */
-.page-header {
-  margin-bottom: 1.5rem;
-}
-
-/* M3 Card header */
-.m3-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-}
-
-/* Card header row */
-.card-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-}
-
-/* Table wrapper */
-.m3-table-wrapper {
-  overflow-x: auto;
-}
-
-/* Error banner */
-.error-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: rgba(176, 0, 32, 0.08);
-  border: 1px solid var(--md-sys-color-error);
-}
-
-/* Empty state card */
-.m3-empty-state-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
+  gap: 20px;
 }
 
-.m3-empty-state-icon {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
+/* ── Page header ──────────────────────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* ── AN Card ──────────────────────────────────────────────────────────────── */
+.an-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  background: var(--md-sys-color-surface);
+  overflow: hidden;
+}
+
+.an-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
   background: var(--md-sys-color-surface-container-low);
+}
+
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  flex-shrink: 0;
 
-  .material-symbols-outlined {
-    font-size: 2rem;
-    color: var(--md-sys-color-on-surface-variant);
-    opacity: 0.6;
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: var(--md-sys-color-primary-container);
+    .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
   }
 }
 
-/* Filter grid */
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  flex: 1;
+}
+
+.an-card-subtitle {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+}
+
+.an-card-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── CSS Spinner ──────────────────────────────────────────────────────────── */
+.css-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Form field ───────────────────────────────────────────────────────────── */
+.form-field__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.form-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
+
+  &--date {
+    width: auto;
+    min-width: 150px;
+  }
+}
+
+/* ── Date field ───────────────────────────────────────────────────────────── */
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* ── Filter grid ──────────────────────────────────────────────────────────── */
 .filter-grid {
   display: grid;
   grid-template-columns: minmax(200px, 1fr) auto auto auto;
-  gap: 0.75rem;
+  gap: 12px;
   align-items: end;
 
   @media (max-width: 767px) {
@@ -490,7 +542,59 @@ onUnmounted(() => {
   }
 }
 
-/* Link selector */
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  padding-bottom: 2px;
+}
+
+/* ── Validation hint ──────────────────────────────────────────────────────── */
+.validation-hint {
+  font-size: 0.8rem;
+  color: #d97706;
+}
+
+/* ── Selected chips ───────────────────────────────────────────────────────── */
+.selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 10px;
+  border-radius: 20px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.sel-chip__remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--md-sys-color-on-secondary-container);
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover { background: rgba(0,0,0,0.08); }
+
+  .material-symbols-outlined { font-size: 14px; }
+}
+
+/* ── Link selector ────────────────────────────────────────────────────────── */
 .link-selector-wrapper {
   min-width: 0;
 }
@@ -504,17 +608,31 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 1rem;
-  height: 56px;
-  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
-  border-radius: 4px;
+  height: 40px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
   cursor: pointer;
   user-select: none;
-  background: var(--md-sys-color-surface, #fff);
+  background: var(--md-sys-color-surface);
   transition: border-color 0.15s;
 
-  &:hover {
-    border-color: var(--md-sys-color-on-surface, #1a1f36);
-  }
+  &:hover { border-color: var(--md-sys-color-on-surface); }
+}
+
+.selector-placeholder {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.9375rem;
+}
+
+.selector-value {
+  font-size: 0.9375rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.selector-chevron {
+  font-size: 18px;
+  flex-shrink: 0;
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .selector-dropdown {
@@ -525,32 +643,44 @@ onUnmounted(() => {
   z-index: 400;
   border-radius: 12px;
   overflow: hidden;
-  background: var(--md-sys-color-surface, #fff);
-  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .selector-options {
   max-height: 240px;
   overflow-y: auto;
-  padding: 0.25rem 0;
+  padding: 4px 0;
 }
 
 .selector-option {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 1rem;
+  gap: 12px;
+  padding: 10px 16px;
   cursor: pointer;
   transition: background 0.12s;
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-low, #f7f9fc);
-  }
+  &:hover { background: var(--md-sys-color-surface-container-low); }
 
   &.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  &__title {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__url {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.7rem;
   }
 }
 
@@ -558,11 +688,109 @@ onUnmounted(() => {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  accent-color: var(--md-sys-color-primary, #635bff);
+  accent-color: var(--md-sys-color-primary);
   cursor: pointer;
 }
 
-/* Rank badge */
+.selector-empty {
+  text-align: center;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+  padding: 1rem;
+}
+
+/* ── Error banner ─────────────────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(176, 0, 32, 0.08);
+  border: 1px solid var(--md-sys-color-error);
+  font-size: 0.875rem;
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  gap: 1rem;
+}
+
+.loading-label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+/* ── Period info ──────────────────────────────────────────────────────────── */
+.period-info {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.875rem;
+}
+
+/* ── Table ────────────────────────────────────────────────────────────────── */
+.m3-table-wrapper {
+  overflow-x: auto;
+}
+
+.m3-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-low);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-on-surface);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover td { background: var(--md-sys-color-surface-container-low); }
+}
+
+.cell-muted {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8rem;
+}
+
+/* ── Link cell ────────────────────────────────────────────────────────────── */
+.link-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  &__slug {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.75rem;
+  }
+}
+
+/* ── Rank badge ───────────────────────────────────────────────────────────── */
 .rank-badge {
   width: 24px;
   height: 24px;
@@ -576,30 +804,14 @@ onUnmounted(() => {
   flex-shrink: 0;
 }
 
-/* M3 Cards */
-.m3-card {
-  border-radius: 12px;
-  overflow: hidden;
-
-  &--elevated {
-    background: var(--md-sys-color-surface-container-low, #fff);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-  }
-
-  &--outlined {
-    background: var(--md-sys-color-surface, #fff);
-    border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
-  }
-}
-
-/* M3 Badges */
+/* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   font-size: 0.7rem;
   font-weight: 500;
   padding: 0.15rem 0.6rem;
-  border-radius: 999px;
+  border-radius: 6px;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -608,51 +820,54 @@ onUnmounted(() => {
 
   &--primary {
     background: rgba(99, 91, 255, 0.1);
-    color: var(--md-sys-color-primary, #635bff);
+    color: var(--md-sys-color-primary);
   }
 
   &--neutral {
     background: rgba(107, 114, 128, 0.1);
     color: #6b7280;
+    border: 1px solid var(--md-sys-color-outline-variant);
   }
 }
 
-/* M3 Table */
-.m3-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8125rem;
-
-  th {
-    padding: 0.625rem 1rem;
-    text-align: left;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface-variant);
-    background: var(--md-sys-color-surface-container-low, #f8f9fa);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
-    white-space: nowrap;
-  }
-
-  td {
-    padding: 0.625rem 1rem;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant, #f0f2f5);
-    color: var(--md-sys-color-on-surface);
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  tbody tr:hover td {
-    background: var(--md-sys-color-surface-container-low, #f8f9fa);
-  }
-}
-
-/* Empty state */
-.empty-state {
+/* ── Empty state ──────────────────────────────────────────────────────────── */
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
   text-align: center;
-  color: var(--md-sys-color-on-surface-variant);
+}
+
+.empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.6;
+  }
+}
+
+.empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin-bottom: 0.5rem;
+}
+
+.empty-desc {
   font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+  max-width: 400px;
+  margin: 0;
 }
 </style>

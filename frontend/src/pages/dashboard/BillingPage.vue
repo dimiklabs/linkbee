@@ -1,17 +1,17 @@
 <template>
-  <div class="page-section" style="max-width: 900px;">
+  <div class="billing-page">
 
     <!-- Page Header -->
-    <div class="dash-page-header">
-      <div class="dash-page-header__left">
-        <h1 class="dash-page-header__title">Billing &amp; Plan</h1>
-        <p class="dash-page-header__subtitle">Manage your subscription and track usage.</p>
+    <div class="page-header">
+      <div class="page-header__left">
+        <h1 class="page-title">Billing &amp; Plan</h1>
+        <p class="page-subtitle">Manage your subscription and track usage.</p>
       </div>
     </div>
 
     <!-- Loading -->
-    <div v-if="loading" style="text-align:center;padding:64px 0;">
-      <md-circular-progress indeterminate />
+    <div v-if="loading" class="loading-center">
+      <div class="css-spinner"></div>
     </div>
 
     <div v-else class="billing-content">
@@ -20,16 +20,15 @@
       <div class="billing-grid">
 
         <!-- Current Plan card -->
-        <div class="m3-card m3-card--elevated">
-          <div class="m3-card-header">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">workspace_premium</span>
-              <span style="font-size:16px;font-weight:600;">Current Plan</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">workspace_premium</span>
             </div>
+            <span class="an-card-title">Current Plan</span>
             <span class="m3-badge" :class="statusClass">{{ statusLabel }}</span>
           </div>
-          <md-divider />
-          <div class="card-body">
+          <div class="an-card-body">
             <div class="plan-name">{{ planLabel }}</div>
 
             <div v-if="sub?.current_period_end" class="meta-row">
@@ -38,18 +37,18 @@
             </div>
             <div v-if="sub?.cancelled_at" class="meta-row">
               <span class="meta-row__label">Cancelled</span>
-              <span class="meta-row__value" style="color:var(--md-sys-color-error);">{{ formatDate(sub.cancelled_at) }}</span>
+              <span class="meta-row__value meta-row__value--danger">{{ formatDate(sub.cancelled_at) }}</span>
             </div>
 
             <!-- Upgrade CTAs -->
-            <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;">
+            <div class="upgrade-actions">
               <button class="btn-filled"
                 v-if="currentPlanID === 'free'"
                 :disabled="checkoutLoading === 'pro'"
                 @click="goCheckout('pro')"
               >
-                <md-circular-progress v-if="checkoutLoading === 'pro'" indeterminate style="margin-right:8px;" />
-                <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">arrow_upward</span>
+                <div v-if="checkoutLoading === 'pro'" class="css-spinner css-spinner--sm css-spinner--white"></div>
+                <span v-else class="material-symbols-outlined">arrow_upward</span>
                 Upgrade to Pro
               </button>
               <button class="btn-filled"
@@ -57,90 +56,80 @@
                 :disabled="checkoutLoading === 'business'"
                 @click="goCheckout('business')"
               >
-                <md-circular-progress v-if="checkoutLoading === 'business'" indeterminate style="margin-right:8px;" />
-                <span v-else class="material-symbols-outlined" style="font-size:18px;margin-right:6px;">rocket_launch</span>
+                <div v-if="checkoutLoading === 'business'" class="css-spinner css-spinner--sm css-spinner--white"></div>
+                <span v-else class="material-symbols-outlined">rocket_launch</span>
                 Upgrade to Business
               </button>
               <span v-if="currentPlanID === 'business'" class="plan-top-badge">
-                <span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-right:4px;">check_circle</span>
+                <span class="material-symbols-outlined">check_circle</span>
                 You're on the highest plan
               </span>
             </div>
 
-            <p v-if="checkoutError" class="md-body-small" style="color:var(--md-sys-color-error);margin-top:8px;">{{ checkoutError }}</p>
+            <p v-if="checkoutError" class="checkout-error">{{ checkoutError }}</p>
           </div>
         </div>
 
         <!-- Usage card -->
-        <div class="m3-card m3-card--elevated">
-          <div class="m3-card-header">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">analytics</span>
-              <span style="font-size:16px;font-weight:600;">Usage This Period</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">analytics</span>
             </div>
+            <span class="an-card-title">Usage This Period</span>
           </div>
-          <md-divider />
-          <div class="card-body">
+          <div class="an-card-body">
 
             <!-- Links -->
             <div class="usage-item">
               <div class="usage-item__header">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">link</span>
-                  <span style="font-size:0.875rem;font-weight:500;">Links</span>
+                <div class="usage-item__name">
+                  <span class="material-symbols-outlined usage-icon">link</span>
+                  <span class="usage-label">Links</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }} used
-                  </span>
-                  <span
-                    class="m3-usage-badge"
-                    :class="pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
-                  >{{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%</span>
+                <div class="usage-item__stats">
+                  <span class="usage-count">{{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }} used</span>
+                  <span class="m3-usage-badge" :class="pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%</span>
                 </div>
               </div>
-              <md-linear-progress :value="pct(usage?.links ?? 0, plan?.max_links ?? 0) / 100" />
+              <div class="prog-bar">
+                <div class="prog-fill" :class="barClass(usage?.links ?? 0, plan?.max_links ?? 0)" :style="{ width: pct(usage?.links ?? 0, plan?.max_links ?? 0) + '%' }"></div>
+              </div>
             </div>
 
             <!-- API Keys -->
             <div class="usage-item">
               <div class="usage-item__header">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">key</span>
-                  <span style="font-size:0.875rem;font-weight:500;">API Keys</span>
+                <div class="usage-item__name">
+                  <span class="material-symbols-outlined usage-icon">key</span>
+                  <span class="usage-label">API Keys</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }} used
-                  </span>
-                  <span
-                    class="m3-usage-badge"
-                    :class="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
-                  >{{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%</span>
+                <div class="usage-item__stats">
+                  <span class="usage-count">{{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }} used</span>
+                  <span class="m3-usage-badge" :class="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%</span>
                 </div>
               </div>
-              <md-linear-progress :value="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) / 100" />
+              <div class="prog-bar">
+                <div class="prog-fill" :class="barClass(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0)" :style="{ width: pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) + '%' }"></div>
+              </div>
             </div>
 
             <!-- Webhooks -->
-            <div class="usage-item" style="margin-bottom:0;">
+            <div class="usage-item usage-item--last">
               <div class="usage-item__header">
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-on-surface-variant);">notifications</span>
-                  <span style="font-size:0.875rem;font-weight:500;">Webhooks</span>
+                <div class="usage-item__name">
+                  <span class="material-symbols-outlined usage-icon">notifications</span>
+                  <span class="usage-label">Webhooks</span>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">
-                    {{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }} used
-                  </span>
-                  <span
-                    class="m3-usage-badge"
-                    :class="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'"
-                  >{{ pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) }}%</span>
+                <div class="usage-item__stats">
+                  <span class="usage-count">{{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }} used</span>
+                  <span class="m3-usage-badge" :class="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) }}%</span>
                 </div>
               </div>
-              <md-linear-progress :value="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) / 100" />
-              <p v-if="!plan?.has_webhooks" style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);margin:6px 0 0;">
+              <div class="prog-bar">
+                <div class="prog-fill" :class="barClass(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0)" :style="{ width: pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) + '%' }"></div>
+              </div>
+              <p v-if="!plan?.has_webhooks" class="usage-item__note">
                 Webhooks are not available on the {{ planLabel }} plan.
                 <button class="btn-link-inline" @click="goCheckout('pro')">Upgrade to Pro</button>
               </p>
@@ -151,16 +140,15 @@
       </div>
 
       <!-- ── Plan Comparison table ─────────────────────────────────────── -->
-      <div class="m3-card m3-card--elevated">
-        <div class="m3-card-header">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">compare</span>
-            <span style="font-size:16px;font-weight:600;">Plan Comparison</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-icon an-card-icon--primary">
+            <span class="material-symbols-outlined">compare</span>
           </div>
+          <span class="an-card-title">Plan Comparison</span>
         </div>
-        <md-divider />
-        <div class="m3-table-wrapper">
-          <table class="m3-table compare-table">
+        <div class="table-wrapper">
+          <table class="compare-table">
             <thead>
               <tr>
                 <th>Feature</th>
@@ -291,11 +279,11 @@ function pct(used: number, limit: number): number {
 }
 
 function barClass(used: number, limit: number): string {
-  if (limit === -1) return 'bg-success';
+  if (limit === -1) return 'prog-fill--success';
   const p = pct(used, limit);
-  if (p >= 100) return 'bg-danger';
-  if (p >= 80) return 'bg-warning';
-  return 'bg-primary';
+  if (p >= 100) return 'prog-fill--danger';
+  if (p >= 80) return 'prog-fill--warning';
+  return '';
 }
 
 async function goCheckout(planID: 'pro' | 'business') {
@@ -303,7 +291,7 @@ async function goCheckout(planID: 'pro' | 'business') {
   checkoutLoading.value = planID;
   try {
     const res = await billingApi.getCheckoutURL(planID);
-    window.location.href = res.data.data.checkout_url;
+    if (res.data.data) window.location.href = res.data.data.checkout_url;
   } catch {
     checkoutError.value = 'Could not generate checkout link. Please try again.';
     checkoutLoading.value = null;
@@ -316,9 +304,11 @@ onMounted(async () => {
       billingApi.getSubscription(),
       billingApi.getUsage(),
     ]);
-    sub.value = subRes.data.data.subscription;
-    plan.value = subRes.data.data.plan;
-    usage.value = usageRes.data.data;
+    if (subRes.data.data) {
+      sub.value = subRes.data.data.subscription;
+      plan.value = subRes.data.data.plan;
+    }
+    if (usageRes.data.data) usage.value = usageRes.data.data;
   } finally {
     loading.value = false;
   }
@@ -326,80 +316,138 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-/* ── Page Header ──────────────────────────────────────────────────────────── */
-.dash-page-header {
+.billing-page {
+  max-width: 900px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Page Header ─────────────────────────────────────────────────────────── */
+.page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 12px;
+}
 
-  &__left {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+.page-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.page-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--md-sys-color-on-surface);
+}
+
+.page-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant);
+  border-top-color: var(--md-sys-color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
   }
 
-  &__title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin: 0;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &__subtitle {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.875rem;
-    margin: 0;
+  &--white {
+    border-color: rgba(255,255,255,0.35);
+    border-top-color: #fff;
   }
 }
 
-/* ── Layout ───────────────────────────────────────────────────────────────── */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+.loading-center {
+  display: flex;
+  justify-content: center;
+  padding: 64px;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
 .billing-content {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 20px;
 }
 
 .billing-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  margin-bottom: 20px;
 
   @media (max-width: 767px) {
     grid-template-columns: 1fr;
   }
 }
 
-/* ── Cards ────────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 12px;
+/* ── Cards ───────────────────────────────────────────────────────────────── */
+.an-card {
   background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 0;
+}
 
-  &--elevated {
-    box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.07);
+.an-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+    color: var(--md-sys-color-primary);
   }
 }
 
-/* ── M3 Card header ───────────────────────────────────────────────────────── */
-.m3-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 20px;
-  gap: 1rem;
-  flex-wrap: wrap;
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  flex: 1;
 }
 
-.card-body {
+.an-card-body {
   padding: 20px 24px 24px;
 }
 
-/* ── Plan name ────────────────────────────────────────────────────────────── */
+/* ── Plan name ───────────────────────────────────────────────────────────── */
 .plan-name {
   font-size: 1.5rem;
   font-weight: 700;
@@ -410,35 +458,44 @@ onMounted(async () => {
 .plan-top-badge {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   color: var(--md-sys-color-primary);
   font-weight: 500;
   font-size: 0.875rem;
-  align-self: center;
+
+  .material-symbols-outlined { font-size: 18px; }
 }
 
-/* ── Meta row ─────────────────────────────────────────────────────────────── */
+.upgrade-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.checkout-error {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-error);
+}
+
+/* ── Meta row ────────────────────────────────────────────────────────────── */
 .meta-row {
   display: flex;
   gap: 8px;
   margin-top: 6px;
   font-size: 0.875rem;
 
-  &__label {
-    color: var(--md-sys-color-on-surface-variant);
-  }
-
-  &__value {
-    font-weight: 500;
-  }
+  &__label { color: var(--md-sys-color-on-surface-variant); }
+  &__value { font-weight: 500; }
+  &__value--danger { color: var(--md-sys-color-error); }
 }
 
-/* ── Usage items ──────────────────────────────────────────────────────────── */
+/* ── Usage items ─────────────────────────────────────────────────────────── */
 .usage-item {
   margin-bottom: 20px;
 
-  &:last-child {
-    margin-bottom: 0;
-  }
+  &--last { margin-bottom: 0; }
 }
 
 .usage-item__header {
@@ -450,15 +507,68 @@ onMounted(async () => {
   gap: 4px;
 }
 
-/* ── Status badges ────────────────────────────────────────────────────────── */
+.usage-item__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.usage-icon {
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.usage-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.usage-item__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.usage-count {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.usage-item__note {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 6px 0 0;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.prog-bar {
+  height: 6px;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  background: var(--md-sys-color-primary);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+
+  &--success { background: #16a34a; }
+  &--warning { background: #f59e0b; }
+  &--danger { background: #dc2626; }
+}
+
+/* ── Status badges ───────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
+  flex-shrink: 0;
 
   &.badge-success {
     background: rgba(22, 163, 74, 0.12);
@@ -481,33 +591,22 @@ onMounted(async () => {
   }
 }
 
-/* ── Usage percentage badges ──────────────────────────────────────────────── */
+/* ── Usage percentage badges ─────────────────────────────────────────────── */
 .m3-usage-badge {
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: 999px;
+  border-radius: 6px;
   font-size: 0.72rem;
   font-weight: 600;
   white-space: nowrap;
 
-  &--danger {
-    background: rgba(220, 38, 38, 0.12);
-    color: #dc2626;
-  }
-
-  &--warning {
-    background: rgba(245, 158, 11, 0.12);
-    color: #b45309;
-  }
-
-  &--ok {
-    background: rgba(22, 163, 74, 0.12);
-    color: #16a34a;
-  }
+  &--danger { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
+  &--warning { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+  &--ok { background: rgba(22, 163, 74, 0.12); color: #16a34a; }
 }
 
-/* ── Inline link button ───────────────────────────────────────────────────── */
+/* ── Inline link button ──────────────────────────────────────────────────── */
 .btn-link-inline {
   background: none;
   border: none;
@@ -520,19 +619,15 @@ onMounted(async () => {
   text-underline-offset: 2px;
 }
 
-/* ── Compare table ────────────────────────────────────────────────────────── */
-.m3-table-wrapper {
+/* ── Compare table ───────────────────────────────────────────────────────── */
+.table-wrapper {
   overflow-x: auto;
-}
-
-.m3-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
 }
 
 .compare-table {
   width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
 
   th,
   td {
@@ -552,9 +647,7 @@ onMounted(async () => {
     text-align: left;
   }
 
-  .text-center {
-    text-align: center;
-  }
+  .text-center { text-align: center; }
 
   .current-col {
     background: rgba(99, 91, 255, 0.08);

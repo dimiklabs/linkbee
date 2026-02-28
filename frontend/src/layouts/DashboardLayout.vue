@@ -56,14 +56,14 @@
           <span class="nav-label">Links</span>
         </router-link>
 
-        <router-link
-          to="/dashboard/analytics"
-          class="nav-item"
-          active-class="active"
-          exact-active-class="active"
-          :title="uiStore.sidebarCollapsed ? 'Analytics' : undefined"
-          @click="uiStore.closeSidebar()"
-        >
+        <router-link class="nav-item active active"
+ to="/dashboard/analytics"
+ 
+ active-
+ exact-active-
+ :title="uiStore.sidebarCollapsed ? 'Analytics' : undefined"
+ @click="uiStore.closeSidebar()"
+ >
           <span class="material-symbols-outlined nav-icon">bar_chart</span>
           <span class="nav-label">Analytics</span>
         </router-link>
@@ -252,11 +252,6 @@
         <!-- Page title -->
         <span class="page-title">{{ pageTitle }}</span>
 
-        <!-- Search -->
-        <button class="icon-btn" title="Search">
-          <span class="material-symbols-outlined">search</span>
-        </button>
-
         <!-- Dark mode toggle -->
         <button
           class="icon-btn"
@@ -268,10 +263,11 @@
           </span>
         </button>
 
-        <!-- Notifications bell -->
-        <button class="icon-btn" title="Notifications">
-          <span class="material-symbols-outlined">notifications</span>
-        </button>
+        <!-- New Link shortcut -->
+        <router-link to="/dashboard/links?create=1" class="topbar-new-link-btn">
+          <span class="material-symbols-outlined">add</span>
+          New Link
+        </router-link>
 
         <!-- User avatar dropdown -->
         <div class="user-menu-wrapper" ref="userMenuWrapperRef">
@@ -832,6 +828,28 @@ $appbar-height: 64px;
   .material-symbols-outlined {
     font-size: 22px;
   }
+}
+
+// ── Topbar New Link button ─────────────────────────────────────────────────
+.topbar-new-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s $ease-standard;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &:hover { opacity: 0.88; }
 }
 
 // ── User avatar button ────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 <template>
-  <div class="page-wrapper">
+  <div class="analytics-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -10,20 +10,16 @@
           </button>
         </RouterLink>
         <div class="page-header__title-group">
-          <h1 class="md-title-large">Link Analytics</h1>
+          <h1 class="page-title">Link Analytics</h1>
           <template v-if="link">
             <div class="page-header__subtitle">
               <span class="short-url-monospace">{{ link.short_url }}</span>
-              <button class="btn-icon"
-                :class="copied ? 'copy-btn--success' : ''"
-                @click="copyShortUrl"
-                title="Copy short URL"
-              >
-                <span class="material-symbols-outlined" style="font-size:18px">{{ copied ? 'check' : 'content_copy' }}</span>
+              <button class="btn-icon" :class="copied ? 'copy-btn--success' : ''" @click="copyShortUrl" title="Copy short URL">
+                <span class="material-symbols-outlined icon-sm">{{ copied ? 'check' : 'content_copy' }}</span>
               </button>
               <a :href="link.short_url" target="_blank" rel="noopener noreferrer">
                 <button class="btn-icon" title="Open short URL">
-                  <span class="material-symbols-outlined" style="font-size:18px">open_in_new</span>
+                  <span class="material-symbols-outlined icon-sm">open_in_new</span>
                 </button>
               </a>
             </div>
@@ -39,19 +35,16 @@
     </div>
 
     <!-- Link Info Card -->
-    <div class="m3-card m3-card--outlined link-info-card" style="margin-bottom:1.5rem;">
-      <!-- Skeleton while loading -->
-      <div v-if="linkLoading" style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;">
-        <div class="skeleton" style="width:120px;height:1.1rem;border-radius:4px;"></div>
-        <div class="skeleton" style="width:200px;height:0.9rem;border-radius:4px;"></div>
+    <div class="an-card">
+      <div v-if="linkLoading" class="link-info-skeleton">
+        <div class="skeleton skeleton--120"></div>
+        <div class="skeleton skeleton--200"></div>
       </div>
-
-      <!-- Populated -->
-      <div v-else-if="link" style="padding:1rem 1.25rem;">
+      <div v-else-if="link" class="an-card-body">
         <div class="link-info-body">
           <div class="link-info-main">
             <div class="link-title-row">
-              <span class="md-title-medium link-info-title">{{ link.title || '/' + link.slug }}</span>
+              <span class="link-info-title">{{ link.title || '/' + link.slug }}</span>
               <span class="m3-badge" :class="link.is_active ? 'm3-badge--success' : 'm3-badge--neutral'">
                 {{ link.is_active ? 'Active' : 'Inactive' }}
               </span>
@@ -59,73 +52,65 @@
                 {{ healthLabel(link.health_status) }}
               </span>
             </div>
-            <div class="link-dest-url md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.25rem;display:flex;align-items:center;gap:0.25rem;overflow:hidden;">
-              <span class="material-symbols-outlined" style="font-size:14px;flex-shrink:0;">link</span>
-              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="link.destination_url">{{ link.destination_url }}</span>
+            <div class="link-dest-url">
+              <span class="material-symbols-outlined icon-xs">link</span>
+              <span class="link-dest-url__text" :title="link.destination_url">{{ link.destination_url }}</span>
             </div>
-            <div v-if="link.tags && link.tags.length" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.5rem;">
+            <div v-if="link.tags && link.tags.length" class="link-tags">
               <span v-for="tag in link.tags" :key="tag" class="m3-badge m3-badge--neutral">{{ tag }}</span>
             </div>
           </div>
           <div class="link-info-stat">
-            <div class="stat-number md-title-large" style="color:var(--md-sys-color-primary);">{{ link.click_count.toLocaleString() }}</div>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">All-time clicks</div>
+            <div class="link-info-stat__value">{{ link.click_count.toLocaleString() }}</div>
+            <div class="link-info-stat__label">All-time clicks</div>
           </div>
         </div>
       </div>
-
-      <!-- Fallback -->
-      <div v-else style="padding:1rem 1.25rem;">
-        <span class="md-title-medium">Link Analytics</span>
-        <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ route.params.id }}</div>
+      <div v-else class="an-card-body">
+        <span class="link-info-title">Link Analytics</span>
+        <div class="text-muted">{{ route.params.id }}</div>
       </div>
     </div>
 
     <!-- Error state -->
-    <div v-if="error" class="error-banner" style="margin-bottom:1rem;">
-      <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
-      <span class="md-body-medium" style="flex:1;">{{ error }}</span>
+    <div v-if="error" class="error-banner">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <span class="error-msg">{{ error }}</span>
       <button class="btn-text" @click="loadAnalytics">Retry</button>
     </div>
 
     <!-- Loading state -->
-    <div v-if="loading && !error" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 0;gap:1rem;">
-      <md-circular-progress indeterminate />
-      <span class="md-body-medium" style="color:var(--md-sys-color-on-surface-variant);">Loading analytics data...</span>
+    <div v-if="loading && !error" class="loading-state">
+      <div class="css-spinner"></div>
+      <span class="text-muted">Loading analytics data...</span>
     </div>
 
     <template v-if="!loading && analytics">
 
       <!-- Filters -->
-      <div class="m3-card m3-card--elevated filters-card" style="margin-bottom:1.5rem;">
-        <div class="m3-card-header">
-          <div class="m3-card-header__left">
-            <span class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-primary);">tune</span>
-            <span class="md-label-large">Date Range &amp; Granularity</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">tune</span>
+            </div>
+            <div class="an-card-title">Date Range &amp; Granularity</div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div class="filter-row">
-            <md-outlined-text-field
-              type="date"
-              label="From"
-              :value="filterFrom"
-              @input="filterFrom = ($event.target as HTMLInputElement).value"
-              style="min-width:160px;"
-            />
-            <md-outlined-text-field
-              type="date"
-              label="To"
-              :value="filterTo"
-              @input="filterTo = ($event.target as HTMLInputElement).value"
-              style="min-width:160px;"
-            />
+            <div class="date-field">
+              <label class="date-field__label">From</label>
+              <input type="date" class="date-input" :value="filterFrom" @input="filterFrom = ($event.target as HTMLInputElement).value" />
+            </div>
+            <div class="date-field">
+              <label class="date-field__label">To</label>
+              <input type="date" class="date-input" :value="filterTo" @input="filterTo = ($event.target as HTMLInputElement).value" />
+            </div>
             <AppSelect
               label="Granularity"
               :model-value="filterGranularity"
               @update:model-value="filterGranularity = $event as 'hour'|'day'|'week'|'month'"
-              style="min-width:140px;"
             >
               <option value="hour">Hour</option>
               <option value="day">Day</option>
@@ -133,7 +118,7 @@
               <option value="month">Month</option>
             </AppSelect>
             <button class="btn-filled" :disabled="loading" @click="applyFilters">
-              <span v-if="loading"><md-circular-progress indeterminate /></span>
+              <div v-if="loading" class="css-spinner css-spinner--sm css-spinner--white"></div>
               Apply
             </button>
           </div>
@@ -141,63 +126,59 @@
       </div>
 
       <!-- Period Comparison Card -->
-      <div v-if="comparison" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Period Comparison</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Current vs preceding period of equal length</div>
+      <div v-if="comparison" class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--neutral">
+              <span class="material-symbols-outlined">compare_arrows</span>
+            </div>
+            <div>
+              <div class="an-card-title">Period Comparison</div>
+              <div class="an-card-subtitle">Current vs preceding period of equal length</div>
+            </div>
           </div>
           <span class="m3-badge m3-badge--neutral">
             {{ formatShortDate(comparison.previous.from) }} → {{ formatShortDate(comparison.current.to) }}
           </span>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div class="comparison-grid">
-            <!-- Total Clicks -->
             <div class="comparison-metric">
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Total Clicks</div>
-              <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
-                <span class="md-headline-small">{{ comparison.current.total_clicks.toLocaleString() }}</span>
+              <div class="comparison-metric__label">Total Clicks</div>
+              <div class="comparison-metric__row">
+                <span class="comparison-metric__value">{{ comparison.current.total_clicks.toLocaleString() }}</span>
                 <span class="trend-badge" :class="trendClass(comparison.clicks.trend)">
-                  <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">{{ comparison.clicks.trend === 'up' ? 'trending_up' : comparison.clicks.trend === 'down' ? 'trending_down' : 'trending_flat' }}</span>
+                  <span class="material-symbols-outlined icon-xs">{{ comparison.clicks.trend === 'up' ? 'trending_up' : comparison.clicks.trend === 'down' ? 'trending_down' : 'trending_flat' }}</span>
                   {{ Math.abs(comparison.clicks.percent_change).toFixed(1) }}%
                 </span>
               </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
-                vs {{ comparison.previous.total_clicks.toLocaleString() }} prev. period
-              </div>
+              <div class="comparison-metric__prev">vs {{ comparison.previous.total_clicks.toLocaleString() }} prev. period</div>
             </div>
-            <!-- Unique Clicks -->
             <div class="comparison-metric">
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.25rem;">Unique Clicks</div>
-              <div style="display:flex;align-items:baseline;gap:0.5rem;flex-wrap:wrap;">
-                <span class="md-headline-small">{{ comparison.current.unique_clicks.toLocaleString() }}</span>
+              <div class="comparison-metric__label">Unique Clicks</div>
+              <div class="comparison-metric__row">
+                <span class="comparison-metric__value">{{ comparison.current.unique_clicks.toLocaleString() }}</span>
                 <span class="trend-badge" :class="trendClass(comparison.unique_clicks.trend)">
-                  <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">{{ comparison.unique_clicks.trend === 'up' ? 'trending_up' : comparison.unique_clicks.trend === 'down' ? 'trending_down' : 'trending_flat' }}</span>
+                  <span class="material-symbols-outlined icon-xs">{{ comparison.unique_clicks.trend === 'up' ? 'trending_up' : comparison.unique_clicks.trend === 'down' ? 'trending_down' : 'trending_flat' }}</span>
                   {{ Math.abs(comparison.unique_clicks.percent_change).toFixed(1) }}%
                 </span>
               </div>
-              <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);margin-top:0.2rem;">
-                vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev. period
-              </div>
+              <div class="comparison-metric__prev">vs {{ comparison.previous.unique_clicks.toLocaleString() }} prev. period</div>
             </div>
-            <!-- Current period -->
             <div class="comparison-period-box comparison-period-box--current">
-              <div class="md-label-large period-label">Current Period</div>
-              <div class="md-body-small period-dates">{{ formatShortDate(comparison.current.from) }} – {{ formatShortDate(comparison.current.to) }}</div>
-              <div style="display:flex;gap:1rem;margin-top:0.25rem;">
-                <span class="md-body-small"><strong>{{ comparison.current.total_clicks.toLocaleString() }}</strong> clicks</span>
-                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);"><strong>{{ comparison.current.unique_clicks.toLocaleString() }}</strong> unique</span>
+              <div class="period-label">Current Period</div>
+              <div class="period-dates">{{ formatShortDate(comparison.current.from) }} – {{ formatShortDate(comparison.current.to) }}</div>
+              <div class="period-stats">
+                <span><strong>{{ comparison.current.total_clicks.toLocaleString() }}</strong> clicks</span>
+                <span class="text-muted"><strong>{{ comparison.current.unique_clicks.toLocaleString() }}</strong> unique</span>
               </div>
             </div>
-            <!-- Previous period -->
             <div class="comparison-period-box comparison-period-box--previous">
-              <div class="md-label-large period-label">Previous Period</div>
-              <div class="md-body-small period-dates">{{ formatShortDate(comparison.previous.from) }} – {{ formatShortDate(comparison.previous.to) }}</div>
-              <div style="display:flex;gap:1rem;margin-top:0.25rem;">
-                <span class="md-body-small"><strong>{{ comparison.previous.total_clicks.toLocaleString() }}</strong> clicks</span>
-                <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);"><strong>{{ comparison.previous.unique_clicks.toLocaleString() }}</strong> unique</span>
+              <div class="period-label">Previous Period</div>
+              <div class="period-dates">{{ formatShortDate(comparison.previous.from) }} – {{ formatShortDate(comparison.previous.to) }}</div>
+              <div class="period-stats">
+                <span><strong>{{ comparison.previous.total_clicks.toLocaleString() }}</strong> clicks</span>
+                <span class="text-muted"><strong>{{ comparison.previous.unique_clicks.toLocaleString() }}</strong> unique</span>
               </div>
             </div>
           </div>
@@ -205,129 +186,118 @@
       </div>
 
       <!-- Stat Cards -->
-      <div class="stat-grid" style="margin-bottom:1.5rem;">
-        <!-- Total Clicks -->
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__header">
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Total Clicks</span>
-              <span v-if="isLive" class="live-badge">
-                <span class="live-dot"></span>
-                <span style="font-size:0.6rem;font-weight:600;letter-spacing:0.04em;color:#16a34a;">LIVE</span>
-              </span>
+      <div class="stat-grid">
+        <div class="an-card stat-card">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--primary">
+              <span class="material-symbols-outlined">trending_up</span>
             </div>
-            <div class="stat-icon" style="background:rgba(var(--md-sys-color-primary-rgb,99,91,255),0.12);">
-              <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);font-size:18px;">trending_up</span>
+            <div class="stat-body">
+              <div class="stat-value">{{ (liveTotal !== null ? liveTotal : analytics.total_clicks).toLocaleString() }}</div>
+              <div class="stat-label">
+                Total Clicks
+                <span v-if="isLive" class="live-badge">
+                  <span class="live-dot"></span>
+                  <span class="live-text">LIVE</span>
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="md-headline-small stat-value">
-            {{ (liveTotal !== null ? liveTotal : analytics.total_clicks).toLocaleString() }}
           </div>
         </div>
-
-        <!-- Unique Clicks -->
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__header">
-            <div style="display:flex;align-items:center;gap:0.5rem;">
-              <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Unique Clicks</span>
-              <span v-if="isLive" class="live-badge">
-                <span class="live-dot"></span>
-                <span style="font-size:0.6rem;font-weight:600;letter-spacing:0.04em;color:#16a34a;">LIVE</span>
-              </span>
+        <div class="an-card stat-card">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--teal">
+              <span class="material-symbols-outlined">group</span>
             </div>
-            <div class="stat-icon" style="background:rgba(20,184,166,0.12);">
-              <span class="material-symbols-outlined" style="color:#14b8a6;font-size:18px;">group</span>
+            <div class="stat-body">
+              <div class="stat-value">{{ (liveUnique !== null ? liveUnique : analytics.unique_clicks).toLocaleString() }}</div>
+              <div class="stat-label">
+                Unique Clicks
+                <span v-if="isLive" class="live-badge">
+                  <span class="live-dot"></span>
+                  <span class="live-text">LIVE</span>
+                </span>
+              </div>
             </div>
-          </div>
-          <div class="md-headline-small stat-value">
-            {{ (liveUnique !== null ? liveUnique : analytics.unique_clicks).toLocaleString() }}
           </div>
         </div>
-
-        <!-- Top Referrer -->
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__header">
-            <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Referrer</span>
-            <div class="stat-icon" style="background:rgba(245,158,11,0.12);">
-              <span class="material-symbols-outlined" style="color:#f59e0b;font-size:18px;">link</span>
+        <div class="an-card stat-card">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--amber">
+              <span class="material-symbols-outlined">link</span>
             </div>
-          </div>
-          <div class="md-title-medium stat-value" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="topReferrer">
-            {{ topReferrer }}
+            <div class="stat-body">
+              <div class="stat-value stat-value--truncate" :title="topReferrer">{{ topReferrer }}</div>
+              <div class="stat-label">Top Referrer</div>
+            </div>
           </div>
         </div>
-
-        <!-- Top Device -->
-        <div class="m3-card m3-card--elevated stat-card">
-          <div class="stat-card__header">
-            <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Top Device</span>
-            <div class="stat-icon" style="background:rgba(239,68,68,0.12);">
-              <span class="material-symbols-outlined" style="color:#ef4444;font-size:18px;">smartphone</span>
+        <div class="an-card stat-card">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--red">
+              <span class="material-symbols-outlined">smartphone</span>
             </div>
-          </div>
-          <div class="md-title-medium stat-value" style="text-transform:capitalize;">
-            {{ topDevice }}
+            <div class="stat-body">
+              <div class="stat-value stat-value--capitalize">{{ topDevice }}</div>
+              <div class="stat-label">Top Device</div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Clicks Over Time Chart -->
-      <div class="m3-card m3-card--elevated" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <span class="md-title-medium">Clicks Over Time</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">show_chart</span>
+            </div>
+            <div class="an-card-title">Clicks Over Time</div>
+          </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem;">
+        <div class="an-card-body">
           <div v-if="analytics.time_series.length === 0" class="empty-state">
             No time series data available for this period.
           </div>
-          <VChart
-            v-else
-            :option="chartOption"
-            style="height:320px;"
-            autoresize
-          />
+          <VChart v-else :option="chartOption" class="chart-tall" autoresize />
         </div>
       </div>
 
       <!-- Traffic Channels -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;margin-top:1rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Traffic Channels</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">How visitors are reaching your link — classified by referrer domain</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">account_tree</span>
+            </div>
+            <div>
+              <div class="an-card-title">Traffic Channels</div>
+              <div class="an-card-subtitle">How visitors are reaching your link — classified by referrer domain</div>
+            </div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div v-if="!analytics.referrer_categories?.length" class="empty-state">
             No channel data available yet.
           </div>
           <div v-else class="two-col-layout">
-            <!-- Donut chart -->
-            <div style="min-width:0;">
-              <VChart :option="trafficChannelsChartOption" style="height:280px;" autoresize />
+            <div class="col-min0">
+              <VChart :option="trafficChannelsChartOption" class="chart-medium" autoresize />
             </div>
-            <!-- Channel breakdown list -->
             <div class="breakdown-list">
-              <div
-                v-for="ch in analytics.referrer_categories"
-                :key="ch.category"
-                class="breakdown-item"
-              >
-                <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:6px;">
-                  <span
-                    style="display:inline-flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;width:32px;height:32px;"
-                    :style="{ backgroundColor: channelColor(ch.category) + '22' }"
-                  >
-                    <span style="font-size:0.95rem;">{{ channelIcon(ch.category) }}</span>
+              <div v-for="ch in analytics.referrer_categories" :key="ch.category" class="breakdown-item">
+                <div class="breakdown-item__row">
+                  <span class="channel-icon-wrap" :style="{ backgroundColor: channelColor(ch.category) + '22' }">
+                    <span class="channel-icon-text">{{ channelIcon(ch.category) }}</span>
                   </span>
-                  <div style="flex:1;min-width:0;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                      <span class="md-body-medium">{{ channelLabel(ch.category) }}</span>
-                      <span class="md-label-large">{{ ch.count.toLocaleString() }} ({{ channelPercent(ch.count) }}%)</span>
+                  <div class="breakdown-item__content">
+                    <div class="breakdown-item__meta">
+                      <span class="breakdown-item__name">{{ channelLabel(ch.category) }}</span>
+                      <span class="breakdown-item__count">{{ ch.count.toLocaleString() }} ({{ channelPercent(ch.count) }}%)</span>
                     </div>
-                    <md-linear-progress :value="channelPercent(ch.count) / 100" />
+                    <div class="prog-bar">
+                      <div class="prog-fill" :style="{ width: channelPercent(ch.count) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -337,139 +307,153 @@
       </div>
 
       <!-- Two-column: Referrers + Devices -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- Top Referrers -->
-        <div class="m3-card m3-card--outlined">
-          <div class="card-header-row">
-            <span class="md-title-medium">Top Referrers</span>
+      <div class="two-col-grid">
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-header__left">
+              <div class="an-card-icon an-card-icon--neutral">
+                <span class="material-symbols-outlined">link</span>
+              </div>
+              <div class="an-card-title">Top Referrers</div>
+            </div>
             <span class="m3-badge m3-badge--neutral">Top 10</span>
           </div>
-          <md-divider />
-          <div style="padding:0.5rem 0;">
-            <div v-if="topReferrers.length === 0" class="m3-empty-state">
-              <span class="material-symbols-outlined" style="font-size:2rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">link_off</span>
-              <p class="md-body-medium" style="margin:0.5rem 0 0;">No referrer data available yet.</p>
+          <div v-if="topReferrers.length === 0" class="m3-empty-state">
+            <div class="m3-empty-state__icon">
+              <span class="material-symbols-outlined">link_off</span>
             </div>
-            <div v-else class="m3-table-wrapper">
+            <p class="m3-empty-state__text">No referrer data available yet.</p>
+          </div>
+          <div v-else class="m3-table-wrapper">
             <table class="m3-table">
               <thead>
                 <tr>
                   <th>Referrer</th>
-                  <th style="text-align:right;">Clicks</th>
-                  <th style="width:120px;">Share</th>
+                  <th class="th-right">Clicks</th>
+                  <th class="th-share">Share</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="ref in topReferrers" :key="ref.referrer">
-                  <td style="max-width:200px;">
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;" :title="ref.referrer">
-                      {{ ref.referrer || 'Direct / None' }}
-                    </span>
+                  <td class="td-truncate">
+                    <span class="truncate-text" :title="ref.referrer">{{ ref.referrer || 'Direct / None' }}</span>
                   </td>
-                  <td style="text-align:right;font-weight:600;">{{ ref.count.toLocaleString() }}</td>
+                  <td class="td-right td-bold">{{ ref.count.toLocaleString() }}</td>
                   <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <md-linear-progress :value="referrerPercent(ref.count) / 100" style="flex:1;" />
-                      <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ referrerPercent(ref.count) }}%</span>
+                    <div class="prog-with-pct">
+                      <div class="prog-bar prog-bar--flex">
+                        <div class="prog-fill" :style="{ width: referrerPercent(ref.count) + '%' }"></div>
+                      </div>
+                      <span class="prog-pct">{{ referrerPercent(ref.count) }}%</span>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
-            </div>
           </div>
         </div>
 
-        <!-- Device Breakdown -->
-        <div class="m3-card m3-card--outlined">
-          <div class="card-header-row">
-            <span class="md-title-medium">Device Breakdown</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-header__left">
+              <div class="an-card-icon an-card-icon--neutral">
+                <span class="material-symbols-outlined">devices</span>
+              </div>
+              <div class="an-card-title">Device Breakdown</div>
+            </div>
             <span class="m3-badge m3-badge--neutral">All Devices</span>
           </div>
-          <md-divider />
-          <div style="padding:0.5rem 0;">
-            <div v-if="analytics.devices.length === 0" class="m3-empty-state">
-              <span class="material-symbols-outlined" style="font-size:2rem;color:var(--md-sys-color-on-surface-variant);opacity:0.5;">devices</span>
-              <p class="md-body-medium" style="margin:0.5rem 0 0;">No device data available yet.</p>
+          <div v-if="analytics.devices.length === 0" class="m3-empty-state">
+            <div class="m3-empty-state__icon">
+              <span class="material-symbols-outlined">devices</span>
             </div>
-            <div v-else class="m3-table-wrapper">
+            <p class="m3-empty-state__text">No device data available yet.</p>
+          </div>
+          <div v-else class="m3-table-wrapper">
             <table class="m3-table">
               <thead>
                 <tr>
                   <th>Device</th>
-                  <th style="text-align:right;">Clicks</th>
-                  <th style="width:120px;">Share</th>
+                  <th class="th-right">Clicks</th>
+                  <th class="th-share">Share</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="device in analytics.devices" :key="device.device_type">
                   <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <span class="material-symbols-outlined" style="font-size:16px;color:var(--md-sys-color-primary);">
+                    <div class="device-cell">
+                      <span class="material-symbols-outlined device-icon">
                         {{ device.device_type.toLowerCase() === 'mobile' ? 'smartphone' : device.device_type.toLowerCase() === 'tablet' ? 'tablet' : 'computer' }}
                       </span>
-                      <span style="text-transform:capitalize;">{{ device.device_type || 'Unknown' }}</span>
+                      <span class="device-label">{{ device.device_type || 'Unknown' }}</span>
                     </div>
                   </td>
-                  <td style="text-align:right;font-weight:600;">{{ device.count.toLocaleString() }}</td>
+                  <td class="td-right td-bold">{{ device.count.toLocaleString() }}</td>
                   <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
-                      <md-linear-progress :value="devicePercent(device.count) / 100" style="flex:1;" />
-                      <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ devicePercent(device.count) }}%</span>
+                    <div class="prog-with-pct">
+                      <div class="prog-bar prog-bar--flex">
+                        <div class="prog-fill" :style="{ width: devicePercent(device.count) + '%' }"></div>
+                      </div>
+                      <span class="prog-pct">{{ devicePercent(device.count) }}%</span>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
-            </div>
           </div>
         </div>
       </div>
 
       <!-- Two-column: Browser + OS -->
-      <div class="two-col-grid" style="margin-bottom:1.5rem;">
-        <!-- Browser Breakdown -->
-        <div class="m3-card m3-card--outlined">
-          <div class="card-header-row">
-            <span class="md-title-medium">Browser Breakdown</span>
+      <div class="two-col-grid">
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-header__left">
+              <div class="an-card-icon an-card-icon--neutral">
+                <span class="material-symbols-outlined">globe</span>
+              </div>
+              <div class="an-card-title">Browser Breakdown</div>
+            </div>
             <span class="m3-badge m3-badge--neutral">All Browsers</span>
           </div>
-          <md-divider />
-          <div style="padding:1rem 1.25rem;">
+          <div class="an-card-body">
             <div v-if="!analytics.browsers || analytics.browsers.length === 0" class="empty-state">
               No browser data available.
             </div>
             <div v-else class="chart-legend-layout">
-              <VChart :option="browserChartOption" style="height:200px;" autoresize />
+              <VChart :option="browserChartOption" class="chart-small" autoresize />
               <div class="legend-list">
                 <div v-for="(b, i) in analytics.browsers" :key="b.browser" class="legend-item">
                   <span class="legend-dot" :style="{ backgroundColor: chartColors[i % chartColors.length] }"></span>
-                  <span class="md-body-small" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="b.browser">{{ b.browser }}</span>
-                  <span class="md-label-large">{{ browserPercent(b.count) }}%</span>
+                  <span class="legend-name" :title="b.browser">{{ b.browser }}</span>
+                  <span class="legend-pct">{{ browserPercent(b.count) }}%</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- OS Breakdown -->
-        <div class="m3-card m3-card--outlined">
-          <div class="card-header-row">
-            <span class="md-title-medium">Operating System</span>
+        <div class="an-card">
+          <div class="an-card-header">
+            <div class="an-card-header__left">
+              <div class="an-card-icon an-card-icon--neutral">
+                <span class="material-symbols-outlined">computer</span>
+              </div>
+              <div class="an-card-title">Operating System</div>
+            </div>
             <span class="m3-badge m3-badge--neutral">All OS</span>
           </div>
-          <md-divider />
-          <div style="padding:1rem 1.25rem;">
+          <div class="an-card-body">
             <div v-if="!analytics.os_breakdown || analytics.os_breakdown.length === 0" class="empty-state">
               No OS data available.
             </div>
             <div v-else class="chart-legend-layout">
-              <VChart :option="osChartOption" style="height:200px;" autoresize />
+              <VChart :option="osChartOption" class="chart-small" autoresize />
               <div class="legend-list">
                 <div v-for="(o, i) in analytics.os_breakdown" :key="o.os" class="legend-item">
                   <span class="legend-dot" :style="{ backgroundColor: chartColors[i % chartColors.length] }"></span>
-                  <span class="md-body-small" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" :title="o.os">{{ o.os }}</span>
-                  <span class="md-label-large">{{ osPercent(o.count) }}%</span>
+                  <span class="legend-name" :title="o.os">{{ o.os }}</span>
+                  <span class="legend-pct">{{ osPercent(o.count) }}%</span>
                 </div>
               </div>
             </div>
@@ -478,32 +462,36 @@
       </div>
 
       <!-- Click Source Breakdown -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Click Source</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">How visitors arrived — direct web link, QR code, or API call</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--neutral">
+              <span class="material-symbols-outlined">share</span>
+            </div>
+            <div>
+              <div class="an-card-title">Click Source</div>
+              <div class="an-card-subtitle">How visitors arrived — direct web link, QR code, or API call</div>
+            </div>
           </div>
           <span class="m3-badge m3-badge--neutral">All Sources</span>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div v-if="!analytics.sources || analytics.sources.length === 0" class="empty-state">
             No source data available.
           </div>
           <div v-else class="chart-legend-layout">
-            <VChart :option="sourceChartOption" style="height:200px;" autoresize />
-            <table class="m3-table" style="flex:1;">
+            <VChart :option="sourceChartOption" class="chart-small" autoresize />
+            <table class="m3-table source-table">
               <tbody>
                 <tr v-for="(s, i) in analytics.sources" :key="s.source">
                   <td>
-                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                    <div class="source-cell">
                       <span class="legend-dot" :style="{ backgroundColor: chartColors[i % chartColors.length] }"></span>
-                      <span class="md-body-small">{{ sourceIcon(s.source) }} {{ sourceLabel(s.source) }}</span>
+                      <span>{{ sourceIcon(s.source) }} {{ sourceLabel(s.source) }}</span>
                     </div>
                   </td>
-                  <td style="text-align:right;font-weight:600;">{{ s.count.toLocaleString() }}</td>
-                  <td style="text-align:right;" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ sourcePercent(s.count) }}%</td>
+                  <td class="td-right td-bold">{{ s.count.toLocaleString() }}</td>
+                  <td class="td-right text-muted">{{ sourcePercent(s.count) }}%</td>
                 </tr>
               </tbody>
             </table>
@@ -512,38 +500,39 @@
       </div>
 
       <!-- Visitor Loyalty -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Visitor Loyalty</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">First-time vs returning visitors, based on hashed IP tracking</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--teal">
+              <span class="material-symbols-outlined">favorite</span>
+            </div>
+            <div>
+              <div class="an-card-title">Visitor Loyalty</div>
+              <div class="an-card-subtitle">First-time vs returning visitors, based on hashed IP tracking</div>
+            </div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
-          <div
-            v-if="!analytics.first_time_visitors && !analytics.returning_visitors"
-            class="empty-state"
-          >
+        <div class="an-card-body">
+          <div v-if="!analytics.first_time_visitors && !analytics.returning_visitors" class="empty-state">
             No visitor loyalty data yet. Data is collected on new clicks.
           </div>
           <div v-else class="chart-legend-layout">
-            <VChart :option="visitorLoyaltyChartOption" style="height:200px;" autoresize />
-            <div style="flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem;align-content:center;">
+            <VChart :option="visitorLoyaltyChartOption" class="chart-small" autoresize />
+            <div class="loyalty-boxes">
               <div class="loyalty-box loyalty-box--first">
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">First-Time</div>
-                <div class="md-headline-small" style="color:var(--md-sys-color-primary);">{{ analytics.first_time_visitors.toLocaleString() }}</div>
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ firstTimePercent }}% of tracked</div>
+                <div class="loyalty-box__label">First-Time</div>
+                <div class="loyalty-box__value loyalty-box__value--primary">{{ analytics.first_time_visitors.toLocaleString() }}</div>
+                <div class="loyalty-box__sub">{{ firstTimePercent }}% of tracked</div>
               </div>
               <div class="loyalty-box loyalty-box--return">
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Returning</div>
-                <div class="md-headline-small" style="color:#14b8a6;">{{ analytics.returning_visitors.toLocaleString() }}</div>
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ returningPercent }}% of tracked</div>
+                <div class="loyalty-box__label">Returning</div>
+                <div class="loyalty-box__value loyalty-box__value--teal">{{ analytics.returning_visitors.toLocaleString() }}</div>
+                <div class="loyalty-box__sub">{{ returningPercent }}% of tracked</div>
               </div>
               <div class="loyalty-box loyalty-box--rate">
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Return Rate</div>
-                <div class="md-headline-small" style="color:#f59e0b;">{{ returningPercent }}%</div>
-                <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">visitors who came back</div>
+                <div class="loyalty-box__label">Return Rate</div>
+                <div class="loyalty-box__value loyalty-box__value--amber">{{ returningPercent }}%</div>
+                <div class="loyalty-box__sub">visitors who came back</div>
               </div>
             </div>
           </div>
@@ -551,72 +540,71 @@
       </div>
 
       <!-- Link Timeline Card -->
-      <div v-if="link" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Link Timeline</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Key dates and milestones for this link</div>
+      <div v-if="link" class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">timeline</span>
+            </div>
+            <div>
+              <div class="an-card-title">Link Timeline</div>
+              <div class="an-card-subtitle">Key dates and milestones for this link</div>
+            </div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:0.75rem 1.25rem;">
+        <div class="an-card-body an-card-body--tight">
           <div class="timeline-list">
-            <!-- Created -->
             <div class="timeline-item">
               <div class="timeline-icon timeline-icon--created">
-                <span class="material-symbols-outlined" style="font-size:16px;">celebration</span>
+                <span class="material-symbols-outlined icon-sm">celebration</span>
               </div>
               <div class="timeline-body">
-                <div class="md-label-large timeline-label">Created</div>
-                <div class="md-body-medium timeline-date">{{ formatLinkDate(link.created_at) }}</div>
+                <div class="timeline-label">Created</div>
+                <div class="timeline-date">{{ formatLinkDate(link.created_at) }}</div>
               </div>
             </div>
-            <!-- Last Updated -->
             <div v-if="link.updated_at && link.updated_at !== link.created_at" class="timeline-item">
               <div class="timeline-icon timeline-icon--updated">
-                <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                <span class="material-symbols-outlined icon-sm">edit</span>
               </div>
               <div class="timeline-body">
-                <div class="md-label-large timeline-label">Last Updated</div>
-                <div class="md-body-medium timeline-date">{{ formatLinkDate(link.updated_at) }}</div>
+                <div class="timeline-label">Last Updated</div>
+                <div class="timeline-date">{{ formatLinkDate(link.updated_at) }}</div>
               </div>
             </div>
-            <!-- Health Last Checked -->
             <div v-if="link.health_checked_at" class="timeline-item">
               <div class="timeline-icon timeline-icon--health">
-                <span class="material-symbols-outlined" style="font-size:16px;">search</span>
+                <span class="material-symbols-outlined icon-sm">search</span>
               </div>
               <div class="timeline-body">
-                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
-                  <div class="md-label-large timeline-label">Health Last Checked</div>
+                <div class="timeline-label-row">
+                  <div class="timeline-label">Health Last Checked</div>
                   <span class="m3-badge" :class="healthBadgeClass(link.health_status)">{{ healthLabel(link.health_status) }}</span>
                 </div>
-                <div class="md-body-medium timeline-date">{{ formatLinkDate(link.health_checked_at) }}</div>
+                <div class="timeline-date">{{ formatLinkDate(link.health_checked_at) }}</div>
               </div>
             </div>
-            <!-- Expires -->
             <div v-if="link.expires_at" class="timeline-item">
               <div class="timeline-icon timeline-icon--expires">
-                <span class="material-symbols-outlined" style="font-size:16px;">schedule</span>
+                <span class="material-symbols-outlined icon-sm">schedule</span>
               </div>
               <div class="timeline-body">
-                <div class="md-label-large timeline-label">Expires</div>
-                <div class="md-body-medium timeline-date" :class="expiryDateClass(link.expires_at)">
+                <div class="timeline-label">Expires</div>
+                <div class="timeline-date" :class="expiryDateClass(link.expires_at)">
                   {{ formatLinkDate(link.expires_at) }}
-                  <span class="md-body-small" :class="expiryDateClass(link.expires_at)">{{ expiryCountdown(link.expires_at) }}</span>
+                  <span class="timeline-date__sub" :class="expiryDateClass(link.expires_at)">{{ expiryCountdown(link.expires_at) }}</span>
                 </div>
               </div>
             </div>
-            <!-- Click Limit -->
             <div v-if="link.max_clicks" class="timeline-item">
               <div class="timeline-icon timeline-icon--limit">
-                <span class="material-symbols-outlined" style="font-size:16px;">flag</span>
+                <span class="material-symbols-outlined icon-sm">flag</span>
               </div>
               <div class="timeline-body">
-                <div class="md-label-large timeline-label">Click Limit</div>
-                <div class="md-body-medium timeline-date">
+                <div class="timeline-label">Click Limit</div>
+                <div class="timeline-date">
                   Max clicks: <strong>{{ link.max_clicks.toLocaleString() }}</strong>
-                  <span style="color:var(--md-sys-color-on-surface-variant);"> ({{ link.click_count.toLocaleString() }} used, {{ Math.max(0, link.max_clicks - link.click_count).toLocaleString() }} remaining)</span>
+                  <span class="text-muted"> ({{ link.click_count.toLocaleString() }} used, {{ Math.max(0, link.max_clicks - link.click_count).toLocaleString() }} remaining)</span>
                 </div>
               </div>
             </div>
@@ -625,154 +613,164 @@
       </div>
 
       <!-- Security & Limits Card -->
-      <div v-if="link" class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Security &amp; Limits</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Access controls and usage limits for this link</div>
+      <div v-if="link" class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--neutral">
+              <span class="material-symbols-outlined">shield</span>
+            </div>
+            <div>
+              <div class="an-card-title">Security &amp; Limits</div>
+              <div class="an-card-subtitle">Access controls and usage limits for this link</div>
+            </div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div class="security-grid">
             <div class="security-item">
-              <div class="md-body-small security-item-label">Password Protected</div>
+              <div class="security-item__label">Password Protected</div>
               <div>
                 <span v-if="link.has_password" class="m3-badge m3-badge--warning">
-                  <span class="material-symbols-outlined" style="font-size:12px;vertical-align:middle;">lock</span> Yes
+                  <span class="material-symbols-outlined icon-xs">lock</span> Yes
                 </span>
                 <span v-else class="m3-badge m3-badge--neutral">No</span>
               </div>
             </div>
             <div class="security-item">
-              <div class="md-body-small security-item-label">Active Status</div>
+              <div class="security-item__label">Active Status</div>
               <span class="m3-badge" :class="link.is_active ? 'm3-badge--success' : 'm3-badge--neutral'">
                 {{ link.is_active ? 'Active' : 'Inactive' }}
               </span>
             </div>
             <div class="security-item">
-              <div class="md-body-small security-item-label">Redirect Type</div>
+              <div class="security-item__label">Redirect Type</div>
               <span class="m3-badge m3-badge--neutral">
                 {{ link.redirect_type === 301 ? '301 Permanent' : '302 Temporary' }}
               </span>
             </div>
             <div class="security-item">
-              <div class="md-body-small security-item-label">Expiry</div>
-              <span v-if="link.expires_at" :class="expiryDateClass(link.expires_at)" class="md-body-medium">
+              <div class="security-item__label">Expiry</div>
+              <span v-if="link.expires_at" :class="expiryDateClass(link.expires_at)" class="security-item__value">
                 {{ formatLinkDate(link.expires_at) }}
-                <span class="md-body-small">{{ expiryCountdown(link.expires_at) }}</span>
+                <span class="security-item__sub">{{ expiryCountdown(link.expires_at) }}</span>
               </span>
-              <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Never expires</span>
+              <span v-else class="text-muted">Never expires</span>
             </div>
-            <!-- Click Limit full width -->
             <div class="security-item security-item--full">
-              <div class="md-body-small security-item-label" style="margin-bottom:0.5rem;">Click Limit</div>
+              <div class="security-item__label">Click Limit</div>
               <div v-if="link.max_clicks">
-                <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.25rem;">
-                  <span class="md-body-medium">{{ link.click_count.toLocaleString() }} / {{ link.max_clicks.toLocaleString() }} clicks used</span>
-                  <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ clickLimitPercent(link.click_count, link.max_clicks) }}%</span>
+                <div class="click-limit-row">
+                  <span>{{ link.click_count.toLocaleString() }} / {{ link.max_clicks.toLocaleString() }} clicks used</span>
+                  <span class="text-muted">{{ clickLimitPercent(link.click_count, link.max_clicks) }}%</span>
                 </div>
-                <md-linear-progress
-                  :value="clickLimitPercent(link.click_count, link.max_clicks) / 100"
-                 
-                />
+                <div class="prog-bar prog-bar--mt">
+                  <div class="prog-fill" :style="{ width: clickLimitPercent(link.click_count, link.max_clicks) + '%', backgroundColor: clickLimitBarColor(link.click_count, link.max_clicks) }"></div>
+                </div>
               </div>
-              <div v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Unlimited</div>
+              <div v-else class="text-muted">Unlimited</div>
             </div>
-            <!-- Tags full width -->
             <div class="security-item security-item--full">
-              <div class="md-body-small security-item-label" style="margin-bottom:0.25rem;">Tags</div>
-              <div v-if="link.tags && link.tags.length" style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+              <div class="security-item__label">Tags</div>
+              <div v-if="link.tags && link.tags.length" class="link-tags">
                 <span v-for="tag in link.tags" :key="tag" class="m3-badge m3-badge--neutral">{{ tag }}</span>
               </div>
-              <span v-else class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">None</span>
+              <span v-else class="text-muted">None</span>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Click Heatmap -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Click Heatmap</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Clicks by hour of day × day of week (UTC)</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--amber">
+              <span class="material-symbols-outlined">grid_view</span>
+            </div>
+            <div>
+              <div class="an-card-title">Click Heatmap</div>
+              <div class="an-card-subtitle">Clicks by hour of day × day of week (UTC)</div>
+            </div>
           </div>
           <span class="m3-badge m3-badge--neutral">24 × 7</span>
         </div>
-        <md-divider />
-        <div style="padding:1rem;">
+        <div class="an-card-body">
           <div v-if="!analytics.heatmap || analytics.heatmap.length === 0" class="empty-state">
             No heatmap data available for this period.
           </div>
-          <VChart v-else :option="heatmapChartOption" style="height:260px;" autoresize />
+          <VChart v-else :option="heatmapChartOption" class="chart-heatmap" autoresize />
         </div>
       </div>
 
       <!-- Geographic World Map -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">Geographic Distribution</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Click density by country — scroll to zoom, drag to pan</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">public</span>
+            </div>
+            <div>
+              <div class="an-card-title">Geographic Distribution</div>
+              <div class="an-card-subtitle">Click density by country — scroll to zoom, drag to pan</div>
+            </div>
           </div>
           <span class="m3-badge m3-badge--neutral">World Map</span>
         </div>
-        <md-divider />
-        <div style="padding:1rem;">
-          <div v-if="worldMapLoading" style="display:flex;flex-direction:column;align-items:center;padding:3rem 0;gap:0.75rem;">
-            <md-circular-progress indeterminate />
-            <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Loading world map…</span>
+        <div class="an-card-body">
+          <div v-if="worldMapLoading" class="loading-state loading-state--inline">
+            <div class="css-spinner"></div>
+            <span class="text-muted">Loading world map…</span>
           </div>
           <div v-else-if="!mapLoaded || !analytics?.countries?.length" class="empty-state">
             No geographic data available yet. Geographic data is collected on new clicks.
           </div>
-          <VChart
-            v-else
-            :option="geoMapOption"
-            style="height:420px;"
-            autoresize
-          />
+          <VChart v-else :option="geoMapOption" class="chart-map" autoresize />
         </div>
       </div>
 
       <!-- Top Countries -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <span class="md-title-medium">Top Countries</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">flag</span>
+            </div>
+            <div class="an-card-title">Top Countries</div>
+          </div>
           <span class="m3-badge m3-badge--neutral">Top 15</span>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div v-if="!analytics.countries || analytics.countries.length === 0" class="empty-state">
             No country data available yet. Geographic data is collected on new clicks.
           </div>
           <div v-else class="two-col-layout">
-            <div style="min-width:0;">
-              <VChart :option="countriesChartOption" style="height:360px;" autoresize />
+            <div class="col-min0">
+              <VChart :option="countriesChartOption" class="chart-countries" autoresize />
             </div>
-            <div style="min-width:0;">
+            <div class="col-min0">
               <table class="m3-table">
                 <thead>
                   <tr>
                     <th>Country</th>
-                    <th style="text-align:right;">Clicks</th>
-                    <th style="width:120px;">Share</th>
+                    <th class="th-right">Clicks</th>
+                    <th class="th-share">Share</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="c in analytics.countries" :key="c.country">
                     <td>
-                      <div style="display:flex;align-items:center;gap:0.5rem;">
-                        <span style="font-size:1.1rem;line-height:1;">{{ countryFlag(c.country) }}</span>
-                        <span class="md-body-small">{{ countryDisplayName(c.country) }}</span>
+                      <div class="country-cell">
+                        <span class="country-flag">{{ countryFlag(c.country) }}</span>
+                        <span>{{ countryDisplayName(c.country) }}</span>
                       </div>
                     </td>
-                    <td style="text-align:right;font-weight:600;">{{ c.count.toLocaleString() }}</td>
+                    <td class="td-right td-bold">{{ c.count.toLocaleString() }}</td>
                     <td>
-                      <div style="display:flex;align-items:center;gap:0.4rem;">
-                        <md-linear-progress :value="countryPercent(c.count) / 100" style="flex:1;" />
-                        <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ countryPercent(c.count) }}%</span>
+                      <div class="prog-with-pct">
+                        <div class="prog-bar prog-bar--flex">
+                          <div class="prog-fill" :style="{ width: countryPercent(c.count) + '%' }"></div>
+                        </div>
+                        <span class="prog-pct">{{ countryPercent(c.count) }}%</span>
                       </div>
                     </td>
                   </tr>
@@ -784,41 +782,47 @@
       </div>
 
       <!-- Top Cities -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <span class="md-title-medium">Top Cities</span>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--neutral">
+              <span class="material-symbols-outlined">location_city</span>
+            </div>
+            <div class="an-card-title">Top Cities</div>
+          </div>
           <span class="m3-badge m3-badge--neutral">Top 20</span>
         </div>
-        <md-divider />
-        <div style="padding:0.5rem 0;">
-          <div v-if="!analytics.cities || analytics.cities.length === 0" class="empty-state">
-            No city data available yet. City data is collected on new clicks.
-          </div>
-          <table v-else class="m3-table">
+        <div v-if="!analytics.cities || analytics.cities.length === 0" class="empty-state">
+          No city data available yet. City data is collected on new clicks.
+        </div>
+        <div v-else class="m3-table-wrapper">
+          <table class="m3-table">
             <thead>
               <tr>
-                <th style="width:36px;">#</th>
+                <th class="th-num">#</th>
                 <th>City</th>
                 <th>Country</th>
-                <th style="text-align:right;">Clicks</th>
-                <th style="width:140px;">Share</th>
+                <th class="th-right">Clicks</th>
+                <th class="th-share">Share</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(c, idx) in analytics.cities" :key="c.city + c.country">
-                <td class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ idx + 1 }}</td>
-                <td><span class="md-body-medium">{{ c.city }}</span></td>
+                <td class="td-num text-muted">{{ idx + 1 }}</td>
+                <td>{{ c.city }}</td>
                 <td>
-                  <div style="display:flex;align-items:center;gap:0.5rem;">
-                    <span style="font-size:1rem;line-height:1;">{{ countryFlag(c.country) }}</span>
-                    <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">{{ countryDisplayName(c.country) }}</span>
+                  <div class="country-cell">
+                    <span class="country-flag">{{ countryFlag(c.country) }}</span>
+                    <span class="text-muted">{{ countryDisplayName(c.country) }}</span>
                   </div>
                 </td>
-                <td style="text-align:right;font-weight:600;">{{ c.count.toLocaleString() }}</td>
+                <td class="td-right td-bold">{{ c.count.toLocaleString() }}</td>
                 <td>
-                  <div style="display:flex;align-items:center;gap:0.4rem;">
-                    <md-linear-progress :value="cityPercent(c.count) / 100" style="flex:1;" />
-                    <span class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);min-width:32px;">{{ cityPercent(c.count) }}%</span>
+                  <div class="prog-with-pct">
+                    <div class="prog-bar prog-bar--flex">
+                      <div class="prog-fill" :style="{ width: cityPercent(c.count) + '%' }"></div>
+                    </div>
+                    <span class="prog-pct">{{ cityPercent(c.count) }}%</span>
                   </div>
                 </td>
               </tr>
@@ -828,15 +832,19 @@
       </div>
 
       <!-- UTM Campaign Tracking -->
-      <div class="m3-card m3-card--outlined" style="margin-bottom:1.5rem;">
-        <div class="card-header-row">
-          <div>
-            <span class="md-title-medium">UTM Campaign Tracking</span>
-            <div class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">Clicks from links with UTM parameters appended</div>
+      <div class="an-card">
+        <div class="an-card-header">
+          <div class="an-card-header__left">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">campaign</span>
+            </div>
+            <div>
+              <div class="an-card-title">UTM Campaign Tracking</div>
+              <div class="an-card-subtitle">Clicks from links with UTM parameters appended</div>
+            </div>
           </div>
         </div>
-        <md-divider />
-        <div style="padding:1rem 1.25rem;">
+        <div class="an-card-body">
           <div
             v-if="!analytics.utm_sources?.length && !analytics.utm_mediums?.length && !analytics.utm_campaigns?.length && !analytics.utm_contents?.length && !analytics.utm_terms?.length"
             class="empty-state"
@@ -844,76 +852,83 @@
             No UTM data yet. Append <code>?utm_source=email&amp;utm_medium=newsletter&amp;utm_campaign=launch</code> to your short link when sharing.
           </div>
           <div v-else>
-            <!-- Row 1: Source, Medium, Campaign -->
             <div class="utm-grid">
               <div>
-                <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Source</div>
-                <div v-if="!analytics.utm_sources?.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No data</div>
+                <div class="utm-group-label">Source</div>
+                <div v-if="!analytics.utm_sources?.length" class="text-muted">No data</div>
                 <div v-else class="breakdown-list">
                   <div v-for="u in analytics.utm_sources" :key="u.value" class="breakdown-item">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                      <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
-                      <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
+                    <div class="breakdown-item__meta">
+                      <span class="breakdown-item__name" :title="u.value">{{ u.value }}</span>
+                      <span class="breakdown-item__count">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_sources) / 100" />
+                    <div class="prog-bar">
+                      <div class="prog-fill" :style="{ width: utmPercent(u.count, analytics.utm_sources) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
               <div>
-                <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Medium</div>
-                <div v-if="!analytics.utm_mediums?.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No data</div>
+                <div class="utm-group-label">Medium</div>
+                <div v-if="!analytics.utm_mediums?.length" class="text-muted">No data</div>
                 <div v-else class="breakdown-list">
                   <div v-for="u in analytics.utm_mediums" :key="u.value" class="breakdown-item">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                      <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
-                      <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
+                    <div class="breakdown-item__meta">
+                      <span class="breakdown-item__name" :title="u.value">{{ u.value }}</span>
+                      <span class="breakdown-item__count">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_mediums) / 100" />
+                    <div class="prog-bar">
+                      <div class="prog-fill" :style="{ width: utmPercent(u.count, analytics.utm_mediums) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
               <div>
-                <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Campaign</div>
-                <div v-if="!analytics.utm_campaigns?.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No data</div>
+                <div class="utm-group-label">Campaign</div>
+                <div v-if="!analytics.utm_campaigns?.length" class="text-muted">No data</div>
                 <div v-else class="breakdown-list">
                   <div v-for="u in analytics.utm_campaigns" :key="u.value" class="breakdown-item">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                      <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px;" :title="u.value">{{ u.value }}</span>
-                      <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
+                    <div class="breakdown-item__meta">
+                      <span class="breakdown-item__name" :title="u.value">{{ u.value }}</span>
+                      <span class="breakdown-item__count">{{ u.count.toLocaleString() }}</span>
                     </div>
-                    <md-linear-progress :value="utmPercent(u.count, analytics.utm_campaigns) / 100" />
+                    <div class="prog-bar">
+                      <div class="prog-fill" :style="{ width: utmPercent(u.count, analytics.utm_campaigns) + '%' }"></div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- Row 2: Content + Term -->
-            <div v-if="analytics.utm_contents?.length || analytics.utm_terms?.length" style="margin-top:1.5rem;">
-              <md-divider style="margin-bottom:1.5rem;" />
+            <div v-if="analytics.utm_contents?.length || analytics.utm_terms?.length" class="utm-section2">
+              <div class="utm-divider"></div>
               <div class="two-col-grid">
                 <div>
-                  <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Content</div>
-                  <div v-if="!analytics.utm_contents?.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No data</div>
+                  <div class="utm-group-label">Content</div>
+                  <div v-if="!analytics.utm_contents?.length" class="text-muted">No data</div>
                   <div v-else class="breakdown-list">
                     <div v-for="u in analytics.utm_contents" :key="u.value" class="breakdown-item">
-                      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" :title="u.value">{{ u.value }}</span>
-                        <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
+                      <div class="breakdown-item__meta">
+                        <span class="breakdown-item__name" :title="u.value">{{ u.value }}</span>
+                        <span class="breakdown-item__count">{{ u.count.toLocaleString() }}</span>
                       </div>
-                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_contents) / 100" />
+                      <div class="prog-bar">
+                        <div class="prog-fill" :style="{ width: utmPercent(u.count, analytics.utm_contents) + '%' }"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <div class="md-label-large" style="color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;">Term</div>
-                  <div v-if="!analytics.utm_terms?.length" class="md-body-small" style="color:var(--md-sys-color-on-surface-variant);">No data</div>
+                  <div class="utm-group-label">Term</div>
+                  <div v-if="!analytics.utm_terms?.length" class="text-muted">No data</div>
                   <div v-else class="breakdown-list">
                     <div v-for="u in analytics.utm_terms" :key="u.value" class="breakdown-item">
-                      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                        <span class="md-body-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;" :title="u.value">{{ u.value }}</span>
-                        <span class="md-label-large">{{ u.count.toLocaleString() }}</span>
+                      <div class="breakdown-item__meta">
+                        <span class="breakdown-item__name" :title="u.value">{{ u.value }}</span>
+                        <span class="breakdown-item__count">{{ u.count.toLocaleString() }}</span>
                       </div>
-                      <md-linear-progress :value="utmPercent(u.count, analytics.utm_terms) / 100" />
+                      <div class="prog-bar">
+                        <div class="prog-fill" :style="{ width: utmPercent(u.count, analytics.utm_terms) + '%' }"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1028,7 +1043,7 @@ async function loadLink() {
   linkLoading.value = true;
   try {
     const res = await linksApi.get(id);
-    link.value = res.data;
+    if (res.data) link.value = res.data;
   } catch {
     // non-fatal — header just won't show link metadata
   } finally {
@@ -1128,12 +1143,12 @@ async function loadAnalytics() {
   loading.value = true;
   error.value = '';
   try {
-    analytics.value = await linksApi.getAnalytics(
+    analytics.value = (await linksApi.getAnalytics(
       id,
       filterFrom.value ? new Date(filterFrom.value).toISOString() : undefined,
       filterTo.value ? new Date(filterTo.value).toISOString() : undefined,
       filterGranularity.value,
-    );
+    )).data ?? null;
   } catch (err: unknown) {
     if (err instanceof Error) {
       error.value = err.message;
@@ -1153,7 +1168,7 @@ async function loadComparison() {
       filterFrom.value ? new Date(filterFrom.value).toISOString() : undefined,
       filterTo.value ? new Date(filterTo.value).toISOString() : undefined,
     );
-    comparison.value = res.data;
+    comparison.value = res.data ?? null;
   } catch {
     comparison.value = null;
   }
@@ -1850,19 +1865,20 @@ const chartOption = computed(() => ({
 </script>
 
 <style scoped lang="scss">
-.page-wrapper {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+/* ── Root ─────────────────────────────────────────────────────────── */
+.analytics-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
 }
 
-/* Page header */
+/* ── Page header ─────────────────────────────────────────────────── */
 .page-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
 
@@ -1876,6 +1892,13 @@ const chartOption = computed(() => ({
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
 }
 
 .page-header__subtitle {
@@ -1896,9 +1919,88 @@ const chartOption = computed(() => ({
   color: var(--md-sys-color-primary);
 }
 
-/* Link info card */
-.link-info-card {
-  border-left: 3px solid var(--md-sys-color-primary) !important;
+.icon-sm { font-size: 18px; }
+.icon-xs { font-size: 14px; }
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+.an-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.an-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}
+
+.an-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+.an-card-subtitle {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 1px;
+}
+
+.an-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--primary {
+    background: rgba(99, 91, 255, 0.1);
+    color: var(--md-sys-color-primary, #635bff);
+  }
+  &--teal {
+    background: rgba(20, 184, 166, 0.1);
+    color: #14b8a6;
+  }
+  &--amber {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+  &--neutral {
+    background: var(--md-sys-color-surface-container, #f3f4f6);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+}
+
+.an-card-body {
+  padding: 16px 20px;
+
+  &--tight {
+    padding: 8px 20px;
+  }
+}
+
+/* ── Link info card ──────────────────────────────────────────────── */
+.link-info-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 16px 20px;
 }
 
 .link-info-body {
@@ -1919,6 +2021,20 @@ const chartOption = computed(() => ({
   flex-shrink: 0;
 }
 
+.link-info-stat__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--md-sys-color-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.link-info-stat__label {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 4px;
+}
+
 .link-title-row {
   display: flex;
   align-items: center;
@@ -1928,25 +2044,130 @@ const chartOption = computed(() => ({
 }
 
 .link-info-title {
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--md-sys-color-on-surface);
 }
 
-.stat-number {
-  line-height: 1;
+.link-dest-url {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+  overflow: hidden;
+
+  &__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
-/* Error banner */
+.link-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+/* ── Error banner ────────────────────────────────────────────────── */
 .error-banner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: 12px;
-  background: rgba(var(--md-sys-color-error-rgb, 176, 0, 32), 0.08);
-  border: 1px solid var(--md-sys-color-error);
+  background: rgba(220, 38, 38, 0.08);
+  border: 1px solid rgba(220, 38, 38, 0.3);
 }
 
-/* Filters */
+.error-icon {
+  color: var(--md-sys-color-error);
+  flex-shrink: 0;
+}
+
+.error-msg {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ── Loading state ───────────────────────────────────────────────── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0;
+  gap: 1rem;
+
+  &--inline {
+    padding: 3rem 0;
+    flex-direction: row;
+    gap: 0.75rem;
+  }
+}
+
+/* ── CSS spinner ─────────────────────────────────────────────────── */
+.css-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  border-top-color: var(--md-sys-color-primary, #635bff);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+
+  &--sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+  }
+
+  &--white {
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Date input ──────────────────────────────────────────────────── */
+.date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-field__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.date-input {
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
+  border-radius: 8px;
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 150px;
+
+  &:focus {
+    border-color: var(--md-sys-color-primary, #635bff);
+  }
+}
+
+/* ── Filter row ──────────────────────────────────────────────────── */
 .filter-row {
   display: flex;
   align-items: flex-end;
@@ -1954,52 +2175,84 @@ const chartOption = computed(() => ({
   flex-wrap: wrap;
 }
 
-/* Card header row */
-.card-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-/* Stat grid */
+/* ── Stat grid ───────────────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
+  gap: 16px;
 
   @media (max-width: 991px) { grid-template-columns: repeat(2, 1fr); }
   @media (max-width: 575px) { grid-template-columns: 1fr; }
 }
 
 .stat-card {
-  padding: 1.25rem;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: var(--md-sys-color-outline, #ccc);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
 }
 
-.stat-card__header {
+.stat-card-inner {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
+  gap: 14px;
+  padding: 18px 20px;
 }
 
-.stat-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+.stat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 22px; }
+
+  &--primary { background: rgba(99, 91, 255, 0.12); color: var(--md-sys-color-primary, #635bff); }
+  &--teal    { background: rgba(20, 184, 166, 0.12); color: #14b8a6; }
+  &--amber   { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+  &--red     { background: rgba(239, 68, 68, 0.12);  color: #ef4444; }
+}
+
+.stat-body {
+  flex: 1;
+  min-width: 0;
 }
 
 .stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--md-sys-color-on-surface);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+
+  &--truncate {
+    font-size: 1rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &--capitalize {
+    font-size: 1rem;
+    text-transform: capitalize;
+  }
 }
 
-/* Comparison */
+.stat-label {
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Period comparison ───────────────────────────────────────────── */
 .comparison-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2013,6 +2266,35 @@ const chartOption = computed(() => ({
   padding: 0.5rem 0;
 }
 
+.comparison-metric__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 0.25rem;
+}
+
+.comparison-metric__row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.comparison-metric__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: -0.02em;
+}
+
+.comparison-metric__prev {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-top: 0.2rem;
+}
+
 .trend-badge {
   display: inline-flex;
   align-items: center;
@@ -2022,8 +2304,8 @@ const chartOption = computed(() => ({
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
 
-  &.comp-badge--up   { background: rgba(22, 163, 74, 0.12);  color: #16a34a; }
-  &.comp-badge--down { background: rgba(220, 38, 38, 0.12);  color: #dc2626; }
+  &.comp-badge--up     { background: rgba(22, 163, 74, 0.12);  color: #16a34a; }
+  &.comp-badge--down   { background: rgba(220, 38, 38, 0.12);  color: #dc2626; }
   &.comp-badge--stable { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
 }
 
@@ -2058,11 +2340,25 @@ const chartOption = computed(() => ({
   margin-bottom: 0.25rem;
 }
 
-/* Two column layouts */
+.period-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+}
+
+/* ── Chart dimensions ────────────────────────────────────────────── */
+.chart-tall     { height: 320px; display: block; }
+.chart-medium   { height: 280px; display: block; }
+.chart-small    { height: 200px; display: block; }
+.chart-heatmap  { height: 260px; display: block; }
+.chart-map      { height: 420px; display: block; }
+.chart-countries { height: 360px; display: block; }
+
+/* ── Two column layouts ──────────────────────────────────────────── */
 .two-col-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: 20px;
 
   @media (max-width: 767px) { grid-template-columns: 1fr; }
 }
@@ -2076,7 +2372,40 @@ const chartOption = computed(() => ({
   @media (max-width: 767px) { grid-template-columns: 1fr; }
 }
 
-/* Breakdown list */
+.col-min0 { min-width: 0; }
+
+/* ── Progress bars ───────────────────────────────────────────────── */
+.prog-bar {
+  height: 6px;
+  background: var(--md-sys-color-surface-container-high, #e9ecef);
+  border-radius: 999px;
+  overflow: hidden;
+
+  &--flex { flex: 1; }
+  &--mt   { margin-top: 6px; }
+}
+
+.prog-fill {
+  height: 100%;
+  background: var(--md-sys-color-primary, #635bff);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.prog-with-pct {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.prog-pct {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  min-width: 30px;
+  text-align: right;
+}
+
+/* ── Breakdown list ──────────────────────────────────────────────── */
 .breakdown-list {
   display: flex;
   flex-direction: column;
@@ -2084,10 +2413,53 @@ const chartOption = computed(() => ({
 }
 
 .breakdown-item {
-  // each item has its own internal layout
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  &__count {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+    white-space: nowrap;
+  }
 }
 
-/* Chart + legend */
+.channel-icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+}
+
+.channel-icon-text { font-size: 0.95rem; }
+
+/* ── Chart + legend ──────────────────────────────────────────────── */
 .chart-legend-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2116,23 +2488,110 @@ const chartOption = computed(() => ({
   flex-shrink: 0;
 }
 
-/* Visitor loyalty boxes */
+.legend-name {
+  flex: 1;
+  font-size: 0.8125rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--md-sys-color-on-surface);
+}
+
+.legend-pct {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* ── Table helpers ───────────────────────────────────────────────── */
+.th-right  { text-align: right; }
+.th-share  { width: 120px; }
+.th-num    { width: 36px; }
+.td-right  { text-align: right; }
+.td-bold   { font-weight: 600; }
+.td-num    { font-size: 0.8125rem; }
+.td-truncate { max-width: 200px; }
+
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.device-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.device-icon {
+  font-size: 16px;
+  color: var(--md-sys-color-primary);
+}
+
+.device-label { text-transform: capitalize; }
+
+.country-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.country-flag {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.source-table { flex: 1; }
+
+.source-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ── Visitor loyalty ─────────────────────────────────────────────── */
+.loyalty-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  align-content: center;
+}
+
 .loyalty-box {
   padding: 0.75rem 1rem;
   border-radius: 12px;
 
-  &--first {
-    background: rgba(99, 91, 255, 0.06);
+  &--first  { background: rgba(99, 91, 255, 0.06); }
+  &--return { background: rgba(20, 184, 166, 0.06); }
+  &--rate   { background: rgba(245, 158, 11, 0.06); }
+
+  &__label {
+    font-size: 0.8rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 0.25rem;
   }
-  &--return {
-    background: rgba(20, 184, 166, 0.06);
+
+  &__value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+
+    &--primary { color: var(--md-sys-color-primary, #635bff); }
+    &--teal    { color: #14b8a6; }
+    &--amber   { color: #f59e0b; }
   }
-  &--rate {
-    background: rgba(245, 158, 11, 0.06);
+
+  &__sub {
+    font-size: 0.75rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 2px;
   }
 }
 
-/* Timeline */
+/* ── Timeline ────────────────────────────────────────────────────── */
 .timeline-list {
   display: flex;
   flex-direction: column;
@@ -2145,14 +2604,8 @@ const chartOption = computed(() => ({
   padding: 0.65rem 0;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
-  &:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-  }
-
-  &:first-child {
-    padding-top: 0;
-  }
+  &:last-child { border-bottom: none; padding-bottom: 0; }
+  &:first-child { padding-top: 0; }
 }
 
 .timeline-icon {
@@ -2165,10 +2618,10 @@ const chartOption = computed(() => ({
   flex-shrink: 0;
   margin-top: 1px;
 
-  &--created { background: rgba(99, 91, 255, 0.1); color: var(--md-sys-color-primary); }
+  &--created { background: rgba(99, 91, 255, 0.1);  color: var(--md-sys-color-primary); }
   &--updated { background: rgba(20, 184, 166, 0.1); color: #14b8a6; }
   &--health  { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-  &--expires { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  &--expires { background: rgba(239, 68, 68, 0.1);  color: #ef4444; }
   &--limit   { background: rgba(99, 91, 255, 0.08); color: var(--md-sys-color-primary); }
 }
 
@@ -2178,17 +2631,33 @@ const chartOption = computed(() => ({
 }
 
 .timeline-label {
-  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 0.15rem;
+}
+
+.timeline-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   margin-bottom: 0.15rem;
 }
 
 .timeline-date {
+  font-size: 0.875rem;
   color: var(--md-sys-color-on-surface);
+
+  &__sub {
+    font-size: 0.8rem;
+    margin-left: 4px;
+  }
 }
 
-/* Security grid */
+/* ── Security grid ───────────────────────────────────────────────── */
 .security-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -2200,18 +2669,36 @@ const chartOption = computed(() => ({
   flex-direction: column;
   gap: 0.35rem;
 
-  &--full {
-    grid-column: 1 / -1;
+  &--full { grid-column: 1 / -1; }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &__value {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  &__sub {
+    font-size: 0.8rem;
+    margin-left: 4px;
   }
 }
 
-.security-item-label {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--md-sys-color-on-surface-variant);
+.click-limit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
 }
 
-/* UTM grid */
+/* ── UTM ─────────────────────────────────────────────────────────── */
 .utm-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2221,56 +2708,24 @@ const chartOption = computed(() => ({
   @media (max-width: 575px) { grid-template-columns: 1fr; }
 }
 
-/* M3 Card header */
-.m3-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1.25rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
-
-  &__left {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  &__right {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+.utm-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 0.75rem;
 }
 
-/* Filters card */
-.filters-card {
-  border-left: 3px solid var(--md-sys-color-primary) !important;
+.utm-section2 { margin-top: 1.5rem; }
+
+.utm-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin-bottom: 1.5rem;
 }
 
-/* M3 Table wrapper */
-.m3-table-wrapper {
-  overflow-x: auto;
-}
-
-/* M3 Cards */
-.m3-card {
-  border-radius: 12px;
-  overflow: hidden;
-
-  &--elevated {
-    background: var(--md-sys-color-surface-container-low, #fff);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
-  }
-
-  &--outlined {
-    background: var(--md-sys-color-surface, #fff);
-    border: 1px solid var(--md-sys-color-outline-variant, #e3e8ee);
-  }
-}
-
-/* M3 Badges */
+/* ── Badges ──────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -2278,23 +2733,25 @@ const chartOption = computed(() => ({
   font-size: 0.7rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
-  border-radius: 999px;
+  border-radius: 6px;
 
-  &--primary   { background: rgba(99, 91, 255, 0.12); color: var(--md-sys-color-primary, #635bff); }
-  &--success   { background: rgba(22, 163, 74, 0.12);  color: #16a34a; }
-  &--error     { background: rgba(220, 38, 38, 0.12);  color: #dc2626; }
-  &--warning   { background: rgba(245, 158, 11, 0.12); color: #d97706; }
-  &--neutral   { background: rgba(107, 114, 128, 0.1); color: #6b7280; }
+  &--primary { background: rgba(99, 91, 255, 0.12);  color: var(--md-sys-color-primary, #635bff); }
+  &--success { background: rgba(22, 163, 74, 0.12);   color: #16a34a; }
+  &--error   { background: rgba(220, 38, 38, 0.12);   color: #dc2626; }
+  &--warning { background: rgba(245, 158, 11, 0.12);  color: #d97706; }
+  &--neutral { background: rgba(107, 114, 128, 0.1);  color: #6b7280; }
 }
 
-/* M3 Table */
+/* ── M3 Table ────────────────────────────────────────────────────── */
+.m3-table-wrapper { overflow-x: auto; }
+
 .m3-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.8125rem;
 
   th {
-    padding: 0.625rem 1rem;
+    padding: 10px 16px;
     text-align: left;
     font-size: 0.75rem;
     font-weight: 600;
@@ -2305,35 +2762,16 @@ const chartOption = computed(() => ({
   }
 
   td {
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant, #f0f2f5);
     color: var(--md-sys-color-on-surface);
   }
 
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  tbody tr:hover td {
-    background: var(--md-sys-color-surface-container-low, #f8f9fa);
-  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--md-sys-color-surface-container-low, #f8f9fa); }
 }
 
-/* Skeleton */
-.skeleton {
-  background: linear-gradient(90deg, var(--md-sys-color-outline-variant, #e3e8ee) 25%, #f0f2f5 50%, var(--md-sys-color-outline-variant, #e3e8ee) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.2s infinite;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-@keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Empty state */
+/* ── Empty states ────────────────────────────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 2rem;
@@ -2348,11 +2786,50 @@ const chartOption = computed(() => ({
   justify-content: center;
   padding: 2.5rem 1.5rem;
   text-align: center;
-  color: var(--md-sys-color-on-surface-variant);
-  gap: 0.25rem;
+  gap: 0.5rem;
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: var(--md-sys-color-surface-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+
+    .material-symbols-outlined {
+      font-size: 24px;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.6;
+    }
+  }
+
+  &__text {
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin: 0;
+  }
 }
 
-/* Live indicator */
+/* ── Skeleton ────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--md-sys-color-outline-variant, #e3e8ee) 25%, #f0f2f5 50%, var(--md-sys-color-outline-variant, #e3e8ee) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 4px;
+  display: inline-block;
+
+  &--120 { width: 120px; height: 1.1rem; }
+  &--200 { width: 200px; height: 0.9rem; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Live indicator ──────────────────────────────────────────────── */
 .live-badge {
   display: inline-flex;
   align-items: center;
@@ -2368,17 +2845,22 @@ const chartOption = computed(() => ({
   animation: live-pulse 1.4s ease-in-out infinite;
 }
 
+.live-text {
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #16a34a;
+}
+
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.75); }
+  50%      { opacity: 0.4; transform: scale(0.75); }
 }
 
-/* Expiry colors */
-.text-danger { color: var(--md-sys-color-error); }
+/* ── Utility ─────────────────────────────────────────────────────── */
+.text-muted   { color: var(--md-sys-color-on-surface-variant); font-size: 0.8125rem; }
+.text-danger  { color: var(--md-sys-color-error); }
 .text-warning { color: #d97706; }
 
-/* copy btn success state */
-.copy-btn--success {
-  color: #16a34a !important;
-}
+.copy-btn--success { color: #16a34a !important; }
 </style>

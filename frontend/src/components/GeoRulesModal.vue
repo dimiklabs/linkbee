@@ -301,7 +301,7 @@ async function addRule() {
       destination_url: newForm.value.destination_url,
       priority: newForm.value.priority,
     });
-    rules.value.push(res.data);
+    if (res.data) rules.value.push(res.data);
     newForm.value = { country_code: '', destination_url: '', priority: 0 };
   } catch (err: any) {
     formError.value = err?.response?.data?.description ?? 'Failed to add rule';
@@ -333,7 +333,7 @@ async function saveEdit(ruleId: string) {
       priority: editForm.value.priority,
     });
     const idx = rules.value.findIndex(r => r.id === ruleId);
-    if (idx !== -1) rules.value[idx] = res.data;
+    if (idx !== -1 && res.data) rules.value[idx] = res.data;
     editingId.value = null;
   } catch {
     // ignore — keep editing

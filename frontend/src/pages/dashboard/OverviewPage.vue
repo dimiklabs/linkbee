@@ -1,118 +1,121 @@
 <template>
   <div class="overview-page">
 
-    <!-- Page header with greeting -->
+    <!-- ── Page Header ──────────────────────────────────────────────────── -->
     <div class="page-header">
-      <div class="page-header-content">
-        <h1 class="md-headline-small page-title">Good {{ timeOfDay }}, {{ authStore.userName }}!</h1>
-        <p class="md-body-medium page-subtitle">{{ todayDisplay }} &mdash; Here's a snapshot of your account activity.</p>
+      <div class="page-header-main">
+        <h1 class="page-title">Good {{ timeOfDay }}, {{ authStore.userName }}!</h1>
+        <p class="page-subtitle">{{ todayDisplay }}</p>
       </div>
+      <router-link to="/dashboard/links?create=1" class="header-cta">
+        <span class="material-symbols-outlined">add</span>
+        New Link
+      </router-link>
     </div>
 
-    <!-- Loading skeleton -->
+    <!-- ── Loading Skeleton ─────────────────────────────────────────────── -->
     <div v-if="loading" class="stat-grid" aria-busy="true" aria-label="Loading statistics">
-      <div v-for="i in 5" :key="i" class="m3-card m3-card--elevated stat-card skeleton-card">
-        <div class="skeleton skeleton-icon"></div>
-        <div class="skeleton skeleton-value"></div>
-        <div class="skeleton skeleton-label"></div>
+      <div v-for="i in 5" :key="i" class="stat-card stat-card--skeleton">
+        <div class="skeleton skel-icon"></div>
+        <div class="skel-body">
+          <div class="skeleton skel-value"></div>
+          <div class="skeleton skel-label"></div>
+        </div>
       </div>
     </div>
 
     <template v-else-if="data">
 
-      <!-- Stat cards -->
+      <!-- ── Stat Cards ────────────────────────────────────────────────── -->
       <div class="stat-grid">
 
-        <div
-          class="m3-card m3-card--elevated stat-card"
-          aria-label="Total links"
-          role="region"
-        >
-          <div class="stat-icon-wrap stat-icon-wrap--primary">
-            <span class="material-symbols-outlined">link</span>
+        <div class="stat-card" aria-label="Total links">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--primary">
+              <span class="material-symbols-outlined">link</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value">{{ data.total_links.toLocaleString() }}</div>
+              <div class="stat-label">Total Links</div>
+            </div>
           </div>
-          <div class="stat-value md-display-small">{{ data.total_links.toLocaleString() }}</div>
-          <div class="md-body-medium stat-label">Total Links</div>
         </div>
 
-        <div
-          class="m3-card m3-card--elevated stat-card"
-          aria-label="Total clicks"
-          role="region"
-        >
-          <div class="stat-icon-wrap stat-icon-wrap--secondary">
-            <span class="material-symbols-outlined">ads_click</span>
+        <div class="stat-card" aria-label="Total clicks">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--secondary">
+              <span class="material-symbols-outlined">ads_click</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value">{{ data.total_clicks.toLocaleString() }}</div>
+              <div class="stat-label">Total Clicks</div>
+            </div>
           </div>
-          <div class="stat-value md-display-small">{{ data.total_clicks.toLocaleString() }}</div>
-          <div class="md-body-medium stat-label">Total Clicks</div>
         </div>
 
-        <div
-          class="m3-card m3-card--elevated stat-card"
-          aria-label="Clicks today"
-          role="region"
-        >
-          <div class="stat-icon-wrap stat-icon-wrap--tertiary">
-            <span class="material-symbols-outlined">today</span>
+        <div class="stat-card" aria-label="Clicks today">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--tertiary">
+              <span class="material-symbols-outlined">today</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value">{{ data.clicks_today.toLocaleString() }}</div>
+              <div class="stat-label">Clicks Today</div>
+            </div>
           </div>
-          <div class="stat-value md-display-small">{{ data.clicks_today.toLocaleString() }}</div>
-          <div class="md-body-medium stat-label">Clicks Today</div>
         </div>
 
-        <div
-          class="m3-card m3-card--elevated stat-card"
-          aria-label="Clicks in the last 30 days"
-          role="region"
-        >
-          <div class="stat-icon-wrap stat-icon-wrap--amber">
-            <span class="material-symbols-outlined">calendar_month</span>
+        <div class="stat-card" aria-label="Clicks in the last 30 days">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--amber">
+              <span class="material-symbols-outlined">calendar_month</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value">{{ data.clicks_30_days.toLocaleString() }}</div>
+              <div class="stat-label">Last 30 Days</div>
+            </div>
           </div>
-          <div class="stat-value md-display-small">{{ data.clicks_30_days.toLocaleString() }}</div>
-          <div class="md-body-medium stat-label">Clicks (30 days)</div>
         </div>
 
-        <div
-          class="m3-card m3-card--elevated stat-card"
-          aria-label="Clicks in the last 7 days"
-          role="region"
-        >
-          <div class="stat-icon-wrap stat-icon-wrap--teal">
-            <span class="material-symbols-outlined">bolt</span>
+        <div class="stat-card" aria-label="Clicks in the last 7 days">
+          <div class="stat-card-inner">
+            <div class="stat-icon-wrap stat-icon-wrap--teal">
+              <span class="material-symbols-outlined">bolt</span>
+            </div>
+            <div class="stat-body">
+              <div class="stat-value">{{ data.clicks_7_days.toLocaleString() }}</div>
+              <div class="stat-label">Last 7 Days</div>
+            </div>
           </div>
-          <div class="stat-value md-display-small">{{ data.clicks_7_days.toLocaleString() }}</div>
-          <div class="md-body-medium stat-label">Clicks (7 days)</div>
         </div>
 
       </div>
 
-      <!-- 30-Day Click Trend -->
-      <div class="m3-card m3-card--elevated chart-card">
-        <div class="m3-card-header">
-          <div class="m3-card-header__left">
-            <span class="material-symbols-outlined m3-card-header__icon">show_chart</span>
+      <!-- ── 30-Day Click Trend ─────────────────────────────────────────── -->
+      <div class="overview-card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon">
+              <span class="material-symbols-outlined">show_chart</span>
+            </div>
             <div>
-              <div class="md-title-medium m3-card-header__title">30-Day Click Trend</div>
-              <div class="md-body-small m3-card-header__subtitle">Daily clicks across all your links</div>
+              <div class="card-title">30-Day Click Trend</div>
+              <div class="card-subtitle">Daily clicks across all your links</div>
             </div>
           </div>
-          <router-link to="/dashboard/analytics" class="view-all-link md-label-large">View analytics</router-link>
+          <router-link to="/dashboard/analytics" class="card-action-link">View analytics</router-link>
         </div>
-        <md-divider />
+
         <div class="chart-body">
-          <div
-            v-if="!data.time_series_30d || data.time_series_30d.length === 0"
-            class="m3-empty-state"
-          >
-            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
-              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">show_chart</span>
+          <div v-if="!data.time_series_30d || data.time_series_30d.length === 0" class="empty-state">
+            <div class="empty-icon-wrap">
+              <span class="material-symbols-outlined empty-icon">show_chart</span>
             </div>
-            <p class="md-title-small m3-empty-state__title">No click data yet</p>
-            <p class="md-body-medium m3-empty-state__subtitle">
-              Clicks will appear here as your links are visited.
-            </p>
+            <p class="empty-title">No click data yet</p>
+            <p class="empty-sub">Clicks will appear here as your links are visited.</p>
             <router-link to="/dashboard/links">
               <button class="btn-filled">
-                <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
+                <span class="material-symbols-outlined">add_link</span>
                 Create a link
               </button>
             </router-link>
@@ -121,55 +124,51 @@
         </div>
       </div>
 
-      <!-- Expiring & At-Limit Links -->
+      <!-- ── Links Needing Attention ───────────────────────────────────── -->
       <div
         v-if="expiringLinks.length > 0 || atLimitLinks.length > 0"
-        class="m3-card m3-card--outlined attention-card"
+        class="overview-card overview-card--warning"
       >
-        <div class="m3-card-header">
-          <div class="m3-card-header__left">
-            <span class="material-symbols-outlined" style="color: var(--md-sys-color-error); font-size: 20px">warning</span>
-            <div>
-              <div class="md-title-medium m3-card-header__title">Links Needing Attention</div>
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-header-icon card-header-icon--warning">
+              <span class="material-symbols-outlined">warning</span>
             </div>
-            <span class="m3-badge m3-badge--error">{{ expiringLinks.length + atLimitLinks.length }}</span>
+            <div>
+              <div class="card-title">Links Needing Attention</div>
+              <div class="card-subtitle">
+                {{ expiringLinks.length + atLimitLinks.length }} link{{ expiringLinks.length + atLimitLinks.length !== 1 ? 's' : '' }} require action
+              </div>
+            </div>
           </div>
-          <router-link to="/dashboard/links?expiring_soon=true" class="view-all-link md-label-large">
-            View all
-          </router-link>
+          <router-link to="/dashboard/links" class="card-action-link">View all</router-link>
         </div>
-        <md-divider />
 
         <!-- Expiring Soon -->
         <div v-if="expiringLinks.length > 0" class="attention-section">
-          <div class="attention-section-title md-label-large">Expiring Soon</div>
-          <div class="m3-table-wrapper">
-            <table class="m3-table">
+          <div class="attention-section-label">Expiring Soon</div>
+          <div class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Link</th>
                   <th>Short URL</th>
-                  <th class="text-end">Expires</th>
-                  <th class="text-end">Time Left</th>
+                  <th class="col-end">Expires</th>
+                  <th class="col-end">Time Left</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="link in expiringLinks" :key="link.id">
                   <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    <router-link :to="`/dashboard/links/${link.id}`" class="row-link">
                       /{{ link.slug }}
                     </router-link>
                   </td>
-                  <td class="text-muted md-body-small">{{ link.short_url }}</td>
-                  <td class="text-end text-muted md-body-small text-nowrap">
-                    {{ formatDate(link.expires_at!) }}
-                  </td>
-                  <td class="text-end text-nowrap">
-                    <span
-                      class="m3-badge"
-                      :class="daysUntil(link.expires_at!) <= 3 ? 'm3-badge--error' : 'm3-badge--warning'"
-                    >
-                      {{ daysUntil(link.expires_at!) }} days left
+                  <td class="row-muted">{{ link.short_url }}</td>
+                  <td class="col-end row-muted row-nowrap">{{ formatDate(link.expires_at!) }}</td>
+                  <td class="col-end row-nowrap">
+                    <span class="status-chip" :class="daysUntil(link.expires_at!) <= 3 ? 'status-chip--error' : 'status-chip--warn'">
+                      {{ daysUntil(link.expires_at!) }}d left
                     </span>
                   </td>
                 </tr>
@@ -178,39 +177,40 @@
           </div>
         </div>
 
-        <md-divider v-if="expiringLinks.length > 0 && atLimitLinks.length > 0" />
+        <div v-if="expiringLinks.length > 0 && atLimitLinks.length > 0" class="section-divider" />
 
         <!-- Approaching Click Limit -->
         <div v-if="atLimitLinks.length > 0" class="attention-section">
-          <div class="attention-section-title md-label-large">Approaching Click Limit</div>
-          <div class="m3-table-wrapper">
-            <table class="m3-table">
+          <div class="attention-section-label">Approaching Click Limit</div>
+          <div class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Link</th>
-                  <th class="text-end">Clicks Used</th>
+                  <th class="col-end">Clicks Used</th>
                   <th>Progress</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="link in atLimitLinks" :key="link.id">
                   <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    <router-link :to="`/dashboard/links/${link.id}`" class="row-link">
                       /{{ link.slug }}
                     </router-link>
                   </td>
-                  <td class="text-end text-muted md-body-small text-nowrap">
+                  <td class="col-end row-muted row-nowrap">
                     {{ link.click_count.toLocaleString() }} / {{ link.max_clicks!.toLocaleString() }}
                   </td>
-                  <td style="min-width: 140px">
+                  <td>
                     <div class="progress-row">
-                      <md-linear-progress
-                        :value="Math.min(1, link.click_count / link.max_clicks!)"
-                        style="flex: 1; "
-                      />
-                      <span class="md-body-small progress-pct">
-                        {{ Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) }}%
-                      </span>
+                      <div class="native-progress">
+                        <div
+                          class="native-progress-fill"
+                          :class="{ 'native-progress-fill--danger': link.click_count >= link.max_clicks! }"
+                          :style="{ width: Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) + '%' }"
+                        />
+                      </div>
+                      <span class="progress-pct">{{ Math.min(100, Math.round((link.click_count / link.max_clicks!) * 100)) }}%</span>
                     </div>
                   </td>
                 </tr>
@@ -220,46 +220,48 @@
         </div>
       </div>
 
-      <!-- Two-column tables -->
+      <!-- ── Two-column table grid ──────────────────────────────────────── -->
       <div class="tables-grid">
 
         <!-- Top links by clicks -->
-        <div class="m3-card m3-card--elevated">
-          <div class="m3-card-header">
-            <div class="m3-card-header__left">
-              <span class="material-symbols-outlined m3-card-header__icon">leaderboard</span>
-              <span class="md-title-medium m3-card-header__title">Top Links by Clicks</span>
+        <div class="overview-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-header-icon">
+                <span class="material-symbols-outlined">leaderboard</span>
+              </div>
+              <div class="card-title">Top Links by Clicks</div>
             </div>
-            <router-link to="/dashboard/links" class="view-all-link md-label-large">View all</router-link>
+            <router-link to="/dashboard/links" class="card-action-link">View all</router-link>
           </div>
-          <md-divider />
-          <div v-if="data.top_links.length === 0" class="m3-empty-state m3-empty-state--compact">
-            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
-              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">link_off</span>
+
+          <div v-if="data.top_links.length === 0" class="empty-state empty-state--compact">
+            <div class="empty-icon-wrap">
+              <span class="material-symbols-outlined empty-icon">link_off</span>
             </div>
-            <p class="md-body-medium m3-empty-state__subtitle">No clicks recorded yet.</p>
+            <p class="empty-sub">No clicks recorded yet.</p>
             <router-link to="/dashboard/links">
               <button class="btn-outlined">Create a link</button>
             </router-link>
           </div>
-          <div v-else class="m3-table-wrapper">
-            <table class="m3-table">
+          <div v-else class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Link</th>
-                  <th class="text-end">Clicks</th>
+                  <th class="col-end">Clicks</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="link in data.top_links" :key="link.id">
                   <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    <router-link :to="`/dashboard/links/${link.id}`" class="row-link">
                       /{{ link.slug }}
                     </router-link>
-                    <div class="link-dest md-body-small">{{ truncate(link.destination_url, 40) }}</div>
+                    <div class="row-dest">{{ truncate(link.destination_url, 40) }}</div>
                   </td>
-                  <td class="text-end">
-                    <span class="m3-badge m3-badge--primary">{{ link.click_count.toLocaleString() }}</span>
+                  <td class="col-end">
+                    <span class="clicks-badge">{{ link.click_count.toLocaleString() }}</span>
                   </td>
                 </tr>
               </tbody>
@@ -268,46 +270,46 @@
         </div>
 
         <!-- Recently created links -->
-        <div class="m3-card m3-card--elevated">
-          <div class="m3-card-header">
-            <div class="m3-card-header__left">
-              <span class="material-symbols-outlined m3-card-header__icon">history</span>
-              <span class="md-title-medium m3-card-header__title">Recently Created</span>
+        <div class="overview-card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-header-icon">
+                <span class="material-symbols-outlined">history</span>
+              </div>
+              <div class="card-title">Recently Created</div>
             </div>
-            <router-link to="/dashboard/links" class="view-all-link md-label-large">View all</router-link>
+            <router-link to="/dashboard/links" class="card-action-link">View all</router-link>
           </div>
-          <md-divider />
-          <div v-if="data.recent_links.length === 0" class="m3-empty-state m3-empty-state--compact">
-            <div style="width:64px;height:64px;border-radius:50%;background:var(--md-sys-color-surface-container);display:flex;align-items:center;justify-content:center;">
-              <span class="material-symbols-outlined" style="font-size:32px;color:var(--md-sys-color-on-surface-variant);">add_link</span>
+
+          <div v-if="data.recent_links.length === 0" class="empty-state empty-state--compact">
+            <div class="empty-icon-wrap">
+              <span class="material-symbols-outlined empty-icon">add_link</span>
             </div>
-            <p class="md-body-medium m3-empty-state__subtitle">No links created yet.</p>
+            <p class="empty-sub">No links created yet.</p>
             <router-link to="/dashboard/links">
               <button class="btn-filled">
-                <span class="material-symbols-outlined" style="font-size:18px;margin-right:6px">add_link</span>
+                <span class="material-symbols-outlined">add_link</span>
                 Create your first link
               </button>
             </router-link>
           </div>
-          <div v-else class="m3-table-wrapper">
-            <table class="m3-table">
+          <div v-else class="table-wrap">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Link</th>
-                  <th class="text-end">Created</th>
+                  <th class="col-end">Created</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="link in data.recent_links" :key="link.id">
                   <td>
-                    <router-link :to="`/dashboard/links/${link.id}`" class="link-slug">
+                    <router-link :to="`/dashboard/links/${link.id}`" class="row-link">
                       /{{ link.slug }}
                     </router-link>
-                    <div class="link-dest md-body-small">{{ truncate(link.destination_url, 40) }}</div>
+                    <div class="row-dest">{{ truncate(link.destination_url, 40) }}</div>
                   </td>
-                  <td class="text-end text-muted md-body-small text-nowrap">
-                    {{ formatDate(link.created_at) }}
-                  </td>
+                  <td class="col-end row-muted row-nowrap">{{ formatDate(link.created_at) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -318,10 +320,10 @@
 
     </template>
 
-    <!-- Error -->
-    <div v-else-if="error" class="m3-card m3-card--outlined error-card">
-      <span class="material-symbols-outlined" style="color: var(--md-sys-color-error)">error</span>
-      <span class="md-body-medium" style="color: var(--md-sys-color-error)">{{ error }}</span>
+    <!-- ── Error ─────────────────────────────────────────────────────────── -->
+    <div v-else-if="error" class="error-banner">
+      <span class="material-symbols-outlined">error</span>
+      <span>{{ error }}</span>
     </div>
 
   </div>
@@ -376,7 +378,7 @@ async function load() {
   error.value = '';
   try {
     const res = await dashboardApi.getOverview();
-    data.value = res.data;
+    if (res.data) data.value = res.data;
   } catch {
     error.value = 'Failed to load dashboard overview.';
   } finally {
@@ -414,7 +416,6 @@ const trendChartOption = computed(() => {
   const dates = series.map((p) => new Date(p.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
   const counts = series.map((p) => Number(p.count));
 
-  // Resolve dynamic colors based on dark mode
   const bg = surfaceColor.value;
   const textColor = onSurface.value;
   const mutedColor = muted.value;
@@ -428,6 +429,7 @@ const trendChartOption = computed(() => {
       trigger: 'axis',
       formatter: (params: { name: string; value: number }[]) => {
         const p = params[0];
+        if (!p) return '';
         return `${p.name}<br/><strong>${p.value.toLocaleString()} clicks</strong>`;
       },
       backgroundColor: uiStore.darkMode ? '#2C283F' : '#ffffff',
@@ -477,12 +479,10 @@ onMounted(async () => {
     load(),
     loadExpiringLinks(),
   ]);
-  // Derive at-limit links from the recently-created / top links already in the overview
   const overviewLinks: LinkResponse[] = [
     ...(data.value?.top_links ?? []),
     ...(data.value?.recent_links ?? []),
   ];
-  // Deduplicate by id before filtering
   const seen = new Set<string>();
   const unique = overviewLinks.filter((l) => {
     if (seen.has(l.id)) return false;
@@ -494,140 +494,169 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+$ease: cubic-bezier(0.2, 0, 0, 1);
+
+/* ── Page ────────────────────────────────────────────────────────────────── */
 .overview-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px;
-
-  @media (max-width: 575px) {
-    padding: 16px;
-    gap: 16px;
-  }
+  gap: 20px;
+  // No padding — DashboardLayout .page-content already provides 24px
 }
 
-/* ── Page header ─────────────────────────────────────────────────────────── */
+/* ── Page Header ─────────────────────────────────────────────────────────── */
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  padding-bottom: 4px;
 }
 
-.page-header-content {
+.page-header-main {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .page-title {
   margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--md-sys-color-on-surface);
-  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .page-subtitle {
   margin: 0;
+  font-size: 0.8rem;
   color: var(--md-sys-color-on-surface-variant);
 }
 
-/* ── Stat grid ───────────────────────────────────────────────────────────── */
+.header-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.15s $ease;
+
+  .material-symbols-outlined { font-size: 18px; }
+  &:hover { opacity: 0.88; }
+}
+
+/* ── Stat Grid ───────────────────────────────────────────────────────────── */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
+  gap: 12px;
 
-  @media (max-width: 1199px) {
-    grid-template-columns: repeat(3, 1fr);
+  @media (max-width: 1199px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 767px)  { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 400px)  { grid-template-columns: 1fr; }
+}
+
+/* ── Stat Card ───────────────────────────────────────────────────────────── */
+.stat-card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.18s $ease, border-color 0.18s $ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: var(--md-sys-color-outline);
   }
 
-  @media (max-width: 767px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 400px) {
-    grid-template-columns: 1fr;
+  &--skeleton {
+    pointer-events: none;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 }
 
-/* ── Stat card ───────────────────────────────────────────────────────────── */
-.stat-card {
+.stat-card-inner {
   display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 6px;
-  border-radius: 16px;
-  transition: box-shadow 0.2s, transform 0.2s;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  }
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
 }
 
 .stat-icon-wrap {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
   flex-shrink: 0;
 
-  .material-symbols-outlined {
-    font-size: 22px;
-  }
+  .material-symbols-outlined { font-size: 22px; }
 
   &--primary {
     background: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-
     .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
   }
-
   &--secondary {
     background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
-
     .material-symbols-outlined { color: var(--md-sys-color-on-secondary-container); }
   }
-
   &--tertiary {
-    background: var(--md-sys-color-tertiary-container, color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent));
-
-    .material-symbols-outlined { color: var(--md-sys-color-on-tertiary-container, var(--md-sys-color-primary)); }
+    background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+    .material-symbols-outlined { color: var(--md-sys-color-primary); }
   }
-
   &--amber {
     background: color-mix(in srgb, #f59e0b 15%, transparent);
-
     .material-symbols-outlined { color: #b45309; }
   }
-
   &--teal {
     background: color-mix(in srgb, #14b8a6 15%, transparent);
-
     .material-symbols-outlined { color: #0f766e; }
   }
 }
 
+.stat-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .stat-value {
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--md-sys-color-on-surface);
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .stat-label {
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
-  margin-top: 2px;
-  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
-.skeleton-card {
-  pointer-events: none;
+.skel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .skeleton {
@@ -643,102 +672,87 @@ onMounted(async () => {
   display: block;
 }
 
-.skeleton-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  margin-bottom: 8px;
-}
-
-.skeleton-value {
-  width: 70%;
-  height: 2rem;
-  margin-bottom: 4px;
-}
-
-.skeleton-label {
-  width: 50%;
-  height: 0.9rem;
-}
+.skel-icon  { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; }
+.skel-value { height: 1.6rem; width: 60%; border-radius: 4px; }
+.skel-label { height: 0.75rem; width: 80%; border-radius: 4px; }
 
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
-/* ── M3 Cards ────────────────────────────────────────────────────────────── */
-.m3-card {
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.m3-card--elevated {
-  background: var(--md-sys-color-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.06);
-}
-
-.m3-card--outlined {
+/* ── Overview Card ───────────────────────────────────────────────────────── */
+.overview-card {
   background: var(--md-sys-color-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 14px;
+  overflow: hidden;
+
+  &--warning {
+    border-color: color-mix(in srgb, #f59e0b 50%, var(--md-sys-color-outline-variant));
+  }
 }
 
-/* ── Attention card ──────────────────────────────────────────────────────── */
-.attention-card {
-  border-color: var(--md-sys-color-error) !important;
-  border-left: 3px solid var(--md-sys-color-error) !important;
-}
-
-/* ── M3 Card Header ──────────────────────────────────────────────────────── */
-.m3-card-header {
+/* ── Card Header ─────────────────────────────────────────────────────────── */
+.card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 14px 20px;
   gap: 8px;
   flex-wrap: wrap;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 
-.m3-card-header__left {
+.card-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
 }
 
-.m3-card-header__icon {
-  font-size: 20px;
-  color: var(--md-sys-color-primary);
+.card-header-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--md-sys-color-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-}
 
-.m3-card-header__title {
-  color: var(--md-sys-color-on-surface);
-  font-weight: 600;
-  margin: 0;
-}
+  .material-symbols-outlined { font-size: 18px; color: var(--md-sys-color-primary); }
 
-.m3-card-header__subtitle {
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 0;
-}
-
-.view-all-link {
-  color: var(--md-sys-color-primary);
-  text-decoration: none;
-  white-space: nowrap;
-  font-size: 0.85rem;
-  font-weight: 600;
-
-  &:hover {
-    text-decoration: underline;
+  &--warning {
+    background: color-mix(in srgb, #f59e0b 12%, transparent);
+    .material-symbols-outlined { color: #b45309; }
   }
 }
 
-/* ── Chart card ──────────────────────────────────────────────────────────── */
-.chart-card {
-  overflow: visible;
+.card-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  margin: 0;
 }
 
+.card-subtitle {
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 2px 0 0;
+}
+
+.card-action-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  &:hover { text-decoration: underline; }
+}
+
+/* ── Chart Body ──────────────────────────────────────────────────────────── */
 .chart-body {
   padding: 16px 16px 20px;
 }
@@ -747,74 +761,63 @@ onMounted(async () => {
 .tables-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
 
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 767px) { grid-template-columns: 1fr; }
 }
 
-/* ── M3 Table Wrapper ────────────────────────────────────────────────────── */
-.m3-table-wrapper {
+/* ── Data Table ──────────────────────────────────────────────────────────── */
+.table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
-.m3-table {
+.data-table {
   width: 100%;
   border-collapse: collapse;
 
   th {
-    font-size: 11px;
+    font-size: 0.68rem;
     font-weight: 600;
     color: var(--md-sys-color-on-surface-variant);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 10px 20px;
+    letter-spacing: 0.07em;
+    padding: 8px 20px;
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container-low);
     white-space: nowrap;
   }
 
   td {
-    padding: 12px 20px;
+    padding: 11px 20px;
     border-bottom: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
     vertical-align: middle;
     color: var(--md-sys-color-on-surface);
+    font-size: 0.875rem;
   }
 
-  tr:last-child td {
-    border-bottom: none;
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    transition: background 0.12s;
+    &:hover td { background: var(--md-sys-color-surface-container-low); }
   }
-
-  tbody tr:hover td {
-    background: var(--md-sys-color-surface-container-low);
-  }
 }
 
-.text-end {
-  text-align: right;
-}
+.col-end { text-align: right; }
+.row-muted { color: var(--md-sys-color-on-surface-variant); font-size: 0.8rem; }
+.row-nowrap { white-space: nowrap; }
 
-.text-nowrap {
-  white-space: nowrap;
-}
-
-.text-muted {
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.link-slug {
-  font-size: 14px;
+.row-link {
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--md-sys-color-primary);
   text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; }
 }
 
-.link-dest {
+.row-dest {
+  font-size: 0.75rem;
   color: var(--md-sys-color-on-surface-variant);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -823,92 +826,147 @@ onMounted(async () => {
   margin-top: 2px;
 }
 
-/* ── M3 Badges ───────────────────────────────────────────────────────────── */
-.m3-badge {
+/* ── Status Chips ────────────────────────────────────────────────────────── */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+
+  &--error {
+    background: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
+  }
+  &--warn {
+    background: color-mix(in srgb, #f59e0b 15%, transparent);
+    color: #92400e;
+  }
+}
+
+.clicks-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--md-sys-color-secondary-container);
+  color: var(--md-sys-color-on-secondary-container);
   white-space: nowrap;
 }
 
-.m3-badge--primary {
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-}
-
-.m3-badge--error {
-  background: var(--md-sys-color-error-container);
-  color: var(--md-sys-color-on-error-container, var(--md-sys-color-error));
-}
-
-.m3-badge--warning {
-  background: color-mix(in srgb, #f59e0b 15%, transparent);
-  color: #92400e;
-}
-
-/* ── Attention sections ──────────────────────────────────────────────────── */
+/* ── Attention Section ───────────────────────────────────────────────────── */
 .attention-section {
   padding: 0 0 4px;
 }
 
-.attention-section-title {
-  padding: 12px 20px 4px;
+.attention-section-label {
+  padding: 10px 20px 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 11px;
+  letter-spacing: 0.07em;
 }
 
-/* ── Progress row ────────────────────────────────────────────────────────── */
+.section-divider {
+  height: 1px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 4px 0;
+}
+
+/* ── Native Progress Bar ─────────────────────────────────────────────────── */
 .progress-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-width: 140px;
+}
+
+.native-progress {
+  flex: 1;
+  height: 6px;
+  background: var(--md-sys-color-surface-container-high);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.native-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--md-sys-color-primary);
+  transition: width 0.4s $ease;
+
+  &--danger { background: var(--md-sys-color-error); }
 }
 
 .progress-pct {
+  font-size: 0.75rem;
+  font-weight: 500;
   color: var(--md-sys-color-on-surface-variant);
   white-space: nowrap;
   min-width: 32px;
   text-align: right;
 }
 
-/* ── Error card ──────────────────────────────────────────────────────────── */
-.error-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-}
-
-/* ── M3 Empty State ──────────────────────────────────────────────────────── */
-.m3-empty-state {
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
   padding: 48px 24px;
   text-align: center;
+  gap: 8px;
 
-  &--compact {
-    padding: 32px 16px;
-  }
+  &--compact { padding: 32px 16px; }
 }
 
-.m3-empty-state__title {
+.empty-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--md-sys-color-surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.empty-icon {
+  font-size: 36px;
+  color: var(--md-sys-color-primary);
+  opacity: 0.55;
+}
+
+.empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--md-sys-color-on-surface);
   margin: 0;
-  font-weight: 600;
 }
 
-.m3-empty-state__subtitle {
+.empty-sub {
+  font-size: 0.825rem;
   color: var(--md-sys-color-on-surface-variant);
-  margin: 0;
-  max-width: 320px;
+  margin: 0 0 8px;
+  max-width: 300px;
+}
+
+/* ── Error Banner ────────────────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--md-sys-color-error-container);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-error-container);
+
+  .material-symbols-outlined { color: var(--md-sys-color-error); font-size: 20px; flex-shrink: 0; }
 }
 </style>

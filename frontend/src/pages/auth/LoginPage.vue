@@ -392,7 +392,7 @@ async function handleReactivation() {
       password: reactivationForm.password,
     });
     if (response.data) {
-      authStore.setTokens(response.data.access_token, response.data.refresh_token);
+      authStore.setTokens(response.data.access_token ?? '', response.data.refresh_token ?? '');
       await authStore.fetchProfile();
     }
     showReactivationModal.value = false;
