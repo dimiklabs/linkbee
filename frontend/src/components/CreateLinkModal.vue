@@ -1,12 +1,12 @@
 <template>
   <BaseModal
     v-model="isOpen"
-    size="lg"
+    :size="modalSize"
     @closed="onDialogClosed"
   >
     <template #headline>
-      <span class="material-symbols-outlined dialog-headline-icon">{{ isEditMode ? 'edit_square' : 'add_link' }}</span>
-      <span>{{ isEditMode ? 'Edit Link' : 'Create New Link' }}</span>
+      <span class="material-symbols-outlined dialog-headline-icon">{{ headlineIcon }}</span>
+      <span>{{ headlineText }}</span>
     </template>
 
     <div class="dialog-content">
@@ -20,253 +20,298 @@
         </button>
       </div>
 
-      <!-- Section: Destination -->
-      <div class="form-section">
-        <div class="section-label">
-          <span class="material-symbols-outlined section-label-icon">travel_explore</span>
-          Destination URL
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- STEP 1 — Enter URL (create mode only)                  -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <template v-if="!isEditMode && step === 'create'">
+        <div class="step1-wrap">
+
+          <div class="field-group">
+            <md-outlined-text-field
+              :value="form.destination_url"
+              @input="form.destination_url = ($event.target as HTMLInputElement).value"
+              label="Paste your long URL"
+              type="url"
+              placeholder="https://example.com/your-very-long-url"
+              class="field-full step1-url-field"
+              :error="!!validationErrors.destination_url"
+              :error-text="validationErrors.destination_url"
+            >
+              <span class="material-symbols-outlined" slot="leading-icon">link</span>
+            </md-outlined-text-field>
+
+            <!-- Duplicate check -->
+            <div v-if="checkingDuplicate" class="feedback-row feedback-row--muted">
+              <md-circular-progress indeterminate style="flex-shrink:0" />
+              <span>Checking for duplicate URLs…</span>
+            </div>
+            <div v-else-if="duplicateLink && !ignoreDuplicate" class="dup-warning">
+              <span class="material-symbols-outlined dup-warning-icon">warning</span>
+              <div class="dup-warning-body">
+                <strong>Duplicate URL detected.</strong>
+                Already shortened as
+                <a :href="duplicateLink.short_url" target="_blank" rel="noopener noreferrer" class="dup-link">
+                  {{ duplicateLink.short_url }}
+                </a>.
+              </div>
+              <button class="btn-text dup-ignore-btn" @click="ignoreDuplicate = true">Create anyway</button>
+            </div>
+          </div>
+
+          <!-- Short link preview -->
+          <div v-if="form.destination_url && !validationErrors.destination_url" class="short-link-preview">
+            <span class="material-symbols-outlined short-link-preview-icon">bolt</span>
+            <span class="short-link-preview-label">Your short link</span>
+            <div class="short-link-preview-pill">
+              <span class="short-link-preview-domain">sl.ink/</span>
+              <span class="short-link-preview-slug">{{ form.slug || '·····' }}</span>
+            </div>
+          </div>
+
+          <!-- Custom slug (secondary / optional) -->
+          <div class="step1-slug-wrap">
+            <div class="step1-slug-label">
+              <span class="material-symbols-outlined" style="font-size:14px">tag</span>
+              Custom slug
+              <span class="optional-badge">optional</span>
+            </div>
+            <md-outlined-text-field
+              :value="form.slug"
+              @input="form.slug = ($event.target as HTMLInputElement).value"
+              label="Custom slug"
+              placeholder="my-custom-slug"
+              class="field-full"
+              supporting-text="Leave blank to auto-generate a short code."
+            >
+              <span class="material-symbols-outlined" slot="leading-icon">tag</span>
+            </md-outlined-text-field>
+          </div>
+
+        </div>
+      </template>
+
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <!-- STEP 2 — Customize (after creation OR in edit mode)    -->
+      <!-- ═══════════════════════════════════════════════════════ -->
+      <template v-else>
+
+        <!-- Created link success card (only right after creation) -->
+        <div v-if="!isEditMode && createdLink" class="created-card">
+          <div class="created-card-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <div class="created-card-body">
+            <span class="created-card-label">Short link ready</span>
+            <a :href="createdLink.short_url" target="_blank" rel="noopener noreferrer" class="created-card-url">
+              {{ createdLink.short_url }}
+            </a>
+          </div>
+          <button class="btn-icon created-card-copy" @click="copyShortLink" :title="copied ? 'Copied!' : 'Copy'">
+            <span class="material-symbols-outlined">{{ copied ? 'check' : 'content_copy' }}</span>
+          </button>
         </div>
 
-        <div class="field-group">
+        <!-- Edit mode: destination URL editable -->
+        <div v-if="isEditMode" class="form-section">
+          <div class="section-label">
+            <span class="material-symbols-outlined section-label-icon">travel_explore</span>
+            Destination URL
+          </div>
           <md-outlined-text-field
             :value="form.destination_url"
             @input="form.destination_url = ($event.target as HTMLInputElement).value"
-            label="Destination URL *"
+            label="Destination URL"
             type="url"
-            placeholder="https://example.com/your-long-url"
             class="field-full"
             :error="!!validationErrors.destination_url"
             :error-text="validationErrors.destination_url"
           >
             <span class="material-symbols-outlined" slot="leading-icon">link</span>
           </md-outlined-text-field>
+        </div>
 
-          <!-- Duplicate check feedback -->
-          <div v-if="!isEditMode && checkingDuplicate" class="feedback-row feedback-row--muted">
-            <md-circular-progress indeterminate style="flex-shrink:0" />
-            <span>Checking for duplicate URLs…</span>
+        <!-- Section: Details (Title, Redirect, Tags) -->
+        <div class="form-section">
+          <div class="section-label">
+            <span class="material-symbols-outlined section-label-icon">badge</span>
+            Details
           </div>
-          <div v-else-if="!isEditMode && duplicateLink && !ignoreDuplicate" class="dup-warning">
-            <span class="material-symbols-outlined dup-warning-icon">warning</span>
-            <div class="dup-warning-body">
-              <strong>Duplicate URL detected.</strong>
-              This destination is already shortened as
-              <a :href="duplicateLink.short_url" target="_blank" rel="noopener noreferrer" class="dup-link">
-                {{ duplicateLink.short_url }}
-              </a>
-              <span class="dup-slug">(slug: <code>{{ duplicateLink.slug }}</code>)</span>.
+
+          <div class="field-row" style="margin-bottom:12px">
+            <md-outlined-text-field
+              :value="form.title"
+              @input="form.title = ($event.target as HTMLInputElement).value"
+              label="Title"
+              placeholder="My Link Title"
+              class="field-flex"
+            >
+              <span class="material-symbols-outlined" slot="leading-icon">title</span>
+            </md-outlined-text-field>
+
+            <AppSelect
+              :model-value="String(form.redirect_type)"
+              @update:model-value="form.redirect_type = Number($event) as 301 | 302"
+              label="Redirect Type"
+              class="field-flex"
+            >
+              <option value="302">302 — Temporary</option>
+              <option value="301">301 — Permanent</option>
+            </AppSelect>
+          </div>
+
+          <md-outlined-text-field
+            :value="tagsInput"
+            @input="tagsInput = ($event.target as HTMLInputElement).value"
+            label="Tags"
+            placeholder="marketing, social, campaign"
+            class="field-full"
+            supporting-text="Comma-separated tags to organise your links."
+          >
+            <span class="material-symbols-outlined" slot="leading-icon">sell</span>
+          </md-outlined-text-field>
+          <div v-if="parsedTags.length > 0" class="tag-chips">
+            <span v-for="tag in parsedTags" :key="tag" class="tag-chip">
+              <span class="material-symbols-outlined tag-chip-icon">label</span>
+              {{ tag }}
+            </span>
+          </div>
+        </div>
+
+        <!-- UTM Parameters (collapsible — open by default after creation) -->
+        <div class="advanced-section">
+          <button class="advanced-toggle" type="button" @click="utmExpanded = !utmExpanded">
+            <span class="material-symbols-outlined advanced-toggle-icon">analytics</span>
+            <span class="advanced-toggle-label">UTM Parameters</span>
+            <span class="adv-badge adv-badge--optional">Optional</span>
+            <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': utmExpanded }">
+              expand_more
+            </span>
+          </button>
+          <div v-if="utmExpanded" class="advanced-fields">
+            <div class="field-row">
+              <md-outlined-text-field
+                :value="form.utm_source"
+                @input="form.utm_source = ($event.target as HTMLInputElement).value"
+                label="UTM Source"
+                placeholder="google"
+                class="field-flex"
+                supporting-text="e.g. google, newsletter"
+              />
+              <md-outlined-text-field
+                :value="form.utm_medium"
+                @input="form.utm_medium = ($event.target as HTMLInputElement).value"
+                label="UTM Medium"
+                placeholder="cpc"
+                class="field-flex"
+                supporting-text="e.g. cpc, email, social"
+              />
+              <md-outlined-text-field
+                :value="form.utm_campaign"
+                @input="form.utm_campaign = ($event.target as HTMLInputElement).value"
+                label="UTM Campaign"
+                placeholder="spring_sale"
+                class="field-flex"
+                supporting-text="e.g. spring_sale"
+              />
             </div>
-            <button class="btn-text dup-ignore-btn" @click="ignoreDuplicate = true" >Create anyway</button>
           </div>
         </div>
 
-        <!-- Short link preview -->
-        <div v-if="form.destination_url && !validationErrors.destination_url" class="short-link-preview">
-          <span class="material-symbols-outlined short-link-preview-icon">bolt</span>
-          <span class="short-link-preview-label">Short link will look like</span>
-          <div class="short-link-preview-pill">
-            <span class="short-link-preview-domain">sl.ink/</span>
-            <span class="short-link-preview-slug">{{ form.slug || '·····' }}</span>
-          </div>
-        </div>
-      </div>
+        <!-- Advanced Options (collapsible) -->
+        <div class="advanced-section" style="margin-top:8px">
+          <button class="advanced-toggle" type="button" @click="advancedExpanded = !advancedExpanded">
+            <span class="material-symbols-outlined advanced-toggle-icon">tune</span>
+            <span class="advanced-toggle-label">Advanced Options</span>
+            <span class="adv-badge">Password · Expiry · Limits</span>
+            <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': advancedExpanded }">
+              expand_more
+            </span>
+          </button>
+          <div v-if="advancedExpanded" class="advanced-fields">
+            <AppSelect
+              v-model="form.folder_id"
+              label="Folder"
+              class="field-full"
+            >
+              <option value="">— No folder —</option>
+              <option v-for="f in props.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
+            </AppSelect>
 
-      <!-- Section: Identity -->
-      <div class="form-section">
-        <div class="section-label">
-          <span class="material-symbols-outlined section-label-icon">badge</span>
-          Identity
-        </div>
-
-        <div class="field-row">
-          <md-outlined-text-field
-            :value="form.slug"
-            @input="form.slug = ($event.target as HTMLInputElement).value"
-            label="Custom Slug"
-            placeholder="my-custom-slug"
-            :disabled="isEditMode"
-            class="field-flex"
-            :supporting-text="isEditMode ? 'Slug cannot be changed after creation.' : 'Leave blank to auto-generate.'"
-          >
-            <span class="material-symbols-outlined" slot="leading-icon">tag</span>
-          </md-outlined-text-field>
-
-          <md-outlined-text-field
-            :value="form.title"
-            @input="form.title = ($event.target as HTMLInputElement).value"
-            label="Title"
-            placeholder="My Link Title"
-            class="field-flex"
-          >
-            <span class="material-symbols-outlined" slot="leading-icon">title</span>
-          </md-outlined-text-field>
-        </div>
-      </div>
-
-      <!-- Section: Tags -->
-      <div class="form-section">
-        <div class="section-label">
-          <span class="material-symbols-outlined section-label-icon">label</span>
-          Tags
-        </div>
-        <md-outlined-text-field
-          :value="tagsInput"
-          @input="tagsInput = ($event.target as HTMLInputElement).value"
-          label="Tags"
-          placeholder="marketing, social, campaign"
-          class="field-full"
-          supporting-text="Enter comma-separated tags to organise your links."
-        >
-          <span class="material-symbols-outlined" slot="leading-icon">sell</span>
-        </md-outlined-text-field>
-
-        <!-- Tag chips preview -->
-        <div v-if="parsedTags.length > 0" class="tag-chips">
-          <span v-for="tag in parsedTags" :key="tag" class="tag-chip">
-            <span class="material-symbols-outlined tag-chip-icon">label</span>
-            {{ tag }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Section: Organisation -->
-      <div class="form-section">
-        <div class="section-label">
-          <span class="material-symbols-outlined section-label-icon">folder_open</span>
-          Organisation
-        </div>
-
-        <div class="field-row">
-          <AppSelect
-            :model-value="String(form.redirect_type)"
-            @update:model-value="form.redirect_type = Number($event) as 301 | 302"
-            label="Redirect Type"
-            class="field-flex"
-          >
-            <option value="302">302 — Temporary Redirect</option>
-            <option value="301">301 — Permanent Redirect</option>
-          </AppSelect>
-
-          <AppSelect
-            v-model="form.folder_id"
-            label="Folder"
-            class="field-flex"
-          >
-            <option value="">— No folder —</option>
-            <option v-for="f in props.folders" :key="f.id" :value="f.id">{{ f.name }}</option>
-          </AppSelect>
-        </div>
-      </div>
-
-      <!-- Section: Advanced Options (collapsible) -->
-      <div class="advanced-section">
-        <button class="advanced-toggle" type="button" @click="advancedExpanded = !advancedExpanded">
-          <span class="material-symbols-outlined advanced-toggle-icon">tune</span>
-          <span class="advanced-toggle-label">Advanced Options</span>
-          <span class="adv-badge">Password · Expiry · Limits</span>
-          <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': advancedExpanded }">
-            expand_more
-          </span>
-        </button>
-
-        <div v-if="advancedExpanded" class="advanced-fields">
-          <!-- Password -->
-          <div class="field-group">
             <md-outlined-text-field
               :value="form.password"
               @input="form.password = ($event.target as HTMLInputElement).value"
               label="Link Password"
               type="password"
-              placeholder="Leave blank for no password protection"
+              placeholder="Leave blank for no password"
               autocomplete="new-password"
               class="field-full"
               supporting-text="Visitors will need this password to access the destination."
             >
               <span class="material-symbols-outlined" slot="leading-icon">lock</span>
             </md-outlined-text-field>
-          </div>
 
-          <!-- Expiry / Max Clicks row -->
-          <div class="field-row">
-            <md-outlined-text-field
-              :value="form.expires_at"
-              @input="form.expires_at = ($event.target as HTMLInputElement).value"
-              label="Expires At"
-              type="datetime-local"
-              class="field-flex"
-              supporting-text="Leave blank to never expire."
-            >
-              <span class="material-symbols-outlined" slot="leading-icon">event</span>
-            </md-outlined-text-field>
+            <div class="field-row">
+              <md-outlined-text-field
+                :value="form.expires_at"
+                @input="form.expires_at = ($event.target as HTMLInputElement).value"
+                label="Expires At"
+                type="datetime-local"
+                class="field-flex"
+                supporting-text="Leave blank to never expire."
+              >
+                <span class="material-symbols-outlined" slot="leading-icon">event</span>
+              </md-outlined-text-field>
 
-            <md-outlined-text-field
-              :value="form.max_clicks !== null ? String(form.max_clicks) : ''"
-              @input="form.max_clicks = ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null"
-              label="Max Clicks"
-              type="number"
-              placeholder="Unlimited"
-              class="field-flex"
-              supporting-text="Disable link after this many clicks."
-            >
-              <span class="material-symbols-outlined" slot="leading-icon">ads_click</span>
-            </md-outlined-text-field>
-          </div>
-        </div>
-      </div>
-
-      <!-- UTM Parameters (collapsible) -->
-      <div class="advanced-section" style="margin-top:8px">
-        <button class="advanced-toggle" type="button" @click="utmExpanded = !utmExpanded">
-          <span class="material-symbols-outlined advanced-toggle-icon">analytics</span>
-          <span class="advanced-toggle-label">UTM Parameters</span>
-          <span class="adv-badge adv-badge--optional">Optional</span>
-          <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': utmExpanded }">
-            expand_more
-          </span>
-        </button>
-
-        <div v-if="utmExpanded" class="advanced-fields">
-          <div class="field-row">
-            <md-outlined-text-field
-              :value="form.utm_source"
-              @input="form.utm_source = ($event.target as HTMLInputElement).value"
-              label="UTM Source"
-              placeholder="google"
-              class="field-flex"
-            />
-            <md-outlined-text-field
-              :value="form.utm_medium"
-              @input="form.utm_medium = ($event.target as HTMLInputElement).value"
-              label="UTM Medium"
-              placeholder="cpc"
-              class="field-flex"
-            />
-            <md-outlined-text-field
-              :value="form.utm_campaign"
-              @input="form.utm_campaign = ($event.target as HTMLInputElement).value"
-              label="UTM Campaign"
-              placeholder="spring_sale"
-              class="field-flex"
-            />
+              <md-outlined-text-field
+                :value="form.max_clicks !== null ? String(form.max_clicks) : ''"
+                @input="form.max_clicks = ($event.target as HTMLInputElement).value ? Number(($event.target as HTMLInputElement).value) : null"
+                label="Max Clicks"
+                type="number"
+                placeholder="Unlimited"
+                class="field-flex"
+                supporting-text="Disable after this many clicks."
+              >
+                <span class="material-symbols-outlined" slot="leading-icon">ads_click</span>
+              </md-outlined-text-field>
+            </div>
           </div>
         </div>
-      </div>
 
+      </template>
     </div>
 
     <template #actions>
-      <button class="btn-text" @click="hide" :disabled="saving">Cancel</button>
-      <button class="btn-filled save-btn" @click="handleSave" :disabled="saving" >
-        <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
-        <span class="material-symbols-outlined" v-else style="margin-right:6px;font-size:18px;">{{ isEditMode ? 'save' : 'add_link' }}</span>
-        {{ saving ? 'Saving…' : (isEditMode ? 'Save Changes' : 'Create Link') }}
-      </button>
+      <!-- Step 1 actions -->
+      <template v-if="!isEditMode && step === 'create'">
+        <button class="btn-text" @click="hide" :disabled="saving">Cancel</button>
+        <button
+          class="btn-filled save-btn"
+          @click="handleCreate"
+          :disabled="saving || (!ignoreDuplicate && !!duplicateLink)"
+        >
+          <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
+          <span v-else class="material-symbols-outlined" style="margin-right:6px;font-size:18px;">bolt</span>
+          {{ saving ? 'Creating…' : 'Shorten Link' }}
+        </button>
+      </template>
+
+      <!-- Step 2 / Edit mode actions -->
+      <template v-else>
+        <button class="btn-text" @click="handleDone" :disabled="saving">
+          {{ isEditMode ? 'Cancel' : 'Done' }}
+        </button>
+        <button class="btn-filled save-btn" @click="handleUpdate" :disabled="saving">
+          <md-circular-progress v-if="saving" indeterminate style="margin-right:6px;" />
+          <span v-else class="material-symbols-outlined" style="margin-right:6px;font-size:18px;">save</span>
+          {{ saving ? 'Saving…' : 'Save Changes' }}
+        </button>
+      </template>
     </template>
   </BaseModal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
@@ -286,9 +331,6 @@ const emit = defineEmits<{
 
 const linksStore = useLinksStore();
 
-const modalEl = ref<HTMLElement | null>(null);
-let modalInstance: any = null;
-
 const isOpen = ref(false);
 const saving = ref(false);
 const error = ref('');
@@ -296,6 +338,9 @@ const validationErrors = ref<Record<string, string>>({});
 const tagsInput = ref('');
 const utmExpanded = ref(false);
 const advancedExpanded = ref(false);
+const step = ref<'create' | 'customize'>('create');
+const createdLink = ref<LinkResponse | null>(null);
+const copied = ref(false);
 
 // Duplicate detection
 const duplicateLink = ref<LinkResponse | null>(null);
@@ -304,6 +349,20 @@ const ignoreDuplicate = ref(false);
 let duplicateTimer: ReturnType<typeof setTimeout> | null = null;
 
 const isEditMode = computed(() => !!props.link);
+
+const modalSize = computed(() =>
+  !isEditMode.value && step.value === 'create' ? 'md' : 'lg'
+);
+
+const headlineIcon = computed(() => {
+  if (isEditMode.value) return 'edit_square';
+  return step.value === 'create' ? 'add_link' : 'check_circle';
+});
+
+const headlineText = computed(() => {
+  if (isEditMode.value) return 'Edit Link';
+  return step.value === 'create' ? 'Shorten a Link' : 'Link Shortened!';
+});
 
 const parsedTags = computed(() =>
   tagsInput.value
@@ -357,6 +416,7 @@ function populateForm(link: LinkResponse) {
   form.value.utm_campaign = link.utm_campaign ?? '';
   form.value.folder_id = link.folder_id ?? '';
   tagsInput.value = link.tags?.join(', ') ?? '';
+  utmExpanded.value = !!(link.utm_source || link.utm_medium || link.utm_campaign);
 }
 
 function resetForm() {
@@ -368,6 +428,8 @@ function resetForm() {
   ignoreDuplicate.value = false;
   utmExpanded.value = false;
   advancedExpanded.value = false;
+  createdLink.value = null;
+  step.value = 'create';
   if (duplicateTimer) { clearTimeout(duplicateTimer); duplicateTimer = null; }
 }
 
@@ -395,7 +457,6 @@ function validate(): boolean {
   return true;
 }
 
-// Watch destination URL to trigger duplicate check in create mode
 watch(
   () => form.value.destination_url,
   (url) => {
@@ -409,76 +470,77 @@ watch(
   }
 );
 
-async function handleSave() {
+async function handleCreate() {
   if (!validate()) return;
-
   saving.value = true;
   error.value = '';
-
-  const tags = tagsInput.value
-    .split(',')
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
-
   try {
-    let savedLink: LinkResponse;
-
-    if (isEditMode.value && props.link) {
-      const payload: UpdateLinkRequest = {
-        destination_url: form.value.destination_url.trim() || undefined,
-        title: form.value.title.trim() || undefined,
-        password: form.value.password || undefined,
-        expires_at: form.value.expires_at
-          ? new Date(form.value.expires_at).toISOString()
-          : null,
-        max_clicks: form.value.max_clicks ?? undefined,
-        redirect_type: form.value.redirect_type,
-        tags: tags.length > 0 ? tags : undefined,
-        utm_source: form.value.utm_source.trim() || undefined,
-        utm_medium: form.value.utm_medium.trim() || undefined,
-        utm_campaign: form.value.utm_campaign.trim() || undefined,
-        folder_id: form.value.folder_id || null,
-      };
-      savedLink = await linksStore.updateLink(props.link.id, payload);
-    } else {
-      const payload: CreateLinkRequest = {
-        destination_url: form.value.destination_url.trim(),
-        slug: form.value.slug.trim() || undefined,
-        title: form.value.title.trim() || undefined,
-        password: form.value.password || undefined,
-        expires_at: form.value.expires_at
-          ? new Date(form.value.expires_at).toISOString()
-          : undefined,
-        max_clicks: form.value.max_clicks ?? undefined,
-        redirect_type: form.value.redirect_type,
-        tags: tags.length > 0 ? tags : undefined,
-        utm_source: form.value.utm_source.trim() || undefined,
-        utm_medium: form.value.utm_medium.trim() || undefined,
-        utm_campaign: form.value.utm_campaign.trim() || undefined,
-        folder_id: form.value.folder_id || undefined,
-      };
-      savedLink = await linksStore.createLink(payload);
-    }
-
-    emit('saved', savedLink);
-    hide();
+    const payload: CreateLinkRequest = {
+      destination_url: form.value.destination_url.trim(),
+      slug: form.value.slug.trim() || undefined,
+      redirect_type: 302,
+    };
+    createdLink.value = await linksStore.createLink(payload);
+    step.value = 'customize';
+    utmExpanded.value = true; // open UTM by default so user can add tracking
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      error.value = err.message;
-    } else {
-      error.value = 'An unexpected error occurred. Please try again.';
-    }
+    error.value = err instanceof Error ? err.message : 'Failed to create link.';
   } finally {
     saving.value = false;
   }
 }
 
-onMounted(() => {
-  // Bootstrap modal lifecycle removed — component will be rewritten for Vuetify
-  if (props.link) {
-    populateForm(props.link);
+async function handleUpdate() {
+  if (isEditMode.value && !validate()) return;
+  saving.value = true;
+  error.value = '';
+  const tags = parsedTags.value;
+  const linkId = isEditMode.value ? props.link!.id : createdLink.value!.id;
+  try {
+    const payload: UpdateLinkRequest = {
+      destination_url: isEditMode.value ? form.value.destination_url.trim() || undefined : undefined,
+      title: form.value.title.trim() || undefined,
+      password: form.value.password || undefined,
+      expires_at: form.value.expires_at
+        ? new Date(form.value.expires_at).toISOString()
+        : null,
+      max_clicks: form.value.max_clicks ?? undefined,
+      redirect_type: form.value.redirect_type,
+      tags: tags.length > 0 ? tags : undefined,
+      utm_source: form.value.utm_source.trim() || undefined,
+      utm_medium: form.value.utm_medium.trim() || undefined,
+      utm_campaign: form.value.utm_campaign.trim() || undefined,
+      folder_id: form.value.folder_id || null,
+    };
+    const savedLink = await linksStore.updateLink(linkId, payload);
+    emit('saved', savedLink);
+    hide();
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Failed to save changes.';
+  } finally {
+    saving.value = false;
   }
-});
+}
+
+function handleDone() {
+  // Close step 2 without saving extra fields; emit the already-created link
+  if (createdLink.value) {
+    emit('saved', createdLink.value);
+  }
+  hide();
+}
+
+async function copyShortLink() {
+  const url = createdLink.value?.short_url;
+  if (!url) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    copied.value = true;
+    setTimeout(() => { copied.value = false; }, 2000);
+  } catch {
+    // Clipboard API unavailable
+  }
+}
 
 watch(
   () => props.link,
@@ -495,16 +557,16 @@ watch(
 function show() {
   if (props.link) {
     populateForm(props.link);
+    step.value = 'customize';
   } else {
     resetForm();
+    step.value = 'create';
   }
   isOpen.value = true;
-  modalInstance?.show();
 }
 
 function hide() {
   isOpen.value = false;
-  modalInstance?.hide();
 }
 
 function onDialogClosed() {
@@ -546,19 +608,109 @@ defineExpose({ show, hide });
   }
 }
 
-.alert-icon {
-  font-size: 18px;
-  flex-shrink: 0;
+.alert-icon { font-size: 18px; flex-shrink: 0; }
+.alert-text { flex: 1; }
+.alert-close { width: 32px; height: 32px; flex-shrink: 0; }
+
+/* ── STEP 1 layout ────────────────────────────────────── */
+.step1-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-.alert-text {
+.step1-url-field {
+  --md-outlined-text-field-container-shape: 14px;
+}
+
+.step1-slug-wrap {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.step1-slug-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.optional-badge {
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface-variant);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ── Created link card ────────────────────────────────── */
+.created-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--md-sys-color-primary, #635bff) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary, #635bff) 25%, transparent);
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.created-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--md-sys-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--md-sys-color-on-primary);
+  }
+}
+
+.created-card-body {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.alert-close {
-  width: 32px;
-  height: 32px;
+.created-card-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--md-sys-color-primary);
+}
+
+.created-card-url {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover { text-decoration: underline; }
+}
+
+.created-card-copy {
   flex-shrink: 0;
+  color: var(--md-sys-color-primary);
 }
 
 /* ── Form sections ────────────────────────────────────── */
@@ -566,13 +718,8 @@ defineExpose({ show, hide });
   padding: 16px 0;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
-  &:first-of-type {
-    padding-top: 4px;
-  }
-
-  &:last-of-type {
-    border-bottom: none;
-  }
+  &:first-of-type { padding-top: 4px; }
+  &:last-of-type  { border-bottom: none; }
 }
 
 .section-label {
@@ -587,9 +734,7 @@ defineExpose({ show, hide });
   margin-bottom: 12px;
 }
 
-.section-label-icon {
-  font-size: 14px;
-}
+.section-label-icon { font-size: 14px; }
 
 /* ── Fields ───────────────────────────────────────────── */
 .field-group {
@@ -604,14 +749,8 @@ defineExpose({ show, hide });
   flex-wrap: wrap;
 }
 
-.field-full {
-  width: 100%;
-}
-
-.field-flex {
-  flex: 1;
-  min-width: 0;
-}
+.field-full  { width: 100%; }
+.field-flex  { flex: 1; min-width: 0; }
 
 /* ── Feedback rows ────────────────────────────────────── */
 .feedback-row {
@@ -620,9 +759,7 @@ defineExpose({ show, hide });
   gap: 8px;
   font-size: 0.82rem;
 
-  &--muted {
-    color: var(--md-sys-color-on-surface-variant);
-  }
+  &--muted { color: var(--md-sys-color-on-surface-variant); }
 }
 
 /* ── Duplicate warning ────────────────────────────────── */
@@ -644,29 +781,16 @@ defineExpose({ show, hide });
   margin-top: 1px;
 }
 
-.dup-warning-body {
-  flex: 1;
-  line-height: 1.5;
-}
+.dup-warning-body { flex: 1; line-height: 1.5; }
 
 .dup-link {
   color: var(--md-sys-color-primary);
   font-weight: 600;
   text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  &:hover { text-decoration: underline; }
 }
 
-.dup-slug {
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.dup-ignore-btn {
-  flex-shrink: 0;
-  align-self: center;
-}
+.dup-ignore-btn { flex-shrink: 0; align-self: center; }
 
 /* ── Short link preview ───────────────────────────────── */
 .short-link-preview {
@@ -683,14 +807,11 @@ defineExpose({ show, hide });
   color: var(--md-sys-color-primary);
 }
 
-.short-link-preview-label {
-  flex-shrink: 0;
-}
+.short-link-preview-label { flex-shrink: 0; }
 
 .short-link-preview-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0;
   padding: 4px 12px;
   background: var(--md-sys-color-primary-container, rgba(99, 91, 255, 0.1));
   border: 1px solid color-mix(in srgb, var(--md-sys-color-primary, #635bff) 30%, transparent);
@@ -700,14 +821,8 @@ defineExpose({ show, hide });
   font-weight: 500;
 }
 
-.short-link-preview-domain {
-  color: var(--md-sys-color-on-surface-variant);
-}
-
-.short-link-preview-slug {
-  color: var(--md-sys-color-primary);
-  font-weight: 700;
-}
+.short-link-preview-domain { color: var(--md-sys-color-on-surface-variant); }
+.short-link-preview-slug   { color: var(--md-sys-color-primary); font-weight: 700; }
 
 /* ── Tag chips ────────────────────────────────────────── */
 .tag-chips {
@@ -730,17 +845,14 @@ defineExpose({ show, hide });
   border: 1px solid color-mix(in srgb, var(--md-sys-color-primary, #635bff) 20%, transparent);
 }
 
-.tag-chip-icon {
-  font-size: 12px;
-  opacity: 0.7;
-}
+.tag-chip-icon { font-size: 12px; opacity: 0.7; }
 
 /* ── Advanced / collapsible sections ─────────────────── */
 .advanced-section {
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 14px;
   overflow: hidden;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 }
 
 .advanced-toggle {
@@ -758,9 +870,7 @@ defineExpose({ show, hide });
   text-align: left;
   transition: background 0.15s;
 
-  &:hover {
-    background: var(--md-sys-color-surface-container-low);
-  }
+  &:hover { background: var(--md-sys-color-surface-container-low); }
 }
 
 .advanced-toggle-icon {
@@ -768,9 +878,7 @@ defineExpose({ show, hide });
   color: var(--md-sys-color-on-surface-variant);
 }
 
-.advanced-toggle-label {
-  flex: 1;
-}
+.advanced-toggle-label { flex: 1; }
 
 .adv-badge {
   font-size: 0.68rem;
@@ -792,9 +900,7 @@ defineExpose({ show, hide });
   transition: transform 0.2s ease;
   margin-left: auto;
 
-  &--open {
-    transform: rotate(180deg);
-  }
+  &--open { transform: rotate(180deg); }
 }
 
 .advanced-fields {
@@ -806,15 +912,6 @@ defineExpose({ show, hide });
   background: var(--md-sys-color-surface-container-lowest, transparent);
 }
 
-/* ── Dialog actions ───────────────────────────────────── */
-.dialog-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.save-btn {
-  min-width: 140px;
-}
+/* ── Save button ──────────────────────────────────────── */
+.save-btn { min-width: 140px; }
 </style>
