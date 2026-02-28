@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/shafikshaon/shortlink/logger"
@@ -22,14 +23,16 @@ const (
 type ClickWorker struct {
 	cache          valkeycompat.Cmdable
 	clickEventRepo repository.ClickEventRepositoryI
+	linkRepo       repository.LinkRepositoryI
 	batchSize      int
 	flushInterval  time.Duration
 }
 
-func NewClickWorker(cache valkeycompat.Cmdable, clickEventRepo repository.ClickEventRepositoryI, batchSize, flushIntervalSeconds int) *ClickWorker {
+func NewClickWorker(cache valkeycompat.Cmdable, clickEventRepo repository.ClickEventRepositoryI, linkRepo repository.LinkRepositoryI, batchSize, flushIntervalSeconds int) *ClickWorker {
 	return &ClickWorker{
 		cache:          cache,
 		clickEventRepo: clickEventRepo,
+		linkRepo:       linkRepo,
 		batchSize:      batchSize,
 		flushInterval:  time.Duration(flushIntervalSeconds) * time.Second,
 	}
@@ -94,4 +97,18 @@ func (w *ClickWorker) flush(ctx context.Context, batch []*model.ClickEvent) {
 		return
 	}
 	logger.Debug("Flushed click events to database", zap.Int("count", len(batch)))
+
+	// Tally clicks per link and update click_count on the links table.
+	counts := make(map[uuid.UUID]int64, len(batch))
+	for _, e := range batch {
+		counts[e.LinkID]++
+	}
+	for linkID, delta := range counts {
+		if err := w.linkRepo.AddClickCount(ctx, linkID, delta); err != nil {
+			logger.Error("Failed to update link click_count",
+				zap.String("link_id", linkID.String()),
+				zap.Int64("delta", delta),
+				zap.Error(err))
+		}
+	}
 }

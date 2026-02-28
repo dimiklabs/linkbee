@@ -123,6 +123,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	clickWorker := worker.NewClickWorker(
 		s.Cache,
 		clickEventRepo,
+		linkRepo,
 		s.Cfg.Link.ClickQueueBatchSize,
 		s.Cfg.Link.ClickQueueFlushInterval,
 	)

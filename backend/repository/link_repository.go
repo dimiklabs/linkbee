@@ -34,6 +34,7 @@ type LinkRepositoryI interface {
 	// Update
 	Update(ctx context.Context, link *model.Link) error
 	IncrementClickCount(ctx context.Context, id uuid.UUID) error
+	AddClickCount(ctx context.Context, id uuid.UUID, delta int64) error
 	ToggleStar(ctx context.Context, id uuid.UUID, userID uuid.UUID) (bool, error)
 	UpdateHealthStatus(ctx context.Context, id uuid.UUID, status string, statusCode int) error
 
@@ -282,6 +283,23 @@ func (r *LinkRepository) IncrementClickCount(ctx context.Context, id uuid.UUID) 
 		Update("click_count", gorm.Expr("click_count + 1")).Error; err != nil {
 		logger.ErrorCtx(ctx, "Failed to increment click count",
 			zap.String("link_id", id.String()),
+			zap.Error(err))
+		return err
+	}
+	return nil
+}
+
+func (r *LinkRepository) AddClickCount(ctx context.Context, id uuid.UUID, delta int64) error {
+	if delta <= 0 {
+		return nil
+	}
+	if err := r.masterDB.WithContext(ctx).
+		Model(&model.Link{}).
+		Where("id = ?", id).
+		Update("click_count", gorm.Expr("click_count + ?", delta)).Error; err != nil {
+		logger.ErrorCtx(ctx, "Failed to add click count",
+			zap.String("link_id", id.String()),
+			zap.Int64("delta", delta),
 			zap.Error(err))
 		return err
 	}
