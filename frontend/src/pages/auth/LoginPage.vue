@@ -58,8 +58,13 @@
         <!-- Error Banner -->
         <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
           <span class="material-symbols-outlined err-icon">error</span>
-          <span class="md-body-medium err-text">{{ errorMessage }}</span>
-          <button class="btn-icon" @click="errorMessage = ''">
+          <div class="err-body">
+            <span class="md-body-medium err-text">{{ errorMessage }}</span>
+            <router-link v-if="showSignupHint" to="/signup" class="err-signup-link">
+              Create an account
+            </router-link>
+          </div>
+          <button class="btn-icon" @click="errorMessage = ''; showSignupHint = false">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -239,7 +244,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import authApi, { oauthApi } from '@/api/auth';
@@ -249,9 +254,21 @@ const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  OAUTH_NOT_LINKED: 'This account is not linked to any existing account. Please sign up first or log in with your email and password.',
+  OAUTH_DISABLED: 'OAuth sign-in is currently disabled. Please use email and password.',
+  OAUTH_INVALID_STATE: 'The sign-in session expired or is invalid. Please try again.',
+  OAUTH_TOKEN_EXCHANGE: 'Could not complete sign-in with the provider. Please try again.',
+  OAUTH_PROVIDER_ERROR: 'The sign-in provider returned an error. Please try again.',
+  OAUTH_EMAIL_NOT_FOUND: 'Could not retrieve your email from the provider. Please ensure your account has a verified email.',
+  USER_INACTIVE: 'Your account is inactive. Please contact support.',
+  FORBIDDEN: 'Access denied. Please contact support.',
+};
+
 const loading = ref(false);
 const oauthLoading = ref(false);
 const errorMessage = ref('');
+const showSignupHint = ref(false);
 const showPassword = ref(false);
 const showReactivationModal = ref(false);
 const reactivationLoading = ref(false);
@@ -275,6 +292,15 @@ const errors = reactive({
 const reactivationForm = reactive({
   email: '',
   password: '',
+});
+
+onMounted(() => {
+  const oauthError = route.query.oauth_error as string | undefined;
+  const oauthMessage = route.query.oauth_message as string | undefined;
+  if (oauthError) {
+    errorMessage.value = OAUTH_ERROR_MESSAGES[oauthError] ?? oauthMessage ?? 'Sign-in failed. Please try again.';
+    showSignupHint.value = oauthError === 'OAUTH_NOT_LINKED';
+  }
 });
 
 function validateForm(): boolean {
@@ -595,8 +621,26 @@ async function handleReactivation() {
   flex-shrink: 0;
 }
 
-.err-text {
+.err-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.err-text {
+  display: block;
+}
+
+.err-signup-link {
+  color: var(--md-sys-color-on-error-container);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: underline;
+
+  &:hover {
+    opacity: 0.8;
+  }
 }
 
 .field-wrap {

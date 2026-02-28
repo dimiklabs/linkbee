@@ -135,7 +135,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService, auditService)
-	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService)
+	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, s.Cfg.App)
 	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
 	adminHandler     := handler.NewAdminHandler(adminService, s.Cfg.App)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)

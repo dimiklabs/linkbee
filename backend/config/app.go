@@ -10,6 +10,7 @@ type AppConfig struct {
 	Env                string
 	ServerAddress      string
 	CorsAllowedOrigins string
+	FrontendURL        string
 	LogFilePath        string
 	JWTSecret          string
 	JWTIssuer          string
@@ -24,6 +25,7 @@ func LoadAppConfig(_ context.Context) *AppConfig {
 	viper.SetDefault("ENV", "development")
 	viper.SetDefault("SERVER_ADDRESS", ":8080")
 	viper.SetDefault("CORS_ALLOWED_ORIGINS", "http://localhost:3000")
+	viper.SetDefault("FRONTEND_URL", "http://localhost:3000")
 	viper.SetDefault("LOG_FILE_PATH", "")
 	viper.SetDefault("JWT_SECRET", "")
 	viper.SetDefault("JWT_ISSUER", "shortlink-auth")
@@ -37,6 +39,7 @@ func LoadAppConfig(_ context.Context) *AppConfig {
 		Env:                viper.GetString("ENV"),
 		ServerAddress:      viper.GetString("SERVER_ADDRESS"),
 		CorsAllowedOrigins: viper.GetString("CORS_ALLOWED_ORIGINS"),
+		FrontendURL:        viper.GetString("FRONTEND_URL"),
 		LogFilePath:        viper.GetString("LOG_FILE_PATH"),
 		JWTSecret:          viper.GetString("JWT_SECRET"),
 		JWTIssuer:          viper.GetString("JWT_ISSUER"),

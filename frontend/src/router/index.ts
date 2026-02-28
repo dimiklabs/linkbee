@@ -43,6 +43,11 @@ const router = createRouter({
       component: () => import('@/pages/auth/VerifyEmailPage.vue'),
       meta: { guest: true },
     },
+    {
+      path: '/auth/callback',
+      name: 'oauth-callback',
+      component: () => import('@/pages/auth/OAuthCallbackPage.vue'),
+    },
 
     // Dashboard (auth required)
     {
