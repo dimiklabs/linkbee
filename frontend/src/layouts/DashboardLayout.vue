@@ -263,10 +263,10 @@
         </button>
 
         <!-- New Link shortcut -->
-        <router-link to="/dashboard/links?create=1" class="topbar-new-link-btn">
+        <button class="topbar-new-link-btn" @click="handleNewLink">
           <span class="material-symbols-outlined">add</span>
           New Link
-        </router-link>
+        </button>
 
         <!-- User avatar dropdown -->
         <div class="user-menu-wrapper" ref="userMenuWrapperRef">
@@ -375,6 +375,13 @@ const pageTitle = computed(() => {
   };
   return titles[name] ?? 'Dashboard';
 });
+
+function handleNewLink() {
+  uiStore.triggerCreateLink();
+  if (route.name !== 'links') {
+    router.push('/dashboard/links');
+  }
+}
 
 function goToProfile() {
   userDropdownOpen.value = false;
@@ -836,12 +843,13 @@ $appbar-height: 64px;
   gap: 6px;
   height: 36px;
   padding: 0 16px;
+  border: none;
   border-radius: 8px;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
   font-size: 0.875rem;
   font-weight: 600;
-  text-decoration: none;
+  cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: opacity 0.15s $ease-standard;

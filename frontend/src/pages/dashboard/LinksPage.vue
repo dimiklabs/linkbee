@@ -519,6 +519,7 @@
 import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useLinksStore } from '@/stores/links';
+import { useUiStore } from '@/stores/ui';
 import type { LinkResponse } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
 import linksApi from '@/api/links';
@@ -537,6 +538,7 @@ import type { ImportLinksResponse } from '@/types/links';
 
 const route = useRoute();
 const linksStore = useLinksStore();
+const uiStore = useUiStore();
 
 // ── Billing / Usage ───────────────────────────────────────────────────────────
 const usage = ref<UsageCounts | null>(null);
@@ -920,8 +922,9 @@ onMounted(async () => {
   loadFolders();
   loadTags();
   document.addEventListener('click', closeAllRowMenus);
-  // Open create modal if navigated with ?create=1
-  if (route.query.create === '1') {
+  // Open create modal triggered by nav button or post-login redirect
+  if (uiStore.pendingCreateLink || route.query.create === '1') {
+    uiStore.clearPendingCreateLink();
     nextTick(() => openCreateModal());
   }
   try {
@@ -936,6 +939,14 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('click', closeAllRowMenus);
+});
+
+// When the nav button is clicked while already on this page, open modal immediately
+watch(() => uiStore.pendingCreateLink, (pending) => {
+  if (pending) {
+    uiStore.clearPendingCreateLink();
+    nextTick(() => openCreateModal());
+  }
 });
 
 function formatDate(dateStr: string): string {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/valkey-io/valkey-go/valkeycompat"
+
 	"github.com/shafikshaon/linkbee/config"
 	"github.com/shafikshaon/linkbee/constant"
 	"github.com/shafikshaon/linkbee/dto"
@@ -11,10 +13,12 @@ import (
 	"github.com/shafikshaon/linkbee/repository"
 	"github.com/shafikshaon/linkbee/response"
 	"github.com/shafikshaon/linkbee/util"
-	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 
-const demoRateLimitKeyPrefix = "demo:rl:"
+const (
+	demoRateLimitKeyPrefix = "demo:rl:"
+	demoSlugCounterKey     = "linkbee:slug:counter"
+)
 
 type DemoServiceI interface {
 	ShortenURL(ctx context.Context, destinationURL, ipAddress string) (*response.DemoShortenResponse, *dto.ServiceError)
@@ -23,14 +27,16 @@ type DemoServiceI interface {
 type demoService struct {
 	linkRepo repository.LinkRepositoryI
 	cache    valkeycompat.Cmdable
+	slugGen  *util.SlugGenerator
 	appCfg   *config.AppConfig
 	linkCfg  *config.LinkConfig
 }
 
-func NewDemoService(linkRepo repository.LinkRepositoryI, cache valkeycompat.Cmdable, appCfg *config.AppConfig, linkCfg *config.LinkConfig) DemoServiceI {
+func NewDemoService(linkRepo repository.LinkRepositoryI, cache valkeycompat.Cmdable, slugGen *util.SlugGenerator, appCfg *config.AppConfig, linkCfg *config.LinkConfig) DemoServiceI {
 	return &demoService{
 		linkRepo: linkRepo,
 		cache:    cache,
+		slugGen:  slugGen,
 		appCfg:   appCfg,
 		linkCfg:  linkCfg,
 	}
@@ -41,32 +47,18 @@ func (s *demoService) ShortenURL(ctx context.Context, destinationURL, ipAddress 
 	rateLimitKey := fmt.Sprintf("%s%s", demoRateLimitKeyPrefix, util.HashIP(ipAddress))
 	count, _ := s.cache.Incr(ctx, rateLimitKey).Result()
 	if count == 1 {
-		// Set TTL of 24 hours on first request
 		s.cache.Expire(ctx, rateLimitKey, 86400*1000000000) // 24h in nanoseconds
 	}
 	if count > int64(s.linkCfg.DemoRateLimitPerIP) {
 		return nil, dto.NewTooManyRequestsError(constant.ErrCodeRateLimited, "Demo rate limit reached. Please sign up for a free account.")
 	}
 
-	// Generate slug
-	var slug string
-	for attempt := 0; attempt < 5; attempt++ {
-		generated, err := util.GenerateSlug(s.linkCfg.SlugLength)
-		if err != nil {
-			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-		}
-		exists, err := s.linkRepo.SlugExists(ctx, generated)
-		if err != nil {
-			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-		}
-		if !exists {
-			slug = generated
-			break
-		}
+	// Generate slug via shared counter + shuffled-alphabet encoding
+	counter, err := s.cache.Incr(ctx, demoSlugCounterKey).Result()
+	if err != nil {
+		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 	}
-	if slug == "" {
-		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "Failed to generate unique slug")
-	}
+	slug := s.slugGen.FromCounter(counter)
 
 	// Create link without a user (demo link - user_id will be a zero UUID)
 	link := &model.Link{

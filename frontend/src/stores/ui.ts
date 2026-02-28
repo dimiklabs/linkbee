@@ -46,10 +46,16 @@ export const useUIStore = defineStore('ui', () => {
   const toggleDarkMode = () => { darkMode.value = !darkMode.value; };
   const setDarkMode = (isDark: boolean) => { darkMode.value = isDark; };
 
+  // Signals LinksPage to open the create-link modal after navigation
+  const pendingCreateLink = ref(false);
+  const triggerCreateLink = () => { pendingCreateLink.value = true; };
+  const clearPendingCreateLink = () => { pendingCreateLink.value = false; };
+
   return {
     sidebarCollapsed, sidebarOpen, userMenuOpen, darkMode, isMobile,
     toggleSidebar, closeSidebar, toggleUserMenu, closeUserMenu,
     handleResize, toggleDarkMode, setDarkMode,
+    pendingCreateLink, triggerCreateLink, clearPendingCreateLink,
   };
 });
 

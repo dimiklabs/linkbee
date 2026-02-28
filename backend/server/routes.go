@@ -13,6 +13,7 @@ import (
 	"github.com/shafikshaon/linkbee/logger"
 	"github.com/shafikshaon/linkbee/middlewares"
 	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/util"
 	analyticsSvc   "github.com/shafikshaon/linkbee/service/analytics"
 	dashboardSvc   "github.com/shafikshaon/linkbee/service/dashboard"
 	expirySvc      "github.com/shafikshaon/linkbee/service/expiry"
@@ -96,7 +97,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	webhookService     := webhookSvc.NewWebhookService(webhookRepo, webhookDeliveryRepo)
 	pixelService       := pixelSvc.NewPixelService(pixelRepo, linkRepo)
 	splitService       := splitSvc.NewSplitService(variantRepo, linkRepo)
-	linkService        := linkSvc.NewLinkService(linkRepo, s.Cfg.App, s.Cfg.Link)
+	slugGen            := util.NewSlugGenerator(s.Cfg.Link.SlugSecret, s.Cfg.Link.SlugLength)
+	linkService        := linkSvc.NewLinkService(linkRepo, s.Cache, slugGen, s.Cfg.App, s.Cfg.Link)
 	geoService         := geoSvc.NewGeoService(s.Cfg.App.GeoDBPath)
 	geoRoutingService  := georoutingSvc.NewGeoRoutingService(geoRuleRepo, linkRepo)
 	redirectService    := redirectSvc.NewRedirectService(linkRepo, variantRepo, geoRuleRepo, s.Cache, s.Cfg.Link.CacheTTLSeconds)
@@ -106,7 +108,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	dashboardService   := dashboardSvc.NewDashboardService(linkRepo, clickEventRepo, s.Cfg.App)
 	reportingService   := reportingSvc.NewReportingService(reportRepo, userRepo, clickEventRepo, linkRepo, emailService, s.Cfg.App, s.Cfg.Email)
 	expiryService      := expirySvc.NewExpiryService(linkRepo, userRepo, emailService, s.Cfg.App, s.Cfg.Email)
-	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, s.Cfg.App, s.Cfg.Link)
+	demoService        := demoSvc.NewDemoService(linkRepo, s.Cache, slugGen, s.Cfg.App, s.Cfg.Link)
 	domainService      := domainSvc.NewDomainService(customDomainRepo)
 	auditService       := auditSvc.NewAuditService(auditLogRepo)
 	teamService        := teamSvc.NewTeamService(teamRepo, userRepo)

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/valkey-io/valkey-go/valkeycompat"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -52,18 +53,33 @@ var healthHTTPClient = &http.Client{
 	},
 }
 
+const slugCounterKey = "linkbee:slug:counter"
+
 type linkService struct {
 	linkRepo repository.LinkRepositoryI
+	cache    valkeycompat.Cmdable
+	slugGen  *util.SlugGenerator
 	appCfg   *config.AppConfig
 	linkCfg  *config.LinkConfig
 }
 
-func NewLinkService(linkRepo repository.LinkRepositoryI, appCfg *config.AppConfig, linkCfg *config.LinkConfig) LinkServiceI {
+func NewLinkService(linkRepo repository.LinkRepositoryI, cache valkeycompat.Cmdable, slugGen *util.SlugGenerator, appCfg *config.AppConfig, linkCfg *config.LinkConfig) LinkServiceI {
 	return &linkService{
 		linkRepo: linkRepo,
+		cache:    cache,
+		slugGen:  slugGen,
 		appCfg:   appCfg,
 		linkCfg:  linkCfg,
 	}
+}
+
+// nextSlug atomically increments the global counter and returns the encoded slug.
+func (s *linkService) nextSlug(ctx context.Context) (string, error) {
+	counter, err := s.cache.Incr(ctx, slugCounterKey).Result()
+	if err != nil {
+		return "", fmt.Errorf("slug counter: %w", err)
+	}
+	return s.slugGen.FromCounter(counter), nil
 }
 
 func (s *linkService) CreateLink(ctx context.Context, userID uuid.UUID, req *request.CreateLinkRequest) (*response.LinkResponse, *dto.ServiceError) {
@@ -76,25 +92,13 @@ func (s *linkService) CreateLink(ctx context.Context, userID uuid.UUID, req *req
 	// Determine slug
 	slug := req.Slug
 	if slug == "" {
-		// Generate a unique slug
-		for attempt := 0; attempt < 5; attempt++ {
-			generated, err := util.GenerateSlug(s.linkCfg.SlugLength)
-			if err != nil {
-				logger.ErrorCtx(ctx, "Failed to generate slug", zap.Error(err))
-				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-			}
-			exists, err := s.linkRepo.SlugExists(ctx, generated)
-			if err != nil {
-				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-			}
-			if !exists {
-				slug = generated
-				break
-			}
+		// Generate a unique slug via counter + shuffled-alphabet encoding
+		generated, err := s.nextSlug(ctx)
+		if err != nil {
+			logger.ErrorCtx(ctx, "Failed to generate slug", zap.Error(err))
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 		}
-		if slug == "" {
-			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "Failed to generate unique slug")
-		}
+		slug = generated
 	} else {
 		// Check custom slug availability
 		exists, err := s.linkRepo.SlugExists(ctx, slug)
@@ -571,24 +575,12 @@ func (s *linkService) CloneLink(ctx context.Context, id uuid.UUID, userID uuid.U
 	// Determine slug
 	slug := req.NewSlug
 	if slug == "" {
-		for attempt := 0; attempt < 5; attempt++ {
-			generated, err := util.GenerateSlug(s.linkCfg.SlugLength)
-			if err != nil {
-				logger.ErrorCtx(ctx, "Failed to generate slug", zap.Error(err))
-				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-			}
-			exists, err := s.linkRepo.SlugExists(ctx, generated)
-			if err != nil {
-				return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
-			}
-			if !exists {
-				slug = generated
-				break
-			}
+		generated, err := s.nextSlug(ctx)
+		if err != nil {
+			logger.ErrorCtx(ctx, "Failed to generate slug", zap.Error(err))
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer)
 		}
-		if slug == "" {
-			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "Failed to generate unique slug")
-		}
+		slug = generated
 	} else {
 		exists, err := s.linkRepo.SlugExists(ctx, slug)
 		if err != nil {
