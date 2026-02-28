@@ -39,9 +39,9 @@ func NewBillingHandler(
 // GetSubscription returns the current user's subscription and plan info.
 func (h *BillingHandler) GetSubscription(c *gin.Context) {
 	ctx := c.Request.Context()
-	rawID, _ := c.Get(middlewares.ContextKeyUserID)
-	userID, ok := rawID.(uuid.UUID)
-	if !ok {
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "unauthorized")
 		return
 	}
@@ -56,9 +56,9 @@ func (h *BillingHandler) GetSubscription(c *gin.Context) {
 
 // GetCheckoutURL returns a Lemon Squeezy checkout URL for the requested plan.
 func (h *BillingHandler) GetCheckoutURL(c *gin.Context) {
-	rawID, _ := c.Get(middlewares.ContextKeyUserID)
-	userID, ok := rawID.(uuid.UUID)
-	if !ok {
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "unauthorized")
 		return
 	}
@@ -75,9 +75,9 @@ func (h *BillingHandler) GetCheckoutURL(c *gin.Context) {
 // GetUsage returns the current resource usage counts for the authenticated user.
 func (h *BillingHandler) GetUsage(c *gin.Context) {
 	ctx := c.Request.Context()
-	rawID, _ := c.Get(middlewares.ContextKeyUserID)
-	userID, ok := rawID.(uuid.UUID)
-	if !ok {
+	userIDStr, _ := c.Get(middlewares.ContextKeyUserID)
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, "unauthorized")
 		return
 	}

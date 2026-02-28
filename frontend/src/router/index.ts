@@ -159,6 +159,18 @@ const router = createRouter({
       component: () => import('@/pages/PublicBioPage.vue'),
     },
 
+    // Legal pages (public)
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('@/pages/TermsOfServicePage.vue'),
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('@/pages/PrivacyPolicyPage.vue'),
+    },
+
     // Catch all
     {
       path: '/:pathMatch(.*)*',

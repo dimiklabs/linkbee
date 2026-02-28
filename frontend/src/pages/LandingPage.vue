@@ -234,9 +234,9 @@
           &copy; 2026 Linkbee. All rights reserved.
         </p>
         <div class="footer-links">
-          <a href="#" class="footer-link">Privacy</a>
-          <a href="#" class="footer-link">Terms</a>
-          <a href="#" class="footer-link">Contact</a>
+          <router-link to="/privacy" class="footer-link">Privacy</router-link>
+          <router-link to="/terms" class="footer-link">Terms</router-link>
+          <a href="mailto:support@linkbee.click" class="footer-link">Contact</a>
         </div>
       </div>
     </footer>

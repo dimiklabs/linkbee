@@ -177,6 +177,13 @@
               <md-circular-progress v-if="loading" indeterminate class="btn-spinner" />
               Create Account
             </button>
+
+            <p class="terms-notice">
+              By creating an account you agree to our
+              <router-link to="/terms" class="auth-link" target="_blank">Terms of Service</router-link>
+              and
+              <router-link to="/privacy" class="auth-link" target="_blank">Privacy Policy</router-link>.
+            </p>
           </form>
 
           <!-- Sign in link -->
@@ -600,6 +607,14 @@ async function handleSignup() {
   white-space: nowrap;
   font-size: 0.75rem;
   min-width: 40px;
+}
+
+.terms-notice {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
 }
 
 .auth-footer-text {

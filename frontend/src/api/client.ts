@@ -73,6 +73,13 @@ apiClient.interceptors.response.use(
           router.push('/login');
           return Promise.reject(refreshError);
         }
+      } else {
+        // No refresh token — session is gone, redirect to login
+        const { useAuthStore } = await import('@/stores/auth');
+        const authStore = useAuthStore();
+        authStore.clearTokens();
+        const { default: router } = await import('@/router');
+        router.push('/login');
       }
     }
 

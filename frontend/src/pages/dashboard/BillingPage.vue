@@ -67,6 +67,13 @@
             </div>
 
             <p v-if="checkoutError" class="checkout-error">{{ checkoutError }}</p>
+
+            <p v-if="currentPlanID !== 'business'" class="billing-terms-note">
+              By upgrading you agree to our
+              <router-link to="/terms" target="_blank">Terms of Service</router-link>
+              and
+              <router-link to="/privacy" target="_blank">Privacy Policy</router-link>.
+            </p>
           </div>
         </div>
 
@@ -477,6 +484,19 @@ onMounted(async () => {
   margin: 8px 0 0;
   font-size: 0.8rem;
   color: var(--md-sys-color-error);
+}
+
+.billing-terms-note {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+
+  a {
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
 }
 
 /* ── Meta row ────────────────────────────────────────────────────────────── */
