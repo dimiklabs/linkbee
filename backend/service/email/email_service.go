@@ -23,6 +23,7 @@ type EmailServiceI interface {
 	SendVerificationEmail(ctx context.Context, user *model.User) error
 	VerifyEmail(ctx context.Context, token string) error
 	ResendVerificationEmail(ctx context.Context, userID uuid.UUID, email string) error
+	SendPasswordResetEmail(ctx context.Context, toEmail, resetToken string) error
 	// SendHTML sends a generic HTML email. Used by other services (e.g., reporting).
 	SendHTML(ctx context.Context, to, subject, body string) error
 }
@@ -182,6 +183,39 @@ func (s *EmailService) SendHTML(ctx context.Context, to, subject, body string) e
 	return s.sendEmail(ctx, to, subject, body)
 }
 
+// SendPasswordResetEmail sends the password reset link to the user's email address.
+func (s *EmailService) SendPasswordResetEmail(ctx context.Context, toEmail, resetToken string) error {
+	resetURL := fmt.Sprintf("%s/reset-password?token=%s", s.config.BaseURL, resetToken)
+
+	tmpl, err := template.New("password-reset").Parse(passwordResetEmailTemplate)
+	if err != nil {
+		return err
+	}
+
+	data := struct {
+		ResetURL string
+		AppName  string
+	}{
+		ResetURL: resetURL,
+		AppName:  s.config.FromName,
+	}
+
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return err
+	}
+
+	if err := s.sendEmail(ctx, toEmail, "Reset your password", buf.String()); err != nil {
+		logger.ErrorCtx(ctx, "Failed to send password reset email",
+			zap.String("email", toEmail),
+			zap.Error(err))
+		return err
+	}
+
+	logger.InfoCtx(ctx, "Password reset email sent", zap.String("email", toEmail))
+	return nil
+}
+
 func (s *EmailService) renderVerificationEmail(user *model.User, verificationURL string) (string, error) {
 	tmpl, err := template.New("verification").Parse(verificationEmailTemplate)
 	if err != nil {
@@ -326,6 +360,61 @@ const verificationEmailTemplate = `<!DOCTYPE html>
                             </p>
                             <p style="margin: 0; color: #888888; font-size: 12px;">
                                 This is an automated message. Please do not reply to this email.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>`
+
+const passwordResetEmailTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Password</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; max-width: 100%; border-collapse: collapse; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="padding: 40px 40px 30px; text-align: center; background-color: #4F46E5; border-radius: 8px 8px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600;">{{.AppName}}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px; color: #1a1a1a; font-size: 24px; font-weight: 600;">Reset Your Password</h2>
+                            <p style="margin: 0 0 20px; color: #4a4a4a; font-size: 16px; line-height: 1.6;">
+                                We received a request to reset your password. Click the button below to choose a new password. This link expires in 1 hour.
+                            </p>
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0 30px;">
+                                        <a href="{{.ResetURL}}" style="display: inline-block; padding: 16px 40px; background-color: #4F46E5; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 6px;">
+                                            Reset Password
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="margin: 0 0 20px; color: #4a4a4a; font-size: 14px; line-height: 1.6;">
+                                If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+                            </p>
+                            <div style="margin-top: 20px; padding: 20px; background-color: #f8f8f8; border-radius: 6px;">
+                                <p style="margin: 0 0 8px; color: #666666; font-size: 14px;">If the button doesn't work, copy and paste this link:</p>
+                                <p style="margin: 0; color: #4F46E5; font-size: 14px; word-break: break-all;">{{.ResetURL}}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; text-align: center;">
+                            <p style="margin: 0; color: #888888; font-size: 12px;">
+                                &copy; 2024 {{.AppName}}. All rights reserved. This is an automated message — please do not reply.
                             </p>
                         </td>
                     </tr>

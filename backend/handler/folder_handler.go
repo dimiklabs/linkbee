@@ -11,6 +11,7 @@ import (
 	"github.com/shafikshaon/shortlink/request"
 	folderSvc "github.com/shafikshaon/shortlink/service/folder"
 	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/shortlink/util"
 )
 
 type FolderHandler struct {
@@ -75,7 +76,8 @@ func (h *FolderHandler) CreateFolder(c *gin.Context) {
 
 	var req request.CreateFolderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeValidationError, err.Error())
+		code, msg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, code, msg)
 		return
 	}
 
@@ -122,7 +124,8 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 
 	var req request.UpdateFolderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeValidationError, err.Error())
+		code, msg := util.TranslateValidationError(err)
+		transport.RespondWithError(c, http.StatusBadRequest, code, msg)
 		return
 	}
 

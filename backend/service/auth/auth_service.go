@@ -57,6 +57,7 @@ type EmailSenderI interface {
 	SendVerificationEmail(ctx context.Context, user *model.User) error
 	VerifyEmail(ctx context.Context, token string) error
 	ResendVerificationEmail(ctx context.Context, userID uuid.UUID, email string) error
+	SendPasswordResetEmail(ctx context.Context, toEmail, resetToken string) error
 }
 
 type AuthService struct {
@@ -525,11 +526,13 @@ func (s *AuthService) ForgotPassword(ctx context.Context, req *request.ForgotPas
 		return dto.NewServiceError(constant.ErrCodeInternalServer, constant.ErrMsgInternalServer, http.StatusInternalServerError)
 	}
 
-	// TODO: Send password reset email with token
-	// For now, log the token (in production, this should be sent via email)
-	logger.InfoCtx(ctx, "Password reset token created",
-		zap.String("user_id", user.ID.String()),
-		zap.String("token", token))
+	if err := s.emailService.SendPasswordResetEmail(ctx, user.Email, token); err != nil {
+		logger.WarnCtx(ctx, "Failed to send password reset email — token saved but email not delivered",
+			zap.String("user_id", user.ID.String()),
+			zap.Error(err))
+		// Do not surface the email error to the caller: the token is persisted and
+		// the response must not reveal whether the address exists (enumeration protection).
+	}
 
 	return nil
 }
