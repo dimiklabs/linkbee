@@ -21,6 +21,15 @@
           <span v-if="saving" class="css-spinner css-spinner--sm css-spinner--white"></span>
           Save settings
         </button>
+        <button
+          :class="['btn-publish', form.is_published ? 'btn-publish--live' : 'btn-publish--draft']"
+          :disabled="toggling"
+          @click="togglePublish"
+        >
+          <span v-if="toggling" class="css-spinner css-spinner--sm css-spinner--white"></span>
+          <span v-else class="material-symbols-outlined">{{ form.is_published ? 'cloud_off' : 'cloud_upload' }}</span>
+          {{ form.is_published ? 'Unpublish' : 'Publish' }}
+        </button>
       </div>
     </div>
 
@@ -625,6 +634,7 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
 
 const loading = ref(true);
 const saving = ref(false);
+const toggling = ref(false);
 const saveError = ref('');
 const bioPage = ref<BioPage | null>(null);
 const links = ref<BioLinkItem[]>([]);
@@ -772,6 +782,21 @@ async function saveSettings() {
     saveError.value = err?.response?.data?.description ?? 'Failed to save settings.';
   } finally {
     saving.value = false;
+  }
+}
+
+async function togglePublish() {
+  toggling.value = true;
+  try {
+    const res = await bioApi.update({ is_published: !form.value.is_published });
+    if (res.data) {
+      bioPage.value = res.data;
+      form.value.is_published = res.data.is_published;
+    }
+  } catch {
+    // silent — state stays as-is
+  } finally {
+    toggling.value = false;
   }
 }
 
@@ -1507,6 +1532,39 @@ function onDragEnd() { dragFrom = -1; }
 .panel-slide-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+/* ── Publish / Unpublish button ───────────────────────────────────────────── */
+.btn-publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, box-shadow .15s, opacity .15s;
+  flex-shrink: 0;
+
+  .material-symbols-outlined { font-size: 18px; }
+  &:disabled { opacity: .38; cursor: not-allowed; pointer-events: none; }
+
+  &--draft {
+    border: none;
+    background: #16a34a;
+    color: #fff;
+    &:hover:not(:disabled) { box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  }
+
+  &--live {
+    border: 1.5px solid #dc2626;
+    background: transparent;
+    color: #dc2626;
+    &:hover:not(:disabled) { background: rgba(220, 38, 38, .06); }
+  }
 }
 
 /* ── Share URL bar ─────────────────────────────────────────────────────────── */
