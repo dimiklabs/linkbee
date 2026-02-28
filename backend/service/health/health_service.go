@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/response"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/response"
 )
 
 const (

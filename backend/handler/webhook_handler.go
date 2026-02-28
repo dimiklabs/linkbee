@@ -7,12 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/request"
-	billingSvc "github.com/shafikshaon/shortlink/service/billing"
-	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/request"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
+	webhookSvc "github.com/shafikshaon/linkbee/service/webhook"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type WebhookHandler struct {

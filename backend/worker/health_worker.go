@@ -7,9 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/response"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/response"
 )
 
 const (

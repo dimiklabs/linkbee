@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	adminSvc "github.com/shafikshaon/shortlink/service/admin"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	adminSvc "github.com/shafikshaon/linkbee/service/admin"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type AdminHandler struct {

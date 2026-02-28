@@ -3,18 +3,18 @@ services:
   # ─── PostgreSQL 18 ────────────────────────────────────────────────────────
   postgres:
     image: postgres:18-alpine
-    container_name: shortlink-postgres
+    container_name: linkbee-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: shortlink
+      POSTGRES_DB: linkbee
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d shortlink"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d linkbee"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
   # ─── Valkey (Redis-compatible cache) ──────────────────────────────────────
   valkey:
     image: valkey/valkey:8-alpine
-    container_name: shortlink-valkey
+    container_name: linkbee-valkey
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -37,7 +37,7 @@ services:
   # ─── Mailpit (SMTP catch-all for development) ─────────────────────────────
   mailpit:
     image: axllent/mailpit:latest
-    container_name: shortlink-mailpit
+    container_name: linkbee-mailpit
     restart: unless-stopped
     ports:
       - "1025:1025"   # SMTP
@@ -53,7 +53,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: shortlink-backend
+    container_name: linkbee-backend
     restart: unless-stopped
     env_file: ./backend/.env
     environment:
@@ -78,7 +78,7 @@ services:
   # ─── Frontend (Vite dev server) ───────────────────────────────────────────
   frontend:
     image: node:22-alpine
-    container_name: shortlink-frontend
+    container_name: linkbee-frontend
     working_dir: /app
     volumes:
       - ./frontend:/app
@@ -96,7 +96,7 @@ services:
   # ─── Nginx (reverse proxy) ────────────────────────────────────────────────
   nginx:
     image: nginx:alpine
-    container_name: shortlink-nginx
+    container_name: linkbee-nginx
     restart: unless-stopped
     ports:
       - "80:80"

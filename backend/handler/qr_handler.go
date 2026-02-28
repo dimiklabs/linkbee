@@ -9,12 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	linkSvc "github.com/shafikshaon/shortlink/service/link"
-	qrSvc "github.com/shafikshaon/shortlink/service/qr"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	linkSvc "github.com/shafikshaon/linkbee/service/link"
+	qrSvc "github.com/shafikshaon/linkbee/service/qr"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type QRHandler struct {

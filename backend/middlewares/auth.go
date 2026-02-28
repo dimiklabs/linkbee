@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 const (

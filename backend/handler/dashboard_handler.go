@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	dashboardSvc "github.com/shafikshaon/shortlink/service/dashboard"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	dashboardSvc "github.com/shafikshaon/linkbee/service/dashboard"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type DashboardHandler struct {

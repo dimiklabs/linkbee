@@ -7,12 +7,12 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/dto"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	util "github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/dto"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	util "github.com/shafikshaon/linkbee/util"
 )
 
 type StatsResponse struct {

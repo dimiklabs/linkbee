@@ -9,7 +9,7 @@
           <div class="brand-logo-icon">
             <span class="material-symbols-outlined">link</span>
           </div>
-          <span class="brand-logo-text">Shortlink</span>
+          <span class="brand-logo-text">Linkbee</span>
         </div>
 
         <!-- Tagline -->
@@ -39,7 +39,7 @@
           </li>
         </ul>
 
-        <div class="left-panel-footer">&copy; 2026 Shortlink</div>
+        <div class="left-panel-footer">&copy; 2026 Linkbee</div>
       </div>
     </div>
 
@@ -52,7 +52,7 @@
           <div class="mobile-logo-icon">
             <span class="material-symbols-outlined">link</span>
           </div>
-          <span class="mobile-logo-text">Shortlink</span>
+          <span class="mobile-logo-text">Linkbee</span>
         </div>
 
         <!-- Error Banner -->

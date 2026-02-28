@@ -13,12 +13,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/dto"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/dto"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 type UserServiceI interface {

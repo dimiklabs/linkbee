@@ -6,8 +6,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	expirySvc "github.com/shafikshaon/shortlink/service/expiry"
+	"github.com/shafikshaon/linkbee/logger"
+	expirySvc "github.com/shafikshaon/linkbee/service/expiry"
 )
 
 // ExpiryWorker sends email notifications for links that are expiring within 3 days.

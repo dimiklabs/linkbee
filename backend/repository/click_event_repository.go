@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
 )
 
 // TimeSeriesPoint is a single data point in a click time series.

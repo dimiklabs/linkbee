@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/model"
+	"github.com/shafikshaon/linkbee/model"
 )
 
 type APIKeyRepositoryI interface {

@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"github.com/shafikshaon/shortlink/model"
+	"github.com/shafikshaon/linkbee/model"
 )
 
 type SubscriptionRepositoryI interface {

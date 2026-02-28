@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/service/health"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/service/health"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type HealthHandler struct {

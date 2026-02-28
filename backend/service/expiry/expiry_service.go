@@ -9,10 +9,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/repository"
-	emailSvc "github.com/shafikshaon/shortlink/service/email"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/repository"
+	emailSvc "github.com/shafikshaon/linkbee/service/email"
 )
 
 // ExpiryServiceI processes expiring link notifications.

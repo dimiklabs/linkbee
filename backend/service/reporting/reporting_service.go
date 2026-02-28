@@ -12,14 +12,14 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/dto"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/request"
-	emailSvc "github.com/shafikshaon/shortlink/service/email"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/dto"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/request"
+	emailSvc "github.com/shafikshaon/linkbee/service/email"
 )
 
 type ReportingServiceI interface {

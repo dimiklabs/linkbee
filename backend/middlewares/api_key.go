@@ -7,11 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/repository"
-	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/repository"
+	apiKeySvc "github.com/shafikshaon/linkbee/service/apikey"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 // AuthOrAPIKeyMiddleware authenticates via JWT Bearer token OR X-API-Key header.

@@ -9,9 +9,9 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/db"
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/db"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 type Server struct {

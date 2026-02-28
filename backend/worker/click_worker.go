@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	clickSvc "github.com/shafikshaon/shortlink/service/click"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	clickSvc "github.com/shafikshaon/linkbee/service/click"
 	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 

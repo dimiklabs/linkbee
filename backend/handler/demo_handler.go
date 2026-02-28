@@ -5,11 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/request"
-	demoSvc "github.com/shafikshaon/shortlink/service/demo"
-	"github.com/shafikshaon/shortlink/transport"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/request"
+	demoSvc "github.com/shafikshaon/linkbee/service/demo"
+	"github.com/shafikshaon/linkbee/transport"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 type DemoHandler struct {

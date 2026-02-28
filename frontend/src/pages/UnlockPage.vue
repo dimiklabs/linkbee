@@ -5,7 +5,7 @@
       <!-- Logo -->
       <div class="unlock-logo-wrap">
         <div class="logo-icon">S</div>
-        <span class="logo-text">Shortlink</span>
+        <span class="logo-text">Linkbee</span>
       </div>
 
       <!-- Card -->
@@ -56,7 +56,7 @@
       </div>
 
       <p class="powered-by md-body-small">
-        Powered by <a href="/" class="powered-link">Shortlink</a>
+        Powered by <a href="/" class="powered-link">Linkbee</a>
       </p>
 
     </div>

@@ -13,10 +13,10 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
 )
 
 type EmailServiceI interface {

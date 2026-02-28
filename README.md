@@ -1,4 +1,4 @@
-# Shortlink
+# Linkbee
 
 A high-performance, production-ready URL shortener platform with QR code generation, analytics, and subscription-based access tiers.
 
@@ -32,7 +32,7 @@ A high-performance, production-ready URL shortener platform with QR code generat
 
 ## Overview
 
-**Shortlink** is a SaaS URL shortener platform that allows individuals, teams, and enterprises to create, manage, and track short URLs and QR codes. It provides a branded experience, deep analytics, and a subscription model to monetize access to advanced features.
+**Linkbee** is a SaaS URL shortener platform that allows individuals, teams, and enterprises to create, manage, and track short URLs and QR codes. It provides a branded experience, deep analytics, and a subscription model to monetize access to advanced features.
 
 ---
 
@@ -108,7 +108,7 @@ You can copy user registration and sigin with google, github, facebook from /Use
 - Basic click analytics (total clicks only)
 - QR code generation (PNG only)
 - No custom domain
-- Shortlink-branded links only
+- Linkbee-branded links only
 - 30-day link history
 
 ### Starter — $9/month
@@ -440,7 +440,7 @@ You can copy user registration and sigin with google, github, facebook from /Use
 
 ### Base URL
 ```
-https://api.shortlink.io/v1
+https://api.linkbee.io/v1
 ```
 
 ### Authentication

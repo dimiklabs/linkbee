@@ -23,7 +23,7 @@ func LoadEmailConfig(_ context.Context) *EmailConfig {
 	viper.SetDefault("SMTP_USER", "")
 	viper.SetDefault("SMTP_PASSWORD", "")
 	viper.SetDefault("EMAIL_FROM_ADDRESS", "noreply@shortlink.io")
-	viper.SetDefault("EMAIL_FROM_NAME", "Shortlink")
+	viper.SetDefault("EMAIL_FROM_NAME", "Linkbee")
 	viper.SetDefault("APP_BASE_URL", "http://localhost:3000")
 	viper.SetDefault("EMAIL_VERIFY_TOKEN_TTL_HOURS", 24)
 

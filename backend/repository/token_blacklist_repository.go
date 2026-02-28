@@ -8,7 +8,7 @@ import (
 	"github.com/valkey-io/valkey-go/valkeycompat"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 const tokenBlacklistPrefix = "token_blacklist:"

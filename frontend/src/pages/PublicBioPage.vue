@@ -70,7 +70,7 @@
           href="/"
           class="bio-powered-link md-body-small"
         >
-          Powered by Shortlink
+          Powered by Linkbee
         </a>
       </div>
     </div>

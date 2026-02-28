@@ -9,7 +9,7 @@
           <div class="logo-icon">
             <span class="material-symbols-outlined">link</span>
           </div>
-          <span class="logo-text">Shortlink</span>
+          <span class="logo-text">Linkbee</span>
         </div>
 
         <!-- Desktop nav links -->
@@ -251,7 +251,7 @@
       <div class="cta-inner">
         <h2 class="cta-title">Ready to grow your reach?</h2>
         <p class="cta-subtitle">
-          Join thousands of teams who trust Shortlink to power their links and analytics.
+          Join thousands of teams who trust Linkbee to power their links and analytics.
           Start in seconds — no credit card required.
         </p>
         <router-link to="/signup" class="cta-action-link">
@@ -269,10 +269,10 @@
           <div class="footer-logo-icon">
             <span class="material-symbols-outlined footer-logo-symbol">link</span>
           </div>
-          <span class="footer-logo-text">Shortlink</span>
+          <span class="footer-logo-text">Linkbee</span>
         </div>
         <p class="footer-copyright">
-          &copy; 2026 Shortlink. All rights reserved.
+          &copy; 2026 Linkbee. All rights reserved.
         </p>
         <div class="footer-links">
           <a href="#" class="footer-link">Privacy</a>

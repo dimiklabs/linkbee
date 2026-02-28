@@ -27,7 +27,7 @@
       <span class="material-symbols-outlined info-card__icon">info</span>
       <div class="info-card__text">
         <strong>How it works:</strong> Add your domain, then create a DNS TXT record
-        <code>_shortlink-verify.&lt;yourdomain.com&gt;</code> with the value shown below,
+        <code>_linkbee-verify.&lt;yourdomain.com&gt;</code> with the value shown below,
         then click <em>Verify</em>. Once verified, point your domain's CNAME to
         <code>{{ appDomain }}</code> and your short links will be served under your brand.
       </div>

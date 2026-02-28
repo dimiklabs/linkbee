@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/shafikshaon/shortlink/cmd"
+	"github.com/shafikshaon/linkbee/cmd"
 )
 
 func main() {

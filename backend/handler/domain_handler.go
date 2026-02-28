@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/model"
-	auditSvc "github.com/shafikshaon/shortlink/service/audit"
-	domainSvc "github.com/shafikshaon/shortlink/service/domain"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/model"
+	auditSvc "github.com/shafikshaon/linkbee/service/audit"
+	domainSvc "github.com/shafikshaon/linkbee/service/domain"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type DomainHandler struct {

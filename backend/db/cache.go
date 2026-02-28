@@ -8,8 +8,8 @@ import (
 	"github.com/valkey-io/valkey-go/valkeycompat"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 func NewValkeyClient(ctx context.Context, cfg *config.CacheConfig) (valkeycompat.Cmdable, error) {

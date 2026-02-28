@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/dto"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/response"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/dto"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/response"
+	"github.com/shafikshaon/linkbee/util"
 	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 

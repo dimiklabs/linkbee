@@ -7,13 +7,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/model"
-	apiKeySvc "github.com/shafikshaon/shortlink/service/apikey"
-	auditSvc "github.com/shafikshaon/shortlink/service/audit"
-	billingSvc "github.com/shafikshaon/shortlink/service/billing"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/model"
+	apiKeySvc "github.com/shafikshaon/linkbee/service/apikey"
+	auditSvc "github.com/shafikshaon/linkbee/service/audit"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type APIKeyHandler struct {

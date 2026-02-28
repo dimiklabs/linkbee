@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/oschwald/geoip2-golang"
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 // GeoServiceI resolves a visitor's country code from request context.

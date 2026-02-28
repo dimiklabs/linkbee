@@ -142,7 +142,7 @@ export const authApi = {
     const a = document.createElement('a');
     const date = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = `shortlink-data-${date}.json`;
+    a.download = `linkbee-data-${date}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

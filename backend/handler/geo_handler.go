@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/request"
-	geoSvc "github.com/shafikshaon/shortlink/service/georouting"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/request"
+	geoSvc "github.com/shafikshaon/linkbee/service/georouting"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type GeoHandler struct {

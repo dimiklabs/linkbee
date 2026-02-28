@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm"
 	gormlogger "gorm.io/gorm/logger"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 func NewPostgresDB(_ context.Context, cfg *config.DBConfig, isReplica bool) (*gorm.DB, error) {

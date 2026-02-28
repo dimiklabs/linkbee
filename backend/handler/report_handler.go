@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/request"
-	reportSvc "github.com/shafikshaon/shortlink/service/reporting"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/request"
+	reportSvc "github.com/shafikshaon/linkbee/service/reporting"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type ReportHandler struct {

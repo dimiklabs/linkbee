@@ -280,7 +280,7 @@ function downloadTemplate() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'shortlink-import-template.csv';
+  a.download = 'linkbee-import-template.csv';
   a.click();
   URL.revokeObjectURL(url);
 }

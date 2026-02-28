@@ -7,17 +7,17 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/request"
-	"github.com/shafikshaon/shortlink/response"
-	auditSvc "github.com/shafikshaon/shortlink/service/audit"
-	authSrv "github.com/shafikshaon/shortlink/service/auth"
-	rateLimitSrv "github.com/shafikshaon/shortlink/service/ratelimit"
-	"github.com/shafikshaon/shortlink/transport"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/request"
+	"github.com/shafikshaon/linkbee/response"
+	auditSvc "github.com/shafikshaon/linkbee/service/audit"
+	authSrv "github.com/shafikshaon/linkbee/service/auth"
+	rateLimitSrv "github.com/shafikshaon/linkbee/service/ratelimit"
+	"github.com/shafikshaon/linkbee/transport"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 type AuthHandler struct {

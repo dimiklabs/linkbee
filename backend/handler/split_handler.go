@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/request"
-	splitSvc "github.com/shafikshaon/shortlink/service/split"
-	"github.com/shafikshaon/shortlink/transport"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/request"
+	splitSvc "github.com/shafikshaon/linkbee/service/split"
+	"github.com/shafikshaon/linkbee/transport"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 type SplitHandler struct {

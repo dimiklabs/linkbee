@@ -10,15 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/repository"
-	clickSvc "github.com/shafikshaon/shortlink/service/click"
-	geoSvc "github.com/shafikshaon/shortlink/service/geo"
-	pixelSvc "github.com/shafikshaon/shortlink/service/pixel"
-	redirectSvc "github.com/shafikshaon/shortlink/service/redirect"
-	webhookSvc "github.com/shafikshaon/shortlink/service/webhook"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/repository"
+	clickSvc "github.com/shafikshaon/linkbee/service/click"
+	geoSvc "github.com/shafikshaon/linkbee/service/geo"
+	pixelSvc "github.com/shafikshaon/linkbee/service/pixel"
+	redirectSvc "github.com/shafikshaon/linkbee/service/redirect"
+	webhookSvc "github.com/shafikshaon/linkbee/service/webhook"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type RedirectHandler struct {

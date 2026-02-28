@@ -9,14 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/request"
-	analyticsSvc "github.com/shafikshaon/shortlink/service/analytics"
-	"github.com/shafikshaon/shortlink/transport"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/request"
+	analyticsSvc "github.com/shafikshaon/linkbee/service/analytics"
+	"github.com/shafikshaon/linkbee/transport"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 type AnalyticsHandler struct {

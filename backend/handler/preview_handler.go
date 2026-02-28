@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	linkSvc "github.com/shafikshaon/shortlink/service/link"
-	previewSvc "github.com/shafikshaon/shortlink/service/preview"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	linkSvc "github.com/shafikshaon/linkbee/service/link"
+	previewSvc "github.com/shafikshaon/linkbee/service/preview"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type PreviewHandler struct {

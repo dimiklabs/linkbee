@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 var (

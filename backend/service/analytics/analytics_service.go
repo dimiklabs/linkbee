@@ -9,11 +9,11 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/dto"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/repository"
-	"github.com/shafikshaon/shortlink/response"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/dto"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/repository"
+	"github.com/shafikshaon/linkbee/response"
 )
 
 type AnalyticsServiceI interface {

@@ -6,8 +6,8 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	reportSvc "github.com/shafikshaon/shortlink/service/reporting"
+	"github.com/shafikshaon/linkbee/logger"
+	reportSvc "github.com/shafikshaon/linkbee/service/reporting"
 )
 
 // ReportWorker triggers scheduled analytics report delivery every minute.

@@ -1,4 +1,4 @@
-module github.com/shafikshaon/shortlink
+module github.com/shafikshaon/linkbee
 
 go 1.26.0
 

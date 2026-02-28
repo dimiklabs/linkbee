@@ -8,10 +8,10 @@ import (
 	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/server"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/server"
+	"github.com/shafikshaon/linkbee/util"
 )
 
 func serveRest(ctx context.Context) {

@@ -6,11 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/request"
-	bioSvc "github.com/shafikshaon/shortlink/service/bio"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/request"
+	bioSvc "github.com/shafikshaon/linkbee/service/bio"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type BioHandler struct {

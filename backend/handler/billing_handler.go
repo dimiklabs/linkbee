@@ -8,11 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/middlewares"
-	"github.com/shafikshaon/shortlink/repository"
-	billingSvc "github.com/shafikshaon/shortlink/service/billing"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/middlewares"
+	"github.com/shafikshaon/linkbee/repository"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type BillingHandler struct {

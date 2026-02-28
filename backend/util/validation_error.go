@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 
-	"github.com/shafikshaon/shortlink/constant"
+	"github.com/shafikshaon/linkbee/constant"
 )
 
 func TranslateValidationError(err error) (string, string) {

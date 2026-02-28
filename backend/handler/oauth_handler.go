@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/config"
-	"github.com/shafikshaon/shortlink/constant"
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/response"
-	githubSrv "github.com/shafikshaon/shortlink/service/github"
-	googleSrv "github.com/shafikshaon/shortlink/service/google"
-	"github.com/shafikshaon/shortlink/transport"
+	"github.com/shafikshaon/linkbee/config"
+	"github.com/shafikshaon/linkbee/constant"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/response"
+	githubSrv "github.com/shafikshaon/linkbee/service/github"
+	googleSrv "github.com/shafikshaon/linkbee/service/google"
+	"github.com/shafikshaon/linkbee/transport"
 )
 
 type OAuthHandler struct {

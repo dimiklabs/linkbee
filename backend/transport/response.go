@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/shafikshaon/shortlink/logger"
+	"github.com/shafikshaon/linkbee/logger"
 )
 
 type StandardResponse struct {

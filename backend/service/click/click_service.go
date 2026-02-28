@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
-	"github.com/shafikshaon/shortlink/logger"
-	"github.com/shafikshaon/shortlink/model"
-	"github.com/shafikshaon/shortlink/util"
+	"github.com/shafikshaon/linkbee/logger"
+	"github.com/shafikshaon/linkbee/model"
+	"github.com/shafikshaon/linkbee/util"
 	"github.com/valkey-io/valkey-go/valkeycompat"
 )
 

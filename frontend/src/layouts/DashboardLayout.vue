@@ -23,7 +23,7 @@
         <div class="nav-logo-icon">
           <span class="material-symbols-outlined">link</span>
         </div>
-        <span class="nav-logo-text">Shortlink</span>
+        <span class="nav-logo-text">Linkbee</span>
       </div>
 
       <md-divider />
