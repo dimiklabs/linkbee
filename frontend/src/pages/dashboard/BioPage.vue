@@ -24,11 +24,18 @@
       </div>
     </div>
 
-    <!-- Copy Public URL -->
-    <div v-if="bioPage && bioPage.is_published && bioPage.username">
-      <button class="btn-text" @click="copyBioUrl">
+    <!-- Share URL bar (always shown when username exists) -->
+    <div v-if="bioPage && bioPage.username" class="share-url-bar">
+      <span class="material-symbols-outlined share-url-bar__icon">link</span>
+      <a :href="publicUrl" target="_blank" rel="noopener noreferrer" class="share-url-bar__url">
+        {{ publicUrl }}
+      </a>
+      <a :href="publicUrl" target="_blank" rel="noopener noreferrer" class="share-url-bar__open" title="Open in new tab">
+        <span class="material-symbols-outlined">open_in_new</span>
+      </a>
+      <button class="share-url-bar__copy" :class="{ copied: bioCopied }" @click="copyBioUrl" :title="bioCopied ? 'Copied!' : 'Copy link'">
         <span class="material-symbols-outlined">{{ bioCopied ? 'check' : 'content_copy' }}</span>
-        {{ bioCopied ? 'Copied!' : 'Copy public URL' }}
+        {{ bioCopied ? 'Copied!' : 'Copy' }}
       </button>
     </div>
 
@@ -1500,5 +1507,79 @@ function onDragEnd() { dragFrom = -1; }
 .panel-slide-leave-to {
   opacity: 0;
   transform: translateY(-6px);
+}
+
+/* ── Share URL bar ─────────────────────────────────────────────────────────── */
+.share-url-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-surface-container-low);
+
+  &__icon {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+    flex-shrink: 0;
+  }
+
+  &__url {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--md-sys-color-primary);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  &__open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--md-sys-color-on-surface-variant);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background .15s;
+
+    .material-symbols-outlined { font-size: 18px; }
+    &:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); }
+  }
+
+  &__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 14px;
+    height: 32px;
+    border: 1.5px solid var(--md-sys-color-outline-variant);
+    border-radius: 8px;
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s, border-color .15s, color .15s;
+
+    .material-symbols-outlined { font-size: 16px; }
+
+    &:hover { background: var(--md-sys-color-surface-container); color: var(--md-sys-color-on-surface); }
+
+    &.copied {
+      border-color: #16a34a;
+      color: #16a34a;
+      background: rgba(22, 163, 74, .06);
+    }
+  }
 }
 </style>
