@@ -18,6 +18,7 @@ import (
 	"github.com/shafikshaon/shortlink/logger"
 	"github.com/shafikshaon/shortlink/model"
 	"github.com/shafikshaon/shortlink/repository"
+	"github.com/shafikshaon/shortlink/util"
 )
 
 type UserServiceI interface {
@@ -75,7 +76,7 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 	logger.InfoCtx(ctx, "Creating new user",
 		zap.String("email", req.Email))
 
-	email := strings.ToLower(strings.TrimSpace(req.Email))
+	email := util.NormalizeEmail(req.Email)
 
 	exists, err := s.userRepo.ExistsByEmail(ctx, email)
 	if err != nil {
@@ -165,7 +166,7 @@ func (s *UserService) GetUserByEmail(ctx context.Context, email string) (*model.
 	logger.DebugCtx(ctx, "Getting user by email",
 		zap.String("email", email))
 
-	user, err := s.userRepo.GetByEmail(ctx, strings.ToLower(strings.TrimSpace(email)))
+	user, err := s.userRepo.GetByEmail(ctx, util.NormalizeEmail(email))
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			logger.WarnCtx(ctx, "User not found by email",
@@ -573,7 +574,7 @@ func (s *UserService) IsEmailAvailable(ctx context.Context, email string, exclud
 	logger.DebugCtx(ctx, "Checking email availability",
 		zap.String("email", email))
 
-	available, err := s.userRepo.IsEmailAvailable(ctx, strings.ToLower(strings.TrimSpace(email)), excludeID)
+	available, err := s.userRepo.IsEmailAvailable(ctx, util.NormalizeEmail(email), excludeID)
 	if err != nil {
 		logger.ErrorCtx(ctx, "Failed to check email availability",
 			zap.String("email", email),

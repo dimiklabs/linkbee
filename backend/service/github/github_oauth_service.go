@@ -367,12 +367,13 @@ func (s *GitHubOAuthService) findOrCreateUser(ctx context.Context, githubUser *G
 	}
 
 	// User not found by GitHub ID, try to find by email
-	user, err = s.userRepo.GetByEmail(ctx, githubUser.Email)
+	normalizedEmail := util.NormalizeEmail(githubUser.Email)
+	user, err = s.userRepo.GetByEmail(ctx, normalizedEmail)
 	if err == nil {
 		// User exists with this email but GitHub is not linked
 		// Require explicit linking from profile
 		logger.WarnCtx(ctx, "User exists but GitHub account not linked",
-			zap.String("email", githubUser.Email),
+			zap.String("email", normalizedEmail),
 			zap.String("user_id", user.ID.String()))
 		return nil, dto.NewServiceError(constant.ErrCodeOAuthNotLinked, constant.ErrMsgOAuthLoginNotLinked, http.StatusForbidden)
 	}
@@ -384,7 +385,7 @@ func (s *GitHubOAuthService) findOrCreateUser(ctx context.Context, githubUser *G
 
 	// Create a new user
 	logger.InfoCtx(ctx, "Creating new user from GitHub OAuth",
-		zap.String("email", githubUser.Email))
+		zap.String("email", normalizedEmail))
 
 	now := time.Now()
 
@@ -392,7 +393,7 @@ func (s *GitHubOAuthService) findOrCreateUser(ctx context.Context, githubUser *G
 	firstName, lastName := parseGitHubName(githubUser.Name, githubUser.Login)
 
 	newUser := &model.User{
-		Email:                githubUser.Email,
+		Email:                normalizedEmail,
 		FirstName:            firstName,
 		LastName:             lastName,
 		ProfilePicture:       githubUser.AvatarURL,

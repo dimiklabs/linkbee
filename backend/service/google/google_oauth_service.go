@@ -309,12 +309,13 @@ func (s *GoogleOAuthService) findOrCreateUser(ctx context.Context, googleUser *G
 	}
 
 	// User not found by Google ID, try to find by email
-	user, err = s.userRepo.GetByEmail(ctx, googleUser.Email)
+	normalizedEmail := util.NormalizeEmail(googleUser.Email)
+	user, err = s.userRepo.GetByEmail(ctx, normalizedEmail)
 	if err == nil {
 		// User exists with this email but Google is not linked
 		// Require explicit linking from profile
 		logger.WarnCtx(ctx, "User exists but Google account not linked",
-			zap.String("email", googleUser.Email),
+			zap.String("email", normalizedEmail),
 			zap.String("user_id", user.ID.String()))
 		return nil, dto.NewServiceError(constant.ErrCodeOAuthNotLinked, constant.ErrMsgOAuthLoginNotLinked, http.StatusForbidden)
 	}
@@ -326,11 +327,11 @@ func (s *GoogleOAuthService) findOrCreateUser(ctx context.Context, googleUser *G
 
 	// Create a new user
 	logger.InfoCtx(ctx, "Creating new user from Google OAuth",
-		zap.String("email", googleUser.Email))
+		zap.String("email", normalizedEmail))
 
 	now := time.Now()
 	newUser := &model.User{
-		Email:                googleUser.Email,
+		Email:                normalizedEmail,
 		FirstName:            googleUser.GivenName,
 		LastName:             googleUser.FamilyName,
 		ProfilePicture:       googleUser.Picture,
