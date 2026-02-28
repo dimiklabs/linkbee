@@ -426,8 +426,11 @@ async function loadReports() {
 
 async function loadLinks() {
   try {
-    const resp = await linksApi.list(1, 200);
-    allLinks.value = resp.data?.links ?? [];
+    const [p1, p2] = await Promise.all([
+      linksApi.list(1, 100),
+      linksApi.list(2, 100),
+    ]);
+    allLinks.value = [...(p1.data?.links ?? []), ...(p2.data?.links ?? [])];
   } catch {
     // non-fatal
   }
