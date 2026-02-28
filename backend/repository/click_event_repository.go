@@ -189,10 +189,16 @@ func (r *ClickEventRepository) GetUniqueClickCountByLinkID(ctx context.Context, 
 }
 
 func (r *ClickEventRepository) GetTimeSeriesData(ctx context.Context, linkID uuid.UUID, from, to time.Time, granularity string) ([]TimeSeriesPoint, error) {
-	// Validate granularity — default to day
-	allowed := map[string]bool{"hour": true, "day": true, "week": true, "month": true}
-	if !allowed[granularity] {
-		granularity = "day"
+	// Validate granularity — default to day.
+	bucketWidths := map[string]string{
+		"hour":  "1 hour",
+		"day":   "1 day",
+		"week":  "7 days",
+		"month": "1 month",
+	}
+	width, ok := bucketWidths[granularity]
+	if !ok {
+		width = "1 day"
 	}
 
 	type result struct {
@@ -200,14 +206,16 @@ func (r *ClickEventRepository) GetTimeSeriesData(ctx context.Context, linkID uui
 		Count     int64
 	}
 
-	// Granularity is already validated above, safe to use in SQL
-	truncExpr := fmt.Sprintf("date_trunc('%s', clicked_at)", granularity)
+	// time_bucket is the TimescaleDB-native equivalent of date_trunc.  It
+	// cooperates with the hypertable's chunk exclusion so only partitions
+	// overlapping [from, to] are scanned.
+	bucketExpr := fmt.Sprintf("time_bucket('%s', clicked_at)", width)
 	var rows []result
 	if err := r.replicaDB.WithContext(ctx).
 		Model(&model.ClickEvent{}).
-		Select(truncExpr+" AS timestamp, COUNT(*) AS count").
+		Select(bucketExpr+" AS timestamp, COUNT(*) AS count").
 		Where("link_id = ? AND clicked_at BETWEEN ? AND ?", linkID, from, to).
-		Group(truncExpr).
+		Group(bucketExpr).
 		Order("timestamp ASC").
 		Scan(&rows).Error; err != nil {
 		logger.ErrorCtx(ctx, "Failed to get time series data",
@@ -733,9 +741,15 @@ func (r *ClickEventRepository) GetTopReferrersByUserID(ctx context.Context, user
 }
 
 func (r *ClickEventRepository) GetTimeSeriesByUserID(ctx context.Context, userID uuid.UUID, from, to time.Time, granularity string) ([]TimeSeriesPoint, error) {
-	allowed := map[string]bool{"hour": true, "day": true, "week": true, "month": true}
-	if !allowed[granularity] {
-		granularity = "day"
+	bucketWidths := map[string]string{
+		"hour":  "1 hour",
+		"day":   "1 day",
+		"week":  "7 days",
+		"month": "1 month",
+	}
+	width, ok := bucketWidths[granularity]
+	if !ok {
+		width = "1 day"
 	}
 
 	type result struct {
@@ -743,14 +757,14 @@ func (r *ClickEventRepository) GetTimeSeriesByUserID(ctx context.Context, userID
 		Count     int64
 	}
 
-	truncExpr := fmt.Sprintf("date_trunc('%s', click_events.clicked_at)", granularity)
+	bucketExpr := fmt.Sprintf("time_bucket('%s', click_events.clicked_at)", width)
 	var rows []result
 	if err := r.replicaDB.WithContext(ctx).
 		Model(&model.ClickEvent{}).
-		Select(truncExpr+" AS timestamp, COUNT(*) AS count").
+		Select(bucketExpr+" AS timestamp, COUNT(*) AS count").
 		Joins("JOIN links ON links.id = click_events.link_id").
 		Where("links.user_id = ? AND links.deleted_at IS NULL AND click_events.clicked_at BETWEEN ? AND ?", userID, from, to).
-		Group(truncExpr).
+		Group(bucketExpr).
 		Order("timestamp ASC").
 		Scan(&rows).Error; err != nil {
 		logger.ErrorCtx(ctx, "Failed to get time series by user",

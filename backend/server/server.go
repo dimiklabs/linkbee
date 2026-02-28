@@ -41,6 +41,9 @@ func NewServer(ctx context.Context, cfg *config.Config) *Server {
 		if err := db.RunAutoMigration(srv.MasterDB); err != nil {
 			logger.Error("Auto migration failed", zap.Error(err))
 		}
+		if err := db.SetupTimescale(srv.MasterDB); err != nil {
+			logger.Error("TimescaleDB setup failed", zap.Error(err))
+		}
 	}
 
 	replicaDB, err := db.NewPostgresDB(ctx, cfg.DB, true)

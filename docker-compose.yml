@@ -1,8 +1,8 @@
 services:
 
-  # ─── PostgreSQL 18 ────────────────────────────────────────────────────────
+  # ─── TimescaleDB (PostgreSQL 17 + time-series extension) ─────────────────
   postgres:
-    image: postgres:18-alpine
+    image: timescale/timescaledb:latest-pg17
     container_name: linkbee-postgres
     restart: unless-stopped
     environment:
