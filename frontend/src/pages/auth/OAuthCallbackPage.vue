@@ -9,7 +9,6 @@
         <p class="oauth-callback__message">{{ errorMessage }}</p>
         <div class="oauth-callback__actions">
           <router-link to="/login" class="btn-filled">Back to Login</router-link>
-          <router-link v-if="showSignupHint" to="/signup" class="btn-outlined">Create Account</router-link>
         </div>
       </div>
 
@@ -32,10 +31,9 @@ const authStore = useAuthStore();
 
 const error = ref(false);
 const errorMessage = ref('');
-const showSignupHint = ref(false);
 
 const ERROR_MESSAGES: Record<string, string> = {
-  OAUTH_NOT_LINKED: 'This account is not linked to any existing account. Please sign up first or log in with your email and password.',
+  EMAIL_ALREADY_EXISTS: 'An account with this email already exists. Please sign in with your email and password.',
   OAUTH_DISABLED: 'OAuth sign-in is currently disabled. Please use email and password.',
   OAUTH_INVALID_STATE: 'The sign-in session expired or is invalid. Please try again.',
   OAUTH_TOKEN_EXCHANGE: 'Could not complete sign-in with the provider. Please try again.',
@@ -54,7 +52,6 @@ onMounted(async () => {
   if (oauthError) {
     error.value = true;
     errorMessage.value = ERROR_MESSAGES[oauthError] ?? oauthMessage ?? 'Sign-in failed. Please try again.';
-    showSignupHint.value = oauthError === 'OAUTH_NOT_LINKED';
     return;
   }
 

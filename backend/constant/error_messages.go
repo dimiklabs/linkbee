@@ -43,8 +43,9 @@ const (
 	ErrMsgOAuthInvalidToken  = "Invalid OAuth token"
 	ErrMsgOAuthEmailNotFound = "Email not provided by OAuth provider"
 	ErrMsgOAuthProviderError = "OAuth provider returned an error"
-	ErrMsgOAuthAccountLinked    = "This Google account is already linked to another user"
-	ErrMsgOAuthLoginNotLinked   = "This OAuth account is not linked to any existing account. Please sign up first."
+	ErrMsgOAuthAccountLinked      = "This Google account is already linked to another user"
+	ErrMsgOAuthLoginNotLinked     = "This OAuth account is not linked to any existing account. Please sign up first."
+	ErrMsgOAuthEmailAlreadyExists = "An account with this email already exists. Please sign in with your email and password."
 
 	// GitHub OAuth
 	ErrMsgGitHubOAuthDisabled = "GitHub authentication is not enabled"

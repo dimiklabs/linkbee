@@ -58,13 +58,8 @@
         <!-- Error Banner -->
         <div v-if="errorMessage" class="m3-error-banner error-banner-anim">
           <span class="material-symbols-outlined err-icon">error</span>
-          <div class="err-body">
-            <span class="md-body-medium err-text">{{ errorMessage }}</span>
-            <router-link v-if="showSignupHint" to="/signup" class="err-signup-link">
-              Create an account
-            </router-link>
-          </div>
-          <button class="btn-icon" @click="errorMessage = ''; showSignupHint = false">
+          <span class="md-body-medium err-text">{{ errorMessage }}</span>
+          <button class="btn-icon" @click="errorMessage = ''">
             <span class="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -255,7 +250,7 @@ const route = useRoute();
 const authStore = useAuthStore();
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
-  OAUTH_NOT_LINKED: 'This account is not linked to any existing account. Please sign up first or log in with your email and password.',
+  EMAIL_ALREADY_EXISTS: 'An account with this email already exists. Please sign in with your email and password.',
   OAUTH_DISABLED: 'OAuth sign-in is currently disabled. Please use email and password.',
   OAUTH_INVALID_STATE: 'The sign-in session expired or is invalid. Please try again.',
   OAUTH_TOKEN_EXCHANGE: 'Could not complete sign-in with the provider. Please try again.',
@@ -268,7 +263,6 @@ const OAUTH_ERROR_MESSAGES: Record<string, string> = {
 const loading = ref(false);
 const oauthLoading = ref(false);
 const errorMessage = ref('');
-const showSignupHint = ref(false);
 const showPassword = ref(false);
 const showReactivationModal = ref(false);
 const reactivationLoading = ref(false);
@@ -299,7 +293,6 @@ onMounted(() => {
   const oauthMessage = route.query.oauth_message as string | undefined;
   if (oauthError) {
     errorMessage.value = OAUTH_ERROR_MESSAGES[oauthError] ?? oauthMessage ?? 'Sign-in failed. Please try again.';
-    showSignupHint.value = oauthError === 'OAUTH_NOT_LINKED';
   }
 });
 
@@ -621,26 +614,8 @@ async function handleReactivation() {
   flex-shrink: 0;
 }
 
-.err-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
 .err-text {
-  display: block;
-}
-
-.err-signup-link {
-  color: var(--md-sys-color-on-error-container);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  text-decoration: underline;
-
-  &:hover {
-    opacity: 0.8;
-  }
+  flex: 1;
 }
 
 .field-wrap {

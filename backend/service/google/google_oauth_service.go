@@ -312,12 +312,12 @@ func (s *GoogleOAuthService) findOrCreateUser(ctx context.Context, googleUser *G
 	normalizedEmail := util.NormalizeEmail(googleUser.Email)
 	user, err = s.userRepo.GetByEmail(ctx, normalizedEmail)
 	if err == nil {
-		// User exists with this email but Google is not linked
-		// Require explicit linking from profile
-		logger.WarnCtx(ctx, "User exists but Google account not linked",
+		// An account with this email exists but is not linked to Google.
+		// Tell the user to sign in with their existing method.
+		logger.WarnCtx(ctx, "Google OAuth: email already registered with another provider",
 			zap.String("email", normalizedEmail),
 			zap.String("user_id", user.ID.String()))
-		return nil, dto.NewServiceError(constant.ErrCodeOAuthNotLinked, constant.ErrMsgOAuthLoginNotLinked, http.StatusForbidden)
+		return nil, dto.NewServiceError(constant.ErrCodeEmailAlreadyExists, constant.ErrMsgOAuthEmailAlreadyExists, http.StatusConflict)
 	}
 
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
