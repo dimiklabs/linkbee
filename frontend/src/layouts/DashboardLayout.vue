@@ -56,14 +56,13 @@
           <span class="nav-label">Links</span>
         </router-link>
 
-        <router-link class="nav-item active active"
- to="/dashboard/analytics"
- 
- active-
- exact-active-
- :title="uiStore.sidebarCollapsed ? 'Analytics' : undefined"
- @click="uiStore.closeSidebar()"
- >
+        <router-link
+          to="/dashboard/analytics"
+          class="nav-item"
+          :class="{ active: $route.path.startsWith('/dashboard/analytics') }"
+          :title="uiStore.sidebarCollapsed ? 'Analytics' : undefined"
+          @click="uiStore.closeSidebar()"
+        >
           <span class="material-symbols-outlined nav-icon">bar_chart</span>
           <span class="nav-label">Analytics</span>
         </router-link>

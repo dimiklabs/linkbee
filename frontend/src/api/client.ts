@@ -33,7 +33,7 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     const requestUrl = originalRequest?.url || '';
 
-    const skipRefreshUrls = ['/auth/login'];
+    const skipRefreshUrls = ['/auth/login', '/auth/refresh', '/auth/logout'];
     const shouldSkipRefresh = skipRefreshUrls.some(url => requestUrl.endsWith(url));
 
     if (error.response?.status === 401 && !originalRequest._retry && !shouldSkipRefresh) {
