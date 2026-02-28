@@ -20,10 +20,9 @@
     >
       <!-- Logo / header -->
       <div class="nav-header">
-        <div class="nav-logo-icon">
-          <span class="material-symbols-outlined">link</span>
-        </div>
-        <span class="nav-logo-text">Linkbee</span>
+        <router-link to="/" class="nav-logo-link" :title="uiStore.sidebarCollapsed ? 'Linkbee — Home' : undefined">
+          <img src="/logo.png" alt="Linkbee" class="nav-logo-img" />
+        </router-link>
       </div>
 
       <md-divider />
@@ -477,36 +476,32 @@ $appbar-height: 64px;
   flex-shrink: 0;
 }
 
-.nav-logo-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+.nav-logo-link {
   display: flex;
   align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: opacity 0.15s;
 
-  .material-symbols-outlined {
-    font-size: 22px;
-  }
+  &:hover { opacity: 0.8; }
+  &:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 3px; }
 }
 
-.nav-logo-text {
-  font-weight: 700;
-  font-size: 17px;
-  letter-spacing: -0.2px;
-  white-space: nowrap;
-  color: var(--md-sys-color-on-surface);
-  transition: opacity 0.15s $ease-standard;
+.nav-logo-img {
+  height: 36px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  display: block;
+  transition: max-width 0.25s $ease-standard, opacity 0.15s $ease-standard;
 }
 
-// Collapsed: hide logo text
-.nav-drawer.collapsed .nav-logo-text {
-  opacity: 0;
-  pointer-events: none;
-  width: 0;
+// Collapsed: shrink logo to icon-only width
+.nav-drawer.collapsed .nav-logo-img {
+  max-width: 36px;
+  object-fit: cover;
+  object-position: left center;
 }
 
 // ── Scrollable nav body ────────────────────────────────────────────────────
