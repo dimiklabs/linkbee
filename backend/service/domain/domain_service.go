@@ -98,7 +98,7 @@ func (s *domainService) ListDomains(ctx context.Context, userID uuid.UUID) ([]Do
 	return result, nil
 }
 
-// VerifyDomain checks the DNS TXT record _shortlink-verify.<domain> for the stored token.
+// VerifyDomain checks the DNS TXT record _linkbee-verify.<domain> for the stored token.
 func (s *domainService) VerifyDomain(ctx context.Context, id, userID uuid.UUID) (*DomainResponse, *dto.ServiceError) {
 	d, err := s.repo.GetByID(ctx, id, userID)
 	if err != nil {
@@ -108,7 +108,7 @@ func (s *domainService) VerifyDomain(ctx context.Context, id, userID uuid.UUID) 
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to fetch domain")
 	}
 
-	txtHost := "_shortlink-verify." + d.Domain
+	txtHost := "_linkbee-verify." + d.Domain
 	verified := checkTXTRecord(txtHost, d.VerifyToken)
 
 	newStatus := model.DomainStatusFailed
@@ -123,7 +123,7 @@ func (s *domainService) VerifyDomain(ctx context.Context, id, userID uuid.UUID) 
 
 	if !verified {
 		return toResponse(d), dto.NewBadRequestError(constant.ErrCodeDomainVerifyFailed,
-			"TXT record not found — add _shortlink-verify."+d.Domain+" = "+d.VerifyToken)
+			"TXT record not found — add _linkbee-verify."+d.Domain+" = "+d.VerifyToken)
 	}
 
 	return toResponse(d), nil

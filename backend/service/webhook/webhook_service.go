@@ -316,7 +316,7 @@ func (s *webhookService) TestWebhook(ctx context.Context, webhookID, userID uuid
 		"event":     "test",
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"data": map[string]any{
-			"message": "This is a test delivery from Shortlink.",
+			"message": "This is a test delivery from Linkbee.",
 		},
 	}
 	body, _ := json.Marshal(payload)

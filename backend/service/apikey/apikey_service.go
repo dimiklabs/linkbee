@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	keyPrefix    = "sl_"
+	keyPrefix    = "lb_"
 	keyBodyBytes = 32 // 32 random bytes → 64 hex chars → total key ≈ 67 chars
 	prefixLen    = 12 // first 12 chars stored for fast DB lookup
 )
@@ -147,7 +147,7 @@ func (s *apiKeyService) Validate(ctx context.Context, rawKey string) (*Validated
 	}, nil
 }
 
-// generateKey creates a new key: "sl_" + hex(32 random bytes).
+// generateKey creates a new key: "lb_" + hex(32 random bytes).
 func generateKey() (string, error) {
 	b := make([]byte, keyBodyBytes)
 	if _, err := rand.Read(b); err != nil {

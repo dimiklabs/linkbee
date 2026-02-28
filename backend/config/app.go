@@ -28,7 +28,7 @@ func LoadAppConfig(_ context.Context) *AppConfig {
 	viper.SetDefault("FRONTEND_URL", "http://localhost:3000")
 	viper.SetDefault("LOG_FILE_PATH", "")
 	viper.SetDefault("JWT_SECRET", "")
-	viper.SetDefault("JWT_ISSUER", "shortlink-auth")
+	viper.SetDefault("JWT_ISSUER", "linkbee-auth")
 	viper.SetDefault("JWT_ACCESS_EXPIRY_MINUTES", 15)
 	viper.SetDefault("JWT_REFRESH_EXPIRY_DAYS", 7)
 	viper.SetDefault("MAX_SESSIONS", 5)

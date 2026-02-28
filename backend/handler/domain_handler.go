@@ -94,7 +94,7 @@ func (h *DomainHandler) AddDomain(c *gin.Context) {
 // VerifyDomain godoc
 //
 //	@Summary		Verify a custom domain
-//	@Description	Triggers a DNS TXT record check for the domain. The record _shortlink-verify.<domain> must contain the verify_token.
+//	@Description	Triggers a DNS TXT record check for the domain. The record _linkbee-verify.<domain> must contain the verify_token.
 //	@Tags			domains
 //	@Produce		json
 //	@Param			id	path	string	true	"Domain ID"

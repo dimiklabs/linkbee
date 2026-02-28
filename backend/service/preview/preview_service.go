@@ -92,7 +92,7 @@ func fetchOGData(rawURL string) (*PreviewData, error) {
 	if err != nil {
 		return &PreviewData{}, nil
 	}
-	req.Header.Set("User-Agent", "Shortlink-Preview/1.0 (+https://shortlink.app)")
+	req.Header.Set("User-Agent", "Linkbee-Preview/1.0 (+https://linkbee.app)")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8")
 
 	resp, err := previewHTTPClient.Do(req)

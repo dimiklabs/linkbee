@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const ipHashSalt = "shortlink-ip-salt-v1"
+const ipHashSalt = "linkbee-ip-salt-v1"
 
 // HashIP creates a salted SHA-256 hash of an IP address for GDPR-compliant storage.
 func HashIP(ip string) string {

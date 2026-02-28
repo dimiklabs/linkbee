@@ -347,7 +347,7 @@ func probeURL(ctx context.Context, rawURL string) (status string, statusCode int
 	if err != nil {
 		return response.HealthStatusError, 0
 	}
-	req.Header.Set("User-Agent", "shortlink-health-monitor/1.0")
+	req.Header.Set("User-Agent", "linkbee-health-monitor/1.0")
 
 	resp, err := healthHTTPClient.Do(req)
 	if err != nil {
@@ -362,7 +362,7 @@ func probeURL(ctx context.Context, rawURL string) (status string, statusCode int
 	if resp.StatusCode == http.StatusMethodNotAllowed || resp.StatusCode == http.StatusNotImplemented {
 		getReq, gErr := http.NewRequestWithContext(checkCtx, http.MethodGet, rawURL, nil)
 		if gErr == nil {
-			getReq.Header.Set("User-Agent", "shortlink-health-monitor/1.0")
+			getReq.Header.Set("User-Agent", "linkbee-health-monitor/1.0")
 			if getResp, gErr2 := healthHTTPClient.Do(getReq); gErr2 == nil {
 				resp.StatusCode = getResp.StatusCode
 				getResp.Body.Close()

@@ -4,7 +4,7 @@ run:
 	go run main.go
 
 build:
-	go build -o bin/shortlink main.go
+	go build -o bin/linkbee main.go
 
 dev:
 	air

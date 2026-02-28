@@ -149,7 +149,7 @@ func (h *ExportHandler) ExportData(c *gin.Context) {
 		return
 	}
 
-	filename := fmt.Sprintf("shortlink-data-%s.json", time.Now().UTC().Format("2006-01-02"))
+	filename := fmt.Sprintf("linkbee-data-%s.json", time.Now().UTC().Format("2006-01-02"))
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
 	c.Data(http.StatusOK, "application/json; charset=utf-8", payload)
 }
