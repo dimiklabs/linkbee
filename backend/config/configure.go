@@ -22,7 +22,6 @@ type Config struct {
 	Email     *EmailConfig
 	Google    *GoogleOAuthConfig
 	GitHub    *GitHubOAuthConfig
-	Facebook  *FacebookOAuthConfig
 	RateLimit *RateLimitConfig
 	Session   *SessionConfig
 	Link      *LinkConfig
@@ -65,7 +64,6 @@ func NewConfig(ctx context.Context) *Config {
 			Email:     LoadEmailConfig(ctx),
 			Google:    LoadGoogleOAuthConfig(ctx),
 			GitHub:    LoadGitHubOAuthConfig(ctx),
-			Facebook:  LoadFacebookOAuthConfig(ctx),
 			RateLimit: LoadRateLimitConfig(ctx),
 			Session:   LoadSessionConfig(ctx),
 			Link:      LoadLinkConfig(ctx),

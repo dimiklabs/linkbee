@@ -40,6 +40,44 @@ func AuthOrAPIKeyMiddleware(
 			return
 		}
 
+		// ── Query-param token path (for <img src> endpoints like /qr) ─────────
+		if tokenParam := c.Query("token"); tokenParam != "" {
+			claims, err := util.ValidateAccessToken(tokenParam, cfg.JWTSecret, cfg.JWTIssuer)
+			if err != nil {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+					"error_code":  "UNAUTHORIZED",
+					"description": "Invalid or expired token",
+					"request_id":  requestID,
+				})
+				return
+			}
+			if tokenBlacklistRepo != nil {
+				blacklisted, bErr := tokenBlacklistRepo.IsBlacklisted(c.Request.Context(), claims.ID)
+				if bErr != nil {
+					c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+						"error_code":  "INTERNAL_SERVER_ERROR",
+						"description": "Failed to validate token",
+						"request_id":  requestID,
+					})
+					return
+				}
+				if blacklisted {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+						"error_code":  "UNAUTHORIZED",
+						"description": "Token has been revoked",
+						"request_id":  requestID,
+					})
+					return
+				}
+			}
+			c.Set(ContextKeyUserID, claims.UserID)
+			c.Set(ContextKeyEmail, claims.Email)
+			c.Set(ContextKeyRole, claims.Role)
+			c.Set(ContextKeyJTI, claims.ID)
+			c.Next()
+			return
+		}
+
 		// ── JWT Bearer path ───────────────────────────────────────────────────
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {

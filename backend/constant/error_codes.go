@@ -51,10 +51,6 @@ const (
 	ErrCodeGitHubOAuthDisabled = "GITHUB_OAUTH_DISABLED"
 	ErrCodeGitHubAccountLinked = "GITHUB_ACCOUNT_ALREADY_LINKED"
 
-	// Facebook OAuth
-	ErrCodeFacebookOAuthDisabled = "FACEBOOK_OAUTH_DISABLED"
-	ErrCodeFacebookAccountLinked = "FACEBOOK_ACCOUNT_ALREADY_LINKED"
-
 	// Rate Limiting
 	ErrCodeRateLimited = "RATE_LIMITED"
 

@@ -30,10 +30,9 @@ type Session struct {
 }
 
 const (
-	LoginMethodLocal    = "local"
-	LoginMethodGoogle   = "google"
-	LoginMethodGitHub   = "github"
-	LoginMethodFacebook = "facebook"
+	LoginMethodLocal  = "local"
+	LoginMethodGoogle = "google"
+	LoginMethodGitHub = "github"
 )
 
 func (Session) TableName() string {

@@ -21,7 +21,6 @@ type User struct {
 	AuthProvider         string         `gorm:"type:varchar(20);default:'local';not null" json:"auth_provider"`
 	GoogleID             *string        `gorm:"type:varchar(255);uniqueIndex" json:"-"`
 	GitHubID             *string        `gorm:"type:varchar(255);uniqueIndex" json:"-"`
-	FacebookID           *string        `gorm:"type:varchar(255);uniqueIndex" json:"-"`
 	EmailVerified        bool           `gorm:"default:false;not null" json:"email_verified"`
 	EmailVerifiedAt      *time.Time     `gorm:"type:timestamptz" json:"email_verified_at,omitempty"`
 	LastLogin            *time.Time     `gorm:"type:timestamptz" json:"last_login,omitempty"`
@@ -34,10 +33,9 @@ type User struct {
 }
 
 const (
-	AuthProviderLocal    = "local"
-	AuthProviderGoogle   = "google"
-	AuthProviderGitHub   = "github"
-	AuthProviderFacebook = "facebook"
+	AuthProviderLocal  = "local"
+	AuthProviderGoogle = "google"
+	AuthProviderGitHub = "github"
 )
 
 func (User) TableName() string {

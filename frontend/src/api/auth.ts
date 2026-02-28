@@ -153,7 +153,6 @@ export const authApi = {
 export const oauthApi = {
   getGoogleLoginUrl: () => `${apiClient.defaults.baseURL}/auth/google`,
   getGitHubLoginUrl: () => `${apiClient.defaults.baseURL}/auth/github`,
-  getFacebookLoginUrl: () => `${apiClient.defaults.baseURL}/auth/facebook`,
 };
 
 export default authApi;

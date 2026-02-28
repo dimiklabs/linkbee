@@ -50,10 +50,6 @@ const (
 	ErrMsgGitHubOAuthDisabled = "GitHub authentication is not enabled"
 	ErrMsgGitHubAccountLinked = "This GitHub account is already linked to another user"
 
-	// Facebook OAuth
-	ErrMsgFacebookOAuthDisabled = "Facebook authentication is not enabled"
-	ErrMsgFacebookAccountLinked = "This Facebook account is already linked to another user"
-
 	// Rate Limiting
 	ErrMsgAccountRateLimited = "Too many failed login attempts for this account. Please try again later."
 	ErrMsgIPRateLimited      = "Too many failed login attempts from this IP address. Please try again later."

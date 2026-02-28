@@ -22,7 +22,6 @@ import (
 	clickSvc "github.com/shafikshaon/shortlink/service/click"
 	demoSvc "github.com/shafikshaon/shortlink/service/demo"
 	emailSrv "github.com/shafikshaon/shortlink/service/email"
-	facebookSrv "github.com/shafikshaon/shortlink/service/facebook"
 	folderSvc "github.com/shafikshaon/shortlink/service/folder"
 	geoSvc "github.com/shafikshaon/shortlink/service/geo"
 	georoutingSvc "github.com/shafikshaon/shortlink/service/georouting"
@@ -87,8 +86,6 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	rateLimitService     := rateLimitSrv.NewRateLimitService(rateLimitRepo, s.Cfg.RateLimit)
 	googleOAuthService   := googleSrv.NewGoogleOAuthService(s.Cfg.Google, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
 	githubOAuthService   := githubSrv.NewGitHubOAuthService(s.Cfg.GitHub, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
-	facebookOAuthService := facebookSrv.NewFacebookOAuthService(s.Cfg.Facebook, s.Cfg.App, userRepo, oauthStateRepo, sessionRepo, tokenBlacklistRepo)
-
 	billingService     := billingSvc.NewBillingService(subRepo, s.Cfg.Billing)
 	planEnforcer       := billingSvc.NewPlanEnforcer(subRepo, linkRepo, apiKeyRepo, webhookRepo)
 	adminService       := adminSvc.NewAdminService(userRepo, linkRepo, clickEventRepo)
@@ -138,7 +135,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	healthHandler    := handler.NewHealthHandler(healthService)
 	authHandler      := handler.NewAuthHandler(authService, rateLimitService, auditService)
-	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService, facebookOAuthService)
+	oauthHandler     := handler.NewOAuthHandler(googleOAuthService, githubOAuthService)
 	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
 	adminHandler     := handler.NewAdminHandler(adminService, s.Cfg.App)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)
@@ -197,9 +194,6 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			v1Public.GET("/auth/google/callback", oauthHandler.GoogleCallback)
 			v1Public.GET("/auth/github", oauthHandler.GitHubLogin)
 			v1Public.GET("/auth/github/callback", oauthHandler.GitHubCallback)
-			v1Public.GET("/auth/facebook", oauthHandler.FacebookLogin)
-			v1Public.GET("/auth/facebook/callback", oauthHandler.FacebookCallback)
-
 			// Demo shorten (rate-limited per IP)
 			v1Public.POST("/demo/shorten", demoHandler.ShortenURL)
 

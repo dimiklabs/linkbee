@@ -22,7 +22,6 @@ type UserRepositoryI interface {
 	GetByPhone(ctx context.Context, phone string) (*model.User, error)
 	GetByGoogleID(ctx context.Context, googleID string) (*model.User, error)
 	GetByGitHubID(ctx context.Context, githubID string) (*model.User, error)
-	GetByFacebookID(ctx context.Context, facebookID string) (*model.User, error)
 
 	// Read - list
 	GetAll(ctx context.Context, offset, limit int) ([]model.User, int64, error)
@@ -164,17 +163,6 @@ func (r *UserRepository) GetByGitHubID(ctx context.Context, githubID string) (*m
 	return &user, nil
 }
 
-func (r *UserRepository) GetByFacebookID(ctx context.Context, facebookID string) (*model.User, error) {
-	logger.DebugCtx(ctx, "Fetching user by Facebook ID")
-
-	var user model.User
-	if err := r.replicaDB.WithContext(ctx).Where("facebook_id = ?", facebookID).First(&user).Error; err != nil {
-		logger.DebugCtx(ctx, "User not found by Facebook ID",
-			zap.Error(err))
-		return nil, err
-	}
-	return &user, nil
-}
 
 // --------------- Read - list ---------------
 

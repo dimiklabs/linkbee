@@ -204,14 +204,6 @@
               <span class="oauth-letter oauth-letter--github">GH</span>
               <span class="oauth-label">GitHub</span>
             </button>
-            <button class="btn-outlined oauth-btn" 
- :disabled="oauthLoading"
- @click="handleOAuth('facebook')"
- 
- >
-              <span class="oauth-letter oauth-letter--facebook">FB</span>
-              <span class="oauth-label">Facebook</span>
-            </button>
           </div>
 
           <!-- Sign in link -->
@@ -341,17 +333,12 @@ async function handleSignup() {
   }
 }
 
-async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
+async function handleOAuth(provider: 'google' | 'github') {
   oauthLoading.value = true;
   try {
-    let url = '';
-    if (provider === 'google') {
-      url = oauthApi.getGoogleLoginUrl();
-    } else if (provider === 'github') {
-      url = oauthApi.getGitHubLoginUrl();
-    } else if (provider === 'facebook') {
-      url = oauthApi.getFacebookLoginUrl();
-    }
+    const url = provider === 'google'
+      ? oauthApi.getGoogleLoginUrl()
+      : oauthApi.getGitHubLoginUrl();
     if (url) {
       window.location.href = url;
     }
@@ -694,7 +681,6 @@ async function handleOAuth(provider: 'google' | 'github' | 'facebook') {
 
 .oauth-letter--google { color: #4285F4; }
 .oauth-letter--github { color: #24292e; }
-.oauth-letter--facebook { color: #1877F2; }
 
 .oauth-label {
   margin-left: 4px;
