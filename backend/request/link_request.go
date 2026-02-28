@@ -3,7 +3,7 @@ package request
 // CreateLinkRequest is the request body for creating a new short link.
 type CreateLinkRequest struct {
 	DestinationURL string   `json:"destination_url" binding:"required,url"`
-	Slug           string   `json:"slug" binding:"omitempty,min=3,max=20,alphanum"`
+	Slug           string   `json:"slug" binding:"omitempty,min=5,max=100,alphanum"`
 	Title          string   `json:"title" binding:"omitempty,max=500"`
 	Password       string   `json:"password" binding:"omitempty,min=4,max=128"`
 	ExpiresAt      *string  `json:"expires_at"` // RFC3339 string, nullable
@@ -55,7 +55,7 @@ type BulkLinkActionRequest struct {
 // CloneLinkRequest is the optional request body for cloning an existing link.
 type CloneLinkRequest struct {
 	NewTitle string `json:"new_title" binding:"omitempty,max=500"`
-	NewSlug  string `json:"new_slug"  binding:"omitempty,min=3,max=20,alphanum"`
+	NewSlug  string `json:"new_slug"  binding:"omitempty,min=5,max=100,alphanum"`
 }
 
 // DemoShortenRequest is for the unauthenticated demo shorten endpoint.

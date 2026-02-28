@@ -46,7 +46,7 @@
           <!-- Slug label below QR -->
           <div class="qr-slug-label">
             <span class="material-symbols-outlined" style="font-size:14px">link</span>
-            <span class="qr-slug-text">sl.ink/<strong>{{ slug }}</strong></span>
+            <span class="qr-slug-text">linkbee.click/<strong>{{ slug }}</strong></span>
           </div>
 
           <!-- Color presets -->

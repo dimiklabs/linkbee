@@ -21,7 +21,7 @@
       </div>
 
       <!-- ═══════════════════════════════════════════════════ -->
-      <!-- CREATE MODE — URL + slug only                       -->
+      <!-- CREATE MODE — URL + custom slug                     -->
       <!-- ═══════════════════════════════════════════════════ -->
       <template v-if="!isEditMode">
         <div class="field-group">
@@ -56,12 +56,39 @@
           </div>
         </div>
 
+        <!-- Custom slug (collapsible) -->
+        <div class="advanced-section slug-section">
+          <button class="advanced-toggle" type="button" @click="slugExpanded = !slugExpanded">
+            <span class="material-symbols-outlined advanced-toggle-icon">tag</span>
+            <span class="advanced-toggle-label">Custom Slug</span>
+            <span class="adv-badge adv-badge--optional">Optional</span>
+            <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': slugExpanded }">
+              expand_more
+            </span>
+          </button>
+          <div v-if="slugExpanded" class="advanced-fields">
+            <md-outlined-text-field
+              :value="form.slug"
+              @input="onSlugInput(($event.target as HTMLInputElement).value)"
+              label="mycustomslug"
+              placeholder="mycustomslug"
+              maxlength="100"
+              class="field-full"
+              :error="!!validationErrors.slug"
+              :error-text="validationErrors.slug"
+              supporting-text="5–100 alphanumeric characters. Leave blank to auto-generate."
+            >
+              <span class="material-symbols-outlined" slot="leading-icon">tag</span>
+            </md-outlined-text-field>
+          </div>
+        </div>
+
         <!-- Short link preview -->
         <div v-if="form.destination_url && !validationErrors.destination_url" class="short-link-preview">
           <span class="material-symbols-outlined short-link-preview-icon">bolt</span>
           <span class="short-link-preview-label">Your short link</span>
           <div class="short-link-preview-pill">
-            <span class="short-link-preview-domain">sl.ink/</span>
+            <span class="short-link-preview-domain">linkbee.click/</span>
             <span class="short-link-preview-slug">{{ form.slug || '·····' }}</span>
           </div>
         </div>
@@ -98,7 +125,7 @@
             <span class="material-symbols-outlined short-link-preview-icon">bolt</span>
             <span class="short-link-preview-label">Short link will look like</span>
             <div class="short-link-preview-pill">
-              <span class="short-link-preview-domain">sl.ink/</span>
+              <span class="short-link-preview-domain">linkbee.click/</span>
               <span class="short-link-preview-slug">{{ form.slug || '·····' }}</span>
             </div>
           </div>
@@ -317,6 +344,7 @@ const validationErrors = ref<Record<string, string>>({});
 const tagsInput = ref('');
 const utmExpanded = ref(false);
 const advancedExpanded = ref(false);
+const slugExpanded = ref(false);
 
 // Duplicate detection
 const duplicateLink = ref<LinkResponse | null>(null);
@@ -390,6 +418,7 @@ function resetForm() {
   ignoreDuplicate.value = false;
   utmExpanded.value = false;
   advancedExpanded.value = false;
+  slugExpanded.value = false;
   if (duplicateTimer) { clearTimeout(duplicateTimer); duplicateTimer = null; }
 }
 
@@ -400,6 +429,13 @@ async function runDuplicateCheck(url: string) {
   } finally {
     checkingDuplicate.value = false;
   }
+}
+
+function onSlugInput(value: string) {
+  // Strip anything that isn't alphanumeric
+  form.value.slug = value.replace(/[^a-zA-Z0-9]/g, '');
+  // Clear slug error as user types
+  if (validationErrors.value.slug) validationErrors.value.slug = '';
 }
 
 function validate(): boolean {
@@ -413,6 +449,16 @@ function validate(): boolean {
   } catch {
     validationErrors.value.destination_url = 'Please enter a valid URL.';
     return false;
+  }
+  if (!isEditMode.value && form.value.slug) {
+    if (form.value.slug.length < 5) {
+      validationErrors.value.slug = 'Slug must be at least 5 characters.';
+      return false;
+    }
+    if (form.value.slug.length > 100) {
+      validationErrors.value.slug = 'Slug must be 100 characters or fewer.';
+      return false;
+    }
   }
   return true;
 }
@@ -470,7 +516,13 @@ async function handleSave() {
     emit('saved', savedLink);
     hide();
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'An unexpected error occurred.';
+    const anyErr = err as { response?: { data?: { code?: string; message?: string } } };
+    const data = anyErr?.response?.data;
+    if (data?.code === 'SLUG_ALREADY_TAKEN') {
+      validationErrors.value.slug = 'This slug is already taken. Please try another.';
+    } else {
+      error.value = data?.message || (err instanceof Error ? err.message : 'An unexpected error occurred.');
+    }
   } finally {
     saving.value = false;
   }
@@ -596,34 +648,7 @@ defineExpose({ show, hide });
 .short-link-preview-slug   { color: var(--md-sys-color-primary); font-weight: 700; }
 
 /* ── Custom slug section (create mode) ────────────────── */
-.slug-wrap {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-
-.slug-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--md-sys-color-on-surface-variant);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.optional-badge {
-  font-size: 0.65rem;
-  font-weight: 500;
-  padding: 1px 7px;
-  border-radius: 10px;
-  background: var(--md-sys-color-surface-container-highest);
-  color: var(--md-sys-color-on-surface-variant);
-  text-transform: none;
-  letter-spacing: 0;
-}
+.slug-section { margin-top: 12px; }
 
 /* ── Form sections (edit mode) ────────────────────────── */
 .form-section {

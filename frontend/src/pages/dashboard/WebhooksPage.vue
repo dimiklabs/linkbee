@@ -313,7 +313,7 @@ def verify(secret: str, body: bytes, header: str) -> bool:
   "data": {
     "id": "...",
     "slug": "abc12",
-    "short_url": "https://sl.ink/abc12",
+    "short_url": "https://linkbee.click/abc12",
     "destination_url": "https://example.com"
   }
 }</code></pre>

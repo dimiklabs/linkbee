@@ -12,7 +12,7 @@ type Link struct {
 	ID             uuid.UUID      `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
 	UserID         uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"`
 	FolderID       *uuid.UUID     `gorm:"type:uuid;index" json:"folder_id,omitempty"`
-	Slug           string         `gorm:"type:varchar(20);uniqueIndex;not null" json:"slug"`
+	Slug           string         `gorm:"type:varchar(100);uniqueIndex;not null" json:"slug"`
 	DestinationURL string         `gorm:"type:text;not null" json:"destination_url"`
 	Title          string         `gorm:"type:varchar(500)" json:"title,omitempty"`
 	PasswordHash   string         `gorm:"type:varchar(255)" json:"-"`
