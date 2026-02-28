@@ -66,29 +66,6 @@
           </div>
         </div>
 
-        <!-- Advanced Options (collapsible) -->
-        <div class="advanced-section">
-          <button class="advanced-toggle" type="button" @click="advancedExpanded = !advancedExpanded">
-            <span class="material-symbols-outlined advanced-toggle-icon">tune</span>
-            <span class="advanced-toggle-label">Advanced Options</span>
-            <span class="adv-badge">Custom slug</span>
-            <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': advancedExpanded }">
-              expand_more
-            </span>
-          </button>
-          <div v-if="advancedExpanded" class="advanced-fields">
-            <md-outlined-text-field
-              :value="form.slug"
-              @input="form.slug = ($event.target as HTMLInputElement).value"
-              label="Custom slug"
-              placeholder="my-custom-slug"
-              class="field-full"
-              supporting-text="Leave blank to auto-generate a short code."
-            >
-              <span class="material-symbols-outlined" slot="leading-icon">tag</span>
-            </md-outlined-text-field>
-          </div>
-        </div>
       </template>
 
       <!-- ═══════════════════════════════════════════════════ -->

@@ -96,68 +96,27 @@
           <div class="demo-card">
             <div class="demo-card-header">
               <span class="material-symbols-outlined demo-card-icon">link</span>
-              <span class="demo-card-label">Try it now — paste any URL</span>
+              <span class="demo-card-label">Paste any URL to shorten it</span>
             </div>
 
-            <template v-if="!demoResult">
-              <div class="demo-input-row">
-                <md-outlined-text-field
-                  :value="demoUrl"
-                  @input="demoUrl = ($event.target as HTMLInputElement).value"
-                  label="Paste your long URL here..."
-                  type="url"
-                  class="demo-text-field"
-                  @keyup.enter="handleDemoShorten"
-                />
-                <button class="btn-filled demo-shorten-btn" 
- :disabled="demoLoading || !demoUrl"
- @click="handleDemoShorten"
- 
- >
-                  <md-circular-progress
-                    v-if="demoLoading"
-                    indeterminate
-                    class="demo-spinner"
-                  />
-                  <span v-if="!demoLoading">Shorten</span>
-                  <span v-else>Working...</span>
-                </button>
-              </div>
-              <div v-if="demoError" class="demo-error">{{ demoError }}</div>
-            </template>
-
-            <!-- Result state -->
-            <div v-else class="demo-result-box">
-              <div class="demo-result-success-row">
-                <span class="material-symbols-outlined demo-result-check">check_circle</span>
-                <span class="demo-result-ready">Your short link is ready!</span>
-              </div>
-              <div class="demo-result-row">
-                <a
-                  :href="demoResult"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="demo-short-url"
-                >
-                  {{ demoResult }}
-                </a>
-                <button class="btn-tonal demo-copy-btn" @click="copyDemoResult" >
-                  <span class="material-symbols-outlined demo-copy-icon">
-                    {{ demoCopied ? 'check_circle' : 'content_copy' }}
-                  </span>
-                  {{ demoCopied ? 'Copied!' : 'Copy' }}
-                </button>
-              </div>
-              <div class="demo-reset-row">
-                <button class="btn-text" @click="resetDemo">
-                  <span class="material-symbols-outlined demo-back-icon">arrow_back</span>
-                  Shorten another URL
-                </button>
-              </div>
+            <div class="demo-input-row">
+              <md-outlined-text-field
+                :value="demoUrl"
+                @input="demoUrl = ($event.target as HTMLInputElement).value"
+                label="Paste your long URL here..."
+                type="url"
+                class="demo-text-field"
+                @keyup.enter="handleDemoShorten"
+              />
+              <button class="btn-filled demo-shorten-btn" :disabled="!demoUrl" @click="handleDemoShorten">
+                Shorten
+              </button>
             </div>
           </div>
-          <p class="demo-hint">No account required to try</p>
+          <p class="demo-hint">Free to sign up · No credit card needed</p>
         </div>
+
+        <LoginModal ref="loginModalRef" />
       </div>
     </section>
 
@@ -287,7 +246,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
-import linksApi from '@/api/links';
+import LoginModal from '@/components/LoginModal.vue';
 
 // ── Scroll-aware navbar ────────────────────────────────────────────────────────
 const isScrolled = ref(false);
@@ -322,44 +281,11 @@ function handleMobileNav(id: string) {
 
 // ── Demo widget ────────────────────────────────────────────────────────────────
 const demoUrl = ref('');
-const demoLoading = ref(false);
-const demoError = ref('');
-const demoResult = ref('');
-const demoCopied = ref(false);
+const loginModalRef = ref<InstanceType<typeof LoginModal> | null>(null);
 
-async function handleDemoShorten() {
+function handleDemoShorten() {
   if (!demoUrl.value) return;
-
-  demoLoading.value = true;
-  demoError.value = '';
-
-  try {
-    const response = await linksApi.demoShorten({ destination_url: demoUrl.value });
-    demoResult.value = response.data?.short_url ?? '';
-  } catch (err: unknown) {
-    const anyErr = err as { response?: { data?: { message?: string; description?: string } } };
-    const data = anyErr?.response?.data;
-    demoError.value = data?.message || data?.description || 'Failed to shorten URL. Please try again.';
-  } finally {
-    demoLoading.value = false;
-  }
-}
-
-async function copyDemoResult() {
-  try {
-    await navigator.clipboard.writeText(demoResult.value);
-    demoCopied.value = true;
-    setTimeout(() => { demoCopied.value = false; }, 2500);
-  } catch {
-    // clipboard not available
-  }
-}
-
-function resetDemo() {
-  demoResult.value = '';
-  demoUrl.value = '';
-  demoError.value = '';
-  demoCopied.value = false;
+  loginModalRef.value?.show();
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────────
