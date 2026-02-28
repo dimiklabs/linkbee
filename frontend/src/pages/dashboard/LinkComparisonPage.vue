@@ -302,8 +302,14 @@ const barChartOption = computed(() => {
 // ── Actions ───────────────────────────────────────────────────────────────────
 async function loadLinks() {
   try {
-    const resp = await linksApi.list(1, 200);
-    allLinks.value = resp.data?.links ?? [];
+    // Backend max limit is 100; fetch two pages to cover up to 200 links
+    const [p1, p2] = await Promise.all([
+      linksApi.list(1, 100),
+      linksApi.list(2, 100),
+    ]);
+    const page1 = p1.data?.links ?? [];
+    const page2 = p2.data?.links ?? [];
+    allLinks.value = [...page1, ...page2];
   } catch {
     // non-fatal; selector stays empty
   }
