@@ -7,8 +7,8 @@
       <p class="page-subtitle">Select 2–5 links to compare their performance side by side.</p>
     </div>
 
-    <!-- Filters Card -->
-    <div class="an-card">
+    <!-- Filters Card — overflow:visible so the dropdown escapes the card -->
+    <div class="an-card an-card--selector">
       <div class="an-card-header">
         <div class="an-card-icon an-card-icon--primary">
           <span class="material-symbols-outlined">compare_arrows</span>
@@ -17,21 +17,27 @@
       </div>
       <div class="an-card-body">
         <div class="filter-grid">
-          <!-- Link selector -->
+
+          <!-- Link multi-selector -->
           <div class="link-selector-wrapper">
-            <div class="form-field__label" style="margin-bottom:8px;">
-              Links <span style="font-weight:400;color:var(--md-sys-color-on-surface-variant);">(select 2–5)</span>
+            <div class="form-label">
+              Links <span class="form-label__hint">(select 2–5)</span>
             </div>
             <div class="link-selector" :class="{ open: selectorOpen }" ref="selectorRef">
               <div class="selector-trigger" @click="selectorOpen = !selectorOpen">
                 <span v-if="selectedIds.length === 0" class="selector-placeholder">Choose links to compare…</span>
-                <span v-else class="selector-value">{{ selectedIds.length }} link{{ selectedIds.length > 1 ? 's' : '' }} selected</span>
-                <span class="material-symbols-outlined selector-chevron">expand_more</span>
+                <span v-else class="selector-value">
+                  <span class="selector-count">{{ selectedIds.length }}</span>
+                  link{{ selectedIds.length > 1 ? 's' : '' }} selected
+                </span>
+                <span class="material-symbols-outlined selector-chevron"
+                  :class="{ 'selector-chevron--open': selectorOpen }">expand_more</span>
               </div>
               <div v-if="selectorOpen" class="selector-dropdown">
-                <div style="padding:0.5rem 0.75rem 0.25rem;">
+                <div class="selector-search">
+                  <span class="material-symbols-outlined selector-search-icon">search</span>
                   <input
-                    class="form-input"
+                    class="selector-search-input"
                     :value="linkSearch"
                     @input="linkSearch = ($event.target as HTMLInputElement).value"
                     placeholder="Search links…"
@@ -43,7 +49,10 @@
                     v-for="link in filteredLinks"
                     :key="link.id"
                     class="selector-option"
-                    :class="{ disabled: !selectedIds.includes(link.id) && selectedIds.length >= 5 }"
+                    :class="{
+                      disabled: !selectedIds.includes(link.id) && selectedIds.length >= 5,
+                      selected: selectedIds.includes(link.id),
+                    }"
                     @click.stop
                   >
                     <input
@@ -53,7 +62,7 @@
                       :disabled="!selectedIds.includes(link.id) && selectedIds.length >= 5"
                       class="selector-checkbox"
                     />
-                    <div style="min-width:0;">
+                    <div class="selector-option__text">
                       <div class="selector-option__title">{{ link.title || link.slug }}</div>
                       <div class="selector-option__url">{{ link.short_url }}</div>
                     </div>
@@ -64,43 +73,45 @@
             </div>
           </div>
 
-          <!-- From date -->
+          <!-- Date range -->
           <label class="date-field">
-            <span class="date-field__label">From</span>
-            <input type="date" class="form-input form-input--date" :value="filterFrom" @input="filterFrom = ($event.target as HTMLInputElement).value" />
+            <span class="form-label">From</span>
+            <input type="date" class="form-input" :value="filterFrom"
+              @input="filterFrom = ($event.target as HTMLInputElement).value" />
           </label>
 
-          <!-- To date -->
           <label class="date-field">
-            <span class="date-field__label">To</span>
-            <input type="date" class="form-input form-input--date" :value="filterTo" @input="filterTo = ($event.target as HTMLInputElement).value" />
+            <span class="form-label">To</span>
+            <input type="date" class="form-input" :value="filterTo"
+              @input="filterTo = ($event.target as HTMLInputElement).value" />
           </label>
 
           <!-- Actions -->
           <div class="filter-actions">
-            <button class="btn-filled"
-              style="flex:1;"
+            <button class="btn-filled compare-btn"
               :disabled="loading || selectedIds.length < 2"
               @click="runComparison"
             >
               <span v-if="loading" class="css-spinner css-spinner--sm css-spinner--white"></span>
+              <span class="material-symbols-outlined" v-else style="font-size:18px;">compare_arrows</span>
               Compare
             </button>
-            <button class="btn-icon" v-if="result" title="Export to CSV" @click="exportCSV">
+            <button v-if="result" class="btn-icon export-btn" title="Export to CSV" @click="exportCSV">
               <span class="material-symbols-outlined">download</span>
             </button>
           </div>
         </div>
 
         <!-- Validation hint -->
-        <div v-if="selectedIds.length === 1" class="validation-hint">
-          <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;">info</span>
-          Select at least one more link to run a comparison.
-        </div>
+        <p v-if="selectedIds.length === 1" class="validation-hint">
+          <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;">info</span>
+          Select at least one more link to enable comparison.
+        </p>
 
         <!-- Selected chips -->
         <div v-if="selectedIds.length > 0" class="selected-chips">
           <span v-for="id in selectedIds" :key="id" class="sel-chip">
+            <span class="material-symbols-outlined sel-chip__icon">link</span>
             {{ getLinkLabel(id) }}
             <button class="sel-chip__remove" @click="selectedIds = selectedIds.filter(s => s !== id)">
               <span class="material-symbols-outlined">close</span>
@@ -112,8 +123,11 @@
 
     <!-- Error state -->
     <div v-if="error" class="error-banner">
-      <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
-      <span style="flex:1;">{{ error }}</span>
+      <span class="material-symbols-outlined">error</span>
+      <span>{{ error }}</span>
+      <button class="btn-icon" style="margin-left:auto;" @click="error = ''">
+        <span class="material-symbols-outlined">close</span>
+      </button>
     </div>
 
     <!-- Loading -->
@@ -123,27 +137,30 @@
     </div>
 
     <template v-if="!loading && result">
-      <!-- Period info -->
+      <!-- Period info bar -->
       <div class="period-info">
-        Showing data from <strong>{{ formatDate(result.from) }}</strong> to <strong>{{ formatDate(result.to) }}</strong>
+        <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;opacity:.6;">calendar_today</span>
+        Showing <strong>{{ formatDate(result.from) }}</strong> – <strong>{{ formatDate(result.to) }}</strong>
         &nbsp;·&nbsp; <strong>{{ result.span_days }}</strong> day{{ result.span_days !== 1 ? 's' : '' }}
       </div>
 
       <!-- Bar chart — total clicks -->
       <div class="an-card">
         <div class="an-card-header">
+          <span class="material-symbols-outlined an-card-header-icon">bar_chart</span>
           <span class="an-card-title">Total Clicks Comparison</span>
         </div>
-        <div style="padding:1rem;">
-          <VChart :option="barChartOption" style="height:260px;" autoresize />
+        <div class="chart-wrap">
+          <VChart :option="barChartOption" style="height:280px;" autoresize />
         </div>
       </div>
 
       <!-- Comparison table -->
       <div class="an-card">
         <div class="an-card-header">
+          <span class="material-symbols-outlined an-card-header-icon">table_chart</span>
           <div>
-            <span class="an-card-title">Detailed Breakdown</span>
+            <div class="an-card-title">Detailed Breakdown</div>
             <div class="an-card-subtitle">Per-link metrics for the selected period</div>
           </div>
         </div>
@@ -152,9 +169,9 @@
             <thead>
               <tr>
                 <th>Link</th>
-                <th style="text-align:right;">Total Clicks</th>
-                <th style="text-align:right;">Unique Clicks</th>
-                <th style="text-align:right;">Clicks / Day</th>
+                <th class="text-right">Total Clicks</th>
+                <th class="text-right">Unique Clicks</th>
+                <th class="text-right">Clicks / Day</th>
                 <th>Top Referrer</th>
                 <th>Top Country</th>
                 <th>Top Browser</th>
@@ -172,25 +189,13 @@
                     </div>
                   </div>
                 </td>
-                <td style="text-align:right;font-weight:600;">{{ link.total_clicks.toLocaleString() }}</td>
-                <td style="text-align:right;">{{ link.unique_clicks.toLocaleString() }}</td>
-                <td style="text-align:right;">{{ link.clicks_per_day.toFixed(1) }}</td>
-                <td>
-                  <span v-if="link.top_referrer" class="m3-badge m3-badge--primary">{{ link.top_referrer }}</span>
-                  <span v-else class="cell-muted">—</span>
-                </td>
-                <td>
-                  <span v-if="link.top_country" class="m3-badge m3-badge--primary">{{ link.top_country }}</span>
-                  <span v-else class="cell-muted">—</span>
-                </td>
-                <td>
-                  <span v-if="link.top_browser" class="m3-badge m3-badge--primary">{{ link.top_browser }}</span>
-                  <span v-else class="cell-muted">—</span>
-                </td>
-                <td>
-                  <span v-if="link.top_device" class="m3-badge m3-badge--primary">{{ link.top_device }}</span>
-                  <span v-else class="cell-muted">—</span>
-                </td>
+                <td class="text-right fw-600">{{ link.total_clicks.toLocaleString() }}</td>
+                <td class="text-right">{{ link.unique_clicks.toLocaleString() }}</td>
+                <td class="text-right">{{ link.clicks_per_day.toFixed(1) }}</td>
+                <td><span v-if="link.top_referrer" class="m3-badge m3-badge--primary">{{ link.top_referrer }}</span><span v-else class="cell-muted">—</span></td>
+                <td><span v-if="link.top_country" class="m3-badge m3-badge--primary">{{ link.top_country }}</span><span v-else class="cell-muted">—</span></td>
+                <td><span v-if="link.top_browser" class="m3-badge m3-badge--primary">{{ link.top_browser }}</span><span v-else class="cell-muted">—</span></td>
+                <td><span v-if="link.top_device" class="m3-badge m3-badge--primary">{{ link.top_device }}</span><span v-else class="cell-muted">—</span></td>
               </tr>
             </tbody>
           </table>
@@ -270,15 +275,11 @@ const barChartOption = computed(() => {
   return {
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { data: ['Total Clicks', 'Unique Clicks'], bottom: 0 },
-    grid: { left: '3%', right: '4%', bottom: 40, top: 20, containLabel: true },
+    grid: { left: '3%', right: '4%', bottom: 48, top: 20, containLabel: true },
     xAxis: {
       type: 'category',
       data: labels,
-      axisLabel: {
-        overflow: 'truncate',
-        width: 80,
-        interval: 0,
-      },
+      axisLabel: { overflow: 'truncate', width: 100, interval: 0 },
     },
     yAxis: { type: 'value' },
     series: [
@@ -301,11 +302,10 @@ const barChartOption = computed(() => {
 // ── Actions ───────────────────────────────────────────────────────────────────
 async function loadLinks() {
   try {
-    // Fetch up to 200 links for the selector
     const resp = await linksApi.list(1, 200);
     allLinks.value = resp.data?.links ?? [];
   } catch {
-    // non-fatal; selector just stays empty
+    // non-fatal; selector stays empty
   }
 }
 
@@ -331,15 +331,9 @@ function exportCSV() {
   if (!result.value) return;
   const headers = ['Slug', 'Title', 'Total Clicks', 'Unique Clicks', 'Clicks/Day', 'Top Referrer', 'Top Country', 'Top Browser', 'Top Device'];
   const rows = result.value.links.map((l) => [
-    l.slug,
-    l.title ?? '',
-    l.total_clicks,
-    l.unique_clicks,
-    l.clicks_per_day.toFixed(2),
-    l.top_referrer ?? '',
-    l.top_country ?? '',
-    l.top_browser ?? '',
-    l.top_device ?? '',
+    l.slug, l.title ?? '', l.total_clicks, l.unique_clicks,
+    l.clicks_per_day.toFixed(2), l.top_referrer ?? '',
+    l.top_country ?? '', l.top_browser ?? '', l.top_device ?? '',
   ]);
   const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -351,7 +345,6 @@ function exportCSV() {
   URL.revokeObjectURL(url);
 }
 
-// Close dropdown when clicking outside
 function handleClickOutside(e: MouseEvent) {
   if (selectorRef.value && !selectorRef.value.contains(e.target as Node)) {
     selectorOpen.value = false;
@@ -380,11 +373,7 @@ onUnmounted(() => {
 }
 
 /* ── Page header ──────────────────────────────────────────────────────────── */
-.page-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.page-header { display: flex; flex-direction: column; gap: 4px; }
 
 .page-title {
   margin: 0;
@@ -406,6 +395,15 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+/* Filter card needs overflow:visible so the dropdown can escape */
+.an-card--selector {
+  overflow: visible;
+
+  > .an-card-header {
+    border-radius: 13px 13px 0 0;
+  }
+}
+
 .an-card-header {
   display: flex;
   align-items: center;
@@ -415,9 +413,15 @@ onUnmounted(() => {
   background: var(--md-sys-color-surface-container-low);
 }
 
+.an-card-header-icon {
+  font-size: 18px;
+  color: var(--md-sys-color-primary);
+  flex-shrink: 0;
+}
+
 .an-card-icon {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -440,7 +444,7 @@ onUnmounted(() => {
 }
 
 .an-card-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--md-sys-color-on-surface-variant);
   margin-top: 2px;
 }
@@ -449,43 +453,49 @@ onUnmounted(() => {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+}
+
+.chart-wrap {
+  padding: 16px 20px 8px;
 }
 
 /* ── CSS Spinner ──────────────────────────────────────────────────────────── */
 .css-spinner {
   display: inline-block;
-  width: 20px;
-  height: 20px;
+  width: 20px; height: 20px;
   border: 2.5px solid var(--md-sys-color-outline-variant);
   border-top-color: var(--md-sys-color-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 
-  &--sm {
-    width: 16px;
-    height: 16px;
-    border-width: 2px;
-  }
-
-  &--white {
-    border-color: rgba(255,255,255,0.35);
-    border-top-color: #fff;
-  }
+  &--sm  { width: 16px; height: 16px; border-width: 2px; }
+  &--white { border-color: rgba(255,255,255,0.35); border-top-color: #fff; }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Form field ───────────────────────────────────────────────────────────── */
-.form-field__label {
-  font-size: 0.8rem;
+/* ── Form labels ──────────────────────────────────────────────────────────── */
+.form-label {
+  display: block;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--md-sys-color-on-surface-variant);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &__hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.7;
+  }
 }
 
+/* ── Form input ───────────────────────────────────────────────────────────── */
 .form-input {
   height: 40px;
   padding: 0 12px;
@@ -504,32 +514,20 @@ onUnmounted(() => {
     border-color: var(--md-sys-color-primary);
     box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
   }
-
-  &--date {
-    width: auto;
-    min-width: 150px;
-  }
 }
 
 /* ── Date field ───────────────────────────────────────────────────────────── */
 .date-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 
-  &__label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface-variant);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
+  .form-input { width: auto; min-width: 148px; }
 }
 
 /* ── Filter grid ──────────────────────────────────────────────────────────── */
 .filter-grid {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) auto auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 12px;
   align-items: end;
 
@@ -546,13 +544,29 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   align-items: flex-end;
-  padding-bottom: 2px;
+}
+
+.compare-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.export-btn {
+  height: 40px;
+  width: 40px;
+  flex-shrink: 0;
 }
 
 /* ── Validation hint ──────────────────────────────────────────────────────── */
 .validation-hint {
+  margin: 0;
   font-size: 0.8rem;
   color: #d97706;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* ── Selected chips ───────────────────────────────────────────────────────── */
@@ -560,63 +574,59 @@ onUnmounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 4px;
 }
 
 .sel-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 8px 4px 10px;
+  padding: 4px 6px 4px 8px;
   border-radius: 20px;
   background: var(--md-sys-color-secondary-container);
   color: var(--md-sys-color-on-secondary-container);
   font-size: 0.8rem;
   font-weight: 500;
-}
 
-.sel-chip__remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--md-sys-color-on-secondary-container);
-  padding: 0;
-  flex-shrink: 0;
+  &__icon { font-size: 13px; opacity: 0.7; }
 
-  &:hover { background: rgba(0,0,0,0.08); }
+  &__remove {
+    display: flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: transparent; border: none;
+    cursor: pointer;
+    color: var(--md-sys-color-on-secondary-container);
+    padding: 0; flex-shrink: 0;
 
-  .material-symbols-outlined { font-size: 14px; }
+    &:hover { background: rgba(0,0,0,0.1); }
+    .material-symbols-outlined { font-size: 13px; }
+  }
 }
 
 /* ── Link selector ────────────────────────────────────────────────────────── */
-.link-selector-wrapper {
-  min-width: 0;
-}
+.link-selector-wrapper { min-width: 0; }
 
-.link-selector {
-  position: relative;
-}
+.link-selector { position: relative; }
 
 .selector-trigger {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 12px;
   height: 40px;
   border: 1.5px solid var(--md-sys-color-outline-variant);
   border-radius: 8px;
   cursor: pointer;
   user-select: none;
   background: var(--md-sys-color-surface);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 
   &:hover { border-color: var(--md-sys-color-on-surface); }
+
+  .link-selector.open & {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.12);
+  }
 }
 
 .selector-placeholder {
@@ -627,25 +637,69 @@ onUnmounted(() => {
 .selector-value {
   font-size: 0.9375rem;
   color: var(--md-sys-color-on-surface);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.selector-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0 5px;
 }
 
 .selector-chevron {
   font-size: 18px;
   flex-shrink: 0;
   color: var(--md-sys-color-on-surface-variant);
+  transition: transform 0.2s ease;
+
+  &--open { transform: rotate(180deg); }
 }
 
 .selector-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
-  z-index: 400;
+  z-index: 500;
   border-radius: 12px;
-  overflow: hidden;
   background: var(--md-sys-color-surface);
   border: 1px solid var(--md-sys-color-outline-variant);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+  overflow: hidden;
+}
+
+.selector-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.selector-search-icon {
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.selector-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface);
+  font-size: 0.875rem;
+  font-family: inherit;
 }
 
 .selector-options {
@@ -657,20 +711,21 @@ onUnmounted(() => {
 .selector-option {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
+  gap: 10px;
+  padding: 9px 14px;
   cursor: pointer;
-  transition: background 0.12s;
+  transition: background 0.1s;
 
   &:hover { background: var(--md-sys-color-surface-container-low); }
 
-  &.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  &.selected { background: color-mix(in srgb, var(--md-sys-color-primary) 6%, transparent); }
+
+  &.disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &__text { min-width: 0; }
 
   &__title {
-    font-size: 0.8125rem;
+    font-size: 0.825rem;
     font-weight: 500;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -680,14 +735,16 @@ onUnmounted(() => {
 
   &__url {
     color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.7rem;
+    font-size: 0.72rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
 .selector-checkbox {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 16px; height: 16px;
   accent-color: var(--md-sys-color-primary);
   cursor: pointer;
 }
@@ -696,7 +753,7 @@ onUnmounted(() => {
   text-align: center;
   color: var(--md-sys-color-on-surface-variant);
   font-size: 0.875rem;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 /* ── Error banner ─────────────────────────────────────────────────────────── */
@@ -709,6 +766,7 @@ onUnmounted(() => {
   background: rgba(176, 0, 32, 0.08);
   border: 1px solid var(--md-sys-color-error);
   font-size: 0.875rem;
+  color: var(--md-sys-color-error);
 }
 
 /* ── Loading ──────────────────────────────────────────────────────────────── */
@@ -729,13 +787,14 @@ onUnmounted(() => {
 /* ── Period info ──────────────────────────────────────────────────────────── */
 .period-info {
   color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.875rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 /* ── Table ────────────────────────────────────────────────────────────────── */
-.m3-table-wrapper {
-  overflow-x: auto;
-}
+.m3-table-wrapper { overflow-x: auto; }
 
 .m3-table {
   width: 100%;
@@ -745,12 +804,14 @@ onUnmounted(() => {
   th {
     padding: 10px 16px;
     text-align: left;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: var(--md-sys-color-on-surface-variant);
     background: var(--md-sys-color-surface-container-low);
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   td {
@@ -760,106 +821,68 @@ onUnmounted(() => {
   }
 
   tbody tr:last-child td { border-bottom: none; }
-
   tbody tr:hover td { background: var(--md-sys-color-surface-container-low); }
 }
 
-.cell-muted {
-  color: var(--md-sys-color-on-surface-variant);
-  font-size: 0.8rem;
-}
+.text-right { text-align: right !important; }
+.fw-600 { font-weight: 600; }
+.cell-muted { color: var(--md-sys-color-on-surface-variant); font-size: 0.8rem; }
 
 /* ── Link cell ────────────────────────────────────────────────────────────── */
 .link-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 10px;
 
   &__title {
-    font-size: 0.875rem;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 0.875rem; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     max-width: 180px;
   }
 
-  &__slug {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.75rem;
-  }
+  &__slug { color: var(--md-sys-color-on-surface-variant); font-size: 0.72rem; }
 }
 
 /* ── Rank badge ───────────────────────────────────────────────────────────── */
 .rank-badge {
-  width: 24px;
-  height: 24px;
+  width: 24px; height: 24px;
   border-radius: 50%;
   color: #fff;
-  font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 
 /* ── M3 Badges ────────────────────────────────────────────────────────────── */
 .m3-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.7rem;
-  font-weight: 500;
-  padding: 0.15rem 0.6rem;
+  display: inline-flex; align-items: center;
+  font-size: 0.7rem; font-weight: 500;
+  padding: 0.15rem 0.55rem;
   border-radius: 6px;
   max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   vertical-align: middle;
 
-  &--primary {
-    background: rgba(99, 91, 255, 0.1);
-    color: var(--md-sys-color-primary);
-  }
-
-  &--neutral {
-    background: rgba(107, 114, 128, 0.1);
-    color: #6b7280;
-    border: 1px solid var(--md-sys-color-outline-variant);
-  }
+  &--primary { background: rgba(99, 91, 255, 0.1); color: var(--md-sys-color-primary); }
 }
 
 /* ── Empty state ──────────────────────────────────────────────────────────── */
 .empty-state-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 5rem 2rem; text-align: center;
 }
 
 .empty-icon {
-  width: 72px;
-  height: 72px;
+  width: 72px; height: 72px;
   border-radius: 20px;
   background: var(--md-sys-color-surface-container-low);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.25rem;
 
-  .material-symbols-outlined {
-    font-size: 2rem;
-    color: var(--md-sys-color-on-surface-variant);
-    opacity: 0.6;
-  }
+  .material-symbols-outlined { font-size: 2rem; color: var(--md-sys-color-on-surface-variant); opacity: 0.5; }
 }
 
 .empty-title {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 1.125rem; font-weight: 600;
   color: var(--md-sys-color-on-surface);
   margin-bottom: 0.5rem;
 }
@@ -867,7 +890,7 @@ onUnmounted(() => {
 .empty-desc {
   font-size: 0.875rem;
   color: var(--md-sys-color-on-surface-variant);
-  max-width: 400px;
-  margin: 0;
+  max-width: 380px; margin: 0;
+  line-height: 1.6;
 }
 </style>
