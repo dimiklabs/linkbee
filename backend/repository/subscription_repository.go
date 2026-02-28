@@ -12,7 +12,7 @@ import (
 
 type SubscriptionRepositoryI interface {
 	GetByUserID(ctx context.Context, userID uuid.UUID) (*model.Subscription, error)
-	GetByLemonSqueezySubID(ctx context.Context, lsSubID string) (*model.Subscription, error)
+	GetByPaddleSubID(ctx context.Context, paddleSubID string) (*model.Subscription, error)
 	Upsert(ctx context.Context, sub *model.Subscription) error
 }
 
@@ -33,9 +33,9 @@ func (r *SubscriptionRepository) GetByUserID(ctx context.Context, userID uuid.UU
 	return &sub, nil
 }
 
-func (r *SubscriptionRepository) GetByLemonSqueezySubID(ctx context.Context, lsSubID string) (*model.Subscription, error) {
+func (r *SubscriptionRepository) GetByPaddleSubID(ctx context.Context, paddleSubID string) (*model.Subscription, error) {
 	var sub model.Subscription
-	if err := r.replicaDB.WithContext(ctx).Where("lemon_squeezy_sub_id = ?", lsSubID).First(&sub).Error; err != nil {
+	if err := r.replicaDB.WithContext(ctx).Where("paddle_sub_id = ?", paddleSubID).First(&sub).Error; err != nil {
 		return nil, err
 	}
 	return &sub, nil
@@ -48,8 +48,7 @@ func (r *SubscriptionRepository) Upsert(ctx context.Context, sub *model.Subscrip
 			Columns: []clause.Column{{Name: "user_id"}},
 			DoUpdates: clause.AssignmentColumns([]string{
 				"plan_id", "status",
-				"lemon_squeezy_sub_id", "lemon_squeezy_order_id",
-				"lemon_squeezy_customer_id", "lemon_squeezy_variant_id",
+				"paddle_sub_id", "paddle_customer_id", "paddle_price_id",
 				"current_period_end", "cancelled_at", "updated_at",
 			}),
 		}).

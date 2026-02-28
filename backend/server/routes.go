@@ -174,7 +174,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	v1 := router.Group("/api/v1")
 	{
 		// Billing webhook (public — verified via HMAC signature)
-		v1.POST("/billing/webhook", billingHandler.LemonSqueezyWebhook)
+		v1.POST("/billing/webhook", billingHandler.PaddleWebhook)
 
 		// Public routes (no auth required)
 		v1Public := v1.Group("")

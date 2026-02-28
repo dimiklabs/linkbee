@@ -108,16 +108,16 @@ func (h *BillingHandler) fetchUsage(ctx context.Context, userID uuid.UUID) (link
 	return
 }
 
-// LemonSqueezyWebhook handles incoming Lemon Squeezy webhook events.
+// PaddleWebhook handles incoming Paddle webhook events.
 // The raw body is read before parsing so the HMAC signature can be verified.
-func (h *BillingHandler) LemonSqueezyWebhook(c *gin.Context) {
+func (h *BillingHandler) PaddleWebhook(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "failed to read request body")
 		return
 	}
 
-	signature := c.GetHeader("X-Signature")
+	signature := c.GetHeader("Paddle-Signature")
 	if svcErr := h.billingService.HandleWebhook(c.Request.Context(), body, signature); svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
