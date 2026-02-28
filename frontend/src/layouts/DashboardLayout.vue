@@ -20,7 +20,7 @@
     >
       <!-- Logo / header -->
       <div class="nav-header">
-        <router-link to="/" class="nav-logo-link" :title="uiStore.sidebarCollapsed ? 'Linkbee — Home' : undefined">
+        <router-link to="/dashboard" class="nav-logo-link" :title="uiStore.sidebarCollapsed ? 'Linkbee — Home' : undefined">
           <img src="/logo.png" alt="Linkbee" class="nav-logo-img" />
         </router-link>
       </div>
