@@ -156,22 +156,6 @@
             </div>
           </div>
 
-          <!-- Published toggle -->
-          <div :class="['published-toggle', form.is_published ? 'published-toggle--active' : '']">
-            <div>
-              <div class="published-toggle__label">Published</div>
-              <div class="published-toggle__hint">Make your bio page publicly accessible</div>
-            </div>
-            <label style="display:flex;align-items:center;cursor:pointer;">
-              <input
-                v-model="form.is_published"
-                type="checkbox"
-                role="switch"
-                style="width:2.5rem;height:1.25rem;cursor:pointer;accent-color:var(--md-sys-color-primary);"
-              />
-            </label>
-          </div>
-
           <div v-if="saveError" class="error-box">{{ saveError }}</div>
         </div>
       </div>
@@ -1145,33 +1129,6 @@ function onDragEnd() { dragFrom = -1; }
   gap: 8px;
 }
 
-/* ── Published toggle ─────────────────────────────────────────────────────── */
-.published-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: var(--md-sys-color-surface-container-low);
-  gap: 12px;
-
-  &--active {
-    background: rgba(22, 163, 74, .06);
-    border: 1px solid rgba(22, 163, 74, .25);
-  }
-
-  &__label {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--md-sys-color-on-surface);
-  }
-
-  &__hint {
-    color: var(--md-sys-color-on-surface-variant);
-    font-size: 0.8rem;
-    margin-top: 2px;
-  }
-}
 
 /* ── Error box ────────────────────────────────────────────────────────────── */
 .error-box {
