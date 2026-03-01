@@ -94,11 +94,8 @@ const router = createRouter({
           name: 'api-keys',
           component: () => import('@/pages/dashboard/ApiKeysPage.vue'),
         },
-        {
-          path: 'webhooks',
-          name: 'webhooks',
-          component: () => import('@/pages/dashboard/WebhooksPage.vue'),
-        },
+        // Webhooks — hidden until service is available
+        // { path: 'webhooks', name: 'webhooks', component: () => import('@/pages/dashboard/WebhooksPage.vue') },
         {
           path: 'bio',
           name: 'bio',

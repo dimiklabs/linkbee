@@ -121,7 +121,7 @@
               </div>
             </div>
 
-            <!-- Webhooks -->
+            <!-- Webhooks — hidden until service is available
             <div class="usage-item usage-item--last">
               <div class="usage-item__header">
                 <div class="usage-item__name">
@@ -141,6 +141,7 @@
                 <button class="btn-link-inline" @click="goCheckout('pro')">Upgrade to Pro</button>
               </p>
             </div>
+            -->
 
           </div>
         </div>
@@ -186,6 +187,7 @@
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">5</td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
               </tr>
+              <!-- Webhooks row — hidden until service is available
               <tr>
                 <td>Webhooks</td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
@@ -194,6 +196,7 @@
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">5</td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
               </tr>
+              -->
               <tr>
                 <td>Analytics</td>
                 <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">

@@ -113,6 +113,7 @@
           <span class="nav-label">API Keys</span>
         </router-link>
 
+        <!-- Webhooks — hidden until service is available
         <router-link
           to="/dashboard/webhooks"
           class="nav-item"
@@ -123,6 +124,7 @@
           <span class="material-symbols-outlined nav-icon">webhook</span>
           <span class="nav-label">Webhooks</span>
         </router-link>
+        -->
 
         <router-link
           to="/dashboard/bio"
