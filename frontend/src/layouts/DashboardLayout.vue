@@ -155,6 +155,7 @@
         <!-- ── Account section ───────────────────────────────────────── -->
         <div class="nav-section-label">Account</div>
 
+        <!-- Audit Logs — hidden until service is available
         <router-link
           to="/dashboard/audit-logs"
           class="nav-item"
@@ -165,6 +166,7 @@
           <span class="material-symbols-outlined nav-icon">history</span>
           <span class="nav-label">Audit Logs</span>
         </router-link>
+        -->
 
         <router-link
           to="/dashboard/billing"

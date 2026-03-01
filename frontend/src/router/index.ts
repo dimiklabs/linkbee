@@ -103,11 +103,8 @@ const router = createRouter({
         },
         // Domains — hidden until service is available
         // { path: 'domains', name: 'domains', component: () => import('@/pages/dashboard/DomainsPage.vue') },
-        {
-          path: 'audit-logs',
-          name: 'audit-logs',
-          component: () => import('@/pages/dashboard/AuditLogsPage.vue'),
-        },
+        // Audit Logs — hidden until service is available
+        // { path: 'audit-logs', name: 'audit-logs', component: () => import('@/pages/dashboard/AuditLogsPage.vue') },
         {
           path: 'billing',
           name: 'billing',
