@@ -101,11 +101,8 @@ const router = createRouter({
           name: 'bio',
           component: () => import('@/pages/dashboard/BioPage.vue'),
         },
-        {
-          path: 'domains',
-          name: 'domains',
-          component: () => import('@/pages/dashboard/DomainsPage.vue'),
-        },
+        // Domains — hidden until service is available
+        // { path: 'domains', name: 'domains', component: () => import('@/pages/dashboard/DomainsPage.vue') },
         {
           path: 'audit-logs',
           name: 'audit-logs',
@@ -126,11 +123,8 @@ const router = createRouter({
           name: 'security',
           component: () => import('@/pages/dashboard/SecurityPage.vue'),
         },
-        {
-          path: 'teams',
-          name: 'teams',
-          component: () => import('@/pages/dashboard/TeamsPage.vue'),
-        },
+        // Teams — hidden until service is available
+        // { path: 'teams', name: 'teams', component: () => import('@/pages/dashboard/TeamsPage.vue') },
       ],
     },
 

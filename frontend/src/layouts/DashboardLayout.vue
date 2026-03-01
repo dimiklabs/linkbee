@@ -91,6 +91,7 @@
         <!-- ── Tools section ─────────────────────────────────────────── -->
         <div class="nav-section-label">Tools</div>
 
+        <!-- Teams — hidden until service is available
         <router-link
           to="/dashboard/teams"
           class="nav-item"
@@ -101,6 +102,7 @@
           <span class="material-symbols-outlined nav-icon">group</span>
           <span class="nav-label">Teams</span>
         </router-link>
+        -->
 
         <router-link
           to="/dashboard/api-keys"
@@ -137,6 +139,7 @@
           <span class="nav-label">Bio</span>
         </router-link>
 
+        <!-- Domains — hidden until service is available
         <router-link
           to="/dashboard/domains"
           class="nav-item"
@@ -147,6 +150,7 @@
           <span class="material-symbols-outlined nav-icon">domain</span>
           <span class="nav-label">Domains</span>
         </router-link>
+        -->
 
         <!-- ── Account section ───────────────────────────────────────── -->
         <div class="nav-section-label">Account</div>
