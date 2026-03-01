@@ -29,7 +29,7 @@
       <!-- ── Stat Cards ────────────────────────────────────────────────── -->
       <div class="stat-grid">
 
-        <div class="stat-card" aria-label="Total links">
+        <div class="stat-card stat-card--purple" aria-label="Total links">
           <div class="stat-card-inner">
             <div class="stat-icon-wrap stat-icon-wrap--primary">
               <span class="material-symbols-outlined">link</span>
@@ -41,7 +41,7 @@
           </div>
         </div>
 
-        <div class="stat-card" aria-label="Total clicks">
+        <div class="stat-card stat-card--teal" aria-label="Total clicks">
           <div class="stat-card-inner">
             <div class="stat-icon-wrap stat-icon-wrap--secondary">
               <span class="material-symbols-outlined">ads_click</span>
@@ -53,7 +53,7 @@
           </div>
         </div>
 
-        <div class="stat-card" aria-label="Clicks today">
+        <div class="stat-card stat-card--amber" aria-label="Clicks today">
           <div class="stat-card-inner">
             <div class="stat-icon-wrap stat-icon-wrap--tertiary">
               <span class="material-symbols-outlined">today</span>
@@ -65,7 +65,7 @@
           </div>
         </div>
 
-        <div class="stat-card" aria-label="Clicks in the last 30 days">
+        <div class="stat-card stat-card--violet" aria-label="Clicks in the last 30 days">
           <div class="stat-card-inner">
             <div class="stat-icon-wrap stat-icon-wrap--amber">
               <span class="material-symbols-outlined">calendar_month</span>
@@ -77,7 +77,7 @@
           </div>
         </div>
 
-        <div class="stat-card" aria-label="Clicks in the last 7 days">
+        <div class="stat-card stat-card--emerald" aria-label="Clicks in the last 7 days">
           <div class="stat-card-inner">
             <div class="stat-icon-wrap stat-icon-wrap--teal">
               <span class="material-symbols-outlined">bolt</span>
@@ -511,36 +511,38 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
 }
 
 .page-header-main {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .page-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--md-sys-color-on-surface);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
 }
 
 .page-subtitle {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.825rem;
   color: var(--md-sys-color-on-surface-variant);
+  font-weight: 400;
 }
 
 .header-cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 36px;
-  padding: 0 16px;
-  border-radius: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 9px;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
   font-size: 0.875rem;
@@ -548,10 +550,15 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: opacity 0.15s $ease;
+  transition: opacity 0.15s $ease, box-shadow 0.15s $ease;
+  box-shadow: 0 1px 3px rgba(99,91,255,0.30), 0 1px 2px rgba(0,0,0,0.12);
 
   .material-symbols-outlined { font-size: 18px; }
-  &:hover { opacity: 0.88; }
+  &:hover {
+    opacity: 0.92;
+    box-shadow: 0 3px 8px rgba(99,91,255,0.35), 0 1px 3px rgba(0,0,0,0.15);
+    text-decoration: none;
+  }
 }
 
 /* ── Stat Grid ───────────────────────────────────────────────────────────── */
@@ -571,11 +578,27 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 14px;
   overflow: hidden;
-  transition: box-shadow 0.18s $ease, border-color 0.18s $ease;
+  position: relative;
+  transition: box-shadow 0.18s $ease, border-color 0.18s $ease, transform 0.18s $ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--md-sys-color-primary);
+  }
+
+  &--purple::before  { background: #635BFF; }
+  &--teal::before    { background: #0EA5A0; }
+  &--amber::before   { background: #F59E0B; }
+  &--violet::before  { background: #8B5CF6; }
+  &--emerald::before { background: #10B981; }
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10), 0 2px 4px rgba(0,0,0,0.06);
     border-color: var(--md-sys-color-outline);
+    transform: translateY(-2px);
   }
 
   &--skeleton {
@@ -595,8 +618,8 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 .stat-icon-wrap {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -606,24 +629,24 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   .material-symbols-outlined { font-size: 22px; }
 
   &--primary {
-    background: var(--md-sys-color-primary-container);
-    .material-symbols-outlined { color: var(--md-sys-color-on-primary-container); }
+    background: color-mix(in srgb, #635BFF 12%, transparent);
+    .material-symbols-outlined { color: #635BFF; }
   }
   &--secondary {
-    background: var(--md-sys-color-secondary-container);
-    .material-symbols-outlined { color: var(--md-sys-color-on-secondary-container); }
+    background: color-mix(in srgb, #0EA5A0 12%, transparent);
+    .material-symbols-outlined { color: #0EA5A0; }
   }
   &--tertiary {
-    background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
-    .material-symbols-outlined { color: var(--md-sys-color-primary); }
+    background: color-mix(in srgb, #F59E0B 12%, transparent);
+    .material-symbols-outlined { color: #D97706; }
   }
   &--amber {
-    background: color-mix(in srgb, #f59e0b 15%, transparent);
-    .material-symbols-outlined { color: #b45309; }
+    background: color-mix(in srgb, #8B5CF6 12%, transparent);
+    .material-symbols-outlined { color: #7C3AED; }
   }
   &--teal {
-    background: color-mix(in srgb, #14b8a6 15%, transparent);
-    .material-symbols-outlined { color: #0f766e; }
+    background: color-mix(in srgb, #10B981 12%, transparent);
+    .material-symbols-outlined { color: #059669; }
   }
 }
 
@@ -635,11 +658,11 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 .stat-value {
-  font-size: 1.6rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--md-sys-color-on-surface);
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .stat-label {
@@ -649,6 +672,7 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.01em;
 }
 
 /* ── Skeleton ────────────────────────────────────────────────────────────── */
@@ -687,9 +711,16 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 14px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  transition: box-shadow 0.18s $ease;
+
+  &:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+  }
 
   &--warning {
-    border-color: color-mix(in srgb, #f59e0b 50%, var(--md-sys-color-outline-variant));
+    border-color: color-mix(in srgb, #f59e0b 40%, var(--md-sys-color-outline-variant));
+    background: color-mix(in srgb, #FEF3C7 10%, var(--md-sys-color-surface));
   }
 }
 

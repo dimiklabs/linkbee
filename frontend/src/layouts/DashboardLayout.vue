@@ -229,7 +229,12 @@
           >{{ authStore.userInitials }}</div>
           <div class="nav-user-info">
             <div class="nav-user-name">{{ authStore.userName }}</div>
-            <div class="nav-user-email">{{ authStore.profile?.email }}</div>
+            <div class="nav-user-meta">
+              <span
+                class="nav-plan-badge"
+                :class="`nav-plan-badge--${billingStore.planId || 'free'}`"
+              >{{ billingStore.planId === 'growth' ? 'Growth' : billingStore.planId === 'pro' ? 'Pro' : 'Free' }}</span>
+            </div>
           </div>
           <button
             class="nav-logout-btn"
@@ -569,8 +574,8 @@ $appbar-height: 64px;
   align-items: center;
   gap: 12px;
   padding: 0 16px;
-  height: 52px;
-  border-radius: 100px;
+  height: 48px;
+  border-radius: 12px;
   margin: 2px 12px;
   text-decoration: none;
   color: var(--md-sys-color-on-surface-variant);
@@ -712,13 +717,38 @@ $appbar-height: 64px;
   text-overflow: ellipsis;
 }
 
-.nav-user-email {
-  font-size: 11px;
-  color: var(--md-sys-color-on-surface-variant);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 1px;
+.nav-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.nav-plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  line-height: 1.6;
+
+  &--free {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &--pro {
+    background: color-mix(in srgb, #635BFF 15%, transparent);
+    color: #635BFF;
+  }
+
+  &--growth {
+    background: color-mix(in srgb, #0EA5A0 15%, transparent);
+    color: #0EA5A0;
+  }
 }
 
 .nav-logout-btn {
@@ -747,7 +777,8 @@ $appbar-height: 64px;
 
 // Collapsed state for user section
 .nav-drawer.collapsed .nav-user-info,
-.nav-drawer.collapsed .nav-logout-btn {
+.nav-drawer.collapsed .nav-logout-btn,
+.nav-drawer.collapsed .nav-plan-badge {
   opacity: 0;
   width: 0;
   overflow: hidden;
@@ -801,12 +832,13 @@ $appbar-height: 64px;
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
   display: flex;
   align-items: center;
-  padding: 0 16px 0 8px;
-  gap: 4px;
+  padding: 0 20px 0 8px;
+  gap: 6px;
   position: sticky;
   top: 0;
   z-index: 100;
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
 .page-title {
@@ -866,9 +898,9 @@ $appbar-height: 64px;
   align-items: center;
   gap: 6px;
   height: 36px;
-  padding: 0 16px;
+  padding: 0 18px;
   border: none;
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
   font-size: 0.875rem;
@@ -876,11 +908,16 @@ $appbar-height: 64px;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: opacity 0.15s $ease-standard;
+  font-family: 'Inter', sans-serif;
+  transition: opacity 0.15s $ease-standard, box-shadow 0.15s $ease-standard;
+  box-shadow: 0 1px 3px rgba(99,91,255,0.25), 0 1px 2px rgba(0,0,0,0.10);
 
   .material-symbols-outlined { font-size: 18px; }
 
-  &:hover { opacity: 0.88; }
+  &:hover {
+    opacity: 0.92;
+    box-shadow: 0 3px 8px rgba(99,91,255,0.30), 0 1px 3px rgba(0,0,0,0.12);
+  }
 }
 
 // ── User avatar button ────────────────────────────────────────────────────

@@ -323,7 +323,7 @@ async function handleSignup() {
 /* ── Left panel ───────────────────────────────────────────────── */
 .auth-left-panel {
   width: 45%;
-  background: linear-gradient(135deg, #635BFF 0%, #8B5CF6 60%, #14B8A6 100%);
+  background: linear-gradient(145deg, #4A43FF 0%, #635BFF 30%, #8B5CF6 65%, #0EA5A0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -334,9 +334,9 @@ async function handleSignup() {
   &::before {
     content: '';
     position: absolute;
-    width: 340px;
-    height: 340px;
-    background: rgba(255, 255, 255, 0.07);
+    width: 380px;
+    height: 380px;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 50%;
     top: -80px;
     right: -80px;

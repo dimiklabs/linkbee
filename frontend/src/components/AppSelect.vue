@@ -101,7 +101,7 @@ defineEmits<{ 'update:modelValue': [value: string] }>();
   border: none;
   background: transparent;
   color: var(--md-sys-color-on-surface);
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 16px;
   cursor: pointer;
   appearance: none;

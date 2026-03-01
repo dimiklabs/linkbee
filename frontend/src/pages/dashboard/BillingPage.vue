@@ -394,10 +394,11 @@ $ease: cubic-bezier(0.2, 0, 0, 1);
 .page-header { display: flex; flex-direction: column; gap: 4px; }
 
 .page-title {
-  font-size: 1.375rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   color: var(--md-sys-color-on-surface);
+  letter-spacing: -0.025em;
 }
 
 .page-subtitle {

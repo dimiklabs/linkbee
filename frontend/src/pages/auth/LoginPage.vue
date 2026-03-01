@@ -421,7 +421,7 @@ async function handleReactivation() {
 /* ── Left panel ───────────────────────────────────────────────── */
 .auth-left-panel {
   width: 45%;
-  background: linear-gradient(135deg, #635BFF 0%, #8B5CF6 60%, #14B8A6 100%);
+  background: linear-gradient(145deg, #4A43FF 0%, #635BFF 30%, #8B5CF6 65%, #0EA5A0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -433,23 +433,25 @@ async function handleReactivation() {
   &::before {
     content: '';
     position: absolute;
-    width: 340px;
-    height: 340px;
-    background: rgba(255, 255, 255, 0.07);
+    width: 380px;
+    height: 380px;
+    background: rgba(255, 255, 255, 0.06);
     border-radius: 50%;
-    top: -80px;
-    right: -80px;
+    top: -100px;
+    right: -100px;
+    pointer-events: none;
   }
 
   &::after {
     content: '';
     position: absolute;
-    width: 240px;
-    height: 240px;
-    background: rgba(255, 255, 255, 0.05);
+    width: 280px;
+    height: 280px;
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 50%;
-    bottom: -60px;
-    left: -60px;
+    bottom: -80px;
+    left: -80px;
+    pointer-events: none;
   }
 }
 
@@ -576,6 +578,8 @@ async function handleReactivation() {
 .form-heading {
   color: var(--md-sys-color-on-surface);
   margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .form-subtext {

@@ -1208,11 +1208,11 @@ const visiblePages = computed<(number | string)[]>(() => {
 }
 
 .page-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--md-sys-color-on-surface);
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
 }
 
 .total-badge {
@@ -1291,7 +1291,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   border-radius: 8px;
   background: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-on-surface);
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s, background 0.15s;
@@ -1355,7 +1355,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   white-space: nowrap;
   flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
 
   &:hover:not(.active) {
     background: var(--md-sys-color-surface-container-low);
@@ -1445,7 +1445,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   background: transparent;
   cursor: pointer;
   font-size: 0.875rem;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   color: var(--md-sys-color-on-surface);
   border-radius: 8px;
   text-align: left;
@@ -1490,7 +1490,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 500;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   color: var(--md-sys-color-on-surface-variant);
   border-radius: 6px;
   transition: background 0.12s, color 0.12s;
@@ -2228,7 +2228,7 @@ const visiblePages = computed<(number | string)[]>(() => {
   background: var(--md-sys-color-surface);
   color: var(--md-sys-color-on-surface);
   font-size: 0.875rem;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Inter', sans-serif;
   outline: none;
   transition: border-color 0.15s;
 
