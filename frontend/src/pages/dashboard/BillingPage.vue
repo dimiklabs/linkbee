@@ -3,10 +3,8 @@
 
     <!-- Page Header -->
     <div class="page-header">
-      <div class="page-header__left">
-        <h1 class="page-title">Billing &amp; Plan</h1>
-        <p class="page-subtitle">Manage your subscription and track usage.</p>
-      </div>
+      <h1 class="page-title">Billing &amp; Plan</h1>
+      <p class="page-subtitle">Manage your subscription and track usage.</p>
     </div>
 
     <!-- Loading -->
@@ -16,59 +14,125 @@
 
     <div v-else class="billing-content">
 
-      <!-- ── Current Plan + Usage row ──────────────────────────────────── -->
-      <div class="billing-grid">
+      <!-- ── Plan Cards ──────────────────────────────────────────────────── -->
+      <div class="plan-cards">
 
-        <!-- Current Plan card -->
-        <div class="an-card">
-          <div class="an-card-header">
-            <div class="an-card-icon an-card-icon--primary">
-              <span class="material-symbols-outlined">workspace_premium</span>
+        <!-- Free -->
+        <div class="plan-card" :class="{ 'plan-card--current': currentPlanID === 'free' }">
+          <div class="plan-card-top">
+            <div class="plan-tier-row">
+              <span class="plan-tier-name">Free</span>
+              <span v-if="currentPlanID === 'free'" class="plan-badge plan-badge--current">Current Plan</span>
             </div>
-            <span class="an-card-title">Current Plan</span>
-            <span class="m3-badge" :class="statusClass">{{ statusLabel }}</span>
+            <div class="plan-price-row">
+              <span class="plan-price">$0</span>
+              <span class="plan-price-period">/ forever</span>
+            </div>
+            <p class="plan-tagline">Get started at no cost</p>
           </div>
-          <div class="an-card-body">
-            <div class="plan-name">{{ planLabel }}</div>
 
-            <div v-if="sub?.current_period_end" class="meta-row">
-              <span class="meta-row__label">Renews</span>
-              <span class="meta-row__value">{{ formatDate(sub.current_period_end) }}</span>
+          <ul class="plan-features">
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              5 short links
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              QR code generation
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Basic click counts
+            </li>
+            <li class="plan-feature plan-feature--no">
+              <span class="material-symbols-outlined feat-icon feat-icon--no">remove_circle</span>
+              Analytics &amp; reports
+            </li>
+            <li class="plan-feature plan-feature--no">
+              <span class="material-symbols-outlined feat-icon feat-icon--no">remove_circle</span>
+              Custom slugs
+            </li>
+            <li class="plan-feature plan-feature--no">
+              <span class="material-symbols-outlined feat-icon feat-icon--no">remove_circle</span>
+              API keys
+            </li>
+            <li class="plan-feature plan-feature--no">
+              <span class="material-symbols-outlined feat-icon feat-icon--no">remove_circle</span>
+              Bio link click tracking
+            </li>
+          </ul>
+
+          <div class="plan-card-footer">
+            <div v-if="currentPlanID === 'free'" class="plan-active-state">
+              <span class="material-symbols-outlined">check_circle</span>
+              Active plan
             </div>
-            <div v-if="sub?.cancelled_at" class="meta-row">
-              <span class="meta-row__label">Cancelled</span>
-              <span class="meta-row__value meta-row__value--danger">{{ formatDate(sub.cancelled_at) }}</span>
+          </div>
+        </div>
+
+        <!-- Pro -->
+        <div class="plan-card plan-card--pro" :class="{ 'plan-card--current': currentPlanID === 'pro' }">
+          <div class="plan-card-top">
+            <div class="plan-tier-row">
+              <span class="plan-tier-name">Pro</span>
+              <span v-if="currentPlanID === 'pro'" class="plan-badge plan-badge--current">Current Plan</span>
+              <span v-else class="plan-badge plan-badge--recommended">Recommended</span>
             </div>
-
-            <!-- Upgrade CTAs -->
-            <div class="upgrade-actions">
-              <button class="btn-filled"
-                v-if="currentPlanID === 'free'"
-                :disabled="checkoutLoading === 'pro'"
-                @click="goCheckout('pro')"
-              >
-                <div v-if="checkoutLoading === 'pro'" class="css-spinner css-spinner--sm css-spinner--white"></div>
-                <span v-else class="material-symbols-outlined">arrow_upward</span>
-                Upgrade to Pro
-              </button>
-              <button class="btn-filled"
-                v-if="currentPlanID !== 'business'"
-                :disabled="checkoutLoading === 'business'"
-                @click="goCheckout('business')"
-              >
-                <div v-if="checkoutLoading === 'business'" class="css-spinner css-spinner--sm css-spinner--white"></div>
-                <span v-else class="material-symbols-outlined">rocket_launch</span>
-                Upgrade to Business
-              </button>
-              <span v-if="currentPlanID === 'business'" class="plan-top-badge">
-                <span class="material-symbols-outlined">check_circle</span>
-                You're on the highest plan
-              </span>
+            <div class="plan-price-row">
+              <span class="plan-price">$7</span>
+              <span class="plan-price-period">/ month</span>
             </div>
+            <p class="plan-tagline">Everything you need to grow</p>
+          </div>
 
-            <p v-if="checkoutError" class="checkout-error">{{ checkoutError }}</p>
+          <ul class="plan-features">
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              100 short links
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              QR code generation
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Full analytics &amp; charts
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Scheduled email reports
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Custom slugs
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              5 API keys
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Bio link click tracking
+            </li>
+          </ul>
 
-            <p v-if="currentPlanID !== 'business'" class="billing-terms-note">
+          <div class="plan-card-footer">
+            <div v-if="currentPlanID === 'pro'" class="plan-active-state plan-active-state--pro">
+              <span class="material-symbols-outlined">check_circle</span>
+              Active plan
+            </div>
+            <button
+              v-else
+              class="btn-upgrade"
+              :disabled="checkoutLoading === 'pro'"
+              @click="goCheckout('pro')"
+            >
+              <div v-if="checkoutLoading === 'pro'" class="css-spinner css-spinner--sm css-spinner--white"></div>
+              <span v-else class="material-symbols-outlined">workspace_premium</span>
+              Upgrade to Pro
+            </button>
+            <p v-if="checkoutError && checkoutLoading !== 'growth'" class="checkout-error">{{ checkoutError }}</p>
+            <p v-if="currentPlanID !== 'pro'" class="billing-terms-note">
               By upgrading you agree to our
               <router-link to="/terms" target="_blank">Terms of Service</router-link>
               and
@@ -77,7 +141,95 @@
           </div>
         </div>
 
-        <!-- Usage card -->
+        <!-- Growth -->
+        <div class="plan-card plan-card--growth" :class="{ 'plan-card--current': currentPlanID === 'growth' }">
+          <div class="plan-card-top">
+            <div class="plan-tier-row">
+              <span class="plan-tier-name">Growth</span>
+              <span v-if="currentPlanID === 'growth'" class="plan-badge plan-badge--current">Current Plan</span>
+            </div>
+            <div class="plan-price-row">
+              <span class="plan-price">$15</span>
+              <span class="plan-price-period">/ month</span>
+            </div>
+            <p class="plan-tagline">For teams and growing businesses</p>
+          </div>
+
+          <ul class="plan-features">
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Unlimited short links
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Everything in Pro
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              10 API keys
+            </li>
+            <li class="plan-feature plan-feature--yes">
+              <span class="material-symbols-outlined feat-icon feat-icon--yes">check_circle</span>
+              Priority support
+            </li>
+          </ul>
+
+          <div class="plan-card-footer">
+            <div v-if="currentPlanID === 'growth'" class="plan-active-state plan-active-state--pro">
+              <span class="material-symbols-outlined">check_circle</span>
+              Active plan
+            </div>
+            <button
+              v-else
+              class="btn-upgrade btn-upgrade--growth"
+              :disabled="checkoutLoading === 'growth'"
+              @click="goCheckout('growth')"
+            >
+              <div v-if="checkoutLoading === 'growth'" class="css-spinner css-spinner--sm css-spinner--white"></div>
+              <span v-else class="material-symbols-outlined">rocket_launch</span>
+              Upgrade to Growth
+            </button>
+            <p v-if="checkoutError && checkoutLoading !== 'pro'" class="checkout-error">{{ checkoutError }}</p>
+            <p v-if="currentPlanID !== 'growth'" class="billing-terms-note">
+              By upgrading you agree to our
+              <router-link to="/terms" target="_blank">Terms of Service</router-link>
+              and
+              <router-link to="/privacy" target="_blank">Privacy Policy</router-link>.
+            </p>
+          </div>
+        </div>
+
+      </div><!-- /plan-cards -->
+
+      <!-- ── Subscription status + Usage ────────────────────────────────── -->
+      <div class="billing-grid">
+
+        <!-- Subscription details -->
+        <div class="an-card" v-if="sub">
+          <div class="an-card-header">
+            <div class="an-card-icon an-card-icon--primary">
+              <span class="material-symbols-outlined">receipt_long</span>
+            </div>
+            <span class="an-card-title">Subscription</span>
+            <span class="m3-badge" :class="statusClass">{{ statusLabel }}</span>
+          </div>
+          <div class="an-card-body">
+            <div class="sub-detail-row">
+              <span class="sub-detail-label">Plan</span>
+              <span class="sub-detail-value">{{ planLabel }}</span>
+            </div>
+            <div v-if="sub.current_period_end" class="sub-detail-row">
+              <span class="sub-detail-label">Renews</span>
+              <span class="sub-detail-value">{{ formatDate(sub.current_period_end) }}</span>
+            </div>
+            <div v-if="sub.cancelled_at" class="sub-detail-row">
+              <span class="sub-detail-label">Cancelled</span>
+              <span class="sub-detail-value sub-detail-value--danger">{{ formatDate(sub.cancelled_at) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Usage -->
         <div class="an-card">
           <div class="an-card-header">
             <div class="an-card-icon an-card-icon--primary">
@@ -87,7 +239,6 @@
           </div>
           <div class="an-card-body">
 
-            <!-- Links -->
             <div class="usage-item">
               <div class="usage-item__header">
                 <div class="usage-item__name">
@@ -95,8 +246,10 @@
                   <span class="usage-label">Links</span>
                 </div>
                 <div class="usage-item__stats">
-                  <span class="usage-count">{{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }} used</span>
-                  <span class="m3-usage-badge" :class="pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.links ?? 0, plan?.max_links ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%</span>
+                  <span class="usage-count">{{ usage?.links ?? 0 }} / {{ limitLabel(plan?.max_links) }}</span>
+                  <span class="m3-usage-badge" :class="badgeClass(usage?.links ?? 0, plan?.max_links ?? 0)">
+                    {{ pct(usage?.links ?? 0, plan?.max_links ?? 0) }}%
+                  </span>
                 </div>
               </div>
               <div class="prog-bar">
@@ -104,137 +257,31 @@
               </div>
             </div>
 
-            <!-- API Keys -->
-            <div class="usage-item">
+            <div class="usage-item usage-item--last">
               <div class="usage-item__header">
                 <div class="usage-item__name">
                   <span class="material-symbols-outlined usage-icon">key</span>
                   <span class="usage-label">API Keys</span>
                 </div>
                 <div class="usage-item__stats">
-                  <span class="usage-count">{{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }} used</span>
-                  <span class="m3-usage-badge" :class="pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%</span>
+                  <span v-if="(plan?.max_api_keys ?? 0) === 0" class="usage-locked">
+                    <span class="material-symbols-outlined" style="font-size:13px;">lock</span>
+                    Paid feature
+                  </span>
+                  <template v-else>
+                    <span class="usage-count">{{ usage?.api_keys ?? 0 }} / {{ limitLabel(plan?.max_api_keys) }}</span>
+                    <span class="m3-usage-badge" :class="badgeClass(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0)">
+                      {{ pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) }}%
+                    </span>
+                  </template>
                 </div>
               </div>
-              <div class="prog-bar">
+              <div v-if="(plan?.max_api_keys ?? 0) > 0" class="prog-bar">
                 <div class="prog-fill" :class="barClass(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0)" :style="{ width: pct(usage?.api_keys ?? 0, plan?.max_api_keys ?? 0) + '%' }"></div>
               </div>
             </div>
 
-            <!-- Webhooks — hidden until service is available
-            <div class="usage-item usage-item--last">
-              <div class="usage-item__header">
-                <div class="usage-item__name">
-                  <span class="material-symbols-outlined usage-icon">notifications</span>
-                  <span class="usage-label">Webhooks</span>
-                </div>
-                <div class="usage-item__stats">
-                  <span class="usage-count">{{ usage?.webhooks ?? 0 }} / {{ limitLabel(plan?.max_webhooks) }} used</span>
-                  <span class="m3-usage-badge" :class="pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 100 ? 'm3-usage-badge--danger' : pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) >= 80 ? 'm3-usage-badge--warning' : 'm3-usage-badge--ok'">{{ pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) }}%</span>
-                </div>
-              </div>
-              <div class="prog-bar">
-                <div class="prog-fill" :class="barClass(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0)" :style="{ width: pct(usage?.webhooks ?? 0, plan?.max_webhooks ?? 0) + '%' }"></div>
-              </div>
-              <p v-if="!plan?.has_webhooks" class="usage-item__note">
-                Webhooks are not available on the {{ planLabel }} plan.
-                <button class="btn-link-inline" @click="goCheckout('pro')">Upgrade to Pro</button>
-              </p>
-            </div>
-            -->
-
           </div>
-        </div>
-      </div>
-
-      <!-- ── Plan Comparison table ─────────────────────────────────────── -->
-      <div class="an-card">
-        <div class="an-card-header">
-          <div class="an-card-icon an-card-icon--primary">
-            <span class="material-symbols-outlined">compare</span>
-          </div>
-          <span class="an-card-title">Plan Comparison</span>
-        </div>
-        <div class="table-wrapper">
-          <table class="compare-table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
-                  Free
-                  <span v-if="currentPlanID === 'free'" class="current-plan-tag">Current</span>
-                </th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
-                  Pro
-                  <span v-if="currentPlanID === 'pro'" class="current-plan-tag">Current</span>
-                </th>
-                <th class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">
-                  Business
-                  <span v-if="currentPlanID === 'business'" class="current-plan-tag">Current</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Links</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">5</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">100</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
-              </tr>
-              <tr>
-                <td>API Keys</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">1</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">5</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
-              </tr>
-              <!-- Webhooks row — hidden until service is available
-              <tr>
-                <td>Webhooks</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
-                  <span class="material-symbols-outlined x-icon">close</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">5</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">Unlimited</td>
-              </tr>
-              -->
-              <tr>
-                <td>Analytics</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-              </tr>
-              <tr>
-                <td>QR Codes</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-              </tr>
-              <tr>
-                <td>Priority support</td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'free' }">
-                  <span class="material-symbols-outlined x-icon">close</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'pro' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-                <td class="text-center" :class="{ 'current-col': currentPlanID === 'business' }">
-                  <span class="material-symbols-outlined check-icon">check_circle</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </div>
 
@@ -249,7 +296,7 @@ import type { PlanInfo, Subscription, UsageCounts } from '@/types/billing';
 import { PLAN_LABELS, SUB_STATUS_LABELS } from '@/types/billing';
 
 const loading = ref(true);
-const checkoutLoading = ref<'pro' | 'business' | null>(null);
+const checkoutLoading = ref<'pro' | 'growth' | false>(false);
 const checkoutError = ref('');
 
 const sub = ref<Subscription | null>(null);
@@ -284,7 +331,7 @@ function limitLabel(limit: number | undefined): string {
 }
 
 function pct(used: number, limit: number): number {
-  if (limit === -1 || limit === 0) return 0;
+  if (limit <= 0) return 0;
   return Math.min(100, Math.round((used / limit) * 100));
 }
 
@@ -296,7 +343,14 @@ function barClass(used: number, limit: number): string {
   return '';
 }
 
-async function goCheckout(planID: 'pro' | 'business') {
+function badgeClass(used: number, limit: number): string {
+  const p = pct(used, limit);
+  if (p >= 100) return 'm3-usage-badge--danger';
+  if (p >= 80) return 'm3-usage-badge--warning';
+  return 'm3-usage-badge--ok';
+}
+
+async function goCheckout(planID: 'pro' | 'growth') {
   checkoutError.value = '';
   checkoutLoading.value = planID;
   try {
@@ -304,7 +358,8 @@ async function goCheckout(planID: 'pro' | 'business') {
     if (res.data.data) window.location.href = res.data.data.checkout_url;
   } catch {
     checkoutError.value = 'Could not generate checkout link. Please try again.';
-    checkoutLoading.value = null;
+  } finally {
+    checkoutLoading.value = false;
   }
 }
 
@@ -326,28 +381,17 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
+$ease: cubic-bezier(0.2, 0, 0, 1);
+
 .billing-page {
-  max-width: 900px;
-  padding: 0;
+  max-width: 1060px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
-/* ── Page Header ─────────────────────────────────────────────────────────── */
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.page-header__left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.page-header { display: flex; flex-direction: column; gap: 4px; }
 
 .page-title {
   font-size: 1.375rem;
@@ -362,54 +406,232 @@ onMounted(async () => {
   color: var(--md-sys-color-on-surface-variant);
 }
 
-/* ── CSS Spinner ─────────────────────────────────────────────────────────── */
+/* ── Loading ─────────────────────────────────────────────────────────────── */
 .css-spinner {
-  width: 32px;
-  height: 32px;
+  width: 32px; height: 32px;
   border: 3px solid var(--md-sys-color-outline-variant);
   border-top-color: var(--md-sys-color-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   flex-shrink: 0;
 
-  &--sm {
-    width: 16px;
-    height: 16px;
-    border-width: 2px;
-  }
+  &--sm { width: 16px; height: 16px; border-width: 2px; }
+  &--white { border-color: rgba(255,255,255,0.35); border-top-color: #fff; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  &--white {
-    border-color: rgba(255,255,255,0.35);
-    border-top-color: #fff;
-  }
+.loading-center { display: flex; justify-content: center; padding: 64px; }
+
+.billing-content { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Plan Cards ──────────────────────────────────────────────────────────── */
+.plan-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+
+  @media (max-width: 860px) { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { grid-template-columns: 1fr; }
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ── Loading ─────────────────────────────────────────────────────────────── */
-.loading-center {
-  display: flex;
-  justify-content: center;
-  padding: 64px;
-}
-
-/* ── Layout ──────────────────────────────────────────────────────────────── */
-.billing-content {
+.plan-card {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  background: var(--md-sys-color-surface);
+  border: 2px solid var(--md-sys-color-outline-variant);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: border-color 0.2s $ease, box-shadow 0.2s $ease;
+
+  &--current {
+    border-color: var(--md-sys-color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+
+  &--pro {
+    background: linear-gradient(160deg,
+      color-mix(in srgb, var(--md-sys-color-primary-container) 40%, var(--md-sys-color-surface)) 0%,
+      var(--md-sys-color-surface) 60%
+    );
+  }
+
+  &--growth {
+    background: linear-gradient(160deg,
+      color-mix(in srgb, var(--md-sys-color-secondary-container) 40%, var(--md-sys-color-surface)) 0%,
+      var(--md-sys-color-surface) 60%
+    );
+  }
 }
 
+.plan-card-top {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.plan-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.plan-tier-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--md-sys-color-on-surface);
+}
+
+.plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+
+  &--current {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 15%, transparent);
+    color: var(--md-sys-color-primary);
+  }
+
+  &--recommended {
+    background: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
+  }
+}
+
+.plan-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.plan-price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--md-sys-color-on-surface);
+  line-height: 1;
+}
+
+.plan-price-period {
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.plan-tagline {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+/* ── Feature list ────────────────────────────────────────────────────────── */
+.plan-features {
+  list-style: none;
+  margin: 0;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.plan-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+
+  &--no { color: var(--md-sys-color-on-surface-variant); opacity: 0.6; }
+  &--yes { color: var(--md-sys-color-on-surface); }
+}
+
+.feat-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+
+  &--yes { color: #16a34a; }
+  &--no  { color: var(--md-sys-color-on-surface-variant); opacity: 0.4; }
+}
+
+/* ── Card footer ─────────────────────────────────────────────────────────── */
+.plan-card-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-active-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+
+  .material-symbols-outlined { font-size: 18px; }
+
+  &--pro {
+    color: var(--md-sys-color-primary);
+  }
+}
+
+.btn-upgrade {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s $ease;
+
+  .material-symbols-outlined { font-size: 20px; }
+
+  &:hover:not(:disabled) { opacity: 0.88; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--growth {
+    background: var(--md-sys-color-secondary);
+    color: var(--md-sys-color-on-secondary);
+  }
+}
+
+.checkout-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-error);
+}
+
+.billing-terms-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--md-sys-color-on-surface-variant);
+  line-height: 1.5;
+
+  a {
+    color: var(--md-sys-color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+/* ── Subscription + Usage grid ───────────────────────────────────────────── */
 .billing-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr;
-  }
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
 }
 
 /* ── Cards ───────────────────────────────────────────────────────────────── */
@@ -430,12 +652,9 @@ onMounted(async () => {
 }
 
 .an-card-icon {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 
   .material-symbols-outlined { font-size: 18px; }
@@ -453,71 +672,27 @@ onMounted(async () => {
   flex: 1;
 }
 
-.an-card-body {
-  padding: 20px 24px 24px;
-}
+.an-card-body { padding: 20px 24px 24px; }
 
-/* ── Plan name ───────────────────────────────────────────────────────────── */
-.plan-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--md-sys-color-on-surface);
-  margin-bottom: 8px;
-}
-
-.plan-top-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--md-sys-color-primary);
-  font-weight: 500;
-  font-size: 0.875rem;
-
-  .material-symbols-outlined { font-size: 18px; }
-}
-
-.upgrade-actions {
-  margin-top: 20px;
+/* ── Subscription detail rows ────────────────────────────────────────────── */
+.sub-detail-row {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 8px;
-}
-
-.checkout-error {
-  margin: 8px 0 0;
-  font-size: 0.8rem;
-  color: var(--md-sys-color-error);
-}
-
-.billing-terms-note {
-  margin: 10px 0 0;
-  font-size: 0.75rem;
-  color: var(--md-sys-color-on-surface-variant);
-  line-height: 1.5;
-
-  a {
-    color: var(--md-sys-color-primary);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-}
-
-/* ── Meta row ────────────────────────────────────────────────────────────── */
-.meta-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 6px;
+  padding: 8px 0;
   font-size: 0.875rem;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 
-  &__label { color: var(--md-sys-color-on-surface-variant); }
-  &__value { font-weight: 500; }
-  &__value--danger { color: var(--md-sys-color-error); }
+  &:last-child { border-bottom: none; }
 }
 
-/* ── Usage items ─────────────────────────────────────────────────────────── */
+.sub-detail-label { color: var(--md-sys-color-on-surface-variant); }
+.sub-detail-value { font-weight: 500; }
+.sub-detail-value--danger { color: var(--md-sys-color-error); }
+
+/* ── Usage ───────────────────────────────────────────────────────────────── */
 .usage-item {
   margin-bottom: 20px;
-
   &--last { margin-bottom: 0; }
 }
 
@@ -557,13 +732,18 @@ onMounted(async () => {
   color: var(--md-sys-color-on-surface-variant);
 }
 
-.usage-item__note {
-  font-size: 0.8rem;
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 6px 0 0;
+.usage-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-sys-color-tertiary);
+  background: var(--md-sys-color-tertiary-container);
+  border-radius: 100px;
+  padding: 2px 8px;
 }
 
-/* ── Progress bar ────────────────────────────────────────────────────────── */
 .prog-bar {
   height: 6px;
   background: var(--md-sys-color-surface-container-high);
@@ -579,10 +759,10 @@ onMounted(async () => {
 
   &--success { background: #16a34a; }
   &--warning { background: #f59e0b; }
-  &--danger { background: #dc2626; }
+  &--danger  { background: #dc2626; }
 }
 
-/* ── Status badges ───────────────────────────────────────────────────────── */
+/* ── Badges ──────────────────────────────────────────────────────────────── */
 .m3-badge {
   display: inline-flex;
   align-items: center;
@@ -593,28 +773,12 @@ onMounted(async () => {
   white-space: nowrap;
   flex-shrink: 0;
 
-  &.badge-success {
-    background: rgba(22, 163, 74, 0.12);
-    color: #16a34a;
-  }
-
-  &.badge-danger {
-    background: var(--md-sys-color-error-container);
-    color: var(--md-sys-color-error);
-  }
-
-  &.badge-warning {
-    background: rgba(245, 158, 11, 0.15);
-    color: #92400e;
-  }
-
-  &.badge-secondary {
-    background: var(--md-sys-color-surface-container-low);
-    color: var(--md-sys-color-on-surface-variant);
-  }
+  &.badge-success { background: rgba(22,163,74,0.12); color: #16a34a; }
+  &.badge-danger  { background: var(--md-sys-color-error-container); color: var(--md-sys-color-error); }
+  &.badge-warning { background: rgba(245,158,11,0.15); color: #92400e; }
+  &.badge-secondary { background: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface-variant); }
 }
 
-/* ── Usage percentage badges ─────────────────────────────────────────────── */
 .m3-usage-badge {
   display: inline-flex;
   align-items: center;
@@ -624,80 +788,8 @@ onMounted(async () => {
   font-weight: 600;
   white-space: nowrap;
 
-  &--danger { background: rgba(220, 38, 38, 0.12); color: #dc2626; }
-  &--warning { background: rgba(245, 158, 11, 0.12); color: #b45309; }
-  &--ok { background: rgba(22, 163, 74, 0.12); color: #16a34a; }
-}
-
-/* ── Inline link button ──────────────────────────────────────────────────── */
-.btn-link-inline {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--md-sys-color-primary);
-  font-size: inherit;
-  font-weight: 500;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-/* ── Compare table ───────────────────────────────────────────────────────── */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.compare-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
-
-  th,
-  td {
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
-
-  tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  th {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--md-sys-color-on-surface-variant);
-    background: var(--md-sys-color-surface-container-low);
-    text-align: left;
-  }
-
-  .text-center { text-align: center; }
-
-  .current-col {
-    background: rgba(99, 91, 255, 0.08);
-    font-weight: 600;
-  }
-}
-
-.current-plan-tag {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--md-sys-color-primary);
-  margin-top: 2px;
-}
-
-.check-icon {
-  font-size: 18px;
-  color: #16a34a;
-  vertical-align: middle;
-}
-
-.x-icon {
-  font-size: 18px;
-  color: var(--md-sys-color-on-surface-variant);
-  opacity: 0.4;
-  vertical-align: middle;
+  &--danger  { background: rgba(220,38,38,0.12); color: #dc2626; }
+  &--warning { background: rgba(245,158,11,0.12); color: #b45309; }
+  &--ok      { background: rgba(22,163,74,0.12);  color: #16a34a; }
 }
 </style>

@@ -143,6 +143,13 @@ func (h *LinkHandler) CreateLink(c *gin.Context) {
 		return
 	}
 
+	if req.Slug != "" {
+		if svcErr := h.planEnforcer.CheckCustomSlug(ctx, userID); svcErr != nil {
+			transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+			return
+		}
+	}
+
 	result, svcErr := h.linkService.CreateLink(ctx, userID, &req)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)

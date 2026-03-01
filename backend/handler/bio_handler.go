@@ -1,7 +1,12 @@
 package handler
 
 import (
+	"context"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -9,16 +14,28 @@ import (
 	"github.com/shafikshaon/linkbee/constant"
 	"github.com/shafikshaon/linkbee/middlewares"
 	"github.com/shafikshaon/linkbee/request"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
 	bioSvc "github.com/shafikshaon/linkbee/service/bio"
+	clickSvc "github.com/shafikshaon/linkbee/service/click"
 	"github.com/shafikshaon/linkbee/transport"
 )
 
 type BioHandler struct {
-	bioService bioSvc.BioServiceI
+	bioService      bioSvc.BioServiceI
+	bioClickService clickSvc.BioClickServiceI
+	planEnforcer    billingSvc.PlanEnforcerI
+	uploadsDir      string
+	baseURL         string
 }
 
-func NewBioHandler(bioService bioSvc.BioServiceI) *BioHandler {
-	return &BioHandler{bioService: bioService}
+func NewBioHandler(bioService bioSvc.BioServiceI, bioClickService clickSvc.BioClickServiceI, planEnforcer billingSvc.PlanEnforcerI, uploadsDir, baseURL string) *BioHandler {
+	return &BioHandler{
+		bioService:      bioService,
+		bioClickService: bioClickService,
+		planEnforcer:    planEnforcer,
+		uploadsDir:      uploadsDir,
+		baseURL:         baseURL,
+	}
 }
 
 func (h *BioHandler) userID(c *gin.Context) (uuid.UUID, bool) {
@@ -48,10 +65,17 @@ func (h *BioHandler) GetBioPage(c *gin.Context) {
 	if !ok {
 		return
 	}
-	result, svcErr := h.bioService.GetOrCreate(c.Request.Context(), userID)
+	ctx := c.Request.Context()
+	result, svcErr := h.bioService.GetOrCreate(ctx, userID)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
+	}
+	// Click counts are a Pro feature; zero them out for Free-plan users.
+	if h.planEnforcer.CheckAnalytics(ctx, userID) != nil {
+		for i := range result.Links {
+			result.Links[i].ClickCount = -1
+		}
 	}
 	transport.RespondWithSuccess(c, http.StatusOK, "Bio page retrieved", result)
 }
@@ -133,10 +157,17 @@ func (h *BioHandler) ListBioLinks(c *gin.Context) {
 	if !ok {
 		return
 	}
-	result, svcErr := h.bioService.ListLinks(c.Request.Context(), userID)
+	ctx := c.Request.Context()
+	result, svcErr := h.bioService.ListLinks(ctx, userID)
 	if svcErr != nil {
 		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
+	}
+	// Click counts are a Pro feature; zero them out for Free-plan users.
+	if h.planEnforcer.CheckAnalytics(ctx, userID) != nil {
+		for i := range result {
+			result[i].ClickCount = -1
+		}
 	}
 	transport.RespondWithSuccess(c, http.StatusOK, "Bio links retrieved", result)
 }
@@ -284,4 +315,118 @@ func (h *BioHandler) ReorderBioLinks(c *gin.Context) {
 		return
 	}
 	transport.RespondWithSuccess(c, http.StatusOK, "Bio links reordered", nil)
+}
+
+// RecordBioLinkClick godoc
+//
+//	@Summary		Record a bio link click
+//	@Description	Fire-and-forget endpoint called by the public bio page when a visitor clicks a link.
+//	@Tags			bio
+//	@Param			username	path	string	true	"Bio page username"
+//	@Param			id			path	string	true	"Bio link UUID"
+//	@Success		204	"No Content"
+//	@Router			/api/v1/bio/public/{username}/links/{id}/click [post]
+func (h *BioHandler) RecordBioLinkClick(c *gin.Context) {
+	username := c.Param("username")
+	linkIDStr := c.Param("id")
+
+	linkID, err := uuid.Parse(linkIDStr)
+	if err != nil {
+		// Return 204 regardless — don't leak internal errors to the public.
+		c.Status(http.StatusNoContent)
+		return
+	}
+
+	ip := c.ClientIP()
+	userAgent := c.GetHeader("User-Agent")
+	referrer := c.GetHeader("Referer")
+
+	// Fire-and-forget: enqueue asynchronously so the response is instant.
+	go h.bioClickService.EnqueueBioClick(context.Background(), username, linkID, ip, userAgent, referrer)
+
+	c.Status(http.StatusNoContent)
+}
+
+// UploadBioAvatar godoc
+//
+//	@Summary		Upload bio page avatar
+//	@Description	Accepts a multipart image upload (max 2 MB, JPEG/PNG/GIF/WebP) and stores it as the bio page avatar.
+//	@Tags			bio
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Security		APIKeyAuth
+//	@Param			avatar	formData	file	true	"Avatar image"
+//	@Success		200	{object}	transport.StandardResponse
+//	@Failure		400	{object}	transport.ErrorResponse
+//	@Failure		401	{object}	transport.ErrorResponse
+//	@Router			/api/v1/bio/avatar [post]
+func (h *BioHandler) UploadBioAvatar(c *gin.Context) {
+	userID, ok := h.userID(c)
+	if !ok {
+		return
+	}
+
+	file, header, err := c.Request.FormFile("avatar")
+	if err != nil {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "avatar file is required")
+		return
+	}
+	defer file.Close()
+
+	// Validate content type.
+	ct := header.Header.Get("Content-Type")
+	allowed := map[string]string{
+		"image/jpeg": ".jpg",
+		"image/png":  ".png",
+		"image/gif":  ".gif",
+		"image/webp": ".webp",
+	}
+	ext, ok := allowed[ct]
+	if !ok {
+		// Fallback: derive from filename.
+		fnExt := strings.ToLower(filepath.Ext(header.Filename))
+		extMap := map[string]string{".jpg": ".jpg", ".jpeg": ".jpg", ".png": ".png", ".gif": ".gif", ".webp": ".webp"}
+		ext, ok = extMap[fnExt]
+		if !ok {
+			transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "unsupported image type; use JPEG, PNG, GIF, or WebP")
+			return
+		}
+	}
+
+	// Validate size (max 2 MB).
+	const maxSize = 2 << 20
+	if header.Size > maxSize {
+		transport.RespondWithError(c, http.StatusBadRequest, constant.ErrCodeBadRequest, "avatar must be 2 MB or smaller")
+		return
+	}
+
+	// Ensure upload directory exists.
+	avatarDir := filepath.Join(h.uploadsDir, "avatars")
+	if err := os.MkdirAll(avatarDir, 0o755); err != nil {
+		transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, "could not create upload directory")
+		return
+	}
+
+	// Save file as <userID><ext>, overwriting any previous avatar.
+	filename := userID.String() + ext
+	dst := filepath.Join(avatarDir, filename)
+	if err := c.SaveUploadedFile(header, dst); err != nil {
+		transport.RespondWithError(c, http.StatusInternalServerError, constant.ErrCodeInternalServer, "failed to save avatar")
+		return
+	}
+
+	avatarURL := fmt.Sprintf("%s/uploads/avatars/%s", strings.TrimRight(h.baseURL, "/"), filename)
+
+	// Persist the URL on the bio page (avatar-only update).
+	result, svcErr := h.bioService.Update(c.Request.Context(), userID, bioSvc.UpdateBioRequest{
+		AvatarURL:  avatarURL,
+		AvatarOnly: true,
+	})
+	if svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
+	transport.RespondWithSuccess(c, http.StatusOK, "Avatar uploaded", result)
 }

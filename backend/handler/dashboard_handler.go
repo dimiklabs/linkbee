@@ -9,16 +9,18 @@ import (
 
 	"github.com/shafikshaon/linkbee/constant"
 	"github.com/shafikshaon/linkbee/middlewares"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
 	dashboardSvc "github.com/shafikshaon/linkbee/service/dashboard"
 	"github.com/shafikshaon/linkbee/transport"
 )
 
 type DashboardHandler struct {
 	dashboardService dashboardSvc.DashboardServiceI
+	planEnforcer     billingSvc.PlanEnforcerI
 }
 
-func NewDashboardHandler(dashboardService dashboardSvc.DashboardServiceI) *DashboardHandler {
-	return &DashboardHandler{dashboardService: dashboardService}
+func NewDashboardHandler(dashboardService dashboardSvc.DashboardServiceI, planEnforcer billingSvc.PlanEnforcerI) *DashboardHandler {
+	return &DashboardHandler{dashboardService: dashboardService, planEnforcer: planEnforcer}
 }
 
 // GetOverview godoc
@@ -74,6 +76,11 @@ func (h *DashboardHandler) GetGlobalAnalytics(c *gin.Context) {
 		return
 	}
 
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
 	now := time.Now().UTC()
 	from := now.AddDate(0, 0, -30)
 	to := now
@@ -118,6 +125,11 @@ func (h *DashboardHandler) GetGlobalAnalyticsComparison(c *gin.Context) {
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
 

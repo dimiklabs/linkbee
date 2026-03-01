@@ -1,5 +1,11 @@
 <template>
-  <div class="analytics-page">
+  <UpgradeWall
+    v-if="!billingStore.isPaidPlan && billingStore.loaded"
+    icon="bar_chart"
+    title="Link analytics is a Pro feature"
+    description="Upgrade to Pro to unlock detailed per-link analytics, referrers, device breakdowns, and live counters."
+  />
+  <div v-else class="analytics-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -945,6 +951,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import UpgradeWall from '@/components/UpgradeWall.vue';
+import { useBillingStore } from '@/stores/billing';
+
+const billingStore = useBillingStore();
 import { RouterLink } from 'vue-router';
 import AppSelect from '@/components/AppSelect.vue';
 import { use, registerMap } from 'echarts/core';
@@ -1348,6 +1358,7 @@ function exportToCSV() {
 }
 
 onMounted(() => {
+  billingStore.fetchPlan();
   loadLink();
   loadAnalytics();
   loadComparison();

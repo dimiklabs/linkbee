@@ -17,6 +17,8 @@ type PlanEnforcerI interface {
 	CheckLinkLimit(ctx context.Context, userID uuid.UUID) *dto.ServiceError
 	CheckAPIKeyLimit(ctx context.Context, userID uuid.UUID) *dto.ServiceError
 	CheckWebhookLimit(ctx context.Context, userID uuid.UUID) *dto.ServiceError
+	CheckCustomSlug(ctx context.Context, userID uuid.UUID) *dto.ServiceError
+	CheckAnalytics(ctx context.Context, userID uuid.UUID) *dto.ServiceError
 }
 
 type planEnforcer struct {
@@ -72,6 +74,12 @@ func (e *planEnforcer) CheckAPIKeyLimit(ctx context.Context, userID uuid.UUID) *
 	if plan.MaxAPIKeys == -1 {
 		return nil
 	}
+	if plan.MaxAPIKeys == 0 {
+		return dto.NewForbiddenError(
+			constant.ErrCodePlanLimitReached,
+			fmt.Sprintf("API keys are not available on the %s plan; upgrade to Pro or Growth", plan.Name),
+		)
+	}
 	count, err := e.apiKeyRepo.CountByUserID(ctx, userID)
 	if err != nil {
 		return dto.NewInternalError(constant.ErrCodeInternalServer, "failed to count API keys")
@@ -80,6 +88,28 @@ func (e *planEnforcer) CheckAPIKeyLimit(ctx context.Context, userID uuid.UUID) *
 		return dto.NewForbiddenError(
 			constant.ErrCodePlanLimitReached,
 			fmt.Sprintf("your %s plan allows up to %d API keys; upgrade to create more", plan.Name, plan.MaxAPIKeys),
+		)
+	}
+	return nil
+}
+
+func (e *planEnforcer) CheckAnalytics(ctx context.Context, userID uuid.UUID) *dto.ServiceError {
+	plan := e.plan(ctx, userID)
+	if plan.ID == PlanFree {
+		return dto.NewForbiddenError(
+			constant.ErrCodePlanLimitReached,
+			fmt.Sprintf("analytics are not available on the %s plan; upgrade to Pro or Growth", plan.Name),
+		)
+	}
+	return nil
+}
+
+func (e *planEnforcer) CheckCustomSlug(ctx context.Context, userID uuid.UUID) *dto.ServiceError {
+	plan := e.plan(ctx, userID)
+	if plan.ID == PlanFree {
+		return dto.NewForbiddenError(
+			constant.ErrCodePlanLimitReached,
+			"custom slugs are not available on the Free plan; upgrade to Pro or Growth",
 		)
 	}
 	return nil

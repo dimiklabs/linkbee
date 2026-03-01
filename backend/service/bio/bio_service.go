@@ -19,11 +19,12 @@ import (
 // ── Response types ────────────────────────────────────────────────────────────
 
 type BioLinkResponse struct {
-	ID       string `json:"id"`
-	Title    string `json:"title"`
-	URL      string `json:"url"`
-	IsActive bool   `json:"is_active"`
-	Position int    `json:"position"`
+	ID         string `json:"id"`
+	Title      string `json:"title"`
+	URL        string `json:"url"`
+	IsActive   bool   `json:"is_active"`
+	Position   int    `json:"position"`
+	ClickCount int64  `json:"click_count"`
 }
 
 type BioPageResponse struct {
@@ -59,6 +60,9 @@ type UpdateBioRequest struct {
 	AvatarURL   string
 	Theme       string
 	IsPublished bool
+	// AvatarOnly signals that only the AvatarURL field should be updated,
+	// leaving all other fields untouched.
+	AvatarOnly bool
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -116,11 +120,12 @@ func toBioPageResponse(p *model.BioPage) *BioPageResponse {
 	links := make([]BioLinkResponse, 0, len(p.Links))
 	for _, l := range p.Links {
 		links = append(links, BioLinkResponse{
-			ID:       l.ID.String(),
-			Title:    l.Title,
-			URL:      l.URL,
-			IsActive: l.IsActive,
-			Position: l.Position,
+			ID:         l.ID.String(),
+			Title:      l.Title,
+			URL:        l.URL,
+			IsActive:   l.IsActive,
+			Position:   l.Position,
+			ClickCount: l.ClickCount,
 		})
 	}
 	return &BioPageResponse{
@@ -138,11 +143,12 @@ func toBioPageResponse(p *model.BioPage) *BioPageResponse {
 
 func toBioLinkResponse(l *model.BioLink) *BioLinkResponse {
 	return &BioLinkResponse{
-		ID:       l.ID.String(),
-		Title:    l.Title,
-		URL:      l.URL,
-		IsActive: l.IsActive,
-		Position: l.Position,
+		ID:         l.ID.String(),
+		Title:      l.Title,
+		URL:        l.URL,
+		IsActive:   l.IsActive,
+		Position:   l.Position,
+		ClickCount: l.ClickCount,
 	}
 }
 
@@ -183,6 +189,19 @@ func (svc *BioService) Update(ctx context.Context, userID uuid.UUID, req UpdateB
 	}
 	if err != nil {
 		return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to fetch bio page")
+	}
+
+	// Avatar-only update (from file upload) — touch nothing else.
+	if req.AvatarOnly {
+		page.AvatarURL = req.AvatarURL
+		if err := svc.repo.Update(ctx, page); err != nil {
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to update bio page")
+		}
+		page, err = svc.repo.GetByUserID(ctx, userID)
+		if err != nil {
+			return nil, dto.NewInternalError(constant.ErrCodeInternalServer, "failed to reload bio page")
+		}
+		return toBioPageResponse(page), nil
 	}
 
 	if req.Username != "" && req.Username != page.Username {

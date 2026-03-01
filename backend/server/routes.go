@@ -57,7 +57,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	// ── Repositories ─────────────────────────────────────────────────────────
 	reportRepo            := repository.NewAnalyticsReportRepository(s.MasterDB, s.ReplicaDB)
 	subRepo               := repository.NewSubscriptionRepository(s.MasterDB, s.ReplicaDB)
-	bioRepo               := repository.NewBioRepository(s.MasterDB, s.ReplicaDB)
+	bioRepo                    := repository.NewBioRepository(s.MasterDB, s.ReplicaDB)
+	bioLinkClickEventRepo      := repository.NewBioLinkClickEventRepository(s.MasterDB, s.ReplicaDB)
 	variantRepo           := repository.NewLinkVariantRepository(s.MasterDB, s.ReplicaDB)
 	geoRuleRepo           := repository.NewLinkGeoRuleRepository(s.MasterDB, s.ReplicaDB)
 	apiKeyRepo            := repository.NewAPIKeyRepository(s.MasterDB, s.ReplicaDB)
@@ -91,6 +92,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	planEnforcer       := billingSvc.NewPlanEnforcer(subRepo, linkRepo, apiKeyRepo, webhookRepo)
 	adminService       := adminSvc.NewAdminService(userRepo, linkRepo, clickEventRepo)
 	bioService         := bioSvc.NewBioService(bioRepo)
+	bioClickService    := clickSvc.NewBioClickService(s.Cache, bioRepo)
 	previewService     := previewSvc.NewPreviewService(s.Cache)
 	folderService      := folderSvc.NewFolderService(folderRepo, clickEventRepo)
 	apiKeyService      := apiKeySvc.NewAPIKeyService(apiKeyRepo)
@@ -131,6 +133,16 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	)
 	go clickWorker.Start(ctx)
 
+	// ── Bio click worker (background goroutine) ────────────────────────────────
+	bioClickWorker := worker.NewBioClickWorker(
+		s.Cache,
+		bioLinkClickEventRepo,
+		bioRepo,
+		s.Cfg.Link.ClickQueueBatchSize,
+		s.Cfg.Link.ClickQueueFlushInterval,
+	)
+	go bioClickWorker.Start(ctx)
+
 	// ── Health worker (background goroutine) ──────────────────────────────────
 	healthWorker := worker.NewHealthWorker(linkRepo)
 	go healthWorker.Start(ctx)
@@ -142,7 +154,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	billingHandler   := handler.NewBillingHandler(billingService, linkRepo, apiKeyRepo, webhookRepo)
 	adminHandler     := handler.NewAdminHandler(adminService, s.Cfg.App)
 	exportHandler    := handler.NewExportHandler(userRepo, linkRepo, s.Cfg.App)
-	bioHandler       := handler.NewBioHandler(bioService)
+	uploadsDir := "./uploads"
+	bioHandler       := handler.NewBioHandler(bioService, bioClickService, planEnforcer, uploadsDir, "https://"+s.Cfg.App.BaseDomain)
 	previewHandler   := handler.NewPreviewHandler(previewService, linkService)
 	folderHandler    := handler.NewFolderHandler(folderService)
 	apiKeyHandler    := handler.NewAPIKeyHandler(apiKeyService, planEnforcer, auditService)
@@ -155,11 +168,14 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 	domainHandler    := handler.NewDomainHandler(domainService, auditService)
 	redirectHandler  := handler.NewRedirectHandler(redirectService, clickService, geoService, pixelService, webhookService, linkRepo, customDomainRepo, s.Cfg.App.BaseDomain)
 	qrHandler        := handler.NewQRHandler(qrService, linkService, s.Cfg.App)
-	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App)
-	dashboardHandler := handler.NewDashboardHandler(dashboardService)
-	reportHandler    := handler.NewReportHandler(reportingService)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsService, linkRepo, clickEventRepo, s.Cfg.App, planEnforcer)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService, planEnforcer)
+	reportHandler    := handler.NewReportHandler(reportingService, planEnforcer)
 	demoHandler      := handler.NewDemoHandler(demoService)
 	teamHandler      := handler.NewTeamHandler(teamService)
+
+	// ── Static file serving (avatars, etc.) ──────────────────────────────────
+	router.Static("/uploads", "./uploads")
 
 	// ── Swagger UI ───────────────────────────────────────────────────────────
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -205,6 +221,8 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 
 			// Public bio page
 			v1Public.GET("/bio/public/:username", bioHandler.GetPublicBioPage)
+			// Bio link click tracking (fire-and-forget, no auth)
+			v1Public.POST("/bio/public/:username/links/:id/click", bioHandler.RecordBioLinkClick)
 		}
 
 		// Protected routes (JWT or API key required)
@@ -336,6 +354,7 @@ func (s *Server) ConfigureRoutes(ctx context.Context, router *gin.Engine) {
 			// Bio page (link-in-bio)
 			v1Auth.GET("/bio", bioHandler.GetBioPage)
 			v1Auth.PUT("/bio", bioHandler.UpdateBioPage)
+			v1Auth.POST("/bio/avatar", bioHandler.UploadBioAvatar)
 			v1Auth.GET("/bio/links", bioHandler.ListBioLinks)
 			v1Auth.POST("/bio/links", bioHandler.CreateBioLink)
 			v1Auth.PATCH("/bio/links/reorder", bioHandler.ReorderBioLinks)

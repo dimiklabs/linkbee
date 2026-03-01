@@ -28,12 +28,12 @@ export interface SubscriptionWithPlan {
   plan: PlanInfo;
 }
 
-export type PlanID = 'free' | 'pro' | 'business';
+export type PlanID = 'free' | 'pro' | 'growth';
 
 export const PLAN_LABELS: Record<string, string> = {
   free: 'Free',
   pro: 'Pro',
-  business: 'Business',
+  growth: 'Growth',
 };
 
 export const SUB_STATUS_LABELS: Record<string, string> = {

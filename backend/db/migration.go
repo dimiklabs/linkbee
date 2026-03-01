@@ -26,6 +26,7 @@ func RunAutoMigration(db *gorm.DB) error {
 		&model.RetargetingPixel{},
 		&model.BioPage{},
 		&model.BioLink{},
+		&model.BioLinkClickEvent{},
 		&model.Subscription{},
 		&model.CustomDomain{},
 		&model.AuditLog{},

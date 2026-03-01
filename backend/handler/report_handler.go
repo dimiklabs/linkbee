@@ -9,16 +9,18 @@ import (
 	"github.com/shafikshaon/linkbee/constant"
 	"github.com/shafikshaon/linkbee/middlewares"
 	"github.com/shafikshaon/linkbee/request"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
 	reportSvc "github.com/shafikshaon/linkbee/service/reporting"
 	"github.com/shafikshaon/linkbee/transport"
 )
 
 type ReportHandler struct {
 	reportingService reportSvc.ReportingServiceI
+	planEnforcer     billingSvc.PlanEnforcerI
 }
 
-func NewReportHandler(svc reportSvc.ReportingServiceI) *ReportHandler {
-	return &ReportHandler{reportingService: svc}
+func NewReportHandler(svc reportSvc.ReportingServiceI, planEnforcer billingSvc.PlanEnforcerI) *ReportHandler {
+	return &ReportHandler{reportingService: svc, planEnforcer: planEnforcer}
 }
 
 func (h *ReportHandler) userID(c *gin.Context) (uuid.UUID, bool) {
@@ -29,6 +31,14 @@ func (h *ReportHandler) userID(c *gin.Context) (uuid.UUID, bool) {
 		return uuid.Nil, false
 	}
 	return id, true
+}
+
+func (h *ReportHandler) checkPlan(c *gin.Context, userID uuid.UUID) bool {
+	if svcErr := h.planEnforcer.CheckAnalytics(c.Request.Context(), userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return false
+	}
+	return true
 }
 
 // ListReports godoc
@@ -43,6 +53,9 @@ func (h *ReportHandler) userID(c *gin.Context) (uuid.UUID, bool) {
 func (h *ReportHandler) ListReports(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
+		return
+	}
+	if !h.checkPlan(c, userID) {
 		return
 	}
 	reports, svcErr := h.reportingService.ListReports(c.Request.Context(), userID)
@@ -67,6 +80,9 @@ func (h *ReportHandler) ListReports(c *gin.Context) {
 func (h *ReportHandler) CreateReport(c *gin.Context) {
 	userID, ok := h.userID(c)
 	if !ok {
+		return
+	}
+	if !h.checkPlan(c, userID) {
 		return
 	}
 	var req request.CreateReportRequest

@@ -1,9 +1,9 @@
 package billing
 
 const (
-	PlanFree     = "free"
-	PlanPro      = "pro"
-	PlanBusiness = "business"
+	PlanFree   = "free"
+	PlanPro    = "pro"
+	PlanGrowth = "growth"
 )
 
 // PlanInfo describes a subscription plan and its feature limits.
@@ -23,7 +23,7 @@ var PlanCatalog = map[string]PlanInfo{
 		ID:          PlanFree,
 		Name:        "Free",
 		MaxLinks:    5,
-		MaxAPIKeys:  1,
+		MaxAPIKeys:  0, // API keys require Pro or Growth
 		MaxWebhooks: 0,
 		HasWebhooks: false,
 	},
@@ -35,12 +35,12 @@ var PlanCatalog = map[string]PlanInfo{
 		MaxWebhooks: 5,
 		HasWebhooks: true,
 	},
-	PlanBusiness: {
-		ID:          PlanBusiness,
-		Name:        "Business",
-		MaxLinks:    -1,
-		MaxAPIKeys:  -1,
-		MaxWebhooks: -1,
+	PlanGrowth: {
+		ID:          PlanGrowth,
+		Name:        "Growth",
+		MaxLinks:    -1, // unlimited
+		MaxAPIKeys:  10,
+		MaxWebhooks: -1, // unlimited
 		HasWebhooks: true,
 	},
 }

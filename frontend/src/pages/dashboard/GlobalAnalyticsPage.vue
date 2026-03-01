@@ -1,5 +1,11 @@
 <template>
-  <div class="global-analytics-page">
+  <UpgradeWall
+    v-if="!billingStore.isPaidPlan && billingStore.loaded"
+    icon="bar_chart"
+    title="Analytics is a Pro feature"
+    description="Upgrade to Pro to unlock account-wide analytics, time-series charts, and geographic breakdowns."
+  />
+  <div v-else class="global-analytics-page">
 
     <!-- Page Header + Filters -->
     <div class="page-header">
@@ -402,6 +408,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { use } from 'echarts/core';
+import UpgradeWall from '@/components/UpgradeWall.vue';
+import { useBillingStore } from '@/stores/billing';
+
+const billingStore = useBillingStore();
 import { LineChart, PieChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -467,7 +477,10 @@ async function load() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  billingStore.fetchPlan();
+  load();
+});
 
 // ── Computed helpers ──────────────────────────────────────────────────────────
 const topCountry = computed(() => {

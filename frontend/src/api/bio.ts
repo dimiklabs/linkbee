@@ -47,6 +47,26 @@ export const bioApi = {
   reorderLinks: async (data: ReorderBioLinksRequest): Promise<void> => {
     await apiClient.patch('/bio/links/reorder', data);
   },
+
+  /**
+   * Record a click on a bio page link.
+   * Uses fetch with keepalive so the request survives page navigation.
+   * Errors are swallowed — tracking must never block the user.
+   */
+  recordLinkClick(username: string, linkId: string): void {
+    const base = (apiClient.defaults.baseURL ?? '/api/v1').replace(/\/$/, '');
+    const url = `${base}/bio/public/${encodeURIComponent(username)}/links/${encodeURIComponent(linkId)}/click`;
+    fetch(url, { method: 'POST', keepalive: true }).catch(() => {});
+  },
+
+  uploadAvatar: async (file: File): Promise<ApiResponse<BioPage>> => {
+    const fd = new FormData();
+    fd.append('avatar', file);
+    const res = await apiClient.post('/bio/avatar', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
 };
 
 export default bioApi;

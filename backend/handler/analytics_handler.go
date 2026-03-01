@@ -15,6 +15,7 @@ import (
 	"github.com/shafikshaon/linkbee/repository"
 	"github.com/shafikshaon/linkbee/request"
 	analyticsSvc "github.com/shafikshaon/linkbee/service/analytics"
+	billingSvc "github.com/shafikshaon/linkbee/service/billing"
 	"github.com/shafikshaon/linkbee/transport"
 	"github.com/shafikshaon/linkbee/util"
 )
@@ -24,6 +25,7 @@ type AnalyticsHandler struct {
 	linkRepo         repository.LinkRepositoryI
 	clickRepo        repository.ClickEventRepositoryI
 	appCfg           *config.AppConfig
+	planEnforcer     billingSvc.PlanEnforcerI
 }
 
 func NewAnalyticsHandler(
@@ -31,12 +33,14 @@ func NewAnalyticsHandler(
 	linkRepo repository.LinkRepositoryI,
 	clickRepo repository.ClickEventRepositoryI,
 	appCfg *config.AppConfig,
+	planEnforcer billingSvc.PlanEnforcerI,
 ) *AnalyticsHandler {
 	return &AnalyticsHandler{
 		analyticsService: analyticsService,
 		linkRepo:         linkRepo,
 		clickRepo:        clickRepo,
 		appCfg:           appCfg,
+		planEnforcer:     planEnforcer,
 	}
 }
 
@@ -63,6 +67,11 @@ func (h *AnalyticsHandler) GetLinkAnalytics(c *gin.Context) {
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
 
@@ -129,14 +138,18 @@ func (h *AnalyticsHandler) StreamLiveCount(c *gin.Context) {
 		return
 	}
 
+	ctx := c.Request.Context()
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		c.JSON(svcErr.StatusCode, gin.H{"error": svcErr.Description})
+		return
+	}
+
 	idStr := c.Param("id")
 	linkID, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid link id"})
 		return
 	}
-
-	ctx := c.Request.Context()
 
 	// Verify link ownership
 	link, linkErr := h.linkRepo.GetByID(ctx, linkID)
@@ -202,6 +215,11 @@ func (h *AnalyticsHandler) GetPeriodComparison(c *gin.Context) {
 		return
 	}
 
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -261,6 +279,11 @@ func (h *AnalyticsHandler) GetMultiLinkComparison(c *gin.Context) {
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
 		transport.RespondWithError(c, http.StatusUnauthorized, constant.ErrCodeUnauthorized, constant.ErrMsgUnauthorized)
+		return
+	}
+
+	if svcErr := h.planEnforcer.CheckAnalytics(ctx, userID); svcErr != nil {
+		transport.RespondWithError(c, svcErr.StatusCode, svcErr.ErrorCode, svcErr.Description)
 		return
 	}
 

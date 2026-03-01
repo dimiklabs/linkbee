@@ -4,6 +4,7 @@ export interface BioLinkItem {
   url: string;
   is_active: boolean;
   position: number;
+  click_count: number;
 }
 
 export interface BioPage {

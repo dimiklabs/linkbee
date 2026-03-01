@@ -1,5 +1,11 @@
 <template>
-  <div class="reports-page">
+  <UpgradeWall
+    v-if="!billingStore.isPaidPlan && billingStore.loaded"
+    icon="summarize"
+    title="Scheduled reports is a Pro feature"
+    description="Upgrade to Pro to schedule automated analytics reports delivered to your inbox."
+  />
+  <div v-else class="reports-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -332,6 +338,10 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import BaseModal from '@/components/BaseModal.vue';
+import UpgradeWall from '@/components/UpgradeWall.vue';
+import { useBillingStore } from '@/stores/billing';
+
+const billingStore = useBillingStore();
 import { reportsApi } from '@/api/reports';
 import { linksApi } from '@/api/links';
 import { dashboardApi } from '@/api/dashboard';
@@ -575,6 +585,7 @@ function handleClickOutside(e: MouseEvent) {
 }
 
 onMounted(() => {
+  billingStore.fetchPlan();
   loadReports();
   loadLinks();
   document.addEventListener('click', handleClickOutside);

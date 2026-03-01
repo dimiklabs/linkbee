@@ -63,6 +63,14 @@
         <div class="stat-value stat-value--muted">{{ bioStats.inactive }}</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Total Clicks</div>
+        <router-link v-if="bioStats.clicksLocked" to="/dashboard/billing" class="stat-pro-gate" title="Upgrade to Pro to see click counts">
+          <span class="material-symbols-outlined" style="font-size:15px;">lock</span>
+          Pro feature
+        </router-link>
+        <div v-else class="stat-value">{{ bioStats.totalClicks }}</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Status</div>
         <span :class="['m3-badge', bioPage.is_published ? 'm3-badge--success' : 'm3-badge--neutral']" style="margin-top:4px;">
           {{ bioPage.is_published ? 'Published' : 'Draft' }}
@@ -127,16 +135,50 @@
             ></textarea>
           </div>
 
-          <!-- Avatar URL -->
+          <!-- Avatar Upload -->
           <div class="form-field">
-            <label class="form-field__label">Avatar URL</label>
-            <input
-              class="form-input"
-              type="url"
-              :value="form.avatar_url"
-              @input="form.avatar_url=($event.target as HTMLInputElement).value"
-              placeholder="https://..."
-            />
+            <label class="form-field__label">Avatar</label>
+            <div class="avatar-upload-row">
+              <!-- Current avatar preview -->
+              <div class="avatar-preview-wrap">
+                <img
+                  v-if="form.avatar_url && !avatarPreviewError"
+                  :src="form.avatar_url"
+                  alt="Avatar preview"
+                  class="avatar-preview"
+                  @error="avatarPreviewError = true"
+                />
+                <div v-else class="avatar-preview avatar-preview--fallback">
+                  {{ (form.title || '?').charAt(0).toUpperCase() }}
+                </div>
+              </div>
+              <!-- Upload controls -->
+              <div class="avatar-upload-controls">
+                <label class="btn-outlined avatar-upload-btn" :class="{ disabled: uploadingAvatar }">
+                  <span v-if="uploadingAvatar" class="css-spinner css-spinner--sm"></span>
+                  <span v-else class="material-symbols-outlined">upload</span>
+                  {{ uploadingAvatar ? 'Uploading…' : 'Upload photo' }}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    class="avatar-file-input"
+                    :disabled="uploadingAvatar"
+                    @change="onAvatarFileChange"
+                  />
+                </label>
+                <button
+                  v-if="form.avatar_url"
+                  class="btn-icon btn-danger"
+                  type="button"
+                  title="Remove avatar"
+                  @click="removeAvatar"
+                >
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+                <span class="form-hint" style="margin-top:0;">JPEG, PNG, GIF or WebP · max 2 MB</span>
+              </div>
+            </div>
+            <div v-if="avatarUploadError" class="error-box" style="margin-top:8px;">{{ avatarUploadError }}</div>
           </div>
 
           <!-- Theme -->
@@ -363,6 +405,19 @@
                   <div class="link-info__title">{{ link.title }}</div>
                   <div class="link-info__url">{{ link.url }}</div>
                 </div>
+                <router-link
+                  v-if="link.click_count === -1"
+                  to="/dashboard/billing"
+                  class="link-click-count link-click-count--locked"
+                  title="Upgrade to Pro to see click counts"
+                >
+                  <span class="material-symbols-outlined" style="font-size:13px;">lock</span>
+                  Pro
+                </router-link>
+                <span v-else class="link-click-count" :title="`${link.click_count} clicks`">
+                  <span class="material-symbols-outlined" style="font-size:13px;">ads_click</span>
+                  {{ link.click_count }}
+                </span>
                 <input
                   type="checkbox"
                   role="switch"
@@ -632,6 +687,40 @@ const form = ref({
   is_published: false,
 });
 
+// Avatar upload
+const uploadingAvatar = ref(false);
+const avatarUploadError = ref('');
+const avatarPreviewError = ref(false);
+
+async function onAvatarFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  avatarUploadError.value = '';
+  avatarPreviewError.value = false;
+  uploadingAvatar.value = true;
+  try {
+    const res = await bioApi.uploadAvatar(file);
+    if (res.data?.avatar_url) {
+      form.value.avatar_url = res.data.avatar_url;
+      if (bioPage.value) bioPage.value.avatar_url = res.data.avatar_url;
+    }
+  } catch (err: unknown) {
+    const anyErr = err as { response?: { data?: { description?: string } } };
+    avatarUploadError.value = anyErr?.response?.data?.description ?? 'Upload failed. Please try again.';
+  } finally {
+    uploadingAvatar.value = false;
+    // Reset input so the same file can be re-selected if needed.
+    input.value = '';
+  }
+}
+
+function removeAvatar() {
+  form.value.avatar_url = '';
+  avatarPreviewError.value = false;
+}
+
 // Social platform
 const activePlatform = ref<SocialPlatform | null>(null);
 const platformUsername = ref('');
@@ -661,11 +750,17 @@ const publicUrl = computed(() =>
     : ''
 );
 
-const bioStats = computed(() => ({
-  total: bioPage.value?.links.length ?? 0,
-  active: bioPage.value?.links.filter(l => l.is_active).length ?? 0,
-  inactive: bioPage.value?.links.filter(l => !l.is_active).length ?? 0,
-}));
+const bioStats = computed(() => {
+  const links = bioPage.value?.links ?? [];
+  const clicksLocked = links.some(l => l.click_count === -1);
+  return {
+    total: links.length,
+    active: links.filter(l => l.is_active).length,
+    inactive: links.filter(l => !l.is_active).length,
+    totalClicks: clicksLocked ? 0 : links.reduce((sum, l) => sum + (l.click_count ?? 0), 0),
+    clicksLocked,
+  };
+});
 
 const bioCopied = ref(false);
 
@@ -1086,6 +1181,63 @@ function onDragEnd() { dragFrom = -1; }
   color: var(--md-sys-color-on-surface-variant);
 }
 
+/* ── Avatar upload ────────────────────────────────────────────────────────── */
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatar-preview-wrap {
+  flex-shrink: 0;
+}
+
+.avatar-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--md-sys-color-outline-variant);
+
+  &--fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    font-size: 1.6rem;
+    font-weight: 700;
+    border: none;
+  }
+}
+
+.avatar-upload-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+
+  &.disabled { opacity: 0.6; pointer-events: none; }
+}
+
+.avatar-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
 /* ── Username row ─────────────────────────────────────────────────────────── */
 .bio-username-row {
   display: flex;
@@ -1477,6 +1629,50 @@ function onDragEnd() { dragFrom = -1; }
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.link-click-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+  min-width: 36px;
+  text-decoration: none;
+
+  &--locked {
+    color: var(--md-sys-color-tertiary);
+    background: var(--md-sys-color-tertiary-container);
+    border-radius: 100px;
+    padding: 2px 7px;
+    gap: 3px;
+    font-size: 0.7rem;
+    letter-spacing: 0.3px;
+    min-width: unset;
+    cursor: pointer;
+    transition: opacity 0.15s;
+
+    &:hover { opacity: 0.8; }
+  }
+}
+
+.stat-pro-gate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--md-sys-color-tertiary);
+  text-decoration: none;
+  background: var(--md-sys-color-tertiary-container);
+  border-radius: 100px;
+  padding: 4px 10px;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.8; }
 }
 
 /* ── Transition: platform panel slide ─────────────────────────────────────── */

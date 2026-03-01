@@ -1,5 +1,11 @@
 <template>
-  <div class="apikeys-page">
+  <UpgradeWall
+    v-if="!billingStore.isPaidPlan && billingStore.loaded"
+    icon="key"
+    title="API Keys is a Pro feature"
+    description="Upgrade to Pro to create API keys for programmatic access to your links."
+  />
+  <div v-else class="apikeys-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -218,6 +224,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { RouterLink } from 'vue-router';
+import UpgradeWall from '@/components/UpgradeWall.vue';
+import { useBillingStore } from '@/stores/billing';
+
+const billingStore = useBillingStore();
 import BaseModal from '@/components/BaseModal.vue';
 import apiKeysApi from '@/api/apikeys';
 import type { APIKey, CreateAPIKeyResponse } from '@/types/apikeys';
@@ -357,6 +367,7 @@ watch(showCreate, async (v) => {
 });
 
 onMounted(async () => {
+  billingStore.fetchPlan();
   await loadKeys();
   try {
     const res = await billingApi.getUsage();

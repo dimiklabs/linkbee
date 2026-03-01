@@ -64,6 +64,7 @@
         >
           <span class="material-symbols-outlined nav-icon">bar_chart</span>
           <span class="nav-label">Analytics</span>
+          <span v-if="!billingStore.isPaidPlan && !uiStore.sidebarCollapsed" class="nav-pro-badge">Pro</span>
         </router-link>
 
         <router-link
@@ -75,6 +76,7 @@
         >
           <span class="material-symbols-outlined nav-icon">compare_arrows</span>
           <span class="nav-label">Compare</span>
+          <span v-if="!billingStore.isPaidPlan && !uiStore.sidebarCollapsed" class="nav-pro-badge">Pro</span>
         </router-link>
 
         <router-link
@@ -86,6 +88,7 @@
         >
           <span class="material-symbols-outlined nav-icon">summarize</span>
           <span class="nav-label">Reports</span>
+          <span v-if="!billingStore.isPaidPlan && !uiStore.sidebarCollapsed" class="nav-pro-badge">Pro</span>
         </router-link>
 
         <!-- ── Tools section ─────────────────────────────────────────── -->
@@ -113,6 +116,7 @@
         >
           <span class="material-symbols-outlined nav-icon">key</span>
           <span class="nav-label">API Keys</span>
+          <span v-if="!billingStore.isPaidPlan && !uiStore.sidebarCollapsed" class="nav-pro-badge">Pro</span>
         </router-link>
 
         <!-- Webhooks — hidden until service is available
@@ -350,11 +354,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
+import { useBillingStore } from '@/stores/billing';
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const uiStore = useUiStore();
+const billingStore = useBillingStore();
 
 const userDropdownOpen = ref(false);
 const userMenuWrapperRef = ref<HTMLElement | null>(null);
@@ -429,6 +435,7 @@ function handleClickOutside(e: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  billingStore.fetchPlan();
 });
 
 onUnmounted(() => {
@@ -624,6 +631,20 @@ $appbar-height: 64px;
   white-space: nowrap;
   overflow: hidden;
   transition: opacity 0.15s $ease-standard;
+  flex: 1;
+}
+
+.nav-pro-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 100px;
+  background: var(--md-sys-color-tertiary-container);
+  color: var(--md-sys-color-on-tertiary-container);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 // Collapsed rail: center icons, hide labels

@@ -92,6 +92,39 @@ func SetupTimescale(db *gorm.DB) error {
 		logger.Warn("Failed to add refresh policy for click_stats_hourly", zap.Error(err))
 	}
 
+	// 7. Convert bio_link_click_events to a hypertable partitioned by clicked_at.
+	if err := db.Exec(`
+		SELECT create_hypertable(
+			'bio_link_click_events', 'clicked_at',
+			chunk_time_interval => INTERVAL '1 day',
+			if_not_exists       => TRUE,
+			migrate_data        => TRUE
+		)
+	`).Error; err != nil {
+		logger.Error("Failed to create hypertable for bio_link_click_events", zap.Error(err))
+		return err
+	}
+
+	// 8. Enable compression on bio_link_click_events, segmenting by bio_link_id.
+	if err := db.Exec(`
+		ALTER TABLE bio_link_click_events SET (
+			timescaledb.compress,
+			timescaledb.compress_segmentby = 'bio_link_id',
+			timescaledb.compress_orderby   = 'clicked_at DESC'
+		)
+	`).Error; err != nil {
+		logger.Warn("Failed to configure compression for bio_link_click_events (may already be set)", zap.Error(err))
+	}
+
+	// 9. Automatically compress bio link click chunks older than 7 days.
+	if err := db.Exec(`
+		SELECT add_compression_policy(
+			'bio_link_click_events', INTERVAL '7 days', if_not_exists => TRUE
+		)
+	`).Error; err != nil {
+		logger.Warn("Failed to add compression policy for bio_link_click_events", zap.Error(err))
+	}
+
 	logger.Info("TimescaleDB setup completed")
 	return nil
 }

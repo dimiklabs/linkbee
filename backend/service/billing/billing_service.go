@@ -143,10 +143,10 @@ func (s *billingService) GetCheckoutURL(planID string, userID uuid.UUID) (string
 	switch planID {
 	case PlanPro:
 		priceID = s.billingCfg.PaddleProPriceID
-	case PlanBusiness:
-		priceID = s.billingCfg.PaddleBusinessPriceID
+	case PlanGrowth:
+		priceID = s.billingCfg.PaddleGrowthPriceID
 	default:
-		return "", dto.NewBadRequestError(constant.ErrCodeBadRequest, "invalid plan: must be pro or business")
+		return "", dto.NewBadRequestError(constant.ErrCodeBadRequest, "invalid plan: must be pro or growth")
 	}
 
 	if priceID == "" {
@@ -337,8 +337,8 @@ func paddlePriceToPlan(items []paddleSubItem, cfg *config.BillingConfig) string 
 	switch items[0].Price.ID {
 	case cfg.PaddleProPriceID:
 		return PlanPro
-	case cfg.PaddleBusinessPriceID:
-		return PlanBusiness
+	case cfg.PaddleGrowthPriceID:
+		return PlanGrowth
 	}
 	return PlanFree
 }

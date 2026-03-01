@@ -337,51 +337,40 @@ const pricingPlans = [
     description: 'Perfect for personal use',
     popular: false,
     features: [
-      '50 links/month',
-      'Basic analytics',
+      'Up to 5 short links',
       'QR codes',
-      '30-day history',
-    ],
-  },
-  {
-    name: 'Starter',
-    price: 9,
-    description: 'For growing creators',
-    popular: true,
-    features: [
-      '500 links/month',
-      'Full analytics',
-      'Custom slugs',
+      'Basic click counts',
       'Password protection',
-      '1 year history',
+      'Link expiry',
     ],
   },
   {
     name: 'Pro',
-    price: 29,
-    description: 'For teams and businesses',
-    popular: false,
+    price: 7,
+    description: 'For creators and marketers',
+    popular: true,
     features: [
-      'Unlimited links',
-      'Advanced analytics',
-      'Team collaboration',
-      'API access',
+      'Up to 100 short links',
+      'Full analytics & reports',
+      'Custom slugs',
+      'API access (5 keys)',
+      'Link comparison',
+      'Bio link click tracking',
+      'QR codes',
+      'Password protection',
       'Link expiry',
-      'Priority support',
     ],
   },
   {
-    name: 'Business',
-    price: 79,
-    description: 'Enterprise-grade solution',
+    name: 'Growth',
+    price: 15,
+    description: 'For teams and growing businesses',
     popular: false,
     features: [
+      'Unlimited short links',
       'Everything in Pro',
-      'Custom domain',
-      'SSO / SAML',
-      'SLA guarantee',
-      'Dedicated support',
-      'Audit logs',
+      'Up to 10 API keys',
+      'Priority support',
     ],
   },
 ];
@@ -943,11 +932,12 @@ const pricingPlans = [
 
 .pricing-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 360px));
   gap: 20px;
   align-items: start;
+  justify-content: center;
 
-  @media (max-width: 1100px) {
+  @media (max-width: 900px) {
     grid-template-columns: repeat(2, 1fr);
   }
 

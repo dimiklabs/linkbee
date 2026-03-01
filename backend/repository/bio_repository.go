@@ -22,6 +22,7 @@ type BioRepositoryI interface {
 	UpdateLink(ctx context.Context, link *model.BioLink) error
 	DeleteLink(ctx context.Context, id, bioPageID uuid.UUID) error
 	ReorderLinks(ctx context.Context, bioPageID uuid.UUID, ids []uuid.UUID) error
+	AddBioLinkClickCount(ctx context.Context, bioLinkID uuid.UUID, delta int64) error
 }
 
 type BioRepository struct {
@@ -122,4 +123,11 @@ func (r *BioRepository) ReorderLinks(ctx context.Context, bioPageID uuid.UUID, i
 		}
 		return nil
 	})
+}
+
+func (r *BioRepository) AddBioLinkClickCount(ctx context.Context, bioLinkID uuid.UUID, delta int64) error {
+	return r.master.WithContext(ctx).
+		Model(&model.BioLink{}).
+		Where("id = ?", bioLinkID).
+		UpdateColumn("click_count", gorm.Expr("click_count + ?", delta)).Error
 }

@@ -61,25 +61,43 @@
           <button class="advanced-toggle" type="button" @click="slugExpanded = !slugExpanded">
             <span class="material-symbols-outlined advanced-toggle-icon">tag</span>
             <span class="advanced-toggle-label">Custom Slug</span>
-            <span class="adv-badge adv-badge--optional">Optional</span>
+            <span v-if="isPaidPlan" class="adv-badge adv-badge--optional">Optional</span>
+            <span v-else class="adv-badge adv-badge--pro">
+              <span class="material-symbols-outlined" style="font-size:11px;vertical-align:-1px;">workspace_premium</span>
+              Pro
+            </span>
             <span class="material-symbols-outlined advanced-chevron" :class="{ 'advanced-chevron--open': slugExpanded }">
               expand_more
             </span>
           </button>
           <div v-if="slugExpanded" class="advanced-fields">
-            <md-outlined-text-field
-              :value="form.slug"
-              @input="onSlugInput(($event.target as HTMLInputElement).value)"
-              label="mycustomslug"
-              placeholder="mycustomslug"
-              maxlength="100"
-              class="field-full"
-              :error="!!validationErrors.slug"
-              :error-text="validationErrors.slug"
-              supporting-text="5–100 alphanumeric characters. Leave blank to auto-generate."
-            >
-              <span class="material-symbols-outlined" slot="leading-icon">tag</span>
-            </md-outlined-text-field>
+            <template v-if="isPaidPlan">
+              <md-outlined-text-field
+                :value="form.slug"
+                @input="onSlugInput(($event.target as HTMLInputElement).value)"
+                label="mycustomslug"
+                placeholder="mycustomslug"
+                maxlength="100"
+                class="field-full"
+                :error="!!validationErrors.slug"
+                :error-text="validationErrors.slug"
+                supporting-text="5–100 alphanumeric characters. Leave blank to auto-generate."
+              >
+                <span class="material-symbols-outlined" slot="leading-icon">tag</span>
+              </md-outlined-text-field>
+            </template>
+            <template v-else>
+              <div class="slug-locked">
+                <span class="material-symbols-outlined slug-locked-icon">lock</span>
+                <div class="slug-locked-body">
+                  <strong>Custom slugs are a Pro feature</strong>
+                  <span>Upgrade to choose a memorable, branded short link.</span>
+                </div>
+                <router-link to="/dashboard/billing" class="btn-text slug-upgrade-btn" @click.stop="hide()">
+                  Upgrade
+                </router-link>
+              </div>
+            </template>
           </div>
         </div>
 
@@ -317,11 +335,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import type { LinkResponse, CreateLinkRequest, UpdateLinkRequest } from '@/types/links';
 import type { FolderResponse } from '@/types/folders';
 import { useLinksStore } from '@/stores/links';
 import linksApi from '@/api/links';
+import billingApi from '@/api/billing';
 import BaseModal from '@/components/BaseModal.vue';
 import AppSelect from '@/components/AppSelect.vue';
 
@@ -345,6 +364,17 @@ const tagsInput = ref('');
 const utmExpanded = ref(false);
 const advancedExpanded = ref(false);
 const slugExpanded = ref(false);
+const isPaidPlan = ref(false);
+
+onMounted(async () => {
+  try {
+    const res = await billingApi.getSubscription();
+    const planId = res.data.data?.plan?.id;
+    isPaidPlan.value = planId === 'pro' || planId === 'growth';
+  } catch {
+    isPaidPlan.value = false;
+  }
+});
 
 // Duplicate detection
 const duplicateLink = ref<LinkResponse | null>(null);
@@ -753,6 +783,55 @@ defineExpose({ show, hide });
     background: color-mix(in srgb, var(--md-sys-color-tertiary, #7e5260) 12%, transparent);
     color: var(--md-sys-color-tertiary, #7e5260);
   }
+
+  &--pro {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: color-mix(in srgb, var(--md-sys-color-primary, #635bff) 14%, transparent);
+    color: var(--md-sys-color-primary, #635bff);
+    font-weight: 600;
+  }
+}
+
+/* ── Slug locked state ────────────────────────────────── */
+.slug-locked {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.slug-locked-icon {
+  font-size: 22px;
+  color: var(--md-sys-color-on-surface-variant);
+  flex-shrink: 0;
+}
+
+.slug-locked-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+
+  strong {
+    color: var(--md-sys-color-on-surface);
+    font-weight: 600;
+  }
+
+  span {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 0.8rem;
+  }
+}
+
+.slug-upgrade-btn {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
 }
 
 .advanced-chevron {

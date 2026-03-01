@@ -72,7 +72,7 @@
             <ul>
               <li><strong>Free Plan</strong> — Limited to 5 links and 1 API key. No charge.</li>
               <li><strong>Pro Plan</strong> — Up to 100 links, 5 API keys, 5 webhooks, and priority support. Charged at the rate published on our pricing page.</li>
-              <li><strong>Business Plan</strong> — Unlimited links, API keys, and webhooks. Charged at the rate published on our pricing page.</li>
+              <li><strong>Pro Plan</strong> — Up to 100 links, API keys, analytics, and reports. Charged at the rate published on our pricing page.</li>
             </ul>
             <p>
               Subscription fees are billed in advance on a monthly or annual basis, depending on the plan selected at checkout. All fees are stated in US Dollars (USD) and are exclusive of any applicable taxes unless otherwise stated.

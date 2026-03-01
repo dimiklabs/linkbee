@@ -58,6 +58,7 @@
           rel="noopener noreferrer"
           class="bio-link-card m3-card--outlined"
           :class="theme === 'dark' ? 'bio-link-card--dark' : 'bio-link-card--light'"
+          @click="trackClick(link.id)"
         >
           <span class="md-label-large bio-link-title">{{ link.title }}</span>
           <span class="material-symbols-outlined bio-link-arrow">open_in_new</span>
@@ -94,6 +95,11 @@ const theme = computed(() => page.value?.theme ?? 'light');
 const activeLinks = computed(() =>
   (page.value?.links ?? []).filter(l => l.is_active)
 );
+
+function trackClick(linkId: string) {
+  const username = route.params.username as string;
+  bioApi.recordLinkClick(username, linkId);
+}
 
 onMounted(async () => {
   const username = route.params.username as string;

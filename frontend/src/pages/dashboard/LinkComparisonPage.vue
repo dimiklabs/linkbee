@@ -1,5 +1,11 @@
 <template>
-  <div class="link-comparison-page">
+  <UpgradeWall
+    v-if="!billingStore.isPaidPlan && billingStore.loaded"
+    icon="compare_arrows"
+    title="Link comparison is a Pro feature"
+    description="Upgrade to Pro to compare analytics side-by-side across multiple links."
+  />
+  <div v-else class="link-comparison-page">
 
     <!-- Page Header -->
     <div class="page-header">
@@ -218,6 +224,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import VChart from 'vue-echarts';
+import UpgradeWall from '@/components/UpgradeWall.vue';
+import { useBillingStore } from '@/stores/billing';
+
+const billingStore = useBillingStore();
 import { use } from 'echarts/core';
 import { BarChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
@@ -358,6 +368,7 @@ function handleClickOutside(e: MouseEvent) {
 }
 
 onMounted(() => {
+  billingStore.fetchPlan();
   loadLinks();
   document.addEventListener('click', handleClickOutside);
 });
